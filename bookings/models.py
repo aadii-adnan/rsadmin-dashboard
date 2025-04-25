@@ -28,8 +28,8 @@ class Booking(models.Model):
 
     # Timing and status
     departure_time = models.DateTimeField()
-    dropoff_time = models.DateTimeField()
-    pickup_price = models.DecimalField(max_digits=10, decimal_places=2)
+    return_time = models.DateTimeField()
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=50, default='Pending')  # Confirmed, Cancelled, etc.
 
     created_at = models.DateTimeField(auto_now_add=True)
