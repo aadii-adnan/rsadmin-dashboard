@@ -15,8 +15,17 @@ from xhtml2pdf import pisa
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from services.models import Service, AddOn
+from services.models import Service
+from django.utils import timezone
+from services.models import Coupon
+from django.utils import timezone
+import random
+import string
+from datetime import timedelta
+from core.models import Status
 
+def generate_coupon_code(length=8):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 class PaymentList(APIView):
     def get(self, request):
         payments = Payment.objects.all()
@@ -32,13 +41,24 @@ class CreateStripePaymentIntent(APIView):
             # Create Stripe Customer (optional: attach email)
             customer = stripe.Customer.create(email=booking.email)
 
+            discounted_total = booking.total_price
+
+            if booking.coupon and booking.coupon.active and booking.coupon.valid_from <= timezone.now() <= booking.coupon.valid_to:
+                discount_amount = (booking.total_price * booking.coupon.discount_percent) / 100
+                discounted_total = booking.total_price - discount_amount
+                booking.discounted_price = discounted_total
+                booking.save()
+
             # Create PaymentIntent
             intent = stripe.PaymentIntent.create(
-                amount=int(booking.total_price * 100),  # in cents
+                amount=int(discounted_total * 100),  # in cents
                 currency='eur',
                 customer=customer.id,
                 metadata={'booking_id': booking.id},
             )
+
+            status = 'created'
+            status_obj = get_object_or_404(Status, name=status)
 
             # Save to Payment model
             Payment.objects.create(
@@ -46,7 +66,7 @@ class CreateStripePaymentIntent(APIView):
                 stripe_payment_intent=intent['id'],
                 stripe_customer_id=customer.id,
                 amount=booking.total_price,
-                status='created'
+                status=status_obj
             )
 
             return Response({
@@ -76,8 +96,24 @@ class StripeWebhookView(APIView):
                 payment_intent_id = intent['id']
 
                 payment = Payment.objects.get(stripe_payment_intent=payment_intent_id)
-                payment.status = 'succeeded'
+                new_status = 'Succeeded'
+                status_obj = get_object_or_404(Status, name=new_status)
+                payment.status = status_obj
                 payment.save()
+
+                # Award a new coupon to the user
+                code = generate_coupon_code()
+                valid_from = timezone.now()
+                valid_to = valid_from + timedelta(days=30)
+
+                coupon = Coupon.objects.create(
+                    code=code,
+                    discount_percent=10,  # You can customize this
+                    valid_from=valid_from,
+                    valid_to=valid_to,
+                    user=booking.user,
+                    active=True
+                )
 
                 booking = payment.booking
 
@@ -102,7 +138,9 @@ class StripeWebhookView(APIView):
                 intent = event['data']['object']
                 payment_intent_id = intent['id']
                 payment = Payment.objects.get(stripe_payment_intent=payment_intent_id)
-                payment.status = 'failed'
+                new_status = 'Failed'
+                status_obj = get_object_or_404(Status, name=new_status)
+                payment.status = status_obj
                 payment.save()
 
         except stripe.error.SignatureVerificationError:

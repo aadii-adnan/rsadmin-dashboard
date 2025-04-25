@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'faq',
     'contact',
     'payments',
+    'core',
+    'finance',
 ]
 
 REST_FRAMEWORK = {

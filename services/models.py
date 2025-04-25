@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from users.models import CustomUser
 
 class Service(models.Model):
     name = models.CharField(max_length=100)
@@ -37,3 +38,18 @@ class AddOn(models.Model):
     
     class Meta:
         db_table = 'AddOns'
+class Coupon(models.Model):
+    code = models.CharField(max_length=20, unique=True)
+    discount_percent = models.PositiveIntegerField(help_text="Enter a value between 1 and 100")
+    active = models.BooleanField(default=True)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='coupons', null=True, blank=True)
+
+    class Meta:
+        db_table = 'Coupon'
+
+    def __str__(self):
+        return f"{self.code} - {self.discount_percent}%"
+
+

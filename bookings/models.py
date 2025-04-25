@@ -1,6 +1,7 @@
 from django.db import models
 from users.models import CustomUser
-from services.models import Service, AddOn
+from services.models import Service, AddOn, Coupon
+from core.models import Status
 
 class Booking(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -30,7 +31,9 @@ class Booking(models.Model):
     departure_time = models.DateTimeField()
     return_time = models.DateTimeField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=50, default='Pending')  # Confirmed, Cancelled, etc.
+    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    status = status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'booking'})
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
