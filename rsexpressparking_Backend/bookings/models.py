@@ -22,7 +22,7 @@ class Booking(models.Model):
 
     # Personal info
     first_name = models.CharField(max_length=100)
-    surname = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     email = models.EmailField()
     contact_no = models.CharField(max_length=20)
     total_passengers = models.PositiveIntegerField(blank=True, null=True)
@@ -33,13 +33,13 @@ class Booking(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    status = status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'booking'})
+    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'booking'})
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.surname} - {self.service.name} - {self.dropoff_time.date()}"
+        return f"{self.first_name} {self.last_name} - {self.service.name} - {self.departure_time.date()}"
     
     class Meta:
         db_table = 'Bookings'

@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 
 class ServiceList(APIView):
     def get(self, request):
-        services = Service.objects.all()
+        services = Service.objects.all().order_by('base_price')
         serializer = ServiceSerializer(services, many=True)
         return Response(serializer.data)
 
@@ -44,3 +44,24 @@ class UserLatestCouponView(APIView):
 
         serializer = CouponSerializer(latest_coupon)
         return Response(serializer.data)
+class CheckCouponValidityView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        code = request.data.get('code')
+        if not code:
+            return Response({'error': 'Coupon code is required'}, status=400)
+
+        now = timezone.now()
+        coupon = Coupon.objects.filter(
+            code=code,
+            active=True,
+            valid_from__lte=now,
+            valid_to__gte=now
+        ).first()
+
+        if not coupon or coupon.times_used >= coupon.max_uses:
+            return Response({'error': 'Invalid, expired, or fully used coupon'}, status=404)
+
+        serializer = CouponSerializer(coupon)
+        return Response(serializer.data, status=200)

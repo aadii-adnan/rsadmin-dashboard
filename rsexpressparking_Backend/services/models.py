@@ -1,11 +1,12 @@
 from django.db import models
 from django.utils.text import slugify
-from users.models import CustomUser
+from django.utils import timezone
 
 class Service(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
+    long_description = models.TextField()
     is_featured = models.BooleanField(default=False)
     base_price = models.DecimalField(max_digits=8, decimal_places=2)
     per_day_price = models.DecimalField(max_digits=8, decimal_places=2)
@@ -44,12 +45,22 @@ class Coupon(models.Model):
     active = models.BooleanField(default=True)
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='coupons', null=True, blank=True)
+    max_uses = models.PositiveIntegerField(default=1, help_text="Maximum number of times this coupon can be used")
+    times_used = models.PositiveIntegerField(default=0, help_text="Number of times this coupon has been used")
 
     class Meta:
         db_table = 'Coupon'
 
     def __str__(self):
         return f"{self.code} - {self.discount_percent}%"
+
+    def is_valid(self):
+        """Check if the coupon is still valid based on usage and date."""
+        now = timezone.now()
+        return (
+            self.active and
+            self.valid_from <= now <= self.valid_to and
+            self.times_used < self.max_uses
+        )
 
 
