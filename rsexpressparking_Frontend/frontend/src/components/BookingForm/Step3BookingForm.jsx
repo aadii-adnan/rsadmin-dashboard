@@ -5,7 +5,7 @@ import masterCardLogo from "../../assets/master-card.png";
 import { Elements } from "@stripe/react-stripe-js";
 import CheckoutForm from "./CheckOutForm";
 
-const stripePromise = loadStripe("pk_test_51Qk4vNLq8aVcETC5BtM6TaZcrlb1IwF9n0T8XwFXBsVPdBOs0BWXYQNZWMJwPm77Y77Gw7p5XT5jA6UwC5R8S7KX00H5upQ1eC"); // Replace with your real Stripe public key
+const stripePromise = loadStripe(""); // Replace with your real Stripe public key
 
 const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, handleChange, nextButtonStyle, labelStyle, inputStyle }) => {
   return (

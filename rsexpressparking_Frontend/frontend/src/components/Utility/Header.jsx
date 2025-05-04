@@ -86,72 +86,10 @@ const Header = () => {
                         Home
                       </Link>
                     </li>
-                    <li
-                      id="menu-item-1360"
-                      className="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-1360 nav-item elementskit-dropdown-has relative_position elementskit-dropdown-menu-default_width elementskit-mobile-builder-content"
-                      data-vertical-menu="750px"
-                    >
-                      <Link to="/services" className="ekit-menu-nav-link ekit-menu-dropdown-toggle">
-                        Services
-                        <i
-                          aria-hidden="true"
-                          className="icon icon-plus elementskit-submenu-indicator"
-                        ></i>
-                      </Link>
-                      <ul className="elementskit-dropdown elementskit-submenu-panel">
-                        <li
-                          id="menu-item-1366"
-                          className="menu-item menu-item-type-post_type menu-item-object-page menu-item-1366 nav-item elementskit-mobile-builder-content"
-                          data-vertical-menu="750px"
-                        >
-                          <Link
-                            to="/services/standard-meet-and-greet-parking"
-                            className="dropdown-item"
-                          >
-                            Standard Meet and Greet Parking
-                          </Link>
-                        </li>
-                        <li
-                          id="menu-item-1367"
-                          className="menu-item menu-item-type-post_type menu-item-object-page menu-item-1367 nav-item elementskit-mobile-builder-content"
-                          data-vertical-menu="750px"
-                        >
-                          <Link
-                            to="/services/flexible-meet-and-greet-parking"
-                            className="dropdown-item"
-                          >
-                            Flexible Meet and Greet Parking
-                          </Link>
-                        </li>
-                      </ul>
-                    </li>
-                    <li
-                      id="menu-item-632"
-                      className="menu-item menu-item-type-post_type menu-item-object-page menu-item-632 nav-item elementskit-mobile-builder-content"
-                      data-vertical-menu="750px"
-                    >
-                      <Link to="/about-us" className="ekit-menu-nav-link">
-                        About Us
-                      </Link>
-                    </li>
-                    <li
-                      id="menu-item-631"
-                      className="menu-item menu-item-type-post_type menu-item-object-page menu-item-631 nav-item elementskit-mobile-builder-content"
-                      data-vertical-menu="750px"
-                    >
-                      <Link to="/faqs" className="ekit-menu-nav-link">
-                        FAQs
-                      </Link>
-                    </li>
-                    <li
-                      id="menu-item-753"
-                      className="menu-item menu-item-type-post_type menu-item-object-page menu-item-753 nav-item elementskit-mobile-builder-content"
-                      data-vertical-menu="750px"
-                    >
-                      <Link to="/blog" className="ekit-menu-nav-link">
-                        Blog
-                      </Link>
-                    </li>
+                    <li id="menu-item-922" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-922 nav-item elementskit-dropdown-has relative_position elementskit-dropdown-menu-default_width elementskit-mobile-builder-content" data-vertical-menu="750px"><a href="#" class="ekit-menu-nav-link ekit-menu-dropdown-toggle">Legal Information<i aria-hidden="true" class="icon icon-plus elementskit-submenu-indicator"></i></a>
+                      <ul class="elementskit-dropdown elementskit-submenu-panel">
+                        <li id="menu-item-924" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><a href="https://rsexpressparking.com/terms-conditions/" class=" dropdown-item">Terms &amp; Conditions</a>	</li><li id="menu-item-925" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><a href="https://rsexpressparking.com/privacy-policy/" class=" dropdown-item">Privacy Policy</a></li></ul>
+                      </li>
                     <li
                       id="menu-item-754"
                       className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content"
@@ -160,6 +98,15 @@ const Header = () => {
                       <Link to="/contact-us" className="ekit-menu-nav-link">
                         Contact Us
                       </Link>
+                    </li>
+                    <li
+                      id="menu-item-754"
+                      className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content"
+                      data-vertical-menu="750px"
+                    >
+                      {localStorage.getItem("access_token") && <Link to="/logout" className="ekit-menu-nav-link">
+                        Logout
+                      </Link>}
                     </li>
                   </ul>
                 </div>

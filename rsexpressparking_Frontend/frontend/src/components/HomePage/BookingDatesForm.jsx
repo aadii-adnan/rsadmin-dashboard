@@ -110,6 +110,7 @@ const BookingDatesForm = () => {
       couponId: couponData?.couponId || null,
       discount: couponData?.discount || 0,
       noOfDays: noOfDays,
+      coupon: coupon,
     };
   
     setBookingData((prev) => ({
