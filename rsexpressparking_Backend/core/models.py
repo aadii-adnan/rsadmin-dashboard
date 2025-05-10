@@ -14,4 +14,4 @@ class Status(models.Model):
         db_table = 'Status'
 
     def __str__(self):
-        return f"{self.name} ({self.type})"
+        return self.name

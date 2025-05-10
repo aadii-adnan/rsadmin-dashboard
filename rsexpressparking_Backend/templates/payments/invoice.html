@@ -83,14 +83,14 @@
 <div style="padding: 10px;">
 
     <div class="logo">
-        <h2>RS</h2>
+        <img src="{{ logo_data }}" alt="RS Express Parking Logo" style="width: 150px; height: auto;"/><br/><br/>
         <strong>RS Express Parking</strong><br/>
         <span>Seamless Parking, Stress-Free Travel</span>
     </div>
 
     <div style="margin-bottom: 8px;">
-        <h2 style="border-bottom: 0px;">Thank You!</h2>
-        <p style="border-top: 5px;">We appreciate your trust in RS Express Parking. Your booking is confirmed, and we look forward to serving you.</p>
+        <strong style="font-size: 20px;">Thank You!</strong><br/>
+        <strong>We appreciate your trust in RS Express Parking. Your booking is confirmed, and we look forward to serving you.</strong><br/><br/>
     </div>
 
     <div style="text-align: right; margin-bottom: 6px;">
@@ -110,9 +110,9 @@
             <td>€{{ service.base_price }}</td>
         </tr>
         <tr>
-            <td>No. of days</td>
-            <td>{{ service.per_day_price }}</td>
-            <td>{{ no_of_days }} day(s) X {{ service.per_day_price }} = {{ total_days_price }}</td>
+            <td>Price for {{ no_of_days }} day(s)</td>
+            <td>€{{ service.per_day_price }}</td>
+            <td>{{ no_of_days }} day(s) X {{ service.per_day_price }} = €{{ total_days_price }}</td>
         </tr>
         {% for eachaddon in add_ons %}
         <tr>
@@ -146,7 +146,7 @@
     <div class="section">
         <p class="section-title">Your Details</p>
         <p>
-            <strong>Name:</strong> {{ booking.first_name }} {{ booking.surname }}<br/><br/>
+            <strong>Name:</strong> {{ booking.first_name }} {{ booking.last_name }}<br/><br/>
             <strong>Email:</strong> {{ booking.email }}<br/><br/>
             <strong>Phone:</strong> {{ booking.contact_no }}<br/><br/>
             <strong>Terms:</strong> By proceeding with your booking, You agree to our Terms and Conditions

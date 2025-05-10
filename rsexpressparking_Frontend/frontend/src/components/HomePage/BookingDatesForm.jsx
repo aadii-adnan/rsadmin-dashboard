@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useBooking } from "../../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
-import customFetch from "../../auth/fetch";
 
 const BookingDatesForm = () => {
   const { setBookingData } = useBooking();
@@ -16,8 +15,8 @@ const BookingDatesForm = () => {
     carCollectionTime: "",
   });
 
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
-  const [popupMessage, setPopupMessage] = useState(""); // Message for popup
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
   
 
   const handleChange = (e) => {
@@ -61,27 +60,48 @@ const BookingDatesForm = () => {
 
   const handleApplyCoupon = async () => {
     try {
-      if (!coupon) return null;
-  
-      const response = await customFetch("http://localhost:8000/api/services/coupons/validate/", {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/coupons/validate/`, {
         method: "POST",
-        body: { code: coupon.trim() },
+        body: JSON.stringify({ code: coupon.trim() }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+  
       const data = await response.json();
   
-      if (response.ok) {
-        const discountPercentage = data.discount_percent;
-        return {
-          couponId: data.id,
-          discount: discountPercentage,
-        };
+      if (!response.ok) {
+        // Handle specific error cases
+        switch (response.status) {
+          case 401:
+            setPopupMessage("Session expired. Please login again.");
+            break;
+          case 404:
+            setPopupMessage("Invalid coupon code.");
+            break;
+          case 400:
+            setPopupMessage(data.message || "Invalid coupon.");
+            break;
+          default:
+            setPopupMessage("Failed to validate coupon.");
+        }
+        setIsPopupOpen(true);
+        return null;
       }
+  
+      // Success case
+      
+      return {
+        couponId: data.id,
+        discount: data.discount_percent,
+      };
+  
     } catch (error) {
       console.error("Error validating coupon:", error);
-      alert("An error occurred while applying the coupon.");
+      setPopupMessage("An error occurred while validating the coupon.");
+      setIsPopupOpen(true);
+      return null;
     }
-  
-    return null;
   };
   
   const handleSubmit = async (e) => {
@@ -102,8 +122,15 @@ const BookingDatesForm = () => {
       setIsPopupOpen(true);
       return;
     }
-  
-    const couponData = await handleApplyCoupon();
+    
+    let couponData = null; 
+    if (coupon.trim() !== "") {
+      couponData = await handleApplyCoupon();
+      if (!couponData) {
+        return;
+      }
+    }
+
     const noOfDays = calculateParkingDays(formData);
   
     const paymentDetails = {
@@ -126,212 +153,48 @@ const BookingDatesForm = () => {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div
-      className="form-column"
-      style={{
-        backgroundColor: "#f8f9fa",
-        width: "40%",
-        padding: "30px 60px",
-        position: "absolute",
-        top: "50%",
-        left: "75%",
-        transform: "translate(-50%, -50%)",
-        flex: "1",
-        minWidth: "300px",
-        borderRadius: "10px",
-        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
-        border: "1px solid #e0e0e0",
-      }}
-    >
-      <form onSubmit={handleSubmit}>
-        <h3
-          style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            color: "#2890cd",
-            fontWeight: "600",
-          }}
-        >
-          Book Your Parking
-        </h3>
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            htmlFor="parkingFromDate"
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              fontWeight: "500",
-              color: "#333",
-            }}
-          >
-            Parking From:
-          </label>
-          <input
-            type="date"
-            id="parkingFromDate"
-            name="parkingFromDate"
-            onFocus={(e) => e.target.showPicker()}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-            onChange={handleChange}
-            value={formData.parkingFromDate}
-            min={today}
-            required
-          />
+    <div className="form-column" style={{ backgroundColor: "#f8f9fa", width: "80%", margin:"0 auto", flex: "1", minWidth: "300px", borderRadius: "10px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)", border: "1px solid #e0e0e0", position:"relative", top:"-150px"}}>
+      <form onSubmit={handleSubmit}> <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
+        <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
+          {/* Parking From Date */}
+          <div style={{ flex: "1" }}>
+            <label htmlFor="parkingFromDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Parking From:</label>
+            <input type="date" id="parkingFromDate" name="parkingFromDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.parkingFromDate} min={today} required/>
+          </div>
+
+          {/* Parking From Time */}
+          <div style={{ flex: "1" }}>
+            <label htmlFor="parkingFromTime" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Time:</label>
+            <input type="time" id="parkingFromTime" name="parkingFromTime" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.parkingFromTime} required/>
+          </div>
         </div>
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            htmlFor="parkingFromTime"
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              fontWeight: "500",
-              color: "#333",
-            }}
-          >
-            Time:
-          </label>
-          <input
-            type="time"
-            id="parkingFromTime"
-            name="parkingFromTime"
-            onFocus={(e) => e.target.showPicker()}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-            onChange={handleChange}
-            value={formData.parkingFromTime}
-            required
-          />
+
+        <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
+          {/* Car Collection Date */}
+          <div style={{ flex: "1" }}>
+            <label htmlFor="carCollectionDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Car Collection:</label>
+            <input type="date" id="carCollectionDate" name="carCollectionDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.carCollectionDate} min={formData.parkingFromDate || today} required/>
+          </div>
+
+          {/* Car Collection Time */}
+          <div style={{ flex: "1" }}>
+            <label htmlFor="carCollectionTime" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Time:</label>
+            <input type="time" id="carCollectionTime" name="carCollectionTime" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.carCollectionTime} required/>
+          </div>
         </div>
+
         <div style={{ marginBottom: "15px" }}>
-          <label
-            htmlFor="carCollectionDate"
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              fontWeight: "500",
-              color: "#333",
-            }}
-          >
-            Car Collection:
-          </label>
-          <input
-            type="date"
-            id="carCollectionDate"
-            name="carCollectionDate"
-            onFocus={(e) => e.target.showPicker()}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-            onChange={handleChange}
-            value={formData.carCollectionDate}
-            min={formData.parkingFromDate || today}
-            required
-          />
-        </div>
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            htmlFor="carCollectionTime"
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              fontWeight: "500",
-              color: "#333",
-            }}
-          >
-            Time:
-          </label>
-          <input
-            type="time"
-            id="carCollectionTime"
-            name="carCollectionTime"
-            onFocus={(e) => e.target.showPicker()}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-            onChange={handleChange}
-            value={formData.carCollectionTime}
-            required
-          />
-        </div>
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            htmlFor="couponCode"
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              fontWeight: "500",
-              color: "#333",
-            }}
-          >
-            Coupon Code:
-          </label>
-          <input
-            type="text"
-            id="couponCode"
-            name="coupon"
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-            onChange={(e) => setCoupon(e.target.value)}
-            placeholder="Enter coupon code"
-            value={coupon}
-          />
+          <label htmlFor="couponCode" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Coupon Code:</label>
+          <input type="text" id="couponCode" name="coupon" style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={(e) => setCoupon(e.target.value)} placeholder="Enter coupon code" value={coupon}/>
         </div>
         
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: "#2890cd",
-            color: "#fff",
-            border: "none",
-            borderRadius: "10px",
-            fontSize: "16px",
-            fontWeight: "600",
-            cursor: "pointer",
-            transition: "background-color 0.3s ease",
-          }}
-          onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")}
-          onMouseOut={(e) => (e.target.style.backgroundColor = "#2890cd")}
-          onFocus={(e) =>
-            (e.target.style.boxShadow = "0 0 5px rgba(0, 123, 255, 0.5)")
-          }
-        >
+        <button type="submit" style={{   width: "100%",   padding: "12px",   backgroundColor: "#2890cd",   color: "#fff",   border: "none",   borderRadius: "10px",   fontSize: "16px",   fontWeight: "600",   cursor: "pointer",   transition: "background-color 0.3s ease", }} onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")} onMouseOut={(e) => (e.target.style.backgroundColor = "#2890cd")} onFocus={(e) =>   (e.target.style.boxShadow = "0 0 5px rgba(0, 123, 255, 0.5)") }>
           Book Now
         </button>
       </form>
 
       {/* Popup Dialog */}
-      <PopupDialog
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        title="Invalid Parking Time"
-        message={popupMessage}
-      />
+      <PopupDialog isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} title="Invalid Parking Time" message={popupMessage}/>
     </div>
   );
 };

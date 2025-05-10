@@ -1,9 +1,19 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from core.views import robots_txt 
+from core.sitemaps import StaticReactSitemap, BookingSlugSitemap
+from django.contrib.sitemaps.views import sitemap
+from payments.views import StripeWebhookView
+
+sitemaps = {
+    "static": StaticReactSitemap,
+    "booking": BookingSlugSitemap,  # if you included slugs
+}
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
+    path('admin-dashboard/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/services/', include('services.urls')),
     path('api/bookings/', include('bookings.urls')),
@@ -12,4 +22,10 @@ urlpatterns = [
     path('api/payments/', include('payments.urls')),
     path('api/finance/', include('finance.urls')),
     path('api/core/', include('core.urls')),
+    path("robots.txt", robots_txt, name="robots_txt"),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
+    path("", StripeWebhookView.as_view(), name="stripe-webhook"),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

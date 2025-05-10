@@ -2,18 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useBooking } from "../../context/BookingContext";
 import PopupDialog from "../Utility/PopupDialog";
 
-const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, setFormData, setTotalPrice }) => {
+const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, setFormData, setTotalPrice, totalPrice, selectedAddOns, setSelectedAddOns, addOnsDetails, setAddOnsDetails }) => {
   const [addons, setAddons] = useState([]);
-  const [selectedAddOns, setSelectedAddOns] = useState([]);
   const { setBookingData } = useBooking();
-  const [addOnsDetails, setAddOnsDetails] = useState([]);
   const [error, setError] = useState(""); // State to store validation error messages
   const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
 
   useEffect(() => {
     const fetchAddOns = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/services/addons/");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/addons/`);
         const data = await response.json();
         setAddons(data);
       } catch (error) {
@@ -21,6 +19,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
       }
     };
     fetchAddOns();
+    window.scrollTo(0, 300)
   }, []);
 
   const handleAddOnChange = (addon) => {
@@ -64,6 +63,10 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
     if (!formData.car_registration_no || !formData.car_model || !formData.car_colour || !formData.car_manufacturer) {
       setError("Please fill in all required fields.");
       setIsPopupOpen(true);
+      return false;
+    }
+    if (totalPrice <= 0) {
+      setError("Invalid price calculation");
       return false;
     }
     setError(""); // Clear error if validation passes

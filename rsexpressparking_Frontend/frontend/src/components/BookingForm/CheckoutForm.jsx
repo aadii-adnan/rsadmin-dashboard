@@ -1,115 +1,257 @@
-import React, { useState } from 'react'
-import {
-  CardElement,
-  useStripe,
-  useElements
-} from "@stripe/react-stripe-js";
+import React, { useState, useCallback } from 'react';
+import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { createPaymentIntent, verifyPaymentAmount, checkPaymentStatus } from '../../services/paymentService';
+import PaymentStatus from './PaymentStatus';
 import customFetch from "../../auth/fetch";
 
-const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, handleChange }) => {
-    const stripe = useStripe();
-    const elements = useElements();
-    const [error, setError] = useState(null);
-    const [processing, setProcessing] = useState(false);
+const PAYMENT_CHECK_INTERVAL = 2000; // 2 seconds
+const MAX_PAYMENT_CHECKS = 5;
+const PAYMENT_TIMEOUT = 60000; // 1 minute
+
+const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [paymentId, setPaymentId] = useState(null);
   
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setProcessing(true);
-  
-      if (!stripe || !elements) {
-        return;
-      }
-  
-      try {
-        // Call Django to create PaymentIntent
-        const bookingId = formData.booking_id; // Must be passed into formData
-        const response = await customFetch(`http://localhost:8000/api/payment/create-intent/${bookingId}`, {
-          method: "POST"
-        });
-  
-        const { clientSecret } = await response.json();
-  
-        const result = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: elements.getElement(CardElement),
-            billing_details: {
-              name: formData.cardName
-            }
-          }
-        });
-  
-        if (result.error) {
-          setError(result.error.message);
-          setProcessing(false);
-        } else {
-          if (result.paymentIntent.status === "succeeded") {
-            alert("Payment successful!");
-            goNext();
-          }
-        }
-      } catch (err) {
-        console.error("Payment error:", err);
-        setError("Payment failed. Please try again.");
-      }
-  
-      setProcessing(false);
-    };
-  
-    return (
-      <div>
-        <div className="mb-4">
-          <label htmlFor="cardName" style={labelStyle}>Name on Card</label>
-          <input
-            type="text"
-            id="cardName"
-            name="card_name"
-            value={formData.card_name}
-            onChange={handleChange}
-            required
-            style={{
-             
-              display: "block",
-              width: "100%",
-              padding: "10px 12px",
-              marginTop: "5px",
-              fontSize: "16px",
-              borderRadius: "4px",
-              border: "1px solid #ccc"
-            }}
-          />
-        </div>
-  
-        <div className="form-group mt-4">
-          <label style={labelStyle}>Card Details</label>
-          <div style={{ border: "1px solid #ccc", borderRadius: "6px", padding: "10px" }}>
-            <CardElement options={{
-              style: {
-                base: {
-                  fontSize: "16px",
-                  color: "#32325d",
-                  "::placeholder": { color: "#aab7c4" }
-                },
-                invalid: { color: "#fa755a" }
-              }
-            }} />
-          </div>
-        </div>
-  
-        {error && <div style={{ color: "red", marginTop: "10px" }}>{error}</div>}
-  
-        <div className="mt-4">
-          <button
-            onClick={handleSubmit}
-            className="btn btn-primary w-100"
-            type="submit"
-            disabled={processing || !stripe}
-            style={nextButtonStyle}
-          >
-            {processing ? "Processing..." : "Pay Now"}
-          </button>
-        </div>
-      </div>
-    );
+  // Add payment recovery state
+  const [retryCount, setRetryCount] = useState(0);
+  const [paymentTimeout, setPaymentTimeout] = useState(null);
+
+  const resetPaymentState = () => {
+    setError(null);
+    setMessage(null);
+    setProcessing(false);
+    setRetryCount(0);
+    if (paymentTimeout) clearTimeout(paymentTimeout);
   };
+
+  const updatePaymentStatus = async (paymentId, status) => {
+    try {
+      const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/payments/update-status/${paymentId}/`, {
+        method: "PUT",
+        body: { status },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update payment status");
+      }
+  
+      return response.json();
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      throw error;
+    }
+  };
+
+  const handlePaymentTimeout = useCallback(() => {
+    setError("Payment timeout. Please try again.");
+    setProcessing(false);
+    setMessage(null);
+  }, []);
+
+  const verifyAmount = async (bookingId, amount) => {
+    try {
+      const { valid, expected_amount } = await verifyPaymentAmount(bookingId, amount);
+      if (!valid) {
+        throw new Error(`Amount mismatch. Expected: ${expected_amount}`);
+      }
+      return true;
+    } catch (error) {
+      console.error("Amount verification failed:", error);
+      return false;
+    }
+  };
+
+  const pollPaymentStatus = async (bookingId) => {
+    let attempts = 0;
+    
+    const poll = async () => {
+      try {
+        const { internal_status } = await checkPaymentStatus(bookingId);
+        
+        switch (internal_status) {
+          case 'Succeeded':
+            setMessage("Payment confirmed!");
+            clearTimeout(paymentTimeout);
+            localStorage.setItem("payment_status", "succeeded");
+            
+            goNext();
+            break;
+          case 'Failed':
+            setError("Payment failed. Please try again.");
+            clearTimeout(paymentTimeout);
+            setMessage(null);
+            if(paymentId)
+            await updatePaymentStatus(paymentId, "Failed");
+            break;
+          case 'Pending':
+            if (attempts < MAX_PAYMENT_CHECKS) {
+              attempts++;
+              setTimeout(poll, PAYMENT_CHECK_INTERVAL);
+            } else {
+              setMessage("Payment is processing. We'll email you once confirmed.");
+              clearTimeout(paymentTimeout);
+              // goNext();
+            }
+            break;
+          default:
+            throw new Error("Unknown payment status");
+        }
+      } catch (error) {
+        console.error("Error checking payment status:", error);
+        setError("Failed to confirm payment status");
+      }
+    };
+
+    await poll();
+  };
+
+  const retryPayment = async (clientSecret, paymentMethod) => {
+    if (retryCount >= 3) {
+      throw new Error("Payment failed after multiple attempts. Please try again.");
+    }
+
+    setRetryCount(prev => prev + 1);
+    return await stripe.confirmCardPayment(clientSecret, paymentMethod);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    resetPaymentState();
+    setProcessing(true);
+  
+    const timeout = setTimeout(handlePaymentTimeout, PAYMENT_TIMEOUT);
+    setPaymentTimeout(timeout);
+    let localPaymentId = null;
+  
+    try {
+      if (!stripe || !elements) {
+        throw new Error("Payment system not initialized");
+      }
+  
+      let bookingId = formData.booking_id;
+  
+      // --- Create Payment Intent and check response manually ---
+      const paymentIntentResponse = await createPaymentIntent(bookingId);
+      if (!paymentIntentResponse?.clientSecret) {
+        
+        if (
+          paymentIntentResponse?.error?.includes("Duplicate entry") &&
+          paymentIntentResponse?.error?.includes("booking_id")
+        ) {
+          const { internal_status } = await checkPaymentStatus(bookingId);
+          if (internal_status === "Succeeded") {
+            alert("This booking has already been paid for.");
+   
+            goNext();
+            return;
+          } else if (internal_status === "Pending") {
+            setMessage("A payment for this booking is already being processed. Please wait...");
+            await pollPaymentStatus(bookingId);
+            return;
+          }
+  
+          throw new Error("Previous payment attempt failed. Please try again.");
+        }
+  
+        // Other API errors
+        throw new Error(error?.error || "Failed to create payment intent.");
+      }
+      localPaymentId = paymentIntentResponse?.payment_id;
+      setPaymentId(localPaymentId);
+      // --- Verify amount ---
+      const amountVerified = await verifyAmount(bookingId, paymentIntentResponse?.amount);
+      if (!amountVerified) {
+        throw new Error("Payment amount verification failed");
+      }
+  
+      // --- Prepare payment method ---
+      const cardElement = elements.getElement(CardElement);
+      const paymentMethod = {
+        payment_method: {
+          card: cardElement,
+        },
+      };
+  
+      // --- Retry payment logic ---
+      let result;
+      for (let retryCount = 0; retryCount < 3; retryCount++) {
+        try {
+          result = await retryPayment(paymentIntentResponse.clientSecret, paymentMethod);
+          if (!result.error) break;
+        } catch (err) {
+          if (retryCount === 2) throw err;
+        }
+      }
+  
+      if (result?.error) {
+        throw result.error;
+      }
+  
+      if (result.paymentIntent.status === "succeeded") {
+        setMessage("Payment processed. Confirming your booking...");
+        await pollPaymentStatus(bookingId);
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      setError(err.message || "Payment failed. Please try again.");
+      if(localPaymentId)
+      await updatePaymentStatus(localPaymentId, "Failed");
+    } finally {
+      setProcessing(false);
+      clearTimeout(paymentTimeout);
+    }
+  };
+  
+  
+  
+  return (
+    <div>
+
+      <div className="form-group mt-4">
+        <label style={labelStyle}>Card Details</label>
+        <CardElement
+          className="form-control"
+          options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#424770',
+                '::placeholder': {
+                  color: '#aab7c4',
+                },
+              },
+              invalid: {
+                color: '#9e2146',
+              },
+            },
+          }}
+        />
+      </div>
+
+      {/* Add PaymentStatus component */}
+      <PaymentStatus 
+        message={message}
+        error={error}
+        processing={processing}
+      />
+
+      <div className="mt-4">
+        <button
+          onClick={handleSubmit}
+          className="btn btn-primary w-100 next-button"
+          type="submit"
+          disabled={processing || !stripe}
+          style={nextButtonStyle}
+        >
+          {processing ? "Processing..." : "Pay Now"}
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default CheckoutForm

@@ -1,0 +1,130 @@
+#result_list tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#result_list tbody tr:hover {
+    background-color: #00363a;
+}
+
+#result_list tbody tr a,
+#result_list tbody tr input,
+#result_list tbody tr .button {
+    position: relative;
+    z-index: 2;
+}
+
+.paginator {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.paginator a, .paginator span.this-page {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #447e9b;
+    background: white;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    min-width: 15px;
+    text-align: center;
+}
+
+.paginator span.this-page {
+    background: #447e9b;
+    color: white;
+    border-color: #447e9b;
+}
+
+.paginator a.end:hover {
+    background: #447e9b;
+    border-color: #f5f5f5;
+}
+
+.paginator .end {
+    border: none;
+    padding: 8px 5px;
+    color: #666;
+}
+
+/* Show all button styling */
+p.paginator .show-all {
+    margin-left: 10px;
+    background: #79aec8;
+    color: white;
+    border-color: #79aec8;
+}
+
+p.paginator .show-all:hover {
+    background: #417690;
+    border-color: #417690;
+}
+
+/* ...existing code... */
+
+/* Pagination Styling */
+.paginator {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.paginator a, .paginator span.this-page {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #447e9b;
+    background: white;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    min-width: 15px;
+    text-align: center;
+}
+
+.paginator span.this-page {
+    background: #447e9b;
+    color: white;
+    border-color: #447e9b;
+}
+
+.paginator .end {
+    border: none;
+    padding: 8px 5px;
+    color: #666;
+}
+
+/* Show all button styling */
+p.paginator .show-all {
+    margin-left: 10px;
+    background: #79aec8;
+    color: white;
+    border-color: #79aec8;
+}
+
+p.paginator .show-all:hover {
+    background: #417690;
+    border-color: #417690;
+}
+
+.paginator a.end {
+    background: gray;
+}
+.field-colored_status {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.field-colored_status span {
+    display: inline-block;
+    min-width: 80px;
+}

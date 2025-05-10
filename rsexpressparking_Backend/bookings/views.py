@@ -7,6 +7,8 @@ from .serializers import BookingSerializer
 from django.utils import timezone
 from core.permissions import IsManagerOrAdmin
 from core.models import Status
+from services.models import Coupon
+from payments.models import Payment
 
 class BookingListCreate(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -25,11 +27,42 @@ class BookingListCreate(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = BookingSerializer(data=request.data)
+        data = request.data
+        coupon_id = data.get('coupon')  # Assuming the coupon ID is sent in the request
+
+        # Check if a coupon is provided
+        if coupon_id:
+            now = timezone.now()
+            coupon = Coupon.objects.filter(
+                id=coupon_id,
+                active=True,
+                valid_from__lte=now,
+                valid_to__gte=now
+            ).first()
+
+            if not coupon:
+                return Response({'error': 'Invalid or expired coupon'}, status=400)
+
+            if coupon.times_used >= coupon.max_uses:
+                return Response({'error': 'Coupon has been fully used'}, status=400)
+
+            # Increment the coupon's times_used
+            coupon.times_used += 1
+            coupon.save()
+        
+        serializer = BookingSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                status_obj = Status.objects.get(name='Pending', type='booking')
+                # Save booking with status
+                booking = serializer.save(status=status_obj)
+                return Response(serializer.data, status=201)
+            except Status.DoesNotExist:
+                return Response(
+                    {'error': 'System configuration error: Pending status not found'}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=400)
 
 class BookingRescheduleView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -105,3 +138,54 @@ class ManagerBookingStatusUpdate(APIView):
         booking.status = status_obj
         booking.save()
         return Response({'message': f'Booking marked as {new_status}.'})
+    
+class BookingDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            # If user is manager, allow access to any booking
+            if request.user.is_manager:
+                booking = get_object_or_404(Booking, id=pk)
+            else:
+                # Regular users can only access their own bookings
+                booking = get_object_or_404(Booking, id=pk, user=request.user)
+            
+            serializer = BookingSerializer(booking)
+            return Response(serializer.data)
+        
+        except Booking.DoesNotExist:
+            return Response(
+                {'error': 'Booking not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )    
+        
+class UpdatePaymentStatusView(APIView):
+    def patch(self, request, payment_id):
+        try:
+            payment = get_object_or_404(Payment, id=payment_id)
+            new_status_name = request.data.get('status')
+
+            if not new_status_name:
+                return Response({'error': 'Status is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Fetch the new status object
+            new_status = get_object_or_404(Status, name=new_status_name, type='payment')
+
+            # Update the payment status
+            payment.status = new_status
+            payment.save()
+
+            return Response({
+                'message': 'Payment status updated successfully',
+                'payment_id': payment.id,
+                'new_status': new_status.name
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)        

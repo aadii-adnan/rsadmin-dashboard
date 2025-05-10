@@ -1,17 +1,20 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
+import logo from '../../assets/logo-white.webp'
 
 const Footer = () => {
-  return (
+  
+    return (
     <div style={{backgroundColor : "#010659"}} data-elementor-type="footer" data-elementor-id="330" className="elementor elementor-330 elementor-location-footer" data-elementor-post-type="elementor_library">
         <div className="elementor-element elementor-element-365e4719 e-flex e-con-boxed e-con e-parent e-lazyloaded" data-id="365e4719" data-element_type="container" data-settings="{&quot;background_background&quot;:&quot;classNameic&quot;}">
             <div className="e-con-inner">
                 <div className="elementor-element elementor-element-106f7bd8 e-con-full e-flex e-con e-child" data-id="106f7bd8" data-element_type="container">
                     <div className="elementor-element elementor-element-76fdb7f elementor-widget elementor-widget-image" data-id="76fdb7f" data-element_type="widget" data-widget_type="image.default">
                     <div className="elementor-widget-container">
-                        <a href="https://rsexpressparking.com">
-                            <img width="2170" height="548" src="https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white.png" className="attachment-full size-full wp-image-324 entered lazyloaded" alt="" data-lazy-srcset="https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white.png 2170w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-300x76.png 300w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-1024x259.png 1024w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-768x194.png 768w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-1536x388.png 1536w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-2048x517.png 2048w" data-lazy-sizes="(max-width: 2170px) 100vw, 2170px" data-lazy-src="https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white.png" data-ll-status="loaded" sizes="(max-width: 2170px) 100vw, 2170px" srcSet="https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white.png 2170w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-300x76.png 300w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-1024x259.png 1024w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-768x194.png 768w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-1536x388.png 1536w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-2048x517.png 2048w"/>
-                            <noscript><img width="2170" height="548" src="https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white.png" className="attachment-full size-full wp-image-324" alt="" srcSet="https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white.png 2170w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-300x76.png 300w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-1024x259.png 1024w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-768x194.png 768w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-1536x388.png 1536w, https://rsexpressparking.com/wp-content/uploads/2025/01/logo-white-2048x517.png 2048w" sizes="(max-width: 2170px) 100vw, 2170px" /></noscript>
-                        </a>
+                        <Link to={"/"}>
+                            <img width="2170" height="548" src={logo} className="attachment-full size-full wp-image-324 entered lazyloaded" alt=""/>
+                            <noscript><img width="2170" height="548" src={logo} className="attachment-full size-full wp-image-324" alt=""/></noscript>
+                        </Link>
                     </div>
                     </div>
                     <div className="elementor-element elementor-element-1e228699 elementor-widget elementor-widget-text-editor" data-id="1e228699" data-element_type="widget" data-widget_type="text-editor.default">
@@ -49,34 +52,14 @@ const Footer = () => {
                     <div className="elementor-widget-container">
                         <ul className="elementor-icon-list-items">
                             <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com">
+                                <Link to={"/"}>
                                 <span className="elementor-icon-list-text">Home</span>
-                                </a>
-                            </li>
+                                </Link>
+                            </li>                                                                                                       
                             <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com/book-now/">
-                                <span className="elementor-icon-list-text">Services</span>
-                                </a>
-                            </li>
-                            <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com/about-us/">
-                                <span className="elementor-icon-list-text">About</span>
-                                </a>
-                            </li>
-                            <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com/faqs/">
-                                <span className="elementor-icon-list-text">FAQs</span>
-                                </a>
-                            </li>
-                            <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com/blog/">
-                                <span className="elementor-icon-list-text">Blog</span>
-                                </a>
-                            </li>
-                            <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com/contact-us/">
+                                <Link to={"/contact-us"}>
                                 <span className="elementor-icon-list-text">Contact</span>
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
@@ -92,14 +75,14 @@ const Footer = () => {
                     <div className="elementor-widget-container">
                         <ul className="elementor-icon-list-items">
                             <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com/privacy-policy/">
+                                <Link to={"/privacy-policy"}>
                                 <span className="elementor-icon-list-text">Privacy Policy</span>
-                                </a>
+                                </Link>
                             </li>
                             <li className="elementor-icon-list-item">
-                                <a href="https://rsexpressparking.com/terms-conditions/">
+                                <Link to={"/terms-and-conditions"}>
                                 <span className="elementor-icon-list-text">Term &amp; Conditions </span>
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
@@ -115,12 +98,12 @@ const Footer = () => {
                     <div className="elementor-widget-container">
                         <div className="elementor-icon-box-wrapper">
                             <div className="elementor-icon-box-icon">
-                                <a href="#" className="elementor-icon" tabIndex="-1" aria-label="Address">
+                                <a  className="elementor-icon" tabIndex="-1" aria-label="Address">
                                 <i aria-hidden="true" className="icon icon-map-marker1"></i>				</a>
                             </div>
                             <div className="elementor-icon-box-content">
                                 <h3 className="elementor-icon-box-title">
-                                <a href="#">
+                                <a >
                                 Address						</a>
                                 </h3>
                                 <p className="elementor-icon-box-description">

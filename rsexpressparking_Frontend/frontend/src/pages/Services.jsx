@@ -1,16 +1,17 @@
 import React, {useState, useEffect} from "react";
 import ServiceModal from "../Components/Services/ServiceModal";
 import ServicesItem from "../components/Services/ServicesItem";
+import { Helmet } from "react-helmet-async";
 
 const Services = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
+  	const [selectedService, setSelectedService] = useState(null);
 	const [services, setServices] = useState([]);
 	const [loading, setLoading] = useState(true);
 
 	const fetchServices = async () => {
 		try {
-		  const response = await fetch("http://localhost:8000/api/services");
+		  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services`);
 		  if (!response.ok) {
 			throw new Error("Failed to fetch services");
 		  }
@@ -37,15 +38,35 @@ const Services = () => {
 	}, []);
 
 	return loading ? "Loading..." : (
-    <div style={{ padding: "40px 20px", backgroundColor: "#f8f9fa", minHeight: "100vh", }}>
-      <h1 style={{ textAlign: "center", color: "#010659", marginBottom: "40px", fontSize: "36px", fontWeight: "700",}}>Select Parking Option</h1>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px', margin: '0 auto', width: "80%"}}>
-        {services.map((service) => <ServicesItem key={service.id} service={service} openModal={openModal}/>)}
-      </div>
+		<>
+		<Helmet>
+			<title>Meet & Greet Dublin Airport Parking Services</title>
+			<meta name="description" content="Forget the hassle of parking at the airport with RS Express Parking! Take the chance of enjoying seamless Meet & Greet Parking Service at Dublin Airport."/>
+			<meta name="robots" content="index, follow"/>
+			<link rel="canonical" href="https://rsexpressparking.com/services/"/>
+			<meta property="og:title" content="Meet & Greet Dublin Airport Parking Services"/>
+			<meta property="og:description" content="Enjoy stress-free, secure, and convenient Meet & Greet parking at Dublin Airport with RS Express Parking."/>
+			<meta property="og:type" content="website"/>
+			<meta property="og:url" content="https://rsexpressparking.com/services/"/>
+			<meta property="og:image" content="https://rsexpressparking.com/images/og-parking.jpg"/>
+			<meta property="og:site_name" content="RS Express Parking"/>
+			<meta property="og:locale" content="en_US"/>
+			<meta name="twitter:card" content="summary_large_image"/>
+			<meta name="twitter:title" content="Meet & Greet Dublin Airport Parking Services"/>
+			<meta name="twitter:description" content="Book our professional Meet & Greet Parking Service at Dublin Airport for a seamless travel experience."/>
+			<meta name="twitter:image" content="https://rsexpressparking.com/images/og-parking.jpg"/>
 
-      <ServiceModal isOpen={isModalOpen} onClose={closeModal} long_description={selectedService ? selectedService.long_description : ""}/>
+		</Helmet>
+		<div style={{ padding: "40px 20px", backgroundColor: "#f8f9fa", minHeight: "100vh", }}>
+			<h1 style={{ textAlign: "center", color: "#010659", marginBottom: "40px", fontSize: "36px", fontWeight: "700",}}>Select Parking Option</h1>
+			<div className="each-service" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px', margin: '0 auto'}}>
+				{services.map((service) => <ServicesItem key={service.id} service={service} openModal={openModal}/>)}
+			</div>
 
-    </div>
+			<ServiceModal isOpen={isModalOpen} onClose={closeModal} long_description={selectedService ? selectedService.long_description : ""}/>
+
+		</div>
+	</>
   );
 };
 

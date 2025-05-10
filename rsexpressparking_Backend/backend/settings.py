@@ -15,22 +15,27 @@ from decouple import config
 import stripe
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-default-key") 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', cast=bool)
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "new.rsexpressparking.com,www.new.rsexpressparking.com").split(",")
 
 
 # Application definition
@@ -52,6 +57,7 @@ INSTALLED_APPS = [
     'payments',
     'core',
     'finance',
+    'django.contrib.sitemaps',
 ]
 
 REST_FRAMEWORK = {
@@ -61,6 +67,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'middleware.prerender.PrerenderMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -102,6 +109,9 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
     }
 }
 
@@ -140,7 +150,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -166,9 +180,18 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH", 
+    "POST",
+    "PUT",
+]
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # default is 5 minutes
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # default is 1 day
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # default is 5 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=12),     # default is 1 day
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,
@@ -179,3 +202,10 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
+
+PDF_LOGO_PATH = os.path.join(BASE_DIR, 'static', 'images', 'logo.jpg')
+PDF_IMAGE_PATH = os.path.join(BASE_DIR, 'static', 'images', 'car.png')
+
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True

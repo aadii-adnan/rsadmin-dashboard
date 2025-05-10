@@ -30,7 +30,7 @@ const customFetch = async (url, { method = 'GET', body = null, headers = {}, ...
   
       const refreshToken = localStorage.getItem('refresh_token');
   
-      const refreshResponse = await fetch('http://localhost:8000/api/auth/token/refresh/', {
+      const refreshResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/token/refresh/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,10 +40,13 @@ const customFetch = async (url, { method = 'GET', body = null, headers = {}, ...
         }),
       });
   
-      // if (refreshResponse.status === 401){
-      //   localStorage.clear();
-      //   window.location.href = "/login"
-      // }
+      if (refreshResponse.status === 401) {
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = "/";
+        return;
+    }
   
       if (refreshResponse.ok) {
         const data = await refreshResponse.json();
@@ -58,8 +61,11 @@ const customFetch = async (url, { method = 'GET', body = null, headers = {}, ...
         // Retry the original request with the new token
         response = await fetch(url, fetchOptions);
       } else {
-        console.error('Failed to refresh token');
-        throw new Error('Failed to refresh token');
+          alert("Session expired. Please log in again.");
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          window.location.href = "/";
+          return;
       }
     }
   

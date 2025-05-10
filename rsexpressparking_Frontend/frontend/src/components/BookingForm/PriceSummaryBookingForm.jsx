@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useBooking } from "../../context/BookingContext";
 
-const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPrice, setCouponId, discountedPrice, setDiscountedPrice }) => {
+const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPrice, setCouponId, discountedPrice, setDiscountedPrice, addOnsDetails }) => {
     const { bookingData } = useBooking();
     const [discount, setDiscount] = useState(0); 
     const [amountSaved, setAmountSaved] = useState(0); 
@@ -33,7 +33,7 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
   }, [totalPrice])
 
   return (
-    <div style={{ height: "fit-content", width: "30%", maxWidth: "400px", backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", padding: "20px", marginTop: "30px", marginLeft: "20px" }}>
+    <div className='price-summary' style={{ height: "fit-content", backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", padding: "20px", marginTop: "30px" }}>
       <div className="panel panel-default">
         <div className="panel-body">
           <div className="row">
@@ -120,10 +120,10 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
             <span style={{ display: "inline-block", width: "40px", height: "2px", backgroundColor: "#2890cd", marginLeft: "5px" }}></span>
           </div>
 
-          {bookingData?.carFlightDetails?.addOnsDetails?.length > 0 && (<>          
+          {addOnsDetails.length > 0 && (<>          
             <h6 className="pt-1 cl" style={{ fontSize: "14px", fontWeight: "bold", color: "#010659", marginBottom: "15px", textAlign: "center" }}>Add Ons</h6>
 
-            {bookingData?.carFlightDetails?.addOnsDetails?.map((addon) => (
+            {addOnsDetails.map((addon) => (
               <div key={addon.id} className="row">
                 <div className="col">
                   <h6 style={{ fontSize: "14px", color: "#555", marginBottom: "10px" }}>
@@ -171,7 +171,7 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
             <div className="col">
               <p className="by-details" style={{ fontSize: "12px", color: "#555" }}>
                 By reserving parking you agree to our booking{" "}
-                <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal" style={{ color: "#2890cd", textDecoration: "underline" }}>terms and conditions</a>.
+                <a data-bs-toggle="modal" data-bs-target="#exampleModal" style={{ color: "#2890cd", textDecoration: "underline" }}>terms and conditions</a>.
               </p>
             </div>
           </div>

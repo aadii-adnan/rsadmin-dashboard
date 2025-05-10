@@ -13,7 +13,14 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             return Response({"message": "User created successfully."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check for specific errors
+        errors = serializer.errors
+        if "username" in errors and "already exists" in str(errors["username"]):
+            return Response({"errors": errors}, status=status.HTTP_409_CONFLICT)
+        
+        # Return other validation errors with 400 status
+        return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]

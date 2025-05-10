@@ -9,13 +9,17 @@ class BookingSerializer(serializers.ModelSerializer):
     add_ons = serializers.PrimaryKeyRelatedField(
         queryset=AddOn.objects.all(), many=True
     )
-    status = serializers.PrimaryKeyRelatedField(
-        queryset=Status.objects.all(), required=False
-    )
-    CouponSerializer = serializers.PrimaryKeyRelatedField(
-        queryset=Coupon.objects.all(), many=True, required=False
+    status = StatusSerializer(read_only=True)
+    coupon = serializers.PrimaryKeyRelatedField(
+        queryset=Coupon.objects.all(), 
+        required=False,
+        allow_null=True
     )
 
     class Meta:
         model = Booking
         fields = '__all__'
+        extra_kwargs = {
+            'discounted_price': {'required': False, 'allow_null': True},
+            'status': {'required': False},
+        }

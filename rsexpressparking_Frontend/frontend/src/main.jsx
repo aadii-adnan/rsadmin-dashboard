@@ -6,17 +6,19 @@ import App from './App';
 import { HelmetProvider } from 'react-helmet-async';
 import "./App.css";
 import { BookingProvider } from "./context/BookingContext"; 
-import "./BookingForm.css";
+import "./ContactUs.css"
 import 'bootstrap/dist/css/bootstrap.min.css';
+import "./style.css"
+import "./BookingForm.css";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <AuthProvider>
-   <BookingProvider>
-    <HelmetProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </HelmetProvider>
-    </BookingProvider>
-  </AuthProvider>
+  <BookingProvider>
+    <AuthProvider>
+      <HelmetProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </HelmetProvider>
+    </AuthProvider>
+  </BookingProvider>
 );

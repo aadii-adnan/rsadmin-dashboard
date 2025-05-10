@@ -1,13 +1,20 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import wifi from "../../assets/wifi.png";
 import masterCardLogo from "../../assets/master-card.png";
 import { Elements } from "@stripe/react-stripe-js";
 import CheckoutForm from "./CheckOutForm";
 
-const stripePromise = loadStripe(""); // Replace with your real Stripe public key
+
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY); // Replace with your real Stripe public key
 
 const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, handleChange, nextButtonStyle, labelStyle, inputStyle }) => {
+
+  useEffect(() => {
+    window.scrollTo(0, 600);
+  }
+  , []);
   return (
     <fieldset className="fieldset active">
       <div className="form-card">

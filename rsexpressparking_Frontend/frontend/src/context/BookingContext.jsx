@@ -11,6 +11,7 @@ const defaultState = {
   userDetails: {},
   carFlightDetails: { addOnsDetails : []},
   paymentDetails: {},
+  bookingDetails: {},
 };
 
 export const BookingProvider = ({ children }) => {

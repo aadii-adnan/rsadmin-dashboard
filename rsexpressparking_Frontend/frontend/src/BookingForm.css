@@ -223,121 +223,202 @@ p {
     border-radius:18px;
     border:1px solid #e4e4e4;
     border-top:12px solid #e4e4e4;
-  }
-  #cardDesign {
-    border-radius:12px;
-    background:#232323;
-    color:#fff;
-    margin:0px 20px 0px 20px;
-    z-index:3
-  }
-  #cardLogo {
-    background:url('/static_files/images/cardLogos.png') no-repeat;
-    width:52px;
-    height:32px;
-    background-size:auto 100%;
-    background-position:-52px
-  }
-  #visualName {
-    max-width:220px;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    overflow:hidden;
-    display:block;
-  }
-  button.btn {
-    height:64px;
-  }
+}
+#cardDesign {
+  border-radius:12px;
+  background:#232323;
+  color:#fff;
+  margin:0px 20px 0px 20px;
+  z-index:3
+}
+#cardLogo {
+  background:url('/static_files/images/cardLogos.png') no-repeat;
+  width:52px;
+  height:32px;
+  background-size:auto 100%;
+  background-position:-52px
+}
+#visualName {
+  max-width:220px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+  display:block;
+}
+button.btn {
+  height:64px;
+}
+.service-card {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+  gap: 20px;
+}
 
+.service-card-image,
+.service-card-details,
+.service-card-actions {
+  flex: 1;
+  max-width: 33%;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
 
+.service-card-details {
+  max-width: 40%;
+}
 
+.service-card-actions {
+  max-width: 26%;
+  text-align: right;
+}
 
+.service-card-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  object-fit: cover;
+}
 
+.form-column {
+  padding: 30px 60px;
+}
+.text-column {
+  margin-top: 50px;
+}
+.each-service {
+  width: 80%
+}
+.price-summary {
+  margin-left: 20px;
+  max-width: 400px !important;
+}
+.privacy-policy {
+  width: 75% !important;
+}
 
+/* External CSS for Next and Previous Buttons */
+/* Default styles for the Next and Previous input buttons */
+.next-button, .prev-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 20px;
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
 
-  .service-card {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-start;
-    background-color: #fff;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    width: 100%;
-    gap: 20px;
-  }
+/* Next button styles */
+.next-button {
+  background-color: #2890cd;
+  color: #fff;
+}
+
+/* Previous button styles */
+.prev-button {
+  background-color: #ccc;
+  color: #555;
+  margin-left: 10px;
+}
+
+/* Hover effect for Next button */
+.next-button:hover {
+  background-color: #1a6ca8; /* Darker blue on hover */
+}
+
+/* Hover effect for Previous button */
+.prev-button:hover {
+  background-color: #999; /* Darker gray on hover */
+}
   
+@media (max-width: 992px) {
+  .service-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
   .service-card-image,
   .service-card-details,
   .service-card-actions {
-    flex: 1;
-    max-width: 33%;
-    margin-bottom: 20px;
-    box-sizing: border-box;
+    max-width: 100%;
+    text-align: center;
   }
 
   .service-card-details {
-    max-width: 40%;
+    padding: 0;
   }
 
-.service-card-actions {
-    max-width: 26%;
-    text-align: right;
+  .service-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  .home-heading {
+    font-size: 24px;
+  }
+  .home-text h5 {
+    font-size: 16px;
+  }
+  .text-column {
+    margin-top: 0px;
+  }
+  .price-summary {
+    margin-left: 0px;
+    max-width: 90% !important;
+  }
 }
-  
-  .service-card-image img {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    object-fit: cover;
+
+@media (max-width: 576px) {
+  .service-card {
+    padding: 15px;
   }
-  
-  @media (max-width: 992px) {
-    .service-card {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-  
-    .service-card-image,
-    .service-card-details,
-    .service-card-actions {
-      max-width: 100%;
-      text-align: center;
-    }
-  
-    .service-card-details {
-      padding: 0;
-    }
-  
-    .service-card-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-    }
+
+  .service-card-details h2 {
+    font-size: 18px;
   }
-  
-  @media (max-width: 576px) {
-    .service-card {
-      padding: 15px;
-    }
-  
-    .service-card-details h2 {
-      font-size: 18px;
-    }
-  
-    .service-card-details div {
-      font-size: 13px;
-    }
-  
-    .service-card-actions p {
-      font-size: 18px;
-    }
+
+  .service-card-details div {
+    font-size: 13px;
   }
-  
+
+  .service-card-actions p {
+    font-size: 18px;
+  }
+  .form-column {
+    padding: 20px 10px;
+  }
+  .home-heading {
+    font-size: 24px;
+  }
+  .home-text h5 {
+    font-size: 16px;
+  }
+  .text-column {
+    margin-top: 0px;
+  }
+  .each-service {
+    width: 100%
+  }
+  .service-card-details {
+    margin-bottom: 0px;
+  }
+  .progressbar-item {
+    font-size: 12px !important;
+  }
+  .privacy-policy {
+    width: 90% !important;
+  }
+}

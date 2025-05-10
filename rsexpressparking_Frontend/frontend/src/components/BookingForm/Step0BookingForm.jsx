@@ -1,12 +1,16 @@
 import React, {useState} from 'react'
 import { useAuth } from '../../auth/AuthContext';
+import { useBooking } from "../../context/BookingContext";
 
 const Step0BookingForm = ({ formData, handleChange, labelStyle, inputStyle, setFormData, goNext, nextButtonStyle}) => {
     const { login: loginUser } = useAuth();
     const [login, setLogin] = useState(false);
+    const { bookingData : { userDetails} } = useBooking();
+    const [loading, setLoading] = useState(false);
 
     const handleLoginOrSignup = async (e) => {
         e.preventDefault();
+        setLoading(true);
       
         const trimmedFormData = {
           username: formData.username?.trim(),
@@ -34,19 +38,20 @@ const Step0BookingForm = ({ formData, handleChange, labelStyle, inputStyle, setF
         
           if (!trimmedFormData.password || trimmedFormData.password.length < 6) {
             errors.push("Password must be at least 6 characters.");
-          }
+          }          
         }
       
         if (errors.length > 0) {
           alert(errors.join("\n"));
+          setLoading(false);
           return;
         }
       
         try {
           if (login) {
             await loginUser(trimmedFormData.username, trimmedFormData.password);
-            if(localStorage.getItem("user")) {
-                const user = JSON.parse(localStorage.getItem("user"));
+            if(userDetails?.id) {
+                const user = userDetails;
                 setFormData((prev) => ({
                     ...prev,
                     first_name: user.first_name,
@@ -55,9 +60,9 @@ const Step0BookingForm = ({ formData, handleChange, labelStyle, inputStyle, setF
                     username: user.username,
                 }));
             }
-            alert("Login successful!");
+            
           } else {
-            const registerRes = await fetch('http://localhost:8000/api/auth/register/', {
+            const registerRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -68,21 +73,28 @@ const Step0BookingForm = ({ formData, handleChange, labelStyle, inputStyle, setF
                 password: trimmedFormData.password,
               }),
             });
-      
+            
+            if (registerRes.status === 409) {
+              setLoading(false);
+              throw new Error("Username already exists");
+            }
             if (!registerRes.ok) {
               const errorData = await registerRes.json();
-              throw new Error(errorData.message || "Signup failed.");
+              setLoading(false);
+              throw new Error(errorData.message || "Signup failed.");              
             }
       
             // Auto-login after successful signup
             await loginUser(trimmedFormData.username, trimmedFormData.password);
-            alert("Signup and login successful!");
+            setLoading(false);
+            
           }
       
           goNext(); // Redirect or next action
         } catch (err) {
           console.error(err);
           alert(err.message || "An unexpected error occurred.");
+          setLoading(false);
         }
       };
 
@@ -130,7 +142,7 @@ const Step0BookingForm = ({ formData, handleChange, labelStyle, inputStyle, setF
             </p>
         </div>}
         </div>
-        <input type="submit" className="next action-button" value={login ? "Login" : "Signup"} onClick={handleLoginOrSignup} style={nextButtonStyle} />
+        <input type="submit" className="next action-button next-button" value={loading ? "loading..." : (login ? "Login" : "Signup")} onClick={handleLoginOrSignup} style={nextButtonStyle} />
     </fieldset>
   )
 }

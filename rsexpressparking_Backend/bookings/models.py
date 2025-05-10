@@ -24,7 +24,7 @@ class Booking(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField()
-    contact_no = models.CharField(max_length=20)
+    contact_no = models.CharField(max_length=20, blank=True, null=True)
     total_passengers = models.PositiveIntegerField(blank=True, null=True)
 
     # Timing and status
@@ -34,12 +34,13 @@ class Booking(models.Model):
     coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'booking'})
+    email_sent = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} - {self.service.name} - {self.departure_time.date()}"
+        return f"{self.id} {self.first_name} {self.last_name} - {self.service.name} - {self.departure_time.date()}"
     
     class Meta:
         db_table = 'Bookings'

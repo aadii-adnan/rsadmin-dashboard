@@ -1,0 +1,10 @@
+PassengerEnabled on
+PassengerAppRoot /home/u123456789/public_html/backend
+PassengerPython /usr/bin/python3
+
+SetEnv DJANGO_SETTINGS_MODULE backend.settings
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /backend/
+</IfModule>

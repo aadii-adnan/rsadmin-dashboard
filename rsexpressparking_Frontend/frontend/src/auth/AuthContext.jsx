@@ -1,43 +1,51 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useBooking } from "../context/BookingContext";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const { setBookingData, bookingData } = useBooking();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const storedUser = bookingData?.userDetails
+    if (storedUser?.id) {
+      setUser(storedUser);
     }
   }, []);
 
   const login = async (username, password) => {
-    const res = await fetch('http://localhost:8000/api/auth/login/', {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
 
-    if (!res.ok) throw new Error('Login failed');
+    if (!res.ok) throw new Error('Invalid username or password');
 
     const data = await res.json();
     localStorage.setItem('access_token', data.access);
     localStorage.setItem('refresh_token', data.refresh);
 
-    const profile = await fetch('http://localhost:8000/api/auth/me/', {
+    const profile = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/me/`, {
       headers: { Authorization: `Bearer ${data.access}` },
     });
 
     const profileData = await profile.json();
-    localStorage.setItem('user', JSON.stringify(profileData));
+    setBookingData((prev) => ({
+      ...prev,
+      userDetails: profileData,
+    }));
     setUser(profileData);
   };
 
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+    setBookingData((prev) => ({
+      ...prev,
+      userDetails: null,
+    }));
     setUser(null);
   };
 

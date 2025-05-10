@@ -30,10 +30,9 @@ class UserLatestCouponView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
+
         now = timezone.now()
         latest_coupon = Coupon.objects.filter(
-            user=user,
             active=True,
             valid_from__lte=now,
             valid_to__gte=now
@@ -45,7 +44,6 @@ class UserLatestCouponView(APIView):
         serializer = CouponSerializer(latest_coupon)
         return Response(serializer.data)
 class CheckCouponValidityView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         code = request.data.get('code')

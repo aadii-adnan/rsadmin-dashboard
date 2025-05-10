@@ -1,16 +1,19 @@
 import { Routes, Route, useNavigate } from "react-router-dom";
-import { ProtectedRoute } from "./routes/ProtectedRoute";
-import LoginPage from "./pages/LoginPage";
-import CustomerDashboard from "./pages/CustomerDashboard";
-import ManagerDashboard from "./pages/ManagerDashboard";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import Home from "./pages/Home";
-import SignupPage from "./pages/SignupPage";
 import Services from "./pages/Services";
 import Header from "./components/Utility/Header";
 import Footer from "./components/Utility/Footer"; 
 import BookingForm from "./pages/BookingForm";
 import { useAuth } from './auth/AuthContext';
+import ContactUs from "./pages/ContactUs";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CookieBanner from "./components/Utility/CookieBanner";
+import { FloatingWhatsApp } from 'react-floating-whatsapp';
+import avatar from "./assets/avatar.png";
+import 'react-toastify/dist/ReactToastify.css';
+import NotFound404 from "./pages/NotFound404";
 
 function Logout() {
   const { logout } = useAuth();
@@ -23,36 +26,34 @@ function Logout() {
 }
 
 function App() {
+  
   return (
     <>
-      <Header /> 
+      <CookieBanner />
+      <Header />       
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
         <Route path="/book/:slug" element={<BookingForm />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <CustomerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager-dashboard"
-          element={
-            <ProtectedRoute managerOnly={true}>
-              <ManagerDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/contact-us" element={<ContactUs />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="*" element={<div>Page Not Found</div>} />
+        <Route path="*" element={<NotFound404/>} />
       </Routes>
       <Footer />
+      <FloatingWhatsApp
+        phoneNumber="353834896505"
+        accountName="Meet & Greet"
+        chatMessage="Hi! How can we help you?"
+        placeholder="Type your message..."
+        avatar={avatar}
+        statusMessage="Typically replies immediately"
+        allowClickAway={true}
+        notification={true} 
+        notificationSound={true}
+      />      
     </>
   );
 }

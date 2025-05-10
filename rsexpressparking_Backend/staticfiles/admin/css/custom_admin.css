@@ -1,0 +1,140 @@
+/* Button styling */
+.button {
+    background: #79aec8;
+    padding: 6px 15px;
+    border-radius: 4px;
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.button:hover {
+    background: #417690;
+    color: #fff;
+}
+
+/* Horizontal scrolling for admin form */
+.module {
+    overflow-x: auto;
+    padding-bottom: 15px;
+}
+
+.form-row {
+    min-width: 940px;
+}
+
+/* Make the form container wider */
+#content-main {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Add scrollbar styling for better visibility */
+.module::-webkit-scrollbar {
+    height: 8px;
+}
+
+.module::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.module::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.module::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ...existing code... */
+
+/* List view styling */
+#changelist-form .results {
+    overflow-x: auto;
+}
+
+#result_list {
+    min-width: 1400px;  /* Minimum width for the table */
+}
+
+/* Column widths */
+#result_list th.column-id,
+#result_list td.field-id {
+    width: 50px;
+    height: 50px;
+}
+
+#result_list th.column-full_name,
+#result_list td.field-full_name {
+    width: 150px;
+    height: 50px;
+}
+
+#result_list th.column-service,
+#result_list td.field-service {
+    width: 120px;
+    height: 50px;
+}
+
+#result_list th.column-departure_time,
+#result_list td.field-departure_time,
+#result_list th.column-return_time,
+#result_list td.field-return_time {
+    width: 130px;
+    height: 50px;
+}
+
+#result_list th.column-total_price,
+#result_list td.field-total_price {
+    width: 100px;
+    height: 50px;
+}
+
+#result_list th.column-status,
+#result_list td.field-status {
+    width: 100px;
+    height: 50px;
+}
+
+#result_list th.column-created_at,
+#result_list td.field-created_at {
+    width: 120px;
+    height: 50px;
+}
+
+#result_list th.column-contact_no,
+#result_list td.field-contact_no {
+    width: 120px;
+    height: 50px;
+}
+
+#result_list th.column-car_registration_no,
+#result_list td.field-car_registration_no {
+    width: 130px;
+    height: 50px;
+}
+
+#result_list th.column-car_model,
+#result_list td.field-car_model {
+    width: 120px;
+    height: 50px;
+}
+
+#result_list th.column-download_invoice,
+#result_list td.field-download_invoice {
+    width: 130px;
+    height: 50px;
+}
+
+/* Add padding and improve text display */
+#result_list td, 
+#result_list th {
+    padding: 12px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -3,7 +3,7 @@ from bookings.models import Booking
 from core.models import Status
 
 class Payment(models.Model):
-    booking = models.OneToOneField(Booking, on_delete=models.CASCADE)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='payments')
     stripe_payment_intent = models.CharField(max_length=255)
     stripe_customer_id = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)

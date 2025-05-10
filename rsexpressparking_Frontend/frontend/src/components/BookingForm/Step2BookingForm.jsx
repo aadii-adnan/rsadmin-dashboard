@@ -1,35 +1,60 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import { PhoneInput } from 'react-international-phone';
 import customFetch from "../../auth/fetch"
 import { useBooking } from "../../context/BookingContext";
 import 'react-international-phone/style.css';
+import PopupDialog from "../Utility/PopupDialog";
 
 const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, contactNo, setContactNo,  nextButtonStyle, serviceDetails, couponId, discountedPrice, totalPrice, goNext, statuses, goBack, prevButtonStyle, setFormData}) => {
 
-    const { bookingData: { bookingDates: { parkingFromDate, parkingFromTime, carCollectionDate, carCollectionTime }, }, } = useBooking();
+    const { setBookingData, bookingData: { bookingDates: { parkingFromDate, parkingFromTime, carCollectionDate, carCollectionTime }, userDetails}, } = useBooking();
+    const [error, setError] = useState(""); // State to store validation error messages
+    const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
+    const [loading, setLoading] = useState(false); // Loading state
+
+    const validateInputs = () => {
+        if (!formData.departure_terminal || !formData.return_terminal || !formData.departure_flight_number || !formData.return_flight_number || !formData.first_name || !formData.last_name || !formData.email || !contactNo=="+353") {
+          setError("Please fill in all required fields.");
+          setIsPopupOpen(true);
+          return false;
+        }
+        if (totalPrice <= 0) {
+          setError("Invalid price calculation");
+          return false;
+        }
+        setError(""); // Clear error if validation passes
+        return true;
+      };
 
     const handleBooking = async (e) => {
         try {
             e.preventDefault();
+            setLoading(true); // Set loading state to true
+            if(!validateInputs())                
+                return;
 
-            const statusId = statuses.find((status) => status.name === formData.status)?.id;
+            const statusId = statuses.find((status) => (status.name === formData.status_name) && status.type === "booking")?.id;
 
             if (!statusId) {
                 alert("Invalid status selected.");
                 return;
             }
 
-            const response = await customFetch("http://localhost:8000/api/bookings/", {
+            if (!parkingFromDate || !carCollectionDate) {
+                throw new Error("Invalid booking dates");
+            }
+            
+            const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
                 method: "POST",
                 body: {
                 ...formData,
                 service: serviceDetails.id,
-                user: JSON.parse(localStorage.getItem("user")).id,
+                user: userDetails?.id,
                 contact_no: contactNo,
                 departure_time: parkingFromDate + " " + parkingFromTime,
                 return_time: carCollectionDate + " " + carCollectionTime,
                 coupon: couponId,
-                discounted_price : discountedPrice,                
+                discounted_price : discountedPrice==0 ? totalPrice : discountedPrice,                
                 total_price: totalPrice,
                 status: statusId
                 },
@@ -39,18 +64,36 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
                 setFormData((prev) => ({
                     ...prev,
                     booking_id: data.id,
-                  }));
-                alert("Booking created successfully!");
+                  }));   
+                setBookingData((prev) => ({
+                    ...prev,
+                    bookingDetails: {
+                        ...prev.bookingDetails,
+                        booking_id: data.id,
+                    }
+                }));             
                 goNext();
             } else {
-                alert(data.message || "An error occurred.");
+                if (data.error === "Coupon has been fully used") {
+                    setError(data.error);
+                    setIsPopupOpen(true);
+                    return;
+                }
+                setError(data.message || "An error occurred.");
+                setIsPopupOpen(true);
             }
         } catch (error) {
             console.error("Error creating booking:", error);
         }
     };
 
+    useEffect(() => {
+        window.scrollTo(0, 300);
+      }
+    , []);
+
   return (
+    <>
     <fieldset className="fieldset active">
         <div className="form-card">
             
@@ -160,7 +203,7 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
                     />
                 </div>
                 <div className="col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>Total Passengers: *</label>
+                    <label style={labelStyle}>Total Passengers:</label>
                     <input className='custom-input'
                     type="number"
                     name="total_passengers"
@@ -184,9 +227,18 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
             </div>
 
         </div>
-        <input type="button" className="next action-button" value="Next" onClick={handleBooking} style={nextButtonStyle} />
+        <input type="button" className="next action-button" value={loading ? "loading..." : "Next"} onClick={async(e) => {await handleBooking(e); setLoading(false);}} style={nextButtonStyle} />
         <input type="button" className="previous action-button-previous" value="Previous" onClick={goBack} style={prevButtonStyle} />
     </fieldset>
+
+    {/* Popup Dialog */}
+    <PopupDialog
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        title=""
+        message={error}
+      />
+    </>
   )
 }
 
