@@ -76,9 +76,12 @@
                         <tr><td class="label">Created:</td><td class="value">{{ booking.created_at|date:"d.m.Y H:i" }}</td></tr>
                         <tr><td class="label">Comments:</td><td class="value"></td></tr>
                         <tr><td class="label">Service:</td><td class="value">{{ service.name }}</td></tr>
-                        {% for eachaddon in add_ons %}
-                        <tr><td class="label">Addons:</td><td class="value">{{ eachaddon.name }}</td></tr>
-                        {% endfor %}
+                        <tr>
+                            <td class="label">Addons:</td>
+                            <td class="value">
+                                {{ add_ons|join:", " }}
+                            </td>
+                        </tr>
                         <tr><td class="label">Car Mileage:</td><td class="value"></td></tr>
                     </table>
 

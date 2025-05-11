@@ -5,7 +5,7 @@ const FAQItem = ({question, answer}) => {
 
   return (
     <div className="elementskit-card ">
-        <div onClick={() => setIsOpen(prev => !prev)} className="elementskit-card-header" id="primaryHeading-0-6f4e1865">
+        <div style={{cursor:"pointer"}} onClick={() => setIsOpen(prev => !prev)} className="elementskit-card-header" id="primaryHeading-0-6f4e1865">
             <a className="ekit-accordion--toggler elementskit-btn-link collapsed" data-ekit-toggle="collapse" data-target="#Collapse-f2301cb680f68f99a080" aria-expanded="false" aria-controls="Collapse-f2301cb680f68f99a080">
                 <span className="ekit-accordion-title">{question}</span>
                 <div className="ekit_accordion_icon_group">

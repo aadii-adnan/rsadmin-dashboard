@@ -15,27 +15,22 @@ from decouple import config
 import stripe
 import os
 from datetime import timedelta
-from dotenv import load_dotenv
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-default-key") 
+SECRET_KEY = config('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
+DEBUG = config('DEBUG', cast=bool)
 
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "new.rsexpressparking.com,www.new.rsexpressparking.com").split(",")
+ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com']
 
 
 # Application definition
@@ -57,7 +52,6 @@ INSTALLED_APPS = [
     'payments',
     'core',
     'finance',
-    'django.contrib.sitemaps',
 ]
 
 REST_FRAMEWORK = {
@@ -67,7 +61,6 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-    'middleware.prerender.PrerenderMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -109,9 +102,6 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
     }
 }
 
@@ -150,11 +140,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -184,7 +177,7 @@ CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
     "OPTIONS",
-    "PATCH", 
+    "PATCH",  # ✅ Add this line
     "POST",
     "PUT",
 ]
@@ -209,3 +202,7 @@ PDF_IMAGE_PATH = os.path.join(BASE_DIR, 'static', 'images', 'car.png')
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://new.rsexpressparking.com/',
+]
