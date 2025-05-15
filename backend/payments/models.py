@@ -14,4 +14,4 @@ class Payment(models.Model):
         return f"Payment for {self.booking} - {self.status}"
     
     class Meta:
-        db_table = 'Payments'
+        db_table = 'payments'

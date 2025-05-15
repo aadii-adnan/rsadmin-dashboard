@@ -3,7 +3,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import wifi from "../../assets/wifi.png";
 import masterCardLogo from "../../assets/master-card.png";
 import { Elements } from "@stripe/react-stripe-js";
-import CheckoutForm from "./CheckOutForm";
+import CheckoutForm from "./CheckoutForm";
 
 
 
@@ -33,7 +33,7 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
 
         <div className="container">
           <div className="row">
-            <div style={{ width: "55%" }} className="col-sm-8 mx-auto my-5">
+            <div className="col-sm-8 mx-auto my-5 payment-card">
               <div id="cardDesign" className="position-relative shadow p-4">
                 <div className="d-flex align-items-center justify-content-between">
                   <div className="fs-4"><strong>€{discountedPrice || totalPrice}</strong></div>

@@ -2,17 +2,20 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from .models import Booking
-
+import csv
+from datetime import datetime, timedelta
+from django.http import HttpResponse
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
     def colored_status(self, obj):
         status_colors = {
             'completed': '#28a745',  # green
-            'pending': '#ffc107',    # yellow
+            'confirmed': '#ffc107',    # yellow
             'cancelled': '#dc3545',  # red
             'payment failed': '#dc3545',  # red
-            'rescheduled': '#fd7e14' # orange
+            'rescheduled': '#fd7e14', # orange
+            'pending': 'gray' # orange
         }
         
         if obj.status:
@@ -28,8 +31,7 @@ class BookingAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_manager:
-            return ('id', 'full_name', 'service', 'departure_time', 'return_time', 
-                    'total_price', 'colored_status', 'created_at', 'download_booking_form')
+            return ('id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
         return ('id', 'full_name', 'service', 'departure_time', 'return_time', 
                 'total_price', 'colored_status', 'created_at', 'download_invoice', 'download_booking_form')
     
@@ -62,12 +64,14 @@ class BookingAdmin(admin.ModelAdmin):
                     'add_ons',
                 )
             }),
-            ('Pricing', {
+        ]
+
+        if not request.user.is_manager:
+            base_fieldsets.append(('Pricing', {
                 'fields': (
                     ('total_price', 'coupon', 'discounted_price'),
                 )
-            })
-        ]
+            }))
 
         # Add status section with appropriate fields based on user type
         status_fields = ['status', ('created_at', 'modified_at')]
@@ -94,28 +98,99 @@ class BookingAdmin(admin.ModelAdmin):
     full_name.short_description = 'Customer Name'
 
     def download_invoice(self, obj):
-        if obj.status and obj.status.name.lower() == 'completed':
-            url = reverse('invoice-download', args=[obj.id])
-            return format_html(
-                '<a class="button" href="javascript:void(0)" onclick="printInvoice(\'{}\'); return false;">'
-                '<img src="/static/admin/img/icon-yes.svg" alt="Print Invoice"> Print Invoice</a>',
-                url
-            )
-        return "-"
+        url = reverse('invoice-download', args=[obj.id])
+        return format_html(
+            '<a class="button" href="javascript:void(0)" onclick="printInvoice(\'{}\'); return false;">'
+            '<img src="/static/admin/img/icon-yes.svg" alt="Print Invoice"> Print Invoice</a>',
+            url
+        )
+
     download_invoice.short_description = 'Invoice'
     download_invoice.allow_tags = True
 
     def download_booking_form(self, obj):
-        if obj.status and obj.status.name.lower() == 'completed':
-            url = reverse('booking-form-download', args=[obj.id])
-            return format_html(
-                '<a class="button" href="javascript:void(0)" onclick="printBookingForm(\'{}\'); return false;">'
-                '<img src="/static/admin/img/icon-yes.svg" alt="Print Form"> Booking Form</a>',
-                url
-            )
-        return "-"
+        url = reverse('booking-form-download', args=[obj.id])
+        return format_html(
+            '<a class="button" href="javascript:void(0)" onclick="printBookingForm(\'{}\'); return false;">'
+            '<img src="/static/admin/img/icon-yes.svg" alt="Print Form"> Booking Form</a>',
+            url
+        )
+
     download_booking_form.short_description = 'Download Booking Form'  # Fixed attribute name
     download_booking_form.allow_tags = True
+
+
+    actions = ['export_as_csv']
+
+    def export_as_csv(self, request, queryset):
+        """
+        Export selected bookings as a CSV file.
+        Exclude price-related details if the admin is a manager.
+        """
+        # Create the HTTP response with the appropriate CSV headers
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="bookings.csv"'
+
+        writer = csv.writer(response)
+
+        # Define the header row
+        headers = [
+            'ID', 'User', 'Service', 'Add-ons', 'Car Registration No', 'Car Model',
+            'Car Colour', 'Car Manufacturer', 'Departure Terminal', 'Return Terminal',
+            'Departure Flight Number', 'Return Flight Number', 'First Name', 'Last Name',
+            'Email', 'Contact No', 'Total Passengers', 'Departure Time', 'Return Time',
+            'Status', 'Email Sent', 'Created At', 'Modified At'
+        ]
+
+        # Exclude price-related fields if the admin is a manager
+        if not request.user.is_manager:
+            headers.extend(['Total Price', 'Coupon', 'Discounted Price'])
+
+        # Write the header row
+        writer.writerow(headers)
+
+        # Write data rows
+        for booking in queryset:
+            row = [
+                booking.id,
+                booking.user.username if booking.user else '',
+                booking.service.name if booking.service else '',
+                ', '.join([addon.name for addon in booking.add_ons.all()]),
+                booking.car_registration_no,
+                booking.car_model,
+                booking.car_colour,
+                booking.car_manufacturer,
+                booking.departure_terminal,
+                booking.return_terminal,
+                booking.departure_flight_number,
+                booking.return_flight_number,
+                booking.first_name,
+                booking.last_name,
+                booking.email,
+                booking.contact_no,
+                booking.total_passengers,
+                booking.departure_time,
+                booking.return_time,
+                booking.status.name if booking.status else '',
+                'Yes' if booking.email_sent else 'No',
+                booking.created_at,
+                booking.modified_at,
+            ]
+
+            # Add price-related fields if the admin is not a manager
+            if not request.user.is_manager:
+                row.extend([
+                    booking.total_price,
+                    booking.coupon.code if booking.coupon else '',
+                    booking.discounted_price,
+                ])
+
+            writer.writerow(row)
+
+        return response
+
+    export_as_csv.short_description = "Export Selected Bookings as CSV"
+
 
     class Media:
         css = {

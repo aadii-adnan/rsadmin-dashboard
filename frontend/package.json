@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "@headlessui/react": "^2.2.2",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.3.0",
@@ -28,7 +29,8 @@
     "react-modal": "^3.16.3",
     "react-router-dom": "^7.5.3",
     "react-toastify": "^11.0.5",
-    "react-whatsapp-widget": "^2.2.0"
+    "react-whatsapp-widget": "^2.2.0",
+    "swiper": "^11.2.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

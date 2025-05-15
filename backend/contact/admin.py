@@ -9,6 +9,13 @@ class ContactMessageAdmin(admin.ModelAdmin):
     ordering = ('-timestamp',)
     readonly_fields = ('timestamp',)
 
+    def has_module_permission(self, request):
+        """
+        Restrict access to the Payment model for managers.
+        """
+        if request.user.is_manager:
+            return False
+        return super().has_module_permission(request)
     class Media:
         css = {
             'all': ('admin/css/clickable_rows.css','admin/css/custom_admin.css',)

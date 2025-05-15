@@ -26,7 +26,7 @@ class Service(models.Model):
         return self.name
     
     class Meta:
-        db_table = 'Services'
+        db_table = 'services'
 
 
 class AddOn(models.Model):
@@ -38,7 +38,7 @@ class AddOn(models.Model):
         return self.name
     
     class Meta:
-        db_table = 'AddOns'
+        db_table = 'addons'
 class Coupon(models.Model):
     code = models.CharField(max_length=20, unique=True)
     discount_percent = models.PositiveIntegerField(help_text="Enter a value between 1 and 100")
@@ -49,7 +49,7 @@ class Coupon(models.Model):
     times_used = models.PositiveIntegerField(default=0, help_text="Number of times this coupon has been used")
 
     class Meta:
-        db_table = 'Coupon'
+        db_table = 'coupon'
 
     def __str__(self):
         return f"{self.code} - {self.discount_percent}%"

@@ -8,14 +8,13 @@ import Step1BookingForm from "../components/BookingForm/Step1BookingForm";
 import Step2BookingForm from "../components/BookingForm/Step2BookingForm";
 import Step3BookingForm from "../components/BookingForm/Step3BookingForm";
 import Step4BookingForm from "../components/BookingForm/Step4BookingForm";
-import customFetch from "../auth/fetch";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from 'react-helmet-async';
 
 const steps = [
   { id: "account", label: "Account" },
   { id: "car", label: "Car Details" },
-  { id: "flight", label: "Flight Details" },
+  { id: "addons", label: "Add Ons" },
   { id: "payment", label: "Payment" },
 //   { id: "confirm", label: "Success" },
 ];
@@ -114,6 +113,13 @@ const BookingForm = () => {
           const no_of_days = bookingData?.paymentDetails?.noOfDays;
           setPerDayPrice(data.per_day_price * no_of_days); 
 
+          if (bookingData?.bookingDetails?.booking_id > 0) {
+            setTotalPrice(bookingData?.bookingDetails?.total_price);
+            setAddOnsDetails(bookingData?.carFlightDetails?.addOnsDetails);
+          }else{
+            setTotalPrice(Number(data.base_price) + (data.per_day_price * no_of_days))
+          }         
+
         } catch (error) {
           console.error("Error fetching service details:", error);
         }
@@ -121,7 +127,7 @@ const BookingForm = () => {
 
     useEffect(() => {
         fetchServiceDetails();
-        fetchStatuses(); // Fetch statuses when the component mounts
+        fetchStatuses(); // Fetch statuses when the component mounts        
     }, [slug]);
 
     useEffect(() => {
@@ -152,7 +158,12 @@ const BookingForm = () => {
   
               if (bookingDetails?.booking_id && isMounted) {
                   try {
-                      const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/${bookingDetails.booking_id}/`);
+                      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/${bookingDetails.booking_id}/`, {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                          },
+                        });
                       const booking = await response.json();
                       
                       if (booking && isMounted) {
@@ -194,8 +205,9 @@ const BookingForm = () => {
                       first_name: user.first_name,
                       last_name: user.last_name,
                       email: user.email,
-                      username: user.username,
+                      username: user.username,                      
                   }));
+                  setContactNo(user?.phone);
                   if (currentStep === 0) {
                       setCurrentStep(1);
                   }
@@ -212,11 +224,6 @@ const BookingForm = () => {
           isMounted = false;
       };
   }, [currentStep]);
-    
-      // Calculate total price whenever price or booking fee changes
-      useEffect(() => {
-        setTotalPrice(price + perDayPrice); 
-      }, [price, perDayPrice]);
 
 
     return (
@@ -249,7 +256,7 @@ const BookingForm = () => {
 
     <div style={{  backgroundColor: "#f5f4ee",  padding: "50px 0",  minHeight: "100vh",}} className="container-fluid">
       <div className="row mx-0 justify-content-center">
-        <div className="col-12 col-md-10 col-lg-8 col-xl-6 text-center px-4 py-4 w-sm-95" style={{ backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", marginTop: "30px"}}>
+        <div className="col-12 col-md-10 col-lg-8 col-xl-6 text-center px-3 px-md-4 py-4 w-sm-95" style={{ backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", marginTop: "30px"}}>
             <h2 id="heading" style={{   fontSize: "24px",   fontWeight: "bold",   color: "#010659",   marginBottom: "20px", }}>{serviceDetails?.name}</h2>
             <p style={{ color: "#555", marginBottom: "30px" }}>Fill all form fields to go to the next step</p>
 
@@ -273,11 +280,11 @@ const BookingForm = () => {
             </div>
 
             <form id="msform">
-                {currentStep === 0 && <Step0BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} setFormData={setFormData} goNext={goNext} nextButtonStyle={nextButtonStyle} />}
+                {currentStep === 0 && <Step0BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} setFormData={setFormData} goNext={goNext} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo}/>}
 
-                {currentStep === 1 && <Step1BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} goNext={goNext} nextButtonStyle={nextButtonStyle} setFormData={setFormData} setTotalPrice={setTotalPrice} totalPrice={totalPrice} selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} addOnsDetails={addOnsDetails} setAddOnsDetails={setAddOnsDetails}/>}
+                {currentStep === 1 && <Step1BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} goNext={goNext} nextButtonStyle={nextButtonStyle} goBack={goBack} prevButtonStyle={prevButtonStyle}/>}
 
-                {currentStep === 2 && <Step2BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo} serviceDetails={serviceDetails} couponId={couponId} totalPrice={totalPrice} discountedPrice={discountedPrice} goNext={goNext} statuses={statuses} goBack={goBack} prevButtonStyle={prevButtonStyle} setFormData={setFormData}/>}
+                {currentStep === 2 && <Step2BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo} serviceDetails={serviceDetails} couponId={couponId} totalPrice={totalPrice} discountedPrice={discountedPrice} goNext={goNext} statuses={statuses} goBack={goBack} prevButtonStyle={prevButtonStyle} setFormData={setFormData} addOnsDetails={addOnsDetails} setTotalPrice={setTotalPrice}  selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} setAddOnsDetails={setAddOnsDetails}/>}
 
                 {currentStep === 3 && <Step3BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} prevButtonStyle={prevButtonStyle} goNext={goNext} goBack={goBack} totalPrice={totalPrice} discountedPrice={discountedPrice} />}
 

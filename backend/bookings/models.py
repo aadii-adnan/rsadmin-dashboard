@@ -4,7 +4,7 @@ from services.models import Service, AddOn, Coupon
 from core.models import Status
 
 class Booking(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     add_ons = models.ManyToManyField(AddOn, blank=True)
 
@@ -43,4 +43,4 @@ class Booking(models.Model):
         return f"{self.id} {self.first_name} {self.last_name} - {self.service.name} - {self.departure_time.date()}"
     
     class Meta:
-        db_table = 'Bookings'
+        db_table = 'bookings'

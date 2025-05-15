@@ -6,4 +6,4 @@ class CustomUser(AbstractUser):
     is_manager = models.BooleanField(default=False)  # for RBAC
 
     class Meta:
-        db_table = 'User'
+        db_table = 'user'

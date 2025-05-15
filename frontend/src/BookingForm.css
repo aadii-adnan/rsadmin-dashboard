@@ -1,7 +1,11 @@
 * {
     margin: 0;
     padding: 0;
-  font-family: "Urbanist, Sans-serif" !important;
+    font-family: Urbanist, Sans-serif !important;
+}
+.fa, .fas, .far, .fal, .fab {
+  font-family: "Font Awesome 5 Free" !important; /* Use Font Awesome's default font family */
+  font-weight: 900; /* Ensure proper weight for solid icons */
 }
 
 html {
@@ -293,6 +297,9 @@ button.btn {
 
 .form-column {
   padding: 30px 60px;
+  width: 80%;
+  position: relative;
+  top:-150px;
 }
 .text-column {
   margin-top: 50px;
@@ -342,6 +349,11 @@ button.btn {
 .prev-button:hover {
   background-color: #999; /* Darker gray on hover */
 }
+.custom-input::placeholder {
+  font-size: 14px; /* or whatever size you want */
+  color: "#aab7c4";
+}
+
   
 @media (max-width: 992px) {
   .service-card {
@@ -379,6 +391,13 @@ button.btn {
   .price-summary {
     margin-left: 0px;
     max-width: 90% !important;
+  }
+  #menu-main-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: auto;
+    margin-top: 20px;
   }
 }
 
@@ -421,5 +440,73 @@ button.btn {
   }
   .privacy-policy {
     width: 90% !important;
+  }
+  .form-column {
+    position: static;
+    width: 100%;
+  }
+  label {
+    font-size: 16px;
+  }
+  input, textarea {
+    font-size: 16px; /* Change to your desired size */
+  }
+  input::placeholder, textarea::placeholder {
+    font-size: 14px !important;
+  }
+  input::-ms-input-placeholder,
+  textarea::-ms-input-placeholder {
+    font-size: 14px;
+  }
+  input:-ms-input-placeholder,
+  textarea:-ms-input-placeholder {
+    font-size: 14px;
+    color: #aab7c4;
+  }
+}
+
+/* BookingForm custom row/col layout */
+.bookingform-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.bookingform-col {
+  width: 50%;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.bookingform-col-7 {
+  width: 100%;
+}
+.addon-desc {
+  flex: 1;
+}
+.addon-price p {
+  width: 120px
+}
+.payment-card {
+  max-width: 500px !important;
+}
+
+@media (max-width: 576px) {
+  .bookingform-row {
+    flex-direction: column;
+  }
+  .bookingform-col,
+  .bookingform-col-7 {
+    width: 100%;
+    padding: 0;
+  }
+  .addon-price p {
+    width: auto;    
+  }
+  .addon-price {
+    margin-left: 10px;
+  }
+  .payment-card #cardDesign {
+    margin: 0px;
   }
 }

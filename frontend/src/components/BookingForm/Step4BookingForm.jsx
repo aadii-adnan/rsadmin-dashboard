@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { useBooking } from "../../context/BookingContext";
-import customFetch from '../../auth/fetch';
 import { useRef } from 'react';
 
 const Step4BookingForm = () => {
@@ -11,7 +10,14 @@ const Step4BookingForm = () => {
 
     const downloadInvoice = async() => {
         try {
-          const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/payments/invoice/${booking_id}/`);
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payments/invoice/${booking_id}/`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
           if (!response.ok) {
             throw new Error("Failed to fetch invoice");
           }
@@ -36,7 +42,14 @@ const Step4BookingForm = () => {
     
     const getLatestCoupon = async () => {
         try {
-            const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/services/coupons/latest/`);
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/coupons/latest/`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
             const data = await response.json();
             if (response.ok) {
                 setCoupon(data.code);
@@ -74,7 +87,7 @@ const Step4BookingForm = () => {
             </div>
         </div>
         <div className="row justify-content-center">
-            <div className="col-7 text-center">
+            <div className="col-md-7 text-center">
             <h5 className="purple-text text-center" style={{ fontSize: "18px", fontWeight: "bold", color: "rgb(1, 6, 89)", marginTop: "20px" }}>
                 Your booking has been successfully completed!<br />
                 

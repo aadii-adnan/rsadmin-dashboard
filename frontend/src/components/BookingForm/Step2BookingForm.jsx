@@ -1,19 +1,58 @@
 import React, {useState, useEffect} from 'react'
-import { PhoneInput } from 'react-international-phone';
-import customFetch from "../../auth/fetch"
 import { useBooking } from "../../context/BookingContext";
 import 'react-international-phone/style.css';
 import PopupDialog from "../Utility/PopupDialog";
 
-const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, contactNo, setContactNo,  nextButtonStyle, serviceDetails, couponId, discountedPrice, totalPrice, goNext, statuses, goBack, prevButtonStyle, setFormData}) => {
+const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails, couponId, discountedPrice, totalPrice, goNext, statuses, goBack, prevButtonStyle, setFormData, addOnsDetails, setTotalPrice, selectedAddOns, setSelectedAddOns, setAddOnsDetails}) => {
 
     const { setBookingData, bookingData: { bookingDates: { parkingFromDate, parkingFromTime, carCollectionDate, carCollectionTime }, userDetails}, } = useBooking();
     const [error, setError] = useState(""); // State to store validation error messages
     const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
     const [loading, setLoading] = useState(false); // Loading state
+    const [addons, setAddons] = useState([]);
+
+    useEffect(() => {
+        const fetchAddOns = async () => {
+          try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/addons/`);
+            const data = await response.json();
+            setAddons(data);
+          } catch (error) {
+            console.error("Error fetching add-ons:", error);
+          }
+        };
+        fetchAddOns();
+        window.scrollTo(0, 300)
+      }, []);
+
+    useEffect(() => {
+        setFormData((prev) => ({
+        ...prev,
+        add_ons: selectedAddOns,
+        }));
+    }, [selectedAddOns, setFormData]);
+
+    const handleAddOnChange = (addon) => {
+        const isSelected = selectedAddOns.includes(addon.id);
+    
+        setSelectedAddOns((prev) =>
+          isSelected ? prev.filter((id) => id !== addon.id) : [...prev, addon.id]
+        );
+    
+        // Adjust total price
+        setTotalPrice((prevTotal) =>
+          isSelected
+            ? Number(prevTotal) - Number(addon.price) // removing
+            : Number(prevTotal) + Number(addon.price) // adding
+        );
+    
+        setAddOnsDetails((prev) =>
+          isSelected ? prev.filter((item) => item.id !== addon.id) : [...prev, addon]
+        );
+      };
 
     const validateInputs = () => {
-        if (!formData.departure_terminal || !formData.return_terminal || !formData.departure_flight_number || !formData.return_flight_number || !formData.first_name || !formData.last_name || !formData.email || !contactNo=="+353") {
+        if (!formData.departure_terminal || !formData.return_terminal || !formData.departure_flight_number || !formData.return_flight_number || !formData.first_name || !formData.last_name || !formData.email) {
           setError("Please fill in all required fields.");
           setIsPopupOpen(true);
           return false;
@@ -24,7 +63,7 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
         }
         setError(""); // Clear error if validation passes
         return true;
-      };
+    };
 
     const handleBooking = async (e) => {
         try {
@@ -44,9 +83,12 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
                 throw new Error("Invalid booking dates");
             }
             
-            const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
-                method: "POST",
-                body: {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
+                method: "POST",                
+                headers: {
+                "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
                 ...formData,
                 service: serviceDetails.id,
                 user: userDetails?.id,
@@ -57,7 +99,7 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
                 discounted_price : discountedPrice==0 ? totalPrice : discountedPrice,                
                 total_price: totalPrice,
                 status: statusId
-                },
+                }),
             });
             const data = await response.json();
             if (response.ok) {
@@ -70,6 +112,11 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
                     bookingDetails: {
                         ...prev.bookingDetails,
                         booking_id: data.id,
+                        total_price : totalPrice,
+                    },
+                    carFlightDetails: {
+                        ...prev.carFlightDetails,
+                        addOnsDetails: addOnsDetails,
                     }
                 }));             
                 goNext();
@@ -87,145 +134,34 @@ const Step2BookingForm = ({labelStyle, inputStyle, formData, handleChange, conta
         }
     };
 
-    useEffect(() => {
-        window.scrollTo(0, 300);
-      }
-    , []);
-
   return (
     <>
     <fieldset className="fieldset active">
-        <div className="form-card">
+        <div className="form-card">            
+        
+            <h2 style={{ fontSize: "20px", fontWeight: "bold", color: "#010659", marginBottom: "5px", marginTop: "20px" }}>Extra Services:</h2>
+            <p style={{ fontSize: "16px", color: "#555", marginBottom: "20px" }}>Select any additional services you would like to add:</p>
+            {addons.map((addon) => (
+                <div key={addon.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #ccc", borderRadius: "10px", padding: "10px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", }}>
+                    <div className='addon-desc'>
+                      <h6 style={{ margin: "0 0 5px 0", color: "#010659", fontWeight: "bold" }}>{addon.name.toUpperCase()}</h6>
+                      <p style={{ margin: "0 0 5px 0", color: "#555", fontSize: "14px" }}>{addon.description}</p>
+                    </div>
+                    <div className='addon-price' style={{ textAlign: "right" }}>
+                      <p style={{ fontWeight: "bold", fontSize: "15px", color: "#2890cd", margin: "0 auto", textAlign: "center" }}>
+                          €{addon.price}
+                      </p>
+                      <input
+                          type="checkbox"
+                          id={`addon-${addon.id}`}
+                          checked={selectedAddOns.includes(addon.id)}
+                          onChange={() => handleAddOnChange(addon)}
+                          style={{ width: "18px", height: "18px", cursor: "pointer", marginTop: "10px" }}
+                      />
+                    </div>
+                </div>
+            ))}
             
-            <div className="row">
-                <div className="col-7">
-                    <h2 className="fs-title" style={{ fontSize: "20px", fontWeight: "bold", color: "#010659", marginBottom: "20px" }}>
-                    Flight Details:
-                    </h2>
-                </div>                       
-            </div>
-            <div className="row">
-                <div className="col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>Departure Terminal: *</label>
-                    <input className='custom-input'
-                    type="number"
-                    name="departure_terminal"
-                    placeholder="Dep Terminal"
-                    style={inputStyle}
-                    value={formData?.departure_terminal}
-                    onChange={handleChange}
-                    />
-                </div>
-                <div className="col" style={{ width: "50%", paddingLeft: "10px" }}>
-                    <label style={labelStyle}>Return Terminal: *</label>
-                    <input className='custom-input'
-                    type="number"
-                    name="return_terminal"
-                    placeholder="Ret Terminal"
-                    style={inputStyle}
-                    value={formData?.return_terminal}
-                    onChange={handleChange}
-                    />
-                </div>
-                </div>
-
-                <div className="row">
-                <div className="col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>Departure Flight Number: *</label>
-                    <input className='custom-input'
-                    type="text"
-                    name="departure_flight_number"
-                    placeholder="Dep Flight Number"
-                    style={inputStyle}
-                    value={formData?.departure_flight_number}
-                    onChange={handleChange}
-                    />
-                </div>
-                <div className="col" style={{ width: "50%", paddingLeft: "10px" }}>
-                    <label style={labelStyle}>Return Flight Number: *</label>
-                    <input className='custom-input'
-                    type="text"
-                    name="return_flight_number"
-                    placeholder="Ret Flight Number"
-                    style={inputStyle}
-                    value={formData?.return_flight_number}
-                    onChange={handleChange}
-                    />
-                </div>
-            </div>
-
-            <div className="row">
-                <div className="col-7">
-                    <h2 className="fs-title" style={{ fontSize: "20px", fontWeight: "bold", color: "#010659", marginBottom: "20px" }}>
-                    Your Details:
-                    </h2>
-                </div>                       
-            </div>
-
-            <div className="row">
-                <div className="col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>First Name: *</label>
-                    <input className='custom-input'
-                    type="text"
-                    name="first_name"
-                    placeholder="First Name"
-                    style={inputStyle}
-                    value={formData?.first_name}
-                    onChange={handleChange}
-                    required
-                    />
-                </div>
-                <div className="col" style={{ width: "50%", paddingLeft: "10px" }}>
-                    <label style={labelStyle}>Last Name: *</label>
-                    <input className='custom-input'
-                    type="text"
-                    name="last_name"
-                    placeholder="Last Name"
-                    style={inputStyle}
-                    value={formData?.last_name}
-                    onChange={handleChange}
-                    required
-                    />
-                </div>
-            </div>
-
-            <div className="row">
-                <div className="col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>Email: *</label>
-                    <input className='custom-input'
-                    type="email"
-                    name="email"
-                    placeholder="Email Id"
-                    style={inputStyle}
-                    value={formData?.email}
-                    onChange={handleChange}
-                    required
-                    />
-                </div>
-                <div className="col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>Total Passengers:</label>
-                    <input className='custom-input'
-                    type="number"
-                    name="total_passengers"
-                    placeholder="Passengers"
-                    style={inputStyle}
-                    value={formData?.total_passengers}
-                    onChange={handleChange}
-                    />
-                </div>
-            </div>
-
-            <div className="row">
-                <div className="col" style={{ width: "50%", paddingLeft: "10px", marginBottom: "10px" }}>
-                    <label style={labelStyle}>Contact No: *</label>
-                    <PhoneInput
-                    defaultCountry="ie"
-                    value={contactNo}
-                    onChange={(phone) => setContactNo(phone)}
-                    />
-                </div>
-            </div>
-
         </div>
         <input type="button" className="next action-button" value={loading ? "loading..." : "Next"} onClick={async(e) => {await handleBooking(e); setLoading(false);}} style={nextButtonStyle} />
         <input type="button" className="previous action-button-previous" value="Previous" onClick={goBack} style={prevButtonStyle} />

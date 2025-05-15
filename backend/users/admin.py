@@ -2,6 +2,23 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from .models import CustomUser
+from django.contrib import admin
+from django.contrib.auth.models import Group
+
+class CustomGroupAdmin(admin.ModelAdmin):
+    def has_module_permission(self, request):
+        """
+        Restrict access to the Groups model for managers.
+        """
+        if request.user.is_manager:
+            return False
+        return super().has_module_permission(request)
+
+# Unregister the default Group model
+admin.site.unregister(Group)
+
+# Re-register the Group model with the custom admin class
+admin.site.register(Group, CustomGroupAdmin)
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -53,6 +70,14 @@ class CustomUserAdmin(UserAdmin):
     def full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}"
     full_name.short_description = 'Full Name'
+
+    def has_module_permission(self, request):
+        """
+        Restrict access to the Payment model for managers.
+        """
+        if request.user.is_manager:
+            return False
+        return super().has_module_permission(request)
 
     class Media:
         css = {

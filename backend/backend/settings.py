@@ -30,7 +30,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', cast=bool)
 
 
-ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com']
+ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com', 'www.new.rsexpressparking.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'payments',
     'core',
     'finance',
+    'django.contrib.sitemaps'
 ]
 
 REST_FRAMEWORK = {
@@ -154,7 +155,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS  = [
+    'https://new.rsexpressparking.com',
+    'https://www.new.rsexpressparking.com',
+    'http://localhost:3000',
+    'http://localhost:5173',
+]
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -170,8 +176,6 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
-
-CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_METHODS = [
     "DELETE",

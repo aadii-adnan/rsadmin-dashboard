@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBooking } from '../../context/BookingContext';
-import serviceImg from '../../assets/service.jpg';
+import flexible from '../../assets/service.jpg';
+import standard from "../../assets/parking.jpg"
 import "../../BookingForm.css";
 
-const ServicesItem = ({ service, openModal }) => {
+const ServicesItem = ({ service, openModal, index }) => {
   const { bookingData } = useBooking();
   const [amountSaved, setAmountSaved] = useState(0);
   const [price, setPrice] = useState(0);
@@ -28,6 +29,8 @@ const ServicesItem = ({ service, openModal }) => {
     calculateTotalPrice();
   }, []);
 
+  const imageSrc = index === 0 ? standard : flexible;
+
   return (
     <div className='service-card'
       key={service.id}
@@ -43,7 +46,7 @@ const ServicesItem = ({ service, openModal }) => {
       {/* Left Section: Image */}
       <div className='service-card-image'>
         <img
-          src={serviceImg}
+          src={imageSrc}
           alt={service.name}
           style={{
             width: '100%',

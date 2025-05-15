@@ -1,7 +1,8 @@
 import React, {useState, useEffect} from "react";
-import ServiceModal from "../Components/Services/ServiceModal";
+import ServiceModal from "../components/Services/ServiceModal";
 import ServicesItem from "../components/Services/ServicesItem";
 import { Helmet } from "react-helmet-async";
+import ServiceShimmer from "../components/Services/ServiceShimmer"
 
 const Services = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +16,7 @@ const Services = () => {
 		  if (!response.ok) {
 			throw new Error("Failed to fetch services");
 		  }
+		  
 		  const data = await response.json();
 		  setServices(data);
 		  setLoading(false);
@@ -37,7 +39,7 @@ const Services = () => {
 		fetchServices();
 	}, []);
 
-	return loading ? "Loading..." : (
+	return (
 		<>
 		<Helmet>
 			<title>Meet & Greet Dublin Airport Parking Services</title>
@@ -60,7 +62,11 @@ const Services = () => {
 		<div style={{ padding: "40px 20px", backgroundColor: "#f8f9fa", minHeight: "100vh", }}>
 			<h1 style={{ textAlign: "center", color: "#010659", marginBottom: "40px", fontSize: "36px", fontWeight: "700",}}>Select Parking Option</h1>
 			<div className="each-service" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px', margin: '0 auto'}}>
-				{services.map((service) => <ServicesItem key={service.id} service={service} openModal={openModal}/>)}
+			{loading ? ([...Array(3)].map((_, index) => (<ServiceShimmer key={index} />))
+          		) : (services.map((service, index) => (
+					<ServicesItem key={service.id} service={service} openModal={openModal} index={index}/>
+				))
+			)}
 			</div>
 
 			<ServiceModal isOpen={isModalOpen} onClose={closeModal} long_description={selectedService ? selectedService.long_description : ""}/>

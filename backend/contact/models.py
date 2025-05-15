@@ -12,4 +12,4 @@ class ContactMessage(models.Model):
         return f"{self.last_name} - {self.timestamp}"
     
     class Meta:
-        db_table = 'ContactMessages'
+        db_table = 'contactmessages'

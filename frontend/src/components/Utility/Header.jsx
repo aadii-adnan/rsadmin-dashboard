@@ -34,7 +34,7 @@ const Header = () => {
         className="elementor elementor-319 elementor-location-header"
         data-elementor-post-type="elementor_library"
         >
-        <div
+        <div style={{ backgroundColor: "#F5F4EE" }}
             className="elementor-element elementor-element-71809993 e-con-full e-flex e-con e-parent e-lazyloaded"
             data-id="71809993"
             data-element_type="container"
@@ -76,22 +76,24 @@ const Header = () => {
                         {isMobile && (<>
                         <div id="ekit-megamenu-main-menu" className="active elementskit-menu-container elementskit-menu-offcanvas-elements elementskit-navbar-nav-default ekit-nav-menu-one-page- ekit-nav-dropdown-hover" ekit-dom-added="yes">
                           <ul id="menu-main-menu" className="elementskit-navbar-nav elementskit-menu-po-right submenu-click-on-icon">
-                              <li id="menu-item-576" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-576 nav-item elementskit-mobile-builder-content active" data-vertical-menu="750px"><Link to={"/"} className="ekit-menu-nav-link">Home</Link></li>
+                              {/* <li id="menu-item-576" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-576 nav-item elementskit-mobile-builder-content active" data-vertical-menu="750px"><Link to={"/"} className="ekit-menu-nav-link">Home</Link></li> */}
                                                       
-                              <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
                               
-                              <li id="menu-item-922" className="menu-item menu-item-type-custom menu-item-object-custom current-menu-ancestor current-menu-parent menu-item-has-children menu-item-922 nav-item elementskit-dropdown-has relative_position elementskit-dropdown-menu-default_width elementskit-mobile-builder-content" data-vertical-menu="750px">
+                              
+                              {/* <li id="menu-item-922" className="menu-item menu-item-type-custom menu-item-object-custom current-menu-ancestor current-menu-parent menu-item-has-children menu-item-922 nav-item elementskit-dropdown-has relative_position elementskit-dropdown-menu-default_width elementskit-mobile-builder-content" data-vertical-menu="750px">
                                 <Link to={"#"} className="ekit-menu-nav-link ekit-menu-dropdown-toggle">Legal Information<i onClick={() => setIsLegalInfoDropdownOpen(prev => !prev)} aria-hidden="true" className="icon icon-plus elementskit-submenu-indicator"></i></Link>
-                                <ul className={`elementskit-dropdown elementskit-submenu-panel ${(isMobile && isLegalInfoDropdownOpen) ? "elementskit-dropdown-open" : ""}`}>
-                                    <li id="menu-item-924" className="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-596 current_page_item menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/terms-and-conditions"} className="dropdown-item">Terms &amp; Conditions</Link></li>
-                                    <li id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/privacy-policy"} className="dropdown-item">Privacy Policy</Link></li>
-                                </ul>
-                              </li>
+                                <ul className={`elementskit-dropdown elementskit-submenu-panel ${(isMobile && isLegalInfoDropdownOpen) ? "elementskit-dropdown-open" : ""}`}> */}
+                              <li onClick={() => setIsMobile(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/privacy-policy"}>Privacy Policy</Link></li>
+                              <li onClick={() => setIsMobile(false)} id="menu-item-924" className="menu-item menu-item-type-post_type menu-item-object-page page_item page-item-596 menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/terms-and-conditions"}>Terms &amp; Conditions</Link></li>
+                                {/* </ul>
+                              </li> */}
+
+                              <li onClick={() => setIsMobile(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
 
                               {userDetails?.id && <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/logout"}><div className="ekit-menu-nav-link">Logout</div></Link></li>}
                               
                           </ul>
-                          <div className="elementskit-nav-identity-panel">
+                          <div onClick={() => setIsMobile(false)} className="elementskit-nav-identity-panel">
                               <Link to={"/"} className="elementskit-nav-logo" target="" rel="">
                                 <img width="2170" height="548" src={logo} title="logo white" alt="logo white" decoding="async" data-lazy-src={logo} data-ll-status="loaded" className="entered lazyloaded"/>
                                 <noscript><img width="2170" height="548" src={logo} title="logo white" alt="logo white" decoding="async" /></noscript>

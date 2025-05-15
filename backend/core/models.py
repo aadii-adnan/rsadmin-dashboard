@@ -11,7 +11,7 @@ class Status(models.Model):
 
     class Meta:
         unique_together = ('name', 'type')
-        db_table = 'Status'
+        db_table = 'status'
 
     def __str__(self):
         return self.name

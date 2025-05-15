@@ -28,6 +28,14 @@ class ServiceAdmin(admin.ModelAdmin):
         }),
     )
 
+    def has_module_permission(self, request):
+        """
+        Restrict access to the Payment model for managers.
+        """
+        if request.user.is_manager:
+            return False
+        return super().has_module_permission(request)
+
     class Media:
         css = {
             'all': ('admin/css/clickable_rows.css','admin/css/custom_admin.css',)
@@ -52,6 +60,14 @@ class AddOnAdmin(admin.ModelAdmin):
             )
         }),
     )
+
+    def has_module_permission(self, request):
+        """
+        Restrict access to the Payment model for managers.
+        """
+        if request.user.is_manager:
+            return False
+        return super().has_module_permission(request)
 
     class Media:
         css = {
@@ -99,6 +115,14 @@ class CouponAdmin(admin.ModelAdmin):
     )
     
     readonly_fields = ('times_used',)
+
+    def has_module_permission(self, request):
+        """
+        Restrict access to the Payment model for managers.
+        """
+        if request.user.is_manager:
+            return False
+        return super().has_module_permission(request)
 
     class Media:
         css = {

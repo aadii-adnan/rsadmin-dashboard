@@ -12,6 +12,7 @@ const PopupDialog = ({ isOpen, onClose, title, message }) => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          zIndex: 20, // Ensure it appears above other elements
         },
         content: {
           position: "relative",

@@ -5006,15 +5006,6 @@ button.metform-btn:focus,button.metform-btn:hover {
     font-weight: 400
 }
 
-@font-face {
-    font-family: "Font Awesome 5 Free";
-    font-style: normal;
-    font-weight: 900;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-solid-900.eot);
-    src: url(https://rsexpressparking.com/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-solid-900.eot?#iefix) format("embedded-opentype"),url(https://rsexpressparking.com/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-solid-900.woff2) format("woff2"),url(https://rsexpressparking.com/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-solid-900.woff) format("woff"),url(https://rsexpressparking.com/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-solid-900.ttf) format("truetype"),url(https://rsexpressparking.com/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-solid-900.svg#fontawesome) format("svg")
-}
-
 .fa,.far,.fas {
     font-family: "Font Awesome 5 Free"
 }
@@ -5463,12 +5454,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     background-color: var(--e-global-color-accent)
 }
 
-.elementor-330 .elementor-element.elementor-element-6aa1e7b.elementor-view-default .elementor-icon,.elementor-330 .elementor-element.elementor-element-6aa1e7b.elementor-view-framed .elementor-icon {
-    fill: var(--e-global-color-accent);
-    color: var(--e-global-color-accent);
-    border-color: var(--e-global-color-accent)
-}
-
 .elementor-330 .elementor-element.elementor-element-6aa1e7b .elementor-icon {
     font-size: 20px
 }
@@ -5529,12 +5514,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
 
 .elementor-330 .elementor-element.elementor-element-29f28201.elementor-view-stacked .elementor-icon {
     background-color: var(--e-global-color-accent)
-}
-
-.elementor-330 .elementor-element.elementor-element-29f28201.elementor-view-default .elementor-icon,.elementor-330 .elementor-element.elementor-element-29f28201.elementor-view-framed .elementor-icon {
-    fill: var(--e-global-color-accent);
-    color: var(--e-global-color-accent);
-    border-color: var(--e-global-color-accent)
 }
 
 .elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon {
@@ -8079,7 +8058,6 @@ button.mfp-close.ekit-popup-close:hover {
     visibility: hidden;
     -webkit-transition: all .4s ease-in var(--transition-duration);
     transition: all .4s ease-in var(--transition-duration);
-    cursor: url(https://rsexpressparking.com/wp-content/plugins/elementskit-lite/widgets/init/assets/img/cross-out.svg),pointer;
     background-color: rgba(0,0,0,.9)
 }
 
@@ -8423,95 +8401,6 @@ button.mfp-close.ekit-popup-close:hover {
     border: none
 }
 
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 100;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 200;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 300;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 800;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: Urbanist;
-    font-style: normal;
-    font-weight: 900;
-    font-display: swap;
-    src: url(https://rsexpressparking.com/wp-content/uploads/elementor/google-fonts/fonts/urbanist-l0x-df02ifml4hgcymqlbs0.woff2) format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
-}
-
-@font-face {
-    font-family: elementskit;
-    src: url(https://rsexpressparking.com/wp-content/plugins/elementskit-lite/modules/elementskit-icon-pack/assets/fonts/elementskit.woff?y24e1e) format("woff");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap
-}
-
 .ekit-wid-con .icon,.ekit-wid-con .icon::before,.icon,.icon::before {
     font-family: elementskit!important;
     speak: none;
@@ -8522,6 +8411,14 @@ button.mfp-close.ekit-popup-close:hover {
     line-height: 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale
+}
+
+@font-face {
+    font-family: elementskit;
+    src: url('./assets/fonts/elementskit.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap
 }
 
 .ekit-wid-con .icon.icon-phone-handset::before,.icon.icon-phone-handset::before {

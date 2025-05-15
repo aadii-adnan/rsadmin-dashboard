@@ -27,6 +27,7 @@ import base64
 import os
 from rest_framework.renderers import BaseRenderer
 from django.core.mail import EmailMultiAlternatives
+from rest_framework.permissions import AllowAny
 
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -46,12 +47,11 @@ def link_callback(uri, rel):
         raise Exception(f'File not found: {path}')
     return path
 
-def generate_invoice(booking, payment, template_name='payments/invoice.html'):
+def generate_invoice(booking, template_name='payments/invoice.html'):
     """
     Generate an invoice PDF for a booking and payment.
     """
 
-    user = get_user_model().objects.get(id=booking.user_id)
     service = get_object_or_404(Service, id=booking.service_id)
     add_ons = booking.add_ons.all()
 
@@ -73,8 +73,6 @@ def generate_invoice(booking, payment, template_name='payments/invoice.html'):
     # Render HTML
     context = {
         'booking': booking,
-        'payment': payment,
-        'user': user,
         'service': service,
         'no_of_days': no_of_days,
         'total_days_price': total_days_price,
@@ -102,6 +100,7 @@ class PaymentList(APIView):
         return Response(serializer.data)
 
 class CreateStripePaymentIntent(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, booking_id):
         booking = get_object_or_404(Booking, id=booking_id)
 
@@ -176,7 +175,7 @@ class StripeWebhookView(APIView):
                 payment.status = status_obj
                 payment.save()
 
-                new_booking_status = 'Completed'
+                new_booking_status = 'Confirmed'
                 status_obj = get_object_or_404(Status, name=new_booking_status, type='booking')
                 booking.status = status_obj
                 booking.save()
@@ -197,7 +196,7 @@ class StripeWebhookView(APIView):
                 # Generate and email the invoice    
                 if not booking.email_sent:            
                     try:
-                        response, error = generate_invoice(booking, payment)
+                        response, error = generate_invoice(booking)
                         if error:
                             return HttpResponse(f'Error: {error}', status=500)
                         pdf_content = response.getvalue()
@@ -288,7 +287,7 @@ class StripeWebhookView(APIView):
                             subject="Booking Confirmation – Meet & Greet Parking",
                             body=text_body,
                             from_email=settings.DEFAULT_FROM_EMAIL,
-                            to=[booking.email, "kamranumar2023@gmail.com"],                        
+                            to=[booking.email, "rsexpressparking@gmail.com"],                        
                         )
                         email.attach_alternative(html_body, "text/html")
                         email.attach(f"Invoice-{booking.id}.pdf", pdf_content, 'application/pdf')
@@ -331,18 +330,19 @@ class PDFRenderer(BaseRenderer):
     def render(self, data, media_type=None, renderer_context=None):
         return data  # return raw PDF response
 class InvoiceDownloadView(APIView):
+    permission_classes = [AllowAny]
     renderer_classes = [PDFRenderer]
 
     def get(self, request, booking_id):
         booking = get_object_or_404(Booking, id=booking_id)
-        payment = Payment.objects.filter(booking__id=booking_id).latest('created_at')
 
-        response, error = generate_invoice(booking, payment)
+        response, error = generate_invoice(booking)
         if error:
             return HttpResponse(f'Error: {error}', status=500)
         return response
     
 class BookingFormDownloadView(APIView):
+    permission_classes = [AllowAny]
     renderer_classes = [PDFRenderer]
     def get(self, request, booking_id):
         booking = get_object_or_404(Booking, id=booking_id)
@@ -379,6 +379,7 @@ class BookingFormDownloadView(APIView):
             return HttpResponse('We had some errors <pre>' + html + '</pre>')
         return response
 class PaymentStatusView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request, booking_id):
         try:
             payment = Payment.objects.filter(booking__id=booking_id).latest('created_at')
@@ -407,6 +408,7 @@ class PaymentStatusView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
         
 class VerifyBookingAmountView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, booking_id):
         try:
             # Get the amount from request body
@@ -463,6 +465,7 @@ class VerifyBookingAmountView(APIView):
         
 
 class UpdatePaymentStatusView(APIView):
+    permission_classes = [AllowAny]
     def put(self, request, payment_id):
         try:
             # Get the booking and associated payment

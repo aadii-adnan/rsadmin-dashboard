@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { createPaymentIntent, verifyPaymentAmount, checkPaymentStatus } from '../../services/paymentService';
 import PaymentStatus from './PaymentStatus';
-import customFetch from "../../auth/fetch";
 
 const PAYMENT_CHECK_INTERVAL = 2000; // 2 seconds
 const MAX_PAYMENT_CHECKS = 5;
@@ -30,9 +29,12 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
 
   const updatePaymentStatus = async (paymentId, status) => {
     try {
-      const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/payments/update-status/${paymentId}/`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payments/update-status/${paymentId}/`, {
         method: "PUT",
-        body: { status },
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
       });
   
       if (!response.ok) {

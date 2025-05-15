@@ -7,7 +7,7 @@ class FAQCategory(models.Model):
         return self.name
     
     class Meta:
-        db_table = 'FAQCategory'
+        db_table = 'faqcategory'
 
 class FAQ(models.Model):
     category = models.ForeignKey(FAQCategory, on_delete=models.CASCADE)
@@ -18,4 +18,4 @@ class FAQ(models.Model):
         return self.question
     
     class Meta:
-        db_table = 'FAQ'
+        db_table = 'faq'

@@ -27,7 +27,6 @@ class AddOnList(APIView):
         return Response(serializer.data)
 
 class UserLatestCouponView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
 

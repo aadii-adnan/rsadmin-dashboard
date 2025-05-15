@@ -153,11 +153,11 @@ const BookingDatesForm = () => {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="form-column" style={{ backgroundColor: "#f8f9fa", width: "80%", margin:"0 auto", flex: "1", minWidth: "300px", borderRadius: "10px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)", border: "1px solid #e0e0e0", position:"relative", top:"-150px"}}>
+    <div id="book" className="form-column" style={{ backgroundColor: "#f8f9fa", margin:"0 auto", flex: "1", minWidth: "300px", borderRadius: "10px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)", border: "1px solid #e0e0e0", zIndex:10}}>
       <form onSubmit={handleSubmit}> <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Parking From Date */}
-          <div style={{ flex: "1" }}>
+          <div className="form-date">
             <label htmlFor="parkingFromDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Parking From:</label>
             <input type="date" id="parkingFromDate" name="parkingFromDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.parkingFromDate} min={today} required/>
           </div>
@@ -171,7 +171,7 @@ const BookingDatesForm = () => {
 
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Car Collection Date */}
-          <div style={{ flex: "1" }}>
+          <div className="form-date">
             <label htmlFor="carCollectionDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Car Collection:</label>
             <input type="date" id="carCollectionDate" name="carCollectionDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.carCollectionDate} min={formData.parkingFromDate || today} required/>
           </div>
