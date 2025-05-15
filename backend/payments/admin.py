@@ -45,9 +45,10 @@ class PaymentAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         """
-        Restrict access to the Payment model for managers.
+        Restrict access for managers.
         """
-        if request.user.is_manager:
+        user = request.user
+        if user.is_authenticated and getattr(user, "is_manager", False):
             return False
         return super().has_module_permission(request)
 
