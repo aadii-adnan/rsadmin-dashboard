@@ -51,12 +51,7 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
         );
       };
 
-    const validateInputs = () => {
-        if (!formData.departure_terminal || !formData.return_terminal || !formData.departure_flight_number || !formData.return_flight_number || !formData.first_name || !formData.last_name || !formData.email) {
-          setError("Please fill in all required fields.");
-          setIsPopupOpen(true);
-          return false;
-        }
+    const validateInputs = () => {        
         if (totalPrice <= 0) {
           setError("Invalid price calculation");
           return false;

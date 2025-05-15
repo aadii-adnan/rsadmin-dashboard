@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../auth/AuthContext";
 import { useBooking } from "../../context/BookingContext";
 import PopupDialog from "../Utility/PopupDialog";
@@ -124,6 +124,10 @@ const Step0BookingForm = ({
     setLoading(false);
   }
 };
+
+useEffect(() => {
+    window.scrollTo(0, 300)
+  }, []);
 
   return (
     <>

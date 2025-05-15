@@ -1,6 +1,11 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
+{% block extrahead %}
+    <link rel="icon" type="image/webp" href="{% static 'images/logo.webp' %}">
+{% endblock %}
+
+
 {% block branding %}
 <style>
     #branding img {

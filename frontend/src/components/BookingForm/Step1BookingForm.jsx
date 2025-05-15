@@ -13,7 +13,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
 
   // Validation function
   const validateInputs = () => {
-    if (!formData.car_registration_no || !formData.car_model || !formData.car_colour || !formData.car_manufacturer || !formData.departure_terminal || !formData.return_terminal || !formData.departure_flight_number || !formData.return_flight_number) {
+    if (!formData.car_registration_no || !formData.car_model || !formData.car_colour || !formData.car_manufacturer || !formData.departure_terminal || !formData.return_terminal) {
       setError("Please fill in all required fields.");
       setIsPopupOpen(true);
       return false;
@@ -137,7 +137,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
 
           <div className="bookingform-row">
             <div className="bookingform-col">
-                <label style={labelStyle}>Departure Flight Number: *</label>
+                <label style={labelStyle}>Departure Flight Number:</label>
                 <input className='custom-input'
                 type="text"
                 name="departure_flight_number"
@@ -148,7 +148,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
                 />
             </div>
             <div className="bookingform-col">
-                <label style={labelStyle}>Return Flight Number: *</label>
+                <label style={labelStyle}>Return Flight Number:</label>
                 <input className='custom-input'
                 type="text"
                 name="return_flight_number"
