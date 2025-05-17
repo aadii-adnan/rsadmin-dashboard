@@ -20,7 +20,11 @@ const CookieConsentBanner = () => {
   return (
     <div
       className="position-fixed bottom-0 start-0 end-0 bg-dark text-white py-4 shadow-lg border-top"
-      style={{ zIndex: 1050 }}
+      style={{
+        zIndex: 999999999999999, // Ensure it's above all other elements
+        position: 'fixed',
+        width: '100%',
+      }}
     >
       <div className="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
         <div className="text-center text-md-start fs-5">

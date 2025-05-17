@@ -6,15 +6,15 @@ import simpleLogo from "../../assets/logo.png";
 
 const Header = () => {
 
-  const [isMobile, setIsMobile] = useState(true);
-  const [isLegalInfoDropdownOpen, setIsLegalInfoDropdownOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { bookingData } = useBooking();
   const { userDetails } = bookingData || {};
 
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth > 1024);
+      setIsMobile(window.innerWidth <= 1024);
     };
 
     // Add listener on mount
@@ -70,10 +70,10 @@ const Header = () => {
               <div className="elementor-element elementor-element-4e6caee5 elementor-widget__width-auto elementor-widget elementor-widget-ekit-nav-menu animated fadeIn" data-id="4e6caee5" data-element_type="widget" data-settings="{}" data-widget_type="ekit-nav-menu.default">
                   <div className="elementor-widget-container">
                     <nav className="ekit-wid-con ekit_menu_responsive_tablet" data-hamburger-icon="icon icon-menu1" data-hamburger-icon-type="icon" data-responsive-breakpoint="1024">
-                        <button onClick={() => setIsMobile(prev => !prev)} className="elementskit-menu-hamburger elementskit-menu-toggler" type="button" aria-label="hamburger-icon">
+                        <button onClick={() => setIsOpen(prev => !prev)} className="elementskit-menu-hamburger elementskit-menu-toggler" type="button" aria-label="hamburger-icon">
                         <i aria-hidden="true" className="ekit-menu-icon icon icon-menu1"></i>            </button>
 
-                        {isMobile && (<>
+                        {((isMobile && isOpen) || !isMobile) && (<>
                         <div id="ekit-megamenu-main-menu" className="active elementskit-menu-container elementskit-menu-offcanvas-elements elementskit-navbar-nav-default ekit-nav-menu-one-page- ekit-nav-dropdown-hover" ekit-dom-added="yes">
                           <ul id="menu-main-menu" className="elementskit-navbar-nav elementskit-menu-po-right submenu-click-on-icon">
                               {/* <li id="menu-item-576" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-576 nav-item elementskit-mobile-builder-content active" data-vertical-menu="750px"><Link to={"/"} className="ekit-menu-nav-link">Home</Link></li> */}
@@ -83,22 +83,22 @@ const Header = () => {
                               {/* <li id="menu-item-922" className="menu-item menu-item-type-custom menu-item-object-custom current-menu-ancestor current-menu-parent menu-item-has-children menu-item-922 nav-item elementskit-dropdown-has relative_position elementskit-dropdown-menu-default_width elementskit-mobile-builder-content" data-vertical-menu="750px">
                                 <Link to={"#"} className="ekit-menu-nav-link ekit-menu-dropdown-toggle">Legal Information<i onClick={() => setIsLegalInfoDropdownOpen(prev => !prev)} aria-hidden="true" className="icon icon-plus elementskit-submenu-indicator"></i></Link>
                                 <ul className={`elementskit-dropdown elementskit-submenu-panel ${(isMobile && isLegalInfoDropdownOpen) ? "elementskit-dropdown-open" : ""}`}> */}
-                              <li onClick={() => setIsMobile(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/privacy-policy"}>Privacy Policy</Link></li>
-                              <li onClick={() => setIsMobile(false)} id="menu-item-924" className="menu-item menu-item-type-post_type menu-item-object-page page_item page-item-596 menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/terms-and-conditions"}>Terms &amp; Conditions</Link></li>
+                              <li onClick={() => setIsOpen(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/privacy-policy"}>Privacy Policy</Link></li>
+                              <li onClick={() => setIsOpen(false)} id="menu-item-924" className="menu-item menu-item-type-post_type menu-item-object-page page_item page-item-596 menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/terms-and-conditions"}>Terms &amp; Conditions</Link></li>
                                 {/* </ul>
                               </li> */}
 
-                              <li onClick={() => setIsMobile(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
+                              <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
 
                               {userDetails?.id && <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/logout"}><div className="ekit-menu-nav-link">Logout</div></Link></li>}
                               
                           </ul>
-                          <div onClick={() => setIsMobile(false)} className="elementskit-nav-identity-panel">
+                          <div onClick={() => setIsOpen(false)} className="elementskit-nav-identity-panel">
                               <Link to={"/"} className="elementskit-nav-logo" target="" rel="">
                                 <img width="2170" height="548" src={logo} title="logo white" alt="logo white" decoding="async" data-lazy-src={logo} data-ll-status="loaded" className="entered lazyloaded"/>
                                 <noscript><img width="2170" height="548" src={logo} title="logo white" alt="logo white" decoding="async" /></noscript>
                               </Link>
-                              <button onClick={() => setIsMobile(false)} className="elementskit-menu-close elementskit-menu-toggler" type="button">X</button>
+                              <button onClick={() => setIsOpen(false)} className="elementskit-menu-close elementskit-menu-toggler" type="button">X</button>
                           </div>
                         </div>
                         <div className="elementskit-menu-overlay elementskit-menu-offcanvas-elements elementskit-menu-toggler ekit-nav-menu--overlay"></div>

@@ -91,8 +91,8 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                 departure_time: parkingFromDate + " " + parkingFromTime,
                 return_time: carCollectionDate + " " + carCollectionTime,
                 coupon: couponId,
-                discounted_price : discountedPrice==0 ? totalPrice : discountedPrice,                
-                total_price: totalPrice,
+                discounted_price : discountedPrice==0 ? totalPrice.toFixed(2) : discountedPrice.toFixed(2),                
+                total_price: totalPrice.toFixed(2),
                 status: statusId
                 }),
             });
