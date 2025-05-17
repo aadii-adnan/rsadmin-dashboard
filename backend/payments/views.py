@@ -147,11 +147,10 @@ class CreateStripePaymentIntent(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-
+@method_decorator(csrf_exempt, name='dispatch')
 class StripeWebhookView(APIView):
     permission_classes = []
 
-    @method_decorator(csrf_exempt)
     def post(self, request):
         payload = request.body
         sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')

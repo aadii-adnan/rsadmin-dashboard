@@ -88,10 +88,12 @@ const Step4BookingForm = () => {
         </div>
         <div className="row justify-content-center">
             <div className="col-md-7 text-center">
-            <h5 className="purple-text text-center" style={{ fontSize: "18px", fontWeight: "bold", color: "rgb(1, 6, 89)", marginTop: "20px" }}>
-                Your booking has been successfully completed!<br />
-                
+            {localStorage.getItem("payment_status") === "succeeded" ? <h5 className="purple-text text-center" style={{ fontSize: "18px", fontWeight: "bold", color: "rgb(1, 6, 89)", marginTop: "20px" }}>
+                Your booking has been successfully completed!<br />                
             </h5>
+            : <h5 className="purple-text text-center" style={{ fontSize: "18px", fontWeight: "bold", color: "rgb(1, 6, 89)", marginTop: "20px" }}>
+                Your Payment is still processing. We'll email you with the invoice once confirmed.<br />                
+            </h5>}
             <p className="text-center" style={{ fontSize: "16px", color: "#555", marginTop: "10px" }}>
                 Thank you for choosing our service. We look forward to serving you!
             </p>
@@ -112,7 +114,7 @@ const Step4BookingForm = () => {
                 }}> Download Invoice</button>}
             <iframe ref={iframeRef} style={{ display: 'none' }} title="Invoice PDF" />
             </div>
-            {coupon && <h5 className="purple-text text-center" style={{ fontSize: "18px", color: "rgb(1, 6, 89)", marginTop: "70px" }}>
+            {(localStorage.getItem("payment_status") === "succeeded" && coupon) && <h5 className="purple-text text-center" style={{ fontSize: "18px", color: "rgb(1, 6, 89)", marginTop: "70px" }}>
                 You can use the following code to get a discount on your next booking: <strong>{coupon}</strong>
             </h5>}
             

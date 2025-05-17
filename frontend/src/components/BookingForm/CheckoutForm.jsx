@@ -96,7 +96,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
             } else {
               setMessage("Payment is processing. We'll email you once confirmed.");
               clearTimeout(paymentTimeout);
-              // goNext();
+              goNext();
             }
             break;
           default:
