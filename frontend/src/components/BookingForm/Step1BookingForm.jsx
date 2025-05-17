@@ -161,7 +161,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
           </div>        
       </div>
       <input type="button" className="next action-button" value="Next" onClick={handleNext} style={nextButtonStyle} />
-      {!bookingData?.userDetails?.id && <input type="button" className="previous action-button-previous" value="Previous" onClick={goBack} style={prevButtonStyle} />}
+      {!bookingData?.userDetails?.id && <input type="button" className="previous action-button-previous" value="Back" onClick={goBack} style={prevButtonStyle} />}
     </fieldset>
 
     {/* Popup Dialog */}

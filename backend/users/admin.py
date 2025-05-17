@@ -5,22 +5,7 @@ from .models import CustomUser
 from django.contrib import admin
 from django.contrib.auth.models import Group
 
-class CustomGroupAdmin(admin.ModelAdmin):
-    def has_module_permission(self, request):
-        """
-        Restrict access for managers.
-        """
-        user = request.user
-        if user.is_authenticated and getattr(user, "is_manager", False):
-            return False
-        return super().has_module_permission(request)
-
-# Unregister the default Group model
 admin.site.unregister(Group)
-
-# Re-register the Group model with the custom admin class
-admin.site.register(Group, CustomGroupAdmin)
-
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     list_display = ('id', 'username', 'email', 'full_name', 'phone', 

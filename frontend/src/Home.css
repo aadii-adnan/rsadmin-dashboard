@@ -109,9 +109,11 @@
 .feature-item img {
     height: 200px;
     width: 100%;
+    object-fit: cover;
+    object-position: top center;
 }
 .custom-gap .row {
-  gap: 3rem; /* Adjust the gap between columns */
+  gap: 20px 50px; /* Adjust the gap between columns */
 }
 
 .feature-item {
@@ -175,7 +177,7 @@ body .home-banner {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(1, 6, 89, 0.5); /* #010659 with 60% opacity */
+  background-color: rgba(1, 6, 89, 0.6); /* #010659 with 60% opacity */
   z-index: 1;
 }
 
@@ -192,7 +194,7 @@ body .home-banner {
 
 .banner-heading {
   font-size: 60px;
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 10px;
 }
 
@@ -598,7 +600,7 @@ body .home-banner {
         width: 100%;
     }
     .banner-content {
-        top: 50%;
+        top: 53%;
         width: 90%;
     }
     .banner-heading {

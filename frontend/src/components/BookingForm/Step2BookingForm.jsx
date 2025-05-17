@@ -159,7 +159,7 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
             
         </div>
         <input type="button" className="next action-button" value={loading ? "loading..." : "Next"} onClick={async(e) => {await handleBooking(e); setLoading(false);}} style={nextButtonStyle} />
-        <input type="button" className="previous action-button-previous" value="Previous" onClick={goBack} style={prevButtonStyle} />
+        <input type="button" className="previous action-button-previous" value="Back" onClick={goBack} style={prevButtonStyle} />
     </fieldset>
 
     {/* Popup Dialog */}

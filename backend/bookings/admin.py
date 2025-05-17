@@ -3,8 +3,31 @@ from django.utils.html import format_html
 from django.urls import reverse
 from .models import Booking
 import csv
-from datetime import datetime, timedelta
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.admin import SimpleListFilter
 from django.http import HttpResponse
+
+
+
+
+
+class DepartureTimeTomorrowFilter(SimpleListFilter):
+    title = 'Departure Time'
+    parameter_name = 'departure_time_tomorrow'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('tomorrow', 'Tomorrow'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'tomorrow':
+            tomorrow = timezone.localdate() + timedelta(days=1)
+            start = timezone.make_aware(datetime.combine(tomorrow, datetime.min.time()))
+            end = timezone.make_aware(datetime.combine(tomorrow, datetime.max.time()))
+            return queryset.filter(departure_time__gte=start, departure_time__lte=end)
+        return queryset
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
@@ -85,7 +108,7 @@ class BookingAdmin(admin.ModelAdmin):
 
         return base_fieldsets
     
-    list_filter = ('status', 'service', 'created_at', 'departure_time')
+    list_filter = ('status', 'service', 'created_at', 'departure_time', DepartureTimeTomorrowFilter)
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
     readonly_fields = ('created_at', 'modified_at', 'download_invoice', 'download_booking_form')
     list_per_page = 10 

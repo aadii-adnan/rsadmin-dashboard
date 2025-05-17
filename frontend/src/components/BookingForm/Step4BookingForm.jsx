@@ -69,23 +69,27 @@ const Step4BookingForm = () => {
     <fieldset className="fieldset active">
         <div className="form-card">
         
-        <h2 className="purple-text text-center" style={{ fontSize: "24px", fontWeight: "bold", color: "rgb(1, 6, 89)", marginBottom: "20px" }}>
-            SUCCESS!
-        </h2>
-        <div className="row justify-content-center">
-            <div className="col-3">
-            <img
-                src="https://i.imgur.com/GwStPmg.png"
-                className="fit-image"
-                alt="success"
-                style={{
-                width: "100%",
-                borderRadius: "10px",
-                boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-                }}
-            />
+        {localStorage.getItem("payment_status") === "succeeded" && 
+        <>
+            <h2 className="purple-text text-center" style={{ fontSize: "24px", fontWeight: "bold", color: "rgb(1, 6, 89)", marginBottom: "20px" }}>
+                SUCCESS!
+            </h2>
+            <div className="row justify-content-center">
+                <div className="col-3">
+                <img
+                    src="https://i.imgur.com/GwStPmg.png"
+                    className="fit-image"
+                    alt="success"
+                    style={{
+                        height: "150px",
+                        width: "auto",
+                        borderRadius: "10px",
+                        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+                    }}
+                />
+                </div>
             </div>
-        </div>
+        </>}
         <div className="row justify-content-center">
             <div className="col-md-7 text-center">
             {localStorage.getItem("payment_status") === "succeeded" ? <h5 className="purple-text text-center" style={{ fontSize: "18px", fontWeight: "bold", color: "rgb(1, 6, 89)", marginTop: "20px" }}>

@@ -182,6 +182,7 @@ const Home = () => {
                 </SwiperSlide>
             </Swiper>
             <div className="banner-content">
+                <h6 style={{letterSpacing:"5px", textTransform:"uppercase", fontWeight:400, fontSize:"14px"}}>Meet &amp; Greet Dublin Airport Parking</h6>
                 <h1 className="banner-heading">Meet & Greet Dublin Airport Parking</h1>
                 <h3 className="banner-subheading">
                 Book secure Dublin Airport Parking with 24/7 CCTV monitoring &amp; Meet &amp; Greet service.
