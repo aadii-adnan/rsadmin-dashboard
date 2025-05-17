@@ -13,7 +13,7 @@ import { Helmet } from 'react-helmet-async';
 
 const steps = [
   { id: "account", label: "Account" },
-  { id: "car", label: "Car Details" },
+  { id: "car", label: "Provide Details" },
   { id: "addons", label: "Add Ons" },
   { id: "payment", label: "Payment" },
 //   { id: "confirm", label: "Success" },

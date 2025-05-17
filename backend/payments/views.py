@@ -202,12 +202,12 @@ class StripeWebhookView(APIView):
                         html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #0066cc;">Booking Confirmation – Meet & Greet Parking</h2>
+        <h2 style="color: #0066cc;">Booking Confirmation – {booking.service.name}</h2>
 
         <p>Hi {booking.first_name},</p>
 
         <p>
-        Thank you for choosing <strong>rsexpressparking</strong> – Meet & Greet Parking.
+        Thank you for choosing <strong>rsexpressparking</strong> – {booking.service.name}.
         We're happy to confirm that your booking has been successfully completed and your payment has been received.
         </p>
 
@@ -230,9 +230,15 @@ class StripeWebhookView(APIView):
         You can download your invoice from the attached PDF.
         </p>
 
-        <p>
-        If you have any questions or need to make changes to your booking, feel free to reply to this email or contact us directly.
-        </p>
+        <h3 style="color: #444;">📞 Important Instructions</h3>
+        <ul>
+            <li>
+                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+            </li>
+            <li>
+                For any other queries, feel free to reply to this email or contact us directly.
+            </li>
+        </ul>
 
         <p>
         Thanks again, and we look forward to seeing you soon!
@@ -249,7 +255,7 @@ class StripeWebhookView(APIView):
                         text_body = f"""
     Hi {booking.first_name},
 
-    Thank you for choosing rsexpressparking – Meet & Greet Parking.
+    Thank you for choosing rsexpressparking – {booking.service.name}.
 
     We're happy to confirm that your booking has been successfully completed and your payment has been received.
 
@@ -264,7 +270,7 @@ class StripeWebhookView(APIView):
     -----------------------------
     💳 Payment Details
     -----------------------------
-    Total Paid: ${booking.discounted_price}
+    Total Paid: €{booking.discounted_price}
     Payment Method: Stripe
 
     -----------------------------
@@ -272,7 +278,11 @@ class StripeWebhookView(APIView):
     -----------------------------
     You can download your invoice from the attached PDF.
 
-    If you have any questions or need to make changes to your booking, feel free to reply to this email or contact us directly.
+    -----------------------------
+    📞 Important Instructions
+    -----------------------------
+    - Please make sure to call the driver at +353 83 489 6505 at least 30 minutes before your arrival and departure to ensure a smooth handover.
+    - For any other queries, feel free to reply to this email or contact us directly.
 
     Thanks again, and we look forward to seeing you soon!
 
@@ -283,7 +293,7 @@ class StripeWebhookView(APIView):
 
 
                         email = EmailMultiAlternatives(
-                            subject="Booking Confirmation – Meet & Greet Parking",
+                            subject="Booking Confirmation – " + str(booking.service.name),
                             body=text_body,
                             from_email=settings.DEFAULT_FROM_EMAIL,
                             to=[booking.email, "rsexpressparking@gmail.com"],                        
