@@ -18,14 +18,15 @@ from datetime import datetime, timedelta
 class DepartureTimeWithTomorrowFilter(DateFieldListFilter):
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
-        # Insert "Tomorrow" after "Today"
         tomorrow_lookup = ('tomorrow', _('Tomorrow'))
-        # Find the index of "Today" and insert after it
-        today_index = next((i for i, (val, _) in enumerate(self.links) if val == 'today'), None)
+        # Convert self.links to a list for modification
+        links = list(self.links)
+        today_index = next((i for i, (val, _) in enumerate(links) if val == 'today'), None)
         if today_index is not None:
-            self.links.insert(today_index + 1, tomorrow_lookup)
+            links.insert(today_index + 1, tomorrow_lookup)
         else:
-            self.links.append(tomorrow_lookup)
+            links.append(tomorrow_lookup)
+        self.links = tuple(links)
 
     def choices(self, changelist):
         for lookup, title in self.links:
