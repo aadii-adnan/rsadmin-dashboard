@@ -10,42 +10,33 @@ from django.contrib.admin import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
 from datetime import datetime, timedelta
 
+from django.contrib.admin.filters import DateFieldListFilter
+from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+from datetime import timedelta
 
+class CustomDateFieldListFilter(DateFieldListFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+        tomorrow = timezone.localdate() + timedelta(days=1)
 
-
-
-class DepartureTimeWithTomorrowFilter(DateFieldListFilter):
-    def __init__(self, field, request, params, model, model_admin, field_path):
-        super().__init__(field, request, params, model, model_admin, field_path)
-        tomorrow_lookup = ('tomorrow', _('Tomorrow'))
+        # Convert to list so we can insert
         links = list(self.links)
-        today_index = next((i for i, (val, _) in enumerate(links) if val == 'today'), None)
-        if today_index is not None:
-            links.insert(today_index + 1, tomorrow_lookup)
-        else:
-            links.append(tomorrow_lookup)
+
+        # Insert "Tomorrow" after "Today"
+        links.insert(1, (
+            _('Tomorrow'),
+            {
+                self.field.name + '__year': str(tomorrow.year),
+                self.field.name + '__month': str(tomorrow.month),
+                self.field.name + '__day': str(tomorrow.day),
+            }
+        ))
+
+        # Assign back to self.links
         self.links = tuple(links)
 
-    def choices(self, changelist):
-        for lookup, title in self.links:
-            yield {
-                'selected': self.value() == lookup,  # <-- FIXED HERE
-                'query_string': changelist.get_query_string({self.field_generic: lookup}),
-                'display': title,
-            }
-
-    def queryset(self, request, queryset):
-        if self.value() == 'tomorrow':  # <-- FIXED HERE
-            tomorrow = timezone.localdate() + timedelta(days=1)
-            start = timezone.make_aware(datetime.combine(tomorrow, datetime.min.time()))
-            end = timezone.make_aware(datetime.combine(tomorrow, datetime.max.time()))
-            return queryset.filter(**{
-                f"{self.field_path}__gte": start,
-                f"{self.field_path}__lte": end,
-            })
-        return super().queryset(request, queryset)
-    
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
@@ -126,7 +117,7 @@ class BookingAdmin(admin.ModelAdmin):
 
         return base_fieldsets
     
-    list_filter = ('status', 'service', 'created_at', ('departure_time', DepartureTimeWithTomorrowFilter),)
+    list_filter = ('status', 'service', 'created_at', ('departure_time', CustomDateFieldListFilter),)
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
     readonly_fields = ('created_at', 'modified_at', 'download_invoice', 'download_booking_form')
     list_per_page = 10 
