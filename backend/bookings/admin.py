@@ -4,31 +4,47 @@ from django.urls import reverse
 from .models import Booking
 import csv
 from django.utils import timezone
-from datetime import timedelta
 from django.contrib.admin import SimpleListFilter
 from django.http import HttpResponse
+from django.contrib.admin import DateFieldListFilter
+from django.utils.translation import gettext_lazy as _
+from datetime import datetime, timedelta
 
 
 
 
 
-class DepartureTimeTomorrowFilter(SimpleListFilter):
-    title = 'Departure Time'
-    parameter_name = 'departure_time_tomorrow'
 
-    def lookups(self, request, model_admin):
-        return (
-            ('tomorrow', 'Tomorrow'),
-        )
+class DepartureTimeWithTomorrowFilter(DateFieldListFilter):
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        super().__init__(field, request, params, model, model_admin, field_path)
+        # Insert "Tomorrow" after "Today"
+        tomorrow_lookup = ('tomorrow', _('Tomorrow'))
+        # Find the index of "Today" and insert after it
+        today_index = next((i for i, (val, _) in enumerate(self.links) if val == 'today'), None)
+        if today_index is not None:
+            self.links.insert(today_index + 1, tomorrow_lookup)
+        else:
+            self.links.append(tomorrow_lookup)
+
+    def choices(self, changelist):
+        for lookup, title in self.links:
+            yield {
+                'selected': self.lookup_val == lookup,
+                'query_string': changelist.get_query_string({self.field_generic: lookup}),
+                'display': title,
+            }
 
     def queryset(self, request, queryset):
-        if self.value() == 'tomorrow':
+        if self.lookup_val == 'tomorrow':
             tomorrow = timezone.localdate() + timedelta(days=1)
             start = timezone.make_aware(datetime.combine(tomorrow, datetime.min.time()))
             end = timezone.make_aware(datetime.combine(tomorrow, datetime.max.time()))
-            return queryset.filter(departure_time__gte=start, departure_time__lte=end)
-        return queryset
-@admin.register(Booking)
+            return queryset.filter(**{
+                f"{self.field_path}__gte": start,
+                f"{self.field_path}__lte": end,
+            })
+        return super().queryset(request, queryset)@admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
     def colored_status(self, obj):
@@ -108,7 +124,7 @@ class BookingAdmin(admin.ModelAdmin):
 
         return base_fieldsets
     
-    list_filter = ('status', 'service', 'created_at', 'departure_time', DepartureTimeTomorrowFilter)
+    list_filter = ('status', 'service', 'created_at', ('departure_time', DepartureTimeWithTomorrowFilter),)
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
     readonly_fields = ('created_at', 'modified_at', 'download_invoice', 'download_booking_form')
     list_per_page = 10 
