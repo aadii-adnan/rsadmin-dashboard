@@ -44,7 +44,9 @@ class DepartureTimeWithTomorrowFilter(DateFieldListFilter):
                 f"{self.field_path}__gte": start,
                 f"{self.field_path}__lte": end,
             })
-        return super().queryset(request, queryset)@admin.register(Booking)
+        return super().queryset(request, queryset)
+    
+@admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
     def colored_status(self, obj):
