@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { createPaymentIntent, verifyPaymentAmount, checkPaymentStatus } from '../../services/paymentService';
 import PaymentStatus from './PaymentStatus';
+import { useNavigate } from 'react-router-dom';
 
 const PAYMENT_CHECK_INTERVAL = 2000; // 2 seconds
 const MAX_PAYMENT_CHECKS = 5;
@@ -14,6 +15,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState(null);
   const [paymentId, setPaymentId] = useState(null);
+  const navigate = useNavigate();
   
   // Add payment recovery state
   const [retryCount, setRetryCount] = useState(0);
@@ -80,7 +82,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
             clearTimeout(paymentTimeout);
             localStorage.setItem("payment_status", "succeeded");
             
-            goNext();
+            navigate("/thank-you");
             break;
           case 'Failed':
             setError("Payment failed. Please try again.");
@@ -148,7 +150,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
           if (internal_status === "Succeeded") {
             alert("This booking has already been paid for.");
    
-            goNext();
+            navigate("/thank-you");
             return;
           } else if (internal_status === "Pending") {
             setMessage("A payment for this booking is already being processed. Please wait...");

@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'payments',
     'core',
     'finance',
-    'django.contrib.sitemaps'
+    'django.contrib.sitemaps',
+    'django_celery_beat',
 ]
 
 REST_FRAMEWORK = {
@@ -211,3 +212,8 @@ CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     'https://new.rsexpressparking.com/',
 ]
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'

@@ -14,6 +14,7 @@ import { FloatingWhatsApp } from 'react-floating-whatsapp';
 import avatar from "./assets/avatar.png";
 import 'react-toastify/dist/ReactToastify.css';
 import NotFound404 from "./pages/NotFound404";
+import ThankYouPage from "./pages/ThankYouPage";
 
 function Logout() {
   const { logout } = useAuth();
@@ -41,6 +42,7 @@ function App() {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="*" element={<NotFound404/>} />
+        <Route path="/thank-you" element={<ThankYouPage />} />
       </Routes>
       <Footer />
       <FloatingWhatsApp

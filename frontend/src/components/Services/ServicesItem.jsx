@@ -4,11 +4,24 @@ import { useBooking } from '../../context/BookingContext';
 import flexible from '../../assets/service.jpg';
 import standard from "../../assets/parking.jpg"
 import "../../BookingForm.css";
+import { useNavigate } from 'react-router-dom';
 
 const ServicesItem = ({ service, openModal, index }) => {
-  const { bookingData } = useBooking();
+  const { bookingData, setBookingData } = useBooking();
   const [amountSaved, setAmountSaved] = useState(0);
   const [price, setPrice] = useState(0);
+  const navigate = useNavigate();
+
+  const handleBookNow = () => {
+    setBookingData({
+      ...bookingData,
+      bookingDetails: {
+        ...bookingData?.bookingDetails,
+        service: service.name, // Set the service name
+      },
+    });
+    navigate(`/book/${service.slug}`);
+  };
 
   function calculateTotalPrice() {
     const noOfDays = bookingData?.paymentDetails?.noOfDays || 0;
@@ -113,7 +126,6 @@ const ServicesItem = ({ service, openModal, index }) => {
           )}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-          <Link style={{ textDecoration: 'none' }} to={`/book/${service.slug}`}>
             <div
               style={{
                 padding: '10px 20px',
@@ -125,12 +137,12 @@ const ServicesItem = ({ service, openModal, index }) => {
                 transition: 'background-color 0.3s ease',
                 cursor: 'pointer',
               }}
+              onClick={handleBookNow}
               onMouseOver={(e) => (e.target.style.backgroundColor = '#0056b3')}
               onMouseOut={(e) => (e.target.style.backgroundColor = '#010659')}
             >
               Book Now
             </div>
-          </Link>
           <div
             onClick={() => openModal(service)}
             style={{

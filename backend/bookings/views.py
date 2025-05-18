@@ -10,6 +10,9 @@ from core.models import Status
 from services.models import Coupon
 from payments.models import Payment
 from rest_framework.permissions import AllowAny
+from datetime import timedelta
+from bookings.tasks import send_completion_email
+from celery import current_app
 
 class BookingListCreate(APIView):
     permission_classes = [AllowAny]
@@ -56,6 +59,9 @@ class BookingListCreate(APIView):
                 status_obj = Status.objects.get(name='Pending', type='booking')
                 # Save booking with status
                 booking = serializer.save(status=status_obj)
+                booking_end = booking.return_time
+                eta = booking_end + timedelta(minutes=15)
+                send_completion_email.apply_async((booking.id,), eta=eta)
                 return Response(serializer.data, status=201)
             except Status.DoesNotExist:
                 return Response(

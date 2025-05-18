@@ -120,9 +120,8 @@ class BookingAdmin(admin.ModelAdmin):
     list_filter = ('status', 'service', 'created_at', ('departure_time', CustomDateFieldListFilter),)
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
     readonly_fields = ('created_at', 'modified_at', 'download_invoice', 'download_booking_form')
-    list_per_page = 10 
+    list_per_page = 20 
     show_full_result_count = True  # Shows total number of items
-    list_max_show_all = 200
     
 
     def full_name(self, obj):

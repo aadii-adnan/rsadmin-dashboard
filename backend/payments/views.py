@@ -18,7 +18,6 @@ from django.contrib.auth import get_user_model
 from services.models import Service
 from django.utils import timezone
 from services.models import Coupon
-from django.utils import timezone
 import random
 import string
 from datetime import timedelta
@@ -28,6 +27,8 @@ import os
 from rest_framework.renderers import BaseRenderer
 from django.core.mail import EmailMultiAlternatives
 from rest_framework.permissions import AllowAny
+from bookings.tasks import send_completion_email
+from celery import current_app
 
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -179,6 +180,10 @@ class StripeWebhookView(APIView):
                 booking.status = status_obj
                 booking.save()
 
+                booking_end = booking.return_time
+                eta = booking_end + timedelta(minutes=15)
+                send_completion_email.apply_async((booking.id,), eta=eta)
+
                 # Award a new coupon to the user
                 code = generate_coupon_code()
                 valid_from = timezone.now()
@@ -221,7 +226,7 @@ class StripeWebhookView(APIView):
 
         <h3 style="color: #444;">💳 Payment Details</h3>
         <ul>
-        <li><strong>Total Paid:</strong> ${booking.discounted_price}</li>
+        <li><strong>Total Paid:</strong> €{booking.discounted_price}</li>
         <li><strong>Payment Method:</strong> Stripe</li>
         </ul>
 

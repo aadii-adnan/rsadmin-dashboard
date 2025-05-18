@@ -112,13 +112,13 @@ const BookingDatesForm = () => {
     const carCollectionDateTime = new Date(`${formData.carCollectionDate}T${formData.carCollectionTime}`);
   
     if (parkingFromDateTime - now < 4 * 60 * 60 * 1000 || carCollectionDateTime - now < 4 * 60 * 60 * 1000) {
-      setPopupMessage("Parking date and time must be at least 4 hours from the current time.");
+      setPopupMessage("Departure date and time must be at least 4 hours from the current time.");
       setIsPopupOpen(true);
       return;
     }
   
     if (parkingFromDateTime >= carCollectionDateTime) {
-      setPopupMessage("Car collection date and time must be after parking date and time.");
+      setPopupMessage("Arrival date and time must be after Departure date and time.");
       setIsPopupOpen(true);
       return;
     }
