@@ -19,7 +19,6 @@ class DepartureTimeWithTomorrowFilter(DateFieldListFilter):
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
         tomorrow_lookup = ('tomorrow', _('Tomorrow'))
-        # Convert self.links to a list for modification
         links = list(self.links)
         today_index = next((i for i, (val, _) in enumerate(links) if val == 'today'), None)
         if today_index is not None:
@@ -31,13 +30,13 @@ class DepartureTimeWithTomorrowFilter(DateFieldListFilter):
     def choices(self, changelist):
         for lookup, title in self.links:
             yield {
-                'selected': self.lookup_val == lookup,
+                'selected': self.value() == lookup,  # <-- FIXED HERE
                 'query_string': changelist.get_query_string({self.field_generic: lookup}),
                 'display': title,
             }
 
     def queryset(self, request, queryset):
-        if self.lookup_val == 'tomorrow':
+        if self.value() == 'tomorrow':  # <-- FIXED HERE
             tomorrow = timezone.localdate() + timedelta(days=1)
             start = timezone.make_aware(datetime.combine(tomorrow, datetime.min.time()))
             end = timezone.make_aware(datetime.combine(tomorrow, datetime.max.time()))
