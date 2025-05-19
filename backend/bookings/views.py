@@ -9,8 +9,7 @@ from core.models import Status
 from services.models import Coupon
 from payments.models import Payment
 from rest_framework.permissions import AllowAny
-from bookings.tasks import send_completion_email
-from datetime import timezone, timedelta
+from django.utils import timezone
 
 
 class BookingListCreate(APIView):
