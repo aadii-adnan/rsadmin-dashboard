@@ -4,17 +4,14 @@ from rest_framework import status, permissions
 from django.shortcuts import get_object_or_404
 from .models import Booking
 from .serializers import BookingSerializer
-from django.utils import timezone
 from core.permissions import IsManagerOrAdmin
 from core.models import Status
 from services.models import Coupon
 from payments.models import Payment
 from rest_framework.permissions import AllowAny
-from datetime import timedelta
 from bookings.tasks import send_completion_email
-import datetime
-from django.utils import timezone
-import pytz
+from datetime import timezone, timedelta
+
 
 class BookingListCreate(APIView):
     permission_classes = [AllowAny]
@@ -61,14 +58,12 @@ class BookingListCreate(APIView):
                 status_obj = Status.objects.get(name='Pending', type='booking')
                 # Save booking with status
                 booking = serializer.save(status=status_obj)
-                pkt = pytz.timezone('Asia/Karachi')
 
-                # Step 3: Make it timezone-aware in PKT
-                local_pkt_dt = pkt.localize(booking.return_time)
+                pkt_offset = timezone(timedelta(hours=5))
+                corrected = booking.return_time.replace(tzinfo=pkt_offset)
+                real_utc = corrected.astimezone(timezone.utc)
 
-                # Step 4: Convert to UTC
-                utc_dt = local_pkt_dt.astimezone(pytz.utc)
-                eta = utc_dt + timedelta(minutes=15)
+                eta = real_utc + timedelta(minutes=15)
                 send_completion_email.apply_async((booking.id,), eta=eta)
                 return Response(serializer.data, status=201)
             except Status.DoesNotExist:
