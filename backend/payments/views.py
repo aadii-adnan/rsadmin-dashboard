@@ -16,11 +16,9 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from services.models import Service
-from django.utils import timezone
 from services.models import Coupon
 import random
 import string
-from datetime import timedelta
 from core.models import Status
 import base64
 import os
@@ -28,7 +26,7 @@ from rest_framework.renderers import BaseRenderer
 from django.core.mail import EmailMultiAlternatives
 from rest_framework.permissions import AllowAny
 from bookings.tasks import send_completion_email
-from celery import current_app
+from datetime import timezone, timedelta
 
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -180,8 +178,11 @@ class StripeWebhookView(APIView):
                 booking.status = status_obj
                 booking.save()
 
-                booking_end = booking.return_time
-                eta = booking_end + timedelta(minutes=15)
+                netherland_offset = timezone(timedelta(hours=2))
+                corrected = booking.return_time.replace(tzinfo=netherland_offset)
+                real_utc = corrected.astimezone(timezone.utc)
+
+                eta = real_utc + timedelta(minutes=15)
                 send_completion_email.apply_async((booking.id,), eta=eta)
 
                 # Award a new coupon to the user

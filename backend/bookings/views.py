@@ -58,13 +58,6 @@ class BookingListCreate(APIView):
                 status_obj = Status.objects.get(name='Pending', type='booking')
                 # Save booking with status
                 booking = serializer.save(status=status_obj)
-
-                pkt_offset = timezone(timedelta(hours=5))
-                corrected = booking.return_time.replace(tzinfo=pkt_offset)
-                real_utc = corrected.astimezone(timezone.utc)
-
-                eta = real_utc + timedelta(minutes=15)
-                send_completion_email.apply_async((booking.id,), eta=eta)
                 return Response(serializer.data, status=201)
             except Status.DoesNotExist:
                 return Response(
