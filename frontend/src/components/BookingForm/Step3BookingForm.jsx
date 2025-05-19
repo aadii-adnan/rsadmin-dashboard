@@ -36,7 +36,7 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
             <div className="col-sm-8 mx-auto my-5 payment-card">
               <div id="cardDesign" className="position-relative shadow p-4">
                 <div className="d-flex align-items-center justify-content-between">
-                  <div className="fs-4"><strong>€{discountedPrice.toFixed(2) || totalPrice.toFixed(2)}</strong></div>
+                  <div className="fs-4"><strong>€{discountedPrice > 0 ? discountedPrice.toFixed(2) : totalPrice.toFixed(2)}</strong></div>
                   <img src={wifi} alt="Wifi Svg" width="60px" style={{ transform: "rotate(90deg)", filter: "invert(1)" }} />
                 </div>
                 <div className="mt-4 fs-3">{formData.card_number ? "**** **** **** " + formData.card_number.slice(-4) : "**** **** **** ****"}</div>
