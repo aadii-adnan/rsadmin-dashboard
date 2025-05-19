@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import Service, AddOn, Coupon
 
+
+
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'base_price', 'per_day_price', 'is_featured')

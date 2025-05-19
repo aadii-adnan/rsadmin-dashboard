@@ -12,7 +12,9 @@ from payments.models import Payment
 from rest_framework.permissions import AllowAny
 from datetime import timedelta
 from bookings.tasks import send_completion_email
-from celery import current_app
+import datetime
+from django.utils import timezone
+import pytz
 
 class BookingListCreate(APIView):
     permission_classes = [AllowAny]
@@ -59,8 +61,14 @@ class BookingListCreate(APIView):
                 status_obj = Status.objects.get(name='Pending', type='booking')
                 # Save booking with status
                 booking = serializer.save(status=status_obj)
-                booking_end = booking.return_time
-                eta = booking_end + timedelta(minutes=15)
+                pkt = pytz.timezone('Asia/Karachi')
+
+                # Step 3: Make it timezone-aware in PKT
+                local_pkt_dt = pkt.localize(booking.return_time)
+
+                # Step 4: Convert to UTC
+                utc_dt = local_pkt_dt.astimezone(pytz.utc)
+                eta = utc_dt + timedelta(minutes=15)
                 send_completion_email.apply_async((booking.id,), eta=eta)
                 return Response(serializer.data, status=201)
             except Status.DoesNotExist:

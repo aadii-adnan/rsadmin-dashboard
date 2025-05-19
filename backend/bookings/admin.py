@@ -9,7 +9,6 @@ from django.http import HttpResponse
 from django.contrib.admin import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
 from datetime import datetime, timedelta
-
 from django.contrib.admin.filters import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone

@@ -51,9 +51,9 @@ INSTALLED_APPS = [
     'contact',
     'payments',
     'core',
-    'finance',
     'django.contrib.sitemaps',
     'django_celery_beat',
+    'finance',
 ]
 
 REST_FRAMEWORK = {

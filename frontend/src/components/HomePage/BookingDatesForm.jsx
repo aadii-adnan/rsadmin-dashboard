@@ -117,11 +117,11 @@ const BookingDatesForm = () => {
     //   return;
     // }
   
-    if (parkingFromDateTime >= carCollectionDateTime) {
-      setPopupMessage("Arrival date and time must be after Departure date and time.");
-      setIsPopupOpen(true);
-      return;
-    }
+    // if (parkingFromDateTime >= carCollectionDateTime) {
+    //   setPopupMessage("Arrival date and time must be after Departure date and time.");
+    //   setIsPopupOpen(true);
+    //   return;
+    // }
     
     let couponData = null; 
     if (coupon.trim() !== "") {
