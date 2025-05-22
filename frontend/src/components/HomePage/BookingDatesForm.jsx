@@ -22,7 +22,7 @@ const BookingDatesForm = () => {
   const generate24HourTimeOptions = () => {
     const times = [];
     for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
+      for (let minute = 0; minute < 60; minute += 10) {
         const formattedHour = hour.toString().padStart(2, '0');
         const formattedMinute = minute.toString().padStart(2, '0');
         times.push(`${formattedHour}:${formattedMinute}`);
@@ -177,7 +177,7 @@ const BookingDatesForm = () => {
 
           {/* Parking From Time */}
           <div className="form-time">
-            <label htmlFor="parkingFromTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Departure Time (24h)</label>
+            <label htmlFor="parkingFromTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Departure Time</label>
             <select id="parkingFromTime" name="parkingFromTime" value={formData.parkingFromTime} onChange={handleChange} required style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px",   backgroundColor: "#fff",   cursor: "pointer" }}>
               <option value="">Select time</option>
               {generate24HourTimeOptions().map((time) => (
@@ -198,7 +198,7 @@ const BookingDatesForm = () => {
 
           {/* Car Collection Time */}
           <div className="form-time">
-            <label htmlFor="carCollectionTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Arrival Time (24h)</label>
+            <label htmlFor="carCollectionTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Arrival Time</label>
             <select id="carCollectionTime" name="carCollectionTime" value={formData.carCollectionTime} onChange={handleChange} required style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px",   backgroundColor: "#fff",   cursor: "pointer" }}>
               <option value="">Select time</option>
               {generate24HourTimeOptions().map((time) => (
