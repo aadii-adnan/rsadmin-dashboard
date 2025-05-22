@@ -131,6 +131,10 @@ const BookingForm = () => {
     }, [slug]);
 
     useEffect(() => {
+        window.scrollTo(0, 300)
+      }, []);
+
+    useEffect(() => {
       let isMounted = true; // For cleanup
   
       const initializeBookingForm = async () => {
@@ -247,14 +251,14 @@ const BookingForm = () => {
 
     </Helmet>
     <div
-      className="form-banner d-flex flex-column justify-content-center align-items-center text-white text-center"
-      style={{ backgroundImage: `url(${parkingImg})`, backgroundRepeat: "no-repeat", backgroundPosition: "0 -70px", backgroundSize: "cover", height: "350px", backgroundBlendMode: "overlay", backgroundColor: "#0106597d"}}
+      className="form-banner d-flex flex-column justify-content-center align-items-center text-white text-center booking-form-banner"
+      style={{ backgroundImage: `url(${parkingImg})`, backgroundRepeat: "no-repeat", backgroundSize: "cover", backgroundBlendMode: "overlay", backgroundColor: "#0106597d"}}
     >
       <h1 style={{fontWeight:700}} className="display-5 display-md-4">Convenient Meet & Greet Parking</h1>
       <h6 style={{fontWeight:400}} className="lead d-none d-sm-block">Enjoy stress-free airport parking with our secure, affordable meet & greet service. Quick drop-off and pickup at Dublin Airport.</h6>
     </div>
 
-    <div style={{  backgroundColor: "#f5f4ee",  padding: "50px 0",  minHeight: "100vh",}} className="container-fluid">
+    <div style={{ backgroundColor: "#f5f4ee", minHeight: "100vh"}} className="container-fluid" id="booking-form">
       <div className="row mx-0 justify-content-center">
         <div className="col-12 col-md-10 col-lg-8 col-xl-6 text-center px-3 px-md-4 py-4 w-sm-95" style={{ backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", marginTop: "30px"}}>
             <h2 id="heading" style={{   fontSize: "24px",   fontWeight: "bold",   color: "#010659",   marginBottom: "20px", }}>{serviceDetails?.name}</h2>
@@ -282,7 +286,7 @@ const BookingForm = () => {
             <form id="msform">
                 {currentStep === 0 && <Step0BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} setFormData={setFormData} goNext={goNext} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo}/>}
 
-                {currentStep === 1 && <Step1BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} goNext={goNext} nextButtonStyle={nextButtonStyle} goBack={goBack} prevButtonStyle={prevButtonStyle}/>}
+                {currentStep === 1 && <Step1BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} goNext={goNext} nextButtonStyle={nextButtonStyle} goBack={goBack} prevButtonStyle={prevButtonStyle} contactNo={contactNo} setContactNo={setContactNo}/>}
 
                 {currentStep === 2 && <Step2BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo} serviceDetails={serviceDetails} couponId={couponId} totalPrice={totalPrice} discountedPrice={discountedPrice} goNext={goNext} statuses={statuses} goBack={goBack} prevButtonStyle={prevButtonStyle} setFormData={setFormData} addOnsDetails={addOnsDetails} setTotalPrice={setTotalPrice}  selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} setAddOnsDetails={setAddOnsDetails}/>}
 

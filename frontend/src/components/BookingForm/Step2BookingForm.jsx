@@ -107,6 +107,7 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                     bookingDetails: {
                         ...prev.bookingDetails,
                         booking_id: data.id,
+                        booking_unique_id : data?.booking_id,
                         total_price : totalPrice,
                     },
                     carFlightDetails: {

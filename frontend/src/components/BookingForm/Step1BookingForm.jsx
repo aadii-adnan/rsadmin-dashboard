@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import PopupDialog from "../Utility/PopupDialog";
 import { useBooking } from "../../context/BookingContext";
+import { PhoneInput } from 'react-international-phone';
 
-const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, goBack, prevButtonStyle }) => {
+const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, goBack, prevButtonStyle, contactNo, setContactNo }) => {
   const [error, setError] = useState(""); // State to store validation error messages
   const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
   const { bookingData } = useBooking();
@@ -133,7 +134,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
                 onChange={handleChange}
                 />
             </div>
-          </div>
+        </div>
 
           <div className="bookingform-row">
             <div className="bookingform-col">
@@ -158,7 +159,67 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
                 onChange={handleChange}
                 />
             </div>
-          </div>        
+          </div>   
+
+
+           <div className="bookingform-row">
+                <div className="col-7">
+                    <h2 className="fs-title" style={{ fontSize: "20px", fontWeight: "bold", color: "#010659", marginBottom: "20px" }}>
+                    Your Details:
+                    </h2>
+                </div>                       
+            </div>
+
+            <div className="bookingform-row">
+                <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
+                    <label style={labelStyle}>First Name: *</label>
+                    <input className='custom-input'
+                    type="text"
+                    name="first_name"
+                    placeholder="First Name"
+                    style={inputStyle}
+                    value={formData?.first_name}
+                    onChange={handleChange}
+                    required
+                    />
+                </div>
+                <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px" }}>
+                    <label style={labelStyle}>Last Name: *</label>
+                    <input className='custom-input'
+                    type="text"
+                    name="last_name"
+                    placeholder="Last Name"
+                    style={inputStyle}
+                    value={formData?.last_name}
+                    onChange={handleChange}
+                    required
+                    />
+                </div>
+            </div>
+
+            <div className="bookingform-row">
+                <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
+                    <label style={labelStyle}>Email: *</label>
+                    <input className='custom-input'
+                    type="email"
+                    name="email"
+                    placeholder="Email Id"
+                    style={inputStyle}
+                    value={formData?.email}
+                    onChange={handleChange}
+                    required
+                    />
+                </div>
+                <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px", marginBottom: "10px" }}>
+                    <label style={labelStyle}>Contact No: *</label>
+                    <PhoneInput
+                    defaultCountry="ie"
+                    value={contactNo}
+                    onChange={(phone) => setContactNo(phone)}
+                    />
+                </div>
+            </div>
+           
       </div>
       <input type="button" className="next action-button" value="Next" onClick={handleNext} style={nextButtonStyle} />
       {!bookingData?.userDetails?.id && <input type="button" className="previous action-button-previous" value="Back" onClick={goBack} style={prevButtonStyle} />}

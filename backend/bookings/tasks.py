@@ -20,16 +20,22 @@ def send_completion_email(booking_id):
         <p>Hi {booking.first_name},</p>
 
         <p>
-        We hope you had a smooth experience with our <strong>Meet & Greet Parking</strong> service.
+        We hope you had a smooth experience with our <strong>{booking.service.name}</strong> service.
         </p>
 
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
-        <li><strong>Booking ID:</strong> {booking.id}</li>
+        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
         <li><strong>Drop-Off Date & Time:</strong> {booking.departure_time}</li>
         <li><strong>Pick-Up Date & Time:</strong> {booking.return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
         </ul>
+
+        <h3 style="color: #444;">🎁 Your Coupon</h3>
+        <p>
+            As a thank you, here’s a coupon for <strong>15% off</strong> your next booking:<br>
+            <span style="font-size: 18px; font-weight: bold; color: #0066cc;">{booking.discount_coupon_awarded}</span>
+        </p>
 
         <h3 style="color: #444;">🙏 Thank You!</h3>
         <p>
@@ -38,7 +44,8 @@ def send_completion_email(booking_id):
 
         <h3 style="color: #444;">💬 Feedback</h3>
         <p>
-        We would love to hear about your experience. If you have any feedback or suggestions, simply reply to this email.
+            We would love to hear about your experience. If you have a moment, please consider leaving us a review on Google Maps:<br>
+            <a href="https://g.page/r/CZW2D3u4VHTOEAI/review" target="_blank" style="color:#0066cc;">Leave a Google Review</a>
         </p>
 
         <p>
@@ -58,10 +65,16 @@ We hope you had a smooth experience with our Meet & Greet Parking service.
 -----------------------------
 🚗 Booking Summary
 -----------------------------
-Booking ID: {booking.id}
+Booking ID: {booking.booking_id}
 Drop-Off Date & Time: {booking.departure_time}
 Pick-Up Date & Time: {booking.return_time}
 Vehicle: {booking.car_model} – {booking.car_registration_no}
+
+-----------------------------
+🎁 Your Coupon
+-----------------------------
+As a thank you, here’s a coupon for 15% off your next booking:
+{booking.discount_coupon_awarded}
 
 -----------------------------
 🙏 Thank You!
@@ -71,7 +84,8 @@ Thank you for choosing RS Express Parking. We appreciate your trust and hope to 
 -----------------------------
 💬 Feedback
 -----------------------------
-We would love to hear about your experience. If you have any feedback or suggestions, simply reply to this email.
+We would love to hear about your experience. If you have a moment, please consider leaving us a review on Google Maps:
+https://g.page/r/CZW2D3u4VHTOEAI/review
 
 Warm regards,  
 The RS Express Parking Team  
@@ -81,7 +95,7 @@ https://rsexpressparking.com/ | +353 1 964 0011
     email = EmailMultiAlternatives(
         subject='Thank you for parking with us!',
         body=text_body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
+        from_email='RS Express Parking <support@rsexpressparking.com>',
         to=[booking.email],
     )
     email.attach_alternative(html_body, "text/html")

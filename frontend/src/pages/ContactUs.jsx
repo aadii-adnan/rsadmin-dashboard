@@ -59,13 +59,14 @@ const ContactUs = () => {
   return (
     <div data-elementor-type="wp-page" data-elementor-id="637" class="elementor elementor-637" data-elementor-post-type="page">
         <div style={{backgroundImage: `url('${contactImg}')`}} class="elementor-element elementor-element-f872fc6 e-flex e-con-boxed e-con e-parent e-lazyloaded" data-id="f872fc6" data-element_type="container" data-rocket-lazy-bg-83b6f427-1807-4298-8330-b22bf3dbfb44="excluded">
-            <div class="e-con-inner">
+            <div className="overlay"></div>
+            <div class="e-con-inner">                
                 <div class="elementor-element elementor-element-3ad1a84 elementor-widget__width-inherit elementor-widget elementor-widget-heading animated fadeIn" data-id="3ad1a84" data-element_type="widget" data-settings="{}" data-widget_type="heading.default">
                     <div class="elementor-widget-container">
-                    <h1 class="elementor-heading-title elementor-size-default">Contact Us</h1>
+                    <h1 style={{fontSize:"50px", color:"#fff", position: "relative", zIndex:2, margin:0}} class="elementor-heading-title elementor-size-default">Contact Us</h1>
                     </div>
                 </div>
-            </div>
+            </div>            
         </div>
         <div class="elementor-element elementor-element-42712714 e-flex e-con-boxed e-con e-parent e-lazyloaded" data-id="42712714" data-element_type="container">
             <div class="e-con-inner">

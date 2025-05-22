@@ -88,6 +88,7 @@ const Header = () => {
                                 {/* </ul>
                               </li> */}
 
+                              <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><a href="/blog"><div className="ekit-menu-nav-link">Blog</div></a></li>
                               <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
 
                               {userDetails?.id && <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link to={"/logout"}><div className="ekit-menu-nav-link">Logout</div></Link></li>}

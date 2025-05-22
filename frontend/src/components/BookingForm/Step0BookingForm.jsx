@@ -85,6 +85,7 @@ const Step0BookingForm = ({
           email: user.email,
           username: user.username,
         }));
+        setContactNo(user.phone)
       }
     } else if (rescheduleOption && !login) {
       const registerRes = await fetch(
@@ -98,6 +99,7 @@ const Step0BookingForm = ({
             email: trimmedFormData.email,
             username: trimmedFormData.username,
             password: trimmedFormData.password,
+            phone: trimmedFormData.contact_no,
           }),
         }
       );
@@ -162,7 +164,7 @@ useEffect(() => {
         </div>
 
         {/* Checkbox for Reschedule Option */}
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "20px", display:"none" }}>
           <label style={{ fontSize: "14px", color: "#555" }}>
             <input
               type="checkbox"

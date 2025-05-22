@@ -25,7 +25,11 @@ const PopupDialog = ({ isOpen, onClose, title, message }) => {
           boxShadow: "0 8px 20px rgba(0, 0, 0, 0.3)",
           backgroundColor: "#fff",
           textAlign: "center",
-          overflow: "auto", // Handle long content gracefully
+          overflow: "auto", // Handle long content gracefully          
+          ...(window.innerWidth <= 576 && {
+            padding: "20px 15px", // Reduced padding for mobile
+            position: "static",
+          }),
         },
       }}
       ariaHideApp={false} // Disable app element warning

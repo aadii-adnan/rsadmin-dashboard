@@ -14,7 +14,7 @@ const FAQItem = ({ question, answer }) => {
       </div>
       {isOpen && (
         <div className="faq-answer">
-          <p>{answer}</p>
+          <div dangerouslySetInnerHTML={{ __html: answer }} />
         </div>
       )}
     </div>

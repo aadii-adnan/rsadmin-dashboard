@@ -28,6 +28,7 @@
     "react-international-phone": "^4.5.0",
     "react-modal": "^3.16.3",
     "react-router-dom": "^7.5.3",
+    "react-time-picker": "^7.0.0",
     "react-toastify": "^11.0.5",
     "react-whatsapp-widget": "^2.2.0",
     "swiper": "^11.2.6"

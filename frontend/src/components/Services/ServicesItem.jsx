@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 const ServicesItem = ({ service, openModal, index }) => {
   const { bookingData, setBookingData } = useBooking();
   const [amountSaved, setAmountSaved] = useState(0);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
   const [price, setPrice] = useState(0);
   const navigate = useNavigate();
 
@@ -32,6 +33,7 @@ const ServicesItem = ({ service, openModal, index }) => {
     if (discount > 0) {
       const discountAmount = (basePrice + perDayPrice * noOfDays) * (discount / 100);
       setAmountSaved(discountAmount);
+      setDiscountPercentage(discount)
       setPrice(basePrice + perDayPrice * noOfDays - discountAmount);
     } else {
       setPrice(basePrice + perDayPrice * noOfDays);
@@ -98,31 +100,26 @@ const ServicesItem = ({ service, openModal, index }) => {
       </div>
 
       {/* Right Section: Price Details and Buttons */}
-      <div className='service-card-actions'
-        
-      >
-        <div style={{marginBottom:"20px"}}>
-          <p
-            style={{
-              fontSize: '20px',
-              fontWeight: 'bold',
-              color: '#010659',
-              marginBottom: '5px',
-            }}
-          >
-            €{price.toFixed(2)}
-          </p>
+      <div className='service-card-actions'>
+        <div className='service-card-price'>
+          <p style={{   fontSize: '20px',   fontWeight: 'bold',   color: '#010659',   marginBottom: '5px', }}>  €{price.toFixed(2)}</p>
           {amountSaved > 0 && (
-            <p
-              style={{
-                fontSize: '14px',
-                color: '#28a745',
-                fontWeight: 'bold',
-                marginBottom: '15px',
-              }}
-            >
-              You saved €{amountSaved.toFixed(2)}
-            </p>
+            <div style={{   display: 'flex',   flexDirection: 'row',   gap: '4px',   marginBottom: '15px',   justifyContent: "end" }}>
+              <div style={{ fontSize: '14px', color: '#28a745', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px'}}>
+                <svg  width="16"  height="16"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  strokeWidth="2">
+                  <path d="M12 5v14M5 12l7-7 7 7"/>
+                </svg>
+                You Save:
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <span style={{ fontSize: '16px', color: '#28a745', fontWeight: 'bold'}}>
+                  €{amountSaved.toFixed(2)}
+                </span>
+                <span style={{ fontSize: '13px', color: '#666', backgroundColor: '#e8f5e9', padding: '2px 6px', borderRadius: '4px', fontWeight: '500'}}>
+                  {discountPercentage}% OFF
+                </span>
+              </div>
+            </div>
           )}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>

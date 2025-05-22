@@ -43,6 +43,8 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="*" element={<NotFound404/>} />
         <Route path="/thank-you" element={<ThankYouPage />} />
+        <Route path="/services/standard-meet-and-greet-parking" element={<Home />} />
+        <Route path="/services/flexible-meet-and-greet-parking" element={<Home />} />
       </Routes>
       <Footer />
       <FloatingWhatsApp

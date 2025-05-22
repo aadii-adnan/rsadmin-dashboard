@@ -57,7 +57,8 @@ class BookingListCreate(APIView):
                 status_obj = Status.objects.get(name='Pending', type='booking')
                 # Save booking with status
                 booking = serializer.save(status=status_obj)
-                return Response(serializer.data, status=201)
+                response_serializer = BookingSerializer(booking)
+                return Response(response_serializer.data, status=201)
             except Status.DoesNotExist:
                 return Response(
                     {'error': 'System configuration error: Pending status not found'}, 

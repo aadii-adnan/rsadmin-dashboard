@@ -34,7 +34,7 @@
 <body>
     <!-- Main Details Table -->
     <table>
-        <tr><td>Booking Reference: {{ booking.id }}</td></tr>
+        <tr><td>Booking Reference: {{ booking.booking_id }}</td></tr>
         <tr><td>Dates: {{ booking.departure_time|date:"F j, Y H:i" }} - {{ booking.return_time|date:"F j, Y H:i" }}</td></tr>
         <tr><td>Customer Name: {{ booking.first_name }} {{ booking.last_name }}</td></tr>
         <tr><td>Phone Number: {{ booking.contact_no }}</td></tr>
@@ -53,16 +53,16 @@
     <table >
         <tr>
             <td style="width: 30%;">Valuables Left In Car:</td>
-            <td>&#x2610; SatNav</td>
-            <td>&#x2610; Mobile</td>
-            <td>&#x2610; Sunglasses</td>
-            <td>&#x2610; Other</td>
+            <td>&#x274F; SatNav</td>
+            <td>&#x274F; Mobile</td>
+            <td>&#x274F; Sunglasses</td>
+            <td>&#x274F; Other</td>
         </tr>
     </table>
 
     <!-- Comments Section -->
     <table>
-        <tr>
+        <tr style="height: 50px;">
             <td>Comments: {{ booking.comments }}</td>
         </tr>
     </table>

@@ -45,6 +45,42 @@ def link_callback(uri, rel):
         raise Exception(f'File not found: {path}')
     return path
 
+def generate_booking_form_pdf(booking, template_name='payments/invoice_manager.html'):
+    from services.models import Service
+    from django.template.loader import get_template
+    import base64
+    import os
+
+    service = get_object_or_404(Service, id=booking.service_id)
+    add_ons = booking.add_ons.all()
+
+    # Prepare booking form image base64
+    image_data = None
+    try:
+        with open(settings.PDF_IMAGE_PATH, 'rb') as f:
+            image_data = base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        pass
+
+    context = {
+        'booking': booking,
+        'service': service,
+        'add_ons': add_ons,
+        'image_data': f"data:image/png;base64,{image_data}" if image_data else None,
+    }
+
+    template = get_template(template_name)
+    html = template.render(context)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="RS Booking-{booking.booking_id}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
+
+    if pisa_status.err:
+        return None, 'Error generating PDF'
+    return response, None
+
 def generate_invoice(booking, template_name='payments/invoice.html'):
     """
     Generate an invoice PDF for a booking and payment.
@@ -83,13 +119,95 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
     html = template.render(context)
 
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="Invoice-{booking.id}.pdf"'
+    response['Content-Disposition'] = f'inline; filename="Invoice-{booking.booking_id}.pdf"'
 
     pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
 
     if pisa_status.err:
         return None, 'Error generating PDF'
     return response, None
+
+from django.core.mail import EmailMultiAlternatives
+
+def send_manager_new_booking_email(booking, pdf_content):
+    
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+        <h2 style="color: #0066cc;">New Booking Received – {booking.service.name}</h2>
+
+        <p>
+        A new booking has just been made on RS Express Parking. Here are the details:
+        </p>
+
+        <h3 style="color: #444;">🚗 Booking Summary</h3>
+        <ul>
+        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
+        <li><strong>Customer Name:</strong> {booking.first_name} {booking.last_name}</li>
+        <li><strong>Email:</strong> {booking.email}</li>
+        <li><strong>Phone:</strong> {booking.contact_no}</li>
+        <li><strong>Drop-Off Date & Time:</strong> {booking.departure_time}</li>
+        <li><strong>Pick-Up Date & Time:</strong> {booking.return_time}</li>
+        <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
+        <li><strong>Service:</strong> {booking.service.name}</li>
+        <li><strong>Add-ons:</strong> {', '.join([a.name for a in booking.add_ons.all()])}</li>
+        </ul>
+
+        <h3 style="color: #444;">💳 Payment Details</h3>
+        <ul>
+        <li><strong>Total Paid:</strong> €{booking.discounted_price or booking.total_price}</li>
+        <li><strong>Payment Method:</strong> Stripe</li>
+        </ul>
+
+        <p>
+        Please check the admin panel for more details or to manage this booking.
+        </p>
+
+        <p>
+        Regards,<br>
+        <strong>RS Express Parking System</strong>
+        </p>
+    </body>
+    </html>
+    """
+
+    text_body = f"""
+A new booking has just been made on RS Express Parking.
+
+-----------------------------
+🚗 Booking Summary
+-----------------------------
+Booking ID: {booking.booking_id}
+Customer Name: {booking.first_name} {booking.last_name}
+Email: {booking.email}
+Phone: {booking.contact_no}
+Drop-Off Date & Time: {booking.departure_time}
+Pick-Up Date & Time: {booking.return_time}
+Vehicle: {booking.car_model} – {booking.car_registration_no}
+Service: {booking.service.name}
+Add-ons: {', '.join([a.name for a in booking.add_ons.all()])}
+
+-----------------------------
+💳 Payment Details
+-----------------------------
+Total Paid: €{booking.discounted_price or booking.total_price}
+Payment Method: Stripe
+
+Please check the admin panel for more details or to manage this booking.
+
+Regards,
+RS Express Parking System
+"""
+
+    email = EmailMultiAlternatives(
+        subject="New Booking Received – " + str(booking.service.name),
+        body=text_body,
+        from_email='RS Express Parking <support@rsexpressparking.com>',
+        to=["rsexpressparking@gmail.com"], 
+    )
+    email.attach_alternative(html_body, "text/html")
+    email.attach(f"Invoice-{booking.booking_id}.pdf", pdf_content, 'application/pdf')
+    email.send()
 
 class PaymentList(APIView):
     def get(self, request):
@@ -170,15 +288,10 @@ class StripeWebhookView(APIView):
                 new_status = 'Succeeded'
                 status_obj = get_object_or_404(Status, name=new_status, type='payment')
                 payment.status = status_obj
-                payment.save()
+                payment.save()                
 
-                new_booking_status = 'Confirmed'
-                status_obj = get_object_or_404(Status, name=new_booking_status, type='booking')
-                booking.status = status_obj
-                booking.save()
-
-                netherland_offset = tz(timedelta(hours=2))
-                corrected = booking.return_time.replace(tzinfo=netherland_offset)
+                ireland_offset = tz(timedelta(hours=1))
+                corrected = booking.return_time.replace(tzinfo=ireland_offset)
                 real_utc = corrected.astimezone(tz.utc)
 
                 eta = real_utc + timedelta(minutes=15)
@@ -191,11 +304,17 @@ class StripeWebhookView(APIView):
 
                 coupon = Coupon.objects.create(
                     code=code,
-                    discount_percent=10,  # You can customize this
+                    discount_percent=15,  # You can customize this
                     valid_from=valid_from,
                     valid_to=valid_to,
                     active=True
                 )
+
+                new_booking_status = 'Confirmed'
+                status_obj = get_object_or_404(Status, name=new_booking_status, type='booking')
+                booking.status = status_obj
+                booking.discount_coupon_awarded = coupon.code
+                booking.save()
 
                 # Generate and email the invoice    
                 if not booking.email_sent:            
@@ -212,13 +331,13 @@ class StripeWebhookView(APIView):
         <p>Hi {booking.first_name},</p>
 
         <p>
-        Thank you for choosing <strong>rsexpressparking</strong> – {booking.service.name}.
+        Thank you for choosing <strong>RS Express Parking</strong> – {booking.service.name}.
         We're happy to confirm that your booking has been successfully completed and your payment has been received.
         </p>
 
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
-        <li><strong>Booking ID:</strong> {booking.id}</li>
+        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
         <li><strong>Drop-Off Date & Time:</strong> {booking.departure_time}</li>
         <li><strong>Pick-Up Date & Time:</strong> {booking.return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
@@ -251,7 +370,7 @@ class StripeWebhookView(APIView):
 
         <p>
         Warm regards,<br>
-        <strong>The rsexpressparking Team</strong><br>
+        <strong>The RS Express Parking Team</strong><br>
         <a href="https://rsexpressparking.com/" style="color: #0066cc;">rsexpressparking.com</a> | +353 1 964 0011
         </p>
     </body>
@@ -260,14 +379,14 @@ class StripeWebhookView(APIView):
                         text_body = f"""
     Hi {booking.first_name},
 
-    Thank you for choosing rsexpressparking – {booking.service.name}.
+    Thank you for choosing RS Express Parking – {booking.service.name}.
 
     We're happy to confirm that your booking has been successfully completed and your payment has been received.
 
     -----------------------------
     🚗 Booking Summary
     -----------------------------
-    Booking ID: {booking.id}
+    Booking ID: {booking.booking_id}
     Drop-Off Date & Time: {booking.departure_time}
     Pick-Up Date & Time: {booking.return_time}
     Vehicle: {booking.car_model} – {booking.car_registration_no}
@@ -292,7 +411,7 @@ class StripeWebhookView(APIView):
     Thanks again, and we look forward to seeing you soon!
 
     Warm regards,  
-    The rsexpressparking Team  
+    The RS Express Parking Team  
     https://rsexpressparking.com/ | +353 1 964 0011
     """
 
@@ -300,14 +419,15 @@ class StripeWebhookView(APIView):
                         email = EmailMultiAlternatives(
                             subject="Booking Confirmation – " + str(booking.service.name),
                             body=text_body,
-                            from_email=settings.DEFAULT_FROM_EMAIL,
-                            to=[booking.email, "rsexpressparking@gmail.com"],                        
+                            from_email='RS Express Parking <support@rsexpressparking.com>',
+                            to=[booking.email],                        
                         )
                         email.attach_alternative(html_body, "text/html")
-                        email.attach(f"Invoice-{booking.id}.pdf", pdf_content, 'application/pdf')
+                        email.attach(f"Invoice-{booking.booking_id}.pdf", pdf_content, 'application/pdf')
                         email.send()
                         booking.email_sent = True
                         booking.save()
+                        send_manager_new_booking_email(booking, pdf_content)
                     except Exception as e:
                         print(f"Error sending email: {str(e)}")
                         return HttpResponse(f'Error: {str(e)}', status=500)
@@ -383,7 +503,7 @@ class BookingFormDownloadView(APIView):
         html = template.render(context)
 
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'inline; filename="RS Booking-{booking.id}.pdf"'
+        response['Content-Disposition'] = f'inline; filename="RS Booking-{booking.booking_id}.pdf"'
 
         pisa_status = pisa.CreatePDF(
             html, dest=response, link_callback=link_callback

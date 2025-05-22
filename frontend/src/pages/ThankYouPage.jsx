@@ -1,14 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 
 const ThankYouPage = () => {
   const { bookingData } = useBooking();
   const navigate = useNavigate();
-  const iframeRef = useRef(null);
   const [coupon, setCoupon] = useState("");
-
   const booking_id = bookingData?.bookingDetails?.booking_id;
+  const booking_unique_id = bookingData?.bookingDetails?.booking_unique_id;
   const bookingDates = bookingData?.bookingDates || {};
   const selectedService = bookingData?.bookingDetails?.service || "N/A";
   const selectedAddOns = bookingData?.carFlightDetails?.addOnsDetails || [];
@@ -49,22 +48,26 @@ const ThankYouPage = () => {
       if (!response.ok) throw new Error("Failed to fetch invoice");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      iframeRef.current.src = url;
-      iframeRef.current.onload = () => {
-        iframeRef.current.contentWindow.focus();
-        iframeRef.current.contentWindow.print();
-      };
+
+      // Create a temporary link to trigger download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `RS-Express-Invoice-${booking_unique_id || "booking"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (error) {
-      // Silent fail
+      // Silent fail or show toast
     }
   };
 
   useEffect(() => {
     getLatestCoupon();
   }, []);
-
+  
   useEffect(() => {
-    if (!bookingData) navigate("/");
+    if (localStorage.getItem("payment_status") !== "succeeded") navigate("/");
   }, [bookingData, navigate]);
 
   return (
@@ -110,7 +113,7 @@ const ThankYouPage = () => {
                   </h4>
                   <div className="row mb-2">
                     <div className="col-6 text-muted">Booking ID:</div>
-                    <div className="col-6 fw-semibold">{booking_id}</div>
+                    <div className="col-6 fw-semibold">{booking_unique_id}</div>
                   </div>
                   <div className="row mb-2">
                     <div className="col-6 text-muted">Departure:</div>
@@ -149,29 +152,24 @@ const ThankYouPage = () => {
                   </span>
                 </div>
                 <div className="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
-                  <button
-                    className="btn btn-success px-4 py-2 fw-semibold"
-                    onClick={downloadInvoice}
-                    type="button"
-                    style={{
-                      backgroundColor: "rgb(1, 6, 89)",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "1rem",
-                      minWidth: "180px",
-                    }}
-                  >
-                    Download Invoice
-                  </button>
-                  <iframe
-                    ref={iframeRef}
-                    style={{ display: "none" }}
-                    title="Invoice PDF"
-                  />
+                    <button
+                        className="btn btn-success px-4 py-2 fw-semibold"
+                        onClick={downloadInvoice}
+                        type="button"
+                        style={{
+                            backgroundColor: "rgb(1, 6, 89)",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontSize: "1rem",
+                            minWidth: "180px",
+                        }}
+                        >
+                        Download Invoice
+                    </button>                 
                 </div>
                 {coupon && (
                   <div className="alert alert-success text-center mt-4 mb-0" style={{ fontSize: "1.08rem" }}>
-                    <strong>Special Offer:</strong> Use code <span className="fw-bold">{coupon}</span> for a discount on your next booking!
+                    <strong>Special Offer:</strong> Use code <span className="fw-bold">{coupon}</span> for a <strong>15%</strong> discount on your next booking!
                   </div>
                 )}
               </div>
@@ -186,6 +184,18 @@ const ThankYouPage = () => {
                 Thank you for choosing <span className="fw-bold" style={{ color: "#010659" }}>RS Express Parking</span>.<br />
                 We wish you a safe and pleasant journey!
               </p>
+              <button
+                className="btn mt-3 px-4 py-2 fw-semibold"
+                style={{
+                  borderRadius: "6px",
+                  fontSize: "1rem",
+                  color: "#fff",
+                  backgroundColor: "rgb(1, 6, 89)",
+                }}
+                onClick={() => navigate("/")}
+              >
+                Go Home
+              </button>
             </div>
           </div>
         </div>

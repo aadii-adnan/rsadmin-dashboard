@@ -13,6 +13,11 @@ from django.contrib.admin.filters import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from datetime import timedelta
+import io
+import zipfile
+from django.http import HttpResponse
+from payments.views import generate_invoice, generate_booking_form_pdf
+
 
 class CustomDateFieldListFilter(DateFieldListFilter):
     def __init__(self, *args, **kwargs):
@@ -39,6 +44,51 @@ class CustomDateFieldListFilter(DateFieldListFilter):
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
+    def price_display(self, obj):
+        if obj.discounted_price is not None and obj.discounted_price < obj.total_price:
+            return format_html(
+                '<span style="text-decoration: line-through; color: #888;">€{}</span><br>'
+                '<span style="color: #28a745; font-weight: bold;">€{}</span>',
+                obj.total_price, obj.discounted_price
+            )
+        return f"€{obj.total_price}"
+
+    price_display.short_description = 'Total Price'
+
+    def download_invoices_zip(self, request, queryset):
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            for booking in queryset:
+                response, error = generate_invoice(booking)
+                if error:
+                    continue
+                pdf_bytes = response.content
+                filename = f"Invoice-{booking.booking_id or booking.id}.pdf"
+                zip_file.writestr(filename, pdf_bytes)
+        zip_buffer.seek(0)
+        response = HttpResponse(zip_buffer, content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="invoices.zip"'
+        return response
+
+    download_invoices_zip.short_description = "Download invoices for selected bookings (ZIP)"
+
+    def download_booking_forms_zip(self, request, queryset):
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            for booking in queryset:
+                response, error = generate_booking_form_pdf(booking)
+                if error:
+                    continue
+                pdf_bytes = response.content
+                filename = f"BookingForm-{booking.booking_id or booking.id}.pdf"
+                zip_file.writestr(filename, pdf_bytes)
+        zip_buffer.seek(0)
+        response = HttpResponse(zip_buffer, content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="booking_forms.zip"'
+        return response
+
+    download_booking_forms_zip.short_description = "Download booking forms for selected bookings (ZIP)"
+
     def colored_status(self, obj):
         status_colors = {
             'completed': '#28a745',  # green
@@ -62,9 +112,9 @@ class BookingAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_manager:
-            return ('id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
-        return ('id', 'full_name', 'service', 'departure_time', 'return_time', 
-                'total_price', 'colored_status', 'created_at', 'download_invoice', 'download_booking_form')
+            return ('id', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
+        return ('id', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 
+                'price_display', 'colored_status', 'created_at', 'download_invoice', 'download_booking_form')
     
 
     def get_fieldsets(self, request, obj=None):
@@ -150,7 +200,14 @@ class BookingAdmin(admin.ModelAdmin):
     download_booking_form.allow_tags = True
 
 
-    actions = ['export_as_csv']
+    actions = ['export_as_csv', 'download_invoices_zip', 'download_booking_forms_zip']
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if request.user.is_manager:
+            # Remove the download_invoices_zip action for managers
+            actions.pop('download_invoices_zip', None)
+        return actions
 
     def export_as_csv(self, request, queryset):
         """
@@ -182,7 +239,7 @@ class BookingAdmin(admin.ModelAdmin):
         # Write data rows
         for booking in queryset:
             row = [
-                booking.id,
+                booking.booking_id,
                 booking.user.username if booking.user else '',
                 booking.service.name if booking.service else '',
                 ', '.join([addon.name for addon in booking.add_ons.all()]),

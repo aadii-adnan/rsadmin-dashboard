@@ -153,6 +153,9 @@ img {
 .form-date {
     flex: 1;
 }
+.form-time {
+  flex: 1 1 0%;
+}
 body .home-banner {
   position: relative;
   height: 450px;
@@ -559,7 +562,10 @@ body .home-banner {
         margin: auto;
     }
     .form-date {
-        flex: 2;
+        flex: 3;
+    }
+    .form-time {
+      flex: 2 1 0%;
     }
     .right-content {
         margin-top: 20px;
@@ -603,11 +609,14 @@ body .home-banner {
         top: 53%;
         width: 90%;
     }
+    .banner-content h6 {
+      display: none;
+    }
     .banner-heading {
         font-size: 30px;
     }
     .banner-subheading {
-        font-size: 16px;
+      display: none;
     }
     body .home-banner {
         height: 250px;
