@@ -81,8 +81,17 @@ class AddOnAdmin(admin.ModelAdmin):
 
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
-    list_display = ('id', 'code', 'discount_percent', 'active', 'valid_from', 
-                   'valid_to', 'usage_count', 'is_currently_valid')
+    def valid_from_display(self, obj):
+        return obj.valid_from.strftime('%d %b %Y %H:%M')
+    valid_from_display.short_description = 'Valid From'
+    valid_from_display.admin_order_field = 'valid_from'
+
+    def valid_to_display(self, obj):
+        return obj.valid_to.strftime('%d %b %Y %H:%M')
+    valid_to_display.short_description = 'Valid To'
+    valid_to_display.admin_order_field = 'valid_to'
+    list_display = ('id', 'code', 'discount_percent', 'active', 'valid_from_display', 
+                   'valid_to_display', 'usage_count', 'is_currently_valid')
     list_filter = ('active', 'valid_from', 'valid_to')
     search_fields = ('code',)
     
@@ -109,6 +118,7 @@ class CouponAdmin(admin.ModelAdmin):
         ('Validity Period', {
             'fields': (
                 ('valid_from', 'valid_to'),
+                ('valid_from_display', 'valid_to_display'),
             )
         }),
         ('Usage Limits', {
@@ -118,7 +128,7 @@ class CouponAdmin(admin.ModelAdmin):
         }),
     )
     
-    readonly_fields = ('times_used',)
+    readonly_fields = ('times_used','valid_from_display', 'valid_to_display')
 
     def has_module_permission(self, request):
         """

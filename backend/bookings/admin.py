@@ -117,11 +117,34 @@ class BookingAdmin(admin.ModelAdmin):
     number.short_description = 'No'
     number.admin_order_field = 'id'
 
+    def departure_time_display(self, obj):
+        return obj.departure_time.strftime('%d %b %Y %H:%M')
+    departure_time_display.admin_order_field = 'departure_time'
+    departure_time_display.short_description = 'Departure Time'
+
+    def return_time_display(self, obj):
+        return obj.return_time.strftime('%d %b %Y %H:%M')
+    return_time_display.admin_order_field = 'return_time'
+    return_time_display.short_description = 'Return Time'
+
+    def created_at_display(self, obj):
+        return obj.created_at.strftime('%d %b %Y %H:%M')
+    created_at_display.admin_order_field = 'created_at'
+    created_at_display.short_description = 'Created At'
+
+    def created_at_field(self, obj):
+        return obj.created_at.strftime('%d %b %Y %H:%M')
+    created_at_field.short_description = 'Created At'
+
+    def modified_at_field(self, obj):
+        return obj.modified_at.strftime('%d %b %Y %H:%M')
+    modified_at_field.short_description = 'Modified At'
+
     def get_list_display(self, request):
         if request.user.is_manager:
-            return ('number', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
-        return ('number', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 
-                'price_display', 'colored_status', 'created_at', 'download_invoice', 'download_booking_form')
+            return ('number', 'booking_id', 'full_name', 'service', 'departure_time_display', 'return_time_display', 'colored_status', 'created_at_display', 'download_booking_form')
+        return ('number', 'booking_id', 'full_name', 'service', 'departure_time_display', 'return_time_display', 
+                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
     
 
     def get_fieldsets(self, request, obj=None):
@@ -162,7 +185,7 @@ class BookingAdmin(admin.ModelAdmin):
             }))
 
         # Add status section with appropriate fields based on user type
-        status_fields = ['status', ('created_at', 'modified_at')]
+        status_fields = ['status', ('created_at_field', 'modified_at_field')]
         if not request.user.is_manager:
             status_fields.append('download_invoice')
         status_fields.append('download_booking_form')
@@ -175,7 +198,7 @@ class BookingAdmin(admin.ModelAdmin):
     
     list_filter = ('status', 'service', 'created_at', ('departure_time', CustomDateFieldListFilter),)
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
-    readonly_fields = ('created_at', 'modified_at', 'download_invoice', 'download_booking_form')
+    readonly_fields = ('created_at_field', 'modified_at_field', 'download_invoice', 'download_booking_form')
     list_per_page = 20 
     show_full_result_count = True  # Shows total number of items
     

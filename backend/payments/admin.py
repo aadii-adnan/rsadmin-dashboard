@@ -24,10 +24,15 @@ class PaymentAdmin(admin.ModelAdmin):
         return '-'
     colored_status.short_description = 'Status'
 
-    list_display = ('id', 'booking', 'amount', 'colored_status', 'created_at')
+    def created_at_display(self, obj):
+        return obj.created_at.strftime('%d %b %Y %H:%M')
+    created_at_display.short_description = 'Created At'
+    created_at_display.admin_order_field = 'created_at'
+
+    list_display = ('id', 'booking', 'amount', 'colored_status', 'created_at_display')
     list_filter = ('status', 'created_at')
     search_fields = ('booking__first_name', 'booking__last_name', 'booking__email')
-    readonly_fields = ('created_at',)
+    readonly_fields = ('created_at_display',)
 
     fieldsets = (
         ('Payment Information', {
@@ -38,7 +43,7 @@ class PaymentAdmin(admin.ModelAdmin):
         }),
         ('Timestamps', {
             'fields': (
-                ('created_at', ),
+                ('created_at_display', ),
             )
         }),
     )

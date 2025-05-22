@@ -3,11 +3,24 @@ from .models import ContactMessage
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'first_name', 'last_name', 'email', 'phone', 'timestamp')
+    def timestamp_display(self, obj):
+        return obj.timestamp.strftime('%d %b %Y %H:%M')
+    timestamp_display.short_description = 'Timestamp'
+    timestamp_display.admin_order_field = 'timestamp' 
+
+    list_display = ('id', 'first_name', 'last_name', 'email', 'phone', 'timestamp_display')
     search_fields = ('first_name', 'last_name', 'email', 'phone')
     list_filter = ('timestamp',)
     ordering = ('-timestamp',)
-    readonly_fields = ('timestamp',)
+    readonly_fields = ('timestamp_display',)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            (None, {
+                'fields': ('first_name', 'last_name', 'email', 'phone', 'message', 'timestamp_display')
+            }),
+        ]
+        return fieldsets
 
     def has_module_permission(self, request):
         """
