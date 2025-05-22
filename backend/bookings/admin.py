@@ -112,10 +112,15 @@ class BookingAdmin(admin.ModelAdmin):
         return '-'
     colored_status.short_description = 'Status'
 
+    def number(self, obj):  # Change method name from 'id' to 'number'
+        return obj.id
+    number.short_description = 'No'
+    number.admin_order_field = 'id'
+
     def get_list_display(self, request):
         if request.user.is_manager:
-            return ('no', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
-        return ('no', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 
+            return ('number', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
+        return ('number', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 
                 'price_display', 'colored_status', 'created_at', 'download_invoice', 'download_booking_form')
     
 
@@ -283,4 +288,4 @@ class BookingAdmin(admin.ModelAdmin):
         css = {
             'all': ('admin/css/custom_admin.css','admin/css/clickable_rows.css',)
         }
-        js = ('admin/js/print_invoice.js','admin/js/clickable_rows.js',)
+        js = ('admin/js/print_invoice.js','admin/js/clickable_rows_bookings.js',)
