@@ -8,8 +8,20 @@ from django.contrib.auth.models import Group
 admin.site.unregister(Group)
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
+    def date_joined_display(self, obj):
+        return obj.date_joined.strftime('%d %b %Y %H:%M')
+    date_joined_display.short_description = 'Date Joined'
+    date_joined_display.admin_order_field = 'date_joined'
+
+    def last_login_display(self, obj):
+        if obj.last_login:
+            return obj.last_login.strftime('%d %b %Y %H:%M')
+        return '-'
+    last_login_display.short_description = 'Last Login'
+    last_login_display.admin_order_field = 'last_login'
+
     list_display = ('id', 'username', 'email', 'full_name', 'phone', 
-                   'is_manager', 'is_active', 'date_joined', 'last_login')
+                   'is_manager', 'is_active', 'date_joined_display', 'last_login_display')
     list_filter = ('is_manager', 'is_active', 'is_staff', 'date_joined')
     search_fields = ('username', 'first_name', 'last_name', 'email', 'phone')
     ordering = ('-date_joined',)
@@ -35,7 +47,7 @@ class CustomUserAdmin(UserAdmin):
         }),
         ('Important Dates', {
             'fields': (
-                ('date_joined', 'last_login'),
+                ('date_joined_display', 'last_login_display'),
             )
         }),
     )
@@ -51,7 +63,7 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
-    readonly_fields = ('date_joined', 'last_login')
+    readonly_fields = ('date_joined_display', 'last_login_display')
 
     def full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}"
