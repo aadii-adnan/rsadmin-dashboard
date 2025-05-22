@@ -222,11 +222,11 @@ class BookingAdmin(admin.ModelAdmin):
 
         # Define the header row
         headers = [
-            'ID', 'User', 'Service', 'Add-ons', 'Car Registration No', 'Car Model',
+            'ID', 'Service', 'Add-ons', 'Car Registration No', 'Car Model',
             'Car Colour', 'Car Manufacturer', 'Departure Terminal', 'Return Terminal',
             'Departure Flight Number', 'Return Flight Number', 'First Name', 'Last Name',
             'Email', 'Contact No', 'Total Passengers', 'Departure Time', 'Return Time',
-            'Status', 'Email Sent', 'Created At', 'Modified At'
+            'Status', 'Created At', 'Modified At'
         ]
 
         # Exclude price-related fields if the admin is a manager
@@ -240,7 +240,6 @@ class BookingAdmin(admin.ModelAdmin):
         for booking in queryset:
             row = [
                 booking.booking_id,
-                booking.user.username if booking.user else '',
                 booking.service.name if booking.service else '',
                 ', '.join([addon.name for addon in booking.add_ons.all()]),
                 booking.car_registration_no,
@@ -258,8 +257,7 @@ class BookingAdmin(admin.ModelAdmin):
                 booking.total_passengers,
                 booking.departure_time,
                 booking.return_time,
-                booking.status.name if booking.status else '',
-                'Yes' if booking.email_sent else 'No',
+                booking.status.name if booking.status else '',                
                 booking.created_at,
                 booking.modified_at,
             ]
