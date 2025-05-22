@@ -57,6 +57,7 @@ class BookingAdmin(admin.ModelAdmin):
 
     def download_invoices_zip(self, request, queryset):
         zip_buffer = io.BytesIO()
+        today = timezone.now().strftime('%d-%m-%Y')
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
             for booking in queryset:
                 response, error = generate_invoice(booking)
@@ -67,13 +68,14 @@ class BookingAdmin(admin.ModelAdmin):
                 zip_file.writestr(filename, pdf_bytes)
         zip_buffer.seek(0)
         response = HttpResponse(zip_buffer, content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="invoices.zip"'
+        response['Content-Disposition'] = f'attachment; filename="invoices_{today}.zip"'
         return response
 
     download_invoices_zip.short_description = "Download invoices for selected bookings (ZIP)"
 
     def download_booking_forms_zip(self, request, queryset):
         zip_buffer = io.BytesIO()
+        today = timezone.now().strftime('%d-%m-%Y')
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
             for booking in queryset:
                 response, error = generate_booking_form_pdf(booking)
@@ -84,7 +86,7 @@ class BookingAdmin(admin.ModelAdmin):
                 zip_file.writestr(filename, pdf_bytes)
         zip_buffer.seek(0)
         response = HttpResponse(zip_buffer, content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="booking_forms.zip"'
+        response['Content-Disposition'] = f'attachment; filename="booking_forms_{today}.zip"'
         return response
 
     download_booking_forms_zip.short_description = "Download booking forms for selected bookings (ZIP)"
@@ -112,8 +114,8 @@ class BookingAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         if request.user.is_manager:
-            return ('id', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
-        return ('id', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 
+            return ('no', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 'colored_status', 'created_at', 'download_booking_form')
+        return ('no', 'booking_id', 'full_name', 'service', 'departure_time', 'return_time', 
                 'price_display', 'colored_status', 'created_at', 'download_invoice', 'download_booking_form')
     
 
