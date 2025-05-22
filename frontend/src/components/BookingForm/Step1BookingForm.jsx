@@ -136,89 +136,91 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
             </div>
         </div>
 
-          <div className="bookingform-row">
-            <div className="bookingform-col">
-                <label style={labelStyle}>Departure Flight Number:</label>
-                <input className='custom-input'
-                type="text"
-                name="departure_flight_number"
-                placeholder="Dep Flight Number"
-                style={inputStyle}
-                value={formData?.departure_flight_number}
-                onChange={handleChange}
-                />
-            </div>
-            <div className="bookingform-col">
-                <label style={labelStyle}>Return Flight Number:</label>
-                <input className='custom-input'
-                type="text"
-                name="return_flight_number"
-                placeholder="Ret Flight Number"
-                style={inputStyle}
-                value={formData?.return_flight_number}
-                onChange={handleChange}
-                />
-            </div>
-          </div>   
+        <div className="bookingform-row">
+          <div className="bookingform-col">
+              <label style={labelStyle}>Departure Flight Number:</label>
+              <input className='custom-input'
+              type="text"
+              name="departure_flight_number"
+              placeholder="Dep Flight Number"
+              style={inputStyle}
+              value={formData?.departure_flight_number}
+              onChange={handleChange}
+              />
+          </div>
+          <div className="bookingform-col">
+              <label style={labelStyle}>Return Flight Number:</label>
+              <input className='custom-input'
+              type="text"
+              name="return_flight_number"
+              placeholder="Ret Flight Number"
+              style={inputStyle}
+              value={formData?.return_flight_number}
+              onChange={handleChange}
+              />
+          </div>
+        </div>  
 
-
-           <div className="bookingform-row">
-                <div className="col-7">
-                    <h2 className="fs-title" style={{ fontSize: "20px", fontWeight: "bold", color: "#010659", marginBottom: "20px" }}>
-                    Your Details:
-                    </h2>
-                </div>                       
-            </div>
-
+          {bookingData?.userDetails?.id && <>
+             
             <div className="bookingform-row">
-                <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>First Name: *</label>
-                    <input className='custom-input'
-                    type="text"
-                    name="first_name"
-                    placeholder="First Name"
-                    style={inputStyle}
-                    value={formData?.first_name}
-                    onChange={handleChange}
-                    required
-                    />
-                </div>
-                <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px" }}>
-                    <label style={labelStyle}>Last Name: *</label>
-                    <input className='custom-input'
-                    type="text"
-                    name="last_name"
-                    placeholder="Last Name"
-                    style={inputStyle}
-                    value={formData?.last_name}
-                    onChange={handleChange}
-                    required
-                    />
-                </div>
-            </div>
+                  <div className="col-7">
+                      <h2 className="fs-title" style={{ fontSize: "20px", fontWeight: "bold", color: "#010659", marginBottom: "20px" }}>
+                      Your Details:
+                      </h2>
+                  </div>                       
+              </div>
 
-            <div className="bookingform-row">
-                <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
-                    <label style={labelStyle}>Email: *</label>
-                    <input className='custom-input'
-                    type="email"
-                    name="email"
-                    placeholder="Email Id"
-                    style={inputStyle}
-                    value={formData?.email}
-                    onChange={handleChange}
-                    required
-                    />
-                </div>
-                <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px", marginBottom: "10px" }}>
-                    <label style={labelStyle}>Contact No: *</label>
-                    <PhoneInput
-                    defaultCountry="ie"
-                    value={contactNo}
-                    onChange={(phone) => setContactNo(phone)}
-                    />
-                </div>
-            </div>
+              <div className="bookingform-row">
+                  <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
+                      <label style={labelStyle}>First Name: *</label>
+                      <input className='custom-input'
+                      type="text"
+                      name="first_name"
+                      placeholder="First Name"
+                      style={inputStyle}
+                      value={formData?.first_name}
+                      onChange={handleChange}
+                      required
+                      />
+                  </div>
+                  <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px" }}>
+                      <label style={labelStyle}>Last Name: *</label>
+                      <input className='custom-input'
+                      type="text"
+                      name="last_name"
+                      placeholder="Last Name"
+                      style={inputStyle}
+                      value={formData?.last_name}
+                      onChange={handleChange}
+                      required
+                      />
+                  </div>
+              </div>
+
+              <div className="bookingform-row">
+                  <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
+                      <label style={labelStyle}>Email: *</label>
+                      <input className='custom-input'
+                      type="email"
+                      name="email"
+                      placeholder="Email Id"
+                      style={inputStyle}
+                      value={formData?.email}
+                      onChange={handleChange}
+                      required
+                      />
+                  </div>
+                  <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px", marginBottom: "10px" }}>
+                      <label style={labelStyle}>Contact No: *</label>
+                      <PhoneInput
+                      defaultCountry="ie"
+                      value={contactNo}
+                      onChange={(phone) => setContactNo(phone)}
+                      />
+                  </div>
+              </div>
+            </>}
            
       </div>
       <input type="button" className="next action-button" value="Next" onClick={handleNext} style={nextButtonStyle} />

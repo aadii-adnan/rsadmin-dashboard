@@ -8214,6 +8214,9 @@ button.mfp-close.ekit-popup-close:hover {
     border: 0!important;
     border-radius: 50%!important
 }
+.footer-link:hover {
+    color: #0077b5 !important;
+}
 
 @-webkit-keyframes ekit-btt-fadein {
     from {

@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0;
     font-family: 'Urbanist', sans-serif !important;
+    letter-spacing: 0.3px;
 }
 .fa, .fas, .far, .fal, .fab {
   font-family: "Font Awesome 5 Free" !important; /* Use Font Awesome's default font family */

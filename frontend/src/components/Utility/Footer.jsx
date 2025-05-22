@@ -19,7 +19,7 @@ const Footer = () => {
                     </div>
                     <div className="elementor-element elementor-element-1e228699 elementor-widget elementor-widget-text-editor" data-id="1e228699" data-element_type="widget" data-widget_type="text-editor.default">
                     <div className="elementor-widget-container">
-                        <p>RS Express Parking ensures hassle-free, secure meet and greet parking at Dublin Airport, combining convenience, safety, and affordability for all travelers.</p>
+                        <p style={{color:"#fff"}}>RS Express Parking ensures hassle-free, secure meet and greet parking at Dublin Airport, combining convenience, safety, and affordability for all travelers.</p>
                     </div>
                     </div>
                     <div className="elementor-element elementor-element-4dc97545 elementor-shape-circle e-grid-align-left e-grid-align-tablet-center elementor-hidden-desktop elementor-hidden-tablet elementor-hidden-mobile elementor-grid-0 elementor-widget elementor-widget-social-icons" data-id="4dc97545" data-element_type="widget" data-widget_type="social-icons.default">
@@ -52,12 +52,12 @@ const Footer = () => {
                     <div className="elementor-widget-container">
                         <ul className="elementor-icon-list-items">
                             <li className="elementor-icon-list-item">
-                                <Link to={"/"}>
+                                <Link className='footer-link' to={"/"}>
                                 <span className="elementor-icon-list-text">Home</span>
                                 </Link>
                             </li>                                                                                                       
                             <li className="elementor-icon-list-item">
-                                <Link to={"/contact-us"}>
+                                <Link className='footer-link' to={"/contact-us"}>
                                 <span className="elementor-icon-list-text">Contact</span>
                                 </Link>
                             </li>
@@ -75,12 +75,12 @@ const Footer = () => {
                     <div className="elementor-widget-container">
                         <ul className="elementor-icon-list-items">
                             <li className="elementor-icon-list-item">
-                                <Link to={"/privacy-policy"}>
+                                <Link className='footer-link' to={"/privacy-policy"}>
                                 <span className="elementor-icon-list-text">Privacy Policy</span>
                                 </Link>
                             </li>
                             <li className="elementor-icon-list-item">
-                                <Link to={"/terms-and-conditions"}>
+                                <Link className='footer-link' to={"/terms-conditions"}>
                                 <span className="elementor-icon-list-text">Term &amp; Conditions </span>
                                 </Link>
                             </li>
@@ -170,7 +170,7 @@ const Footer = () => {
                     <div className="elementor-element elementor-element-59554bc3 e-con-full e-flex e-con e-child" data-id="59554bc3" data-element_type="container">
                     <div className="elementor-element elementor-element-18139d4f elementor-widget__width-inherit elementor-widget elementor-widget-text-editor" data-id="18139d4f" data-element_type="widget" data-widget_type="text-editor.default">
                         <div className="elementor-widget-container">
-                            <p>Copyright ©2025 Rs Express Parking. Website by <strong><a style={{color: "white"}} href="https://devdexign.com/" target="_blank" rel="noopener">Dev Dexign</a></strong></p>
+                            <p style={{color:"#fff"}}>Copyright ©2025 Rs Express Parking. Website by <strong><a style={{color: "white"}} href="https://devdexign.com/" target="_blank" rel="noopener">Dev Dexign</a></strong></p>
                         </div>
                     </div>
                     </div>

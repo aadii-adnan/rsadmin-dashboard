@@ -37,7 +37,7 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/book/:slug" element={<BookingForm />} />
         <Route path="/contact-us" element={<ContactUs />} />
-        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/terms-conditions" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/logout" element={<Logout />} />

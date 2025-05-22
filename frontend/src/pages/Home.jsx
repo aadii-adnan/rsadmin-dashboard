@@ -203,12 +203,12 @@ const Home = () => {
             </p>
             <p className="info-important">
                 Important information:<br />
-                If you experience delays or damage, please report the issue directly to RS Express Parking's customer support at +353 1 964 0011.
+                If you experience delays or damage, please report the issue directly to RS Express Parking's customer support at <a style={{color:"#010659"}} href="tel:+35319640011">+353 1 964 0011</a>.
             </p>
             <h3 className="info-subheading"><strong>What To Do When You Arrive</strong></h3>
             <p><strong>Drop Off Procedure:</strong></p>
             <p>
-                Call the driver directly at +353 83 489 6505 around 25–30 minutes before reaching the terminal. This ensures we dispatch a driver to meet you promptly.<br/>
+                Call the driver directly at <a style={{color:"#010659"}} href="tel:+353834896505">+353 83 489 6505</a> around 25–30 minutes before reaching the terminal. This ensures we dispatch a driver to meet you promptly.<br/>
                 <strong>Note:</strong> Please do not call the support number for arrival. Only contact the driver for drop-off and collection.
             </p>
             <p><strong>Terminal 1:</strong></p>
@@ -225,7 +225,7 @@ const Home = () => {
             <h3 className="info-subheading"><strong>What To Do When You Come Back</strong></h3>
             <p><strong>Return Procedure:</strong></p>
             <p>
-                While collecting your luggage, call the driver at +353 83 489 6505 around 20–25 minutes before leaving the terminal to notify them of your return.<br />
+                While collecting your luggage, call the driver at <a style={{color:"#010659"}} href="tel:+353834896505">+353 83 489 6505</a> around 20–25 minutes before leaving the terminal to notify them of your return.<br />
                 Head to the collection zone as directed.<br />
                 Our driver will meet you with your car at the ‘Arrival Pickup Area’, ready for you to drive straight home.
             </p>

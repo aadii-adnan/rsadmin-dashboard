@@ -172,7 +172,7 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
             <div className="col">
               <p className="by-details" style={{ fontSize: "12px", color: "#555" }}>
                 By reserving parking you agree to our booking{" "}
-                <Link to={"/terms-and-conditions"} data-bs-toggle="modal" data-bs-target="#exampleModal" style={{ color: "#2890cd", textDecoration: "underline" }}>terms and conditions</Link>.
+                <Link to={"/terms-conditions"} data-bs-toggle="modal" data-bs-target="#exampleModal" style={{ color: "#2890cd", textDecoration: "underline" }}>terms and conditions</Link>.
               </p>
             </div>
           </div>

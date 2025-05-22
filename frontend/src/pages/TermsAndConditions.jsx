@@ -8,11 +8,11 @@ export default function TermsAndConditions() {
     <title>Terms & Conditions - RS Express Parking</title>
     <meta name="description" content="Welcome to RS EXPRESS PARKING LTD. By using our services, including online bookings and inquiries, you agree to these Terms & Conditions. Please review."/>
     <meta name="robots" content="index, follow"/>
-    <link rel="canonical" href="https://rsexpressparking.com/terms-and-conditions/"/>
+    <link rel="canonical" href="https://rsexpressparking.com/terms-conditions/"/>
     <meta property="og:title" content="Terms & Conditions - RS Express Parking"/>
     <meta property="og:description" content="By using RS Express Parking's services, you agree to our terms. Please review our policies and usage conditions."/>
     <meta property="og:type" content="website"/>
-    <meta property="og:url" content="https://rsexpressparking.com/terms-and-conditions/"/>
+    <meta property="og:url" content="https://rsexpressparking.com/terms-conditions/"/>
     <meta property="og:image" content="https://rsexpressparking.com/images/og-parking.jpg"/>
     <meta property="og:site_name" content="RS Express Parking"/>
     <meta property="og:locale" content="en_US"/>

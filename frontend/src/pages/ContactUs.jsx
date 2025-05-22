@@ -167,7 +167,7 @@ const ContactUs = () => {
                         <div className="elementor-element elementor-element-35126748 elementor-widget elementor-widget-button" data-id="35126748" data-element_type="widget" data-widget_type="button.default">
                             <div className="elementor-widget-container">
                                 <div className="elementor-button-wrapper">
-                                <a className="elementor-button elementor-button-link elementor-size-sm">
+                                <a href="mailto:support@rsexpressparking.com" className="elementor-button elementor-button-link elementor-size-sm">
                                 <span className="elementor-button-content-wrapper">
                                 <span className="elementor-button-text">support@rsexpressparking.com</span>
                                 </span>
@@ -246,9 +246,28 @@ const ContactUs = () => {
                                                         </div>
                                                         </div>
                                                     </div>
-                                                    <div className="elementor-element elementor-element-6e36f998 mf-btn--justify mf-btn--tablet-justify mf-btn--mobile-justify elementor-widget elementor-widget-mf-button" data-id="6e36f998" data-element_type="widget" data-widget_type="mf-button.default">
+                                                    <div className="elementor-element elementor-element-6e36f998" data-id="6e36f998" data-element_type="widget">
                                                         <div className="elementor-widget-container">
-                                                        <div className="mf-btn-wraper " data-mf-form-conditional-logic-requirement=""><button type="submit" className="metform-btn metform-submit-btn " id=""><span>Submit Form </span></button></div>
+                                                            <button 
+                                                            type="submit" 
+                                                            style={{
+                                                                width: "100%",
+                                                                padding: "12px 25px",
+                                                                backgroundColor: "#2890cd",
+                                                                color: "#fff",
+                                                                border: "none",
+                                                                borderRadius: "8px",
+                                                                fontSize: "16px",
+                                                                fontWeight: "600",
+                                                                cursor: "pointer",
+                                                                transition: "background-color 0.3s ease",
+                                                                marginTop: "20px"
+                                                            }}
+                                                            onMouseOver={(e) => e.target.style.backgroundColor = "#0056b3"}
+                                                            onMouseOut={(e) => e.target.style.backgroundColor = "#2890cd"}
+                                                            >
+                                                            {isSubmitting ? "Submitting..." : "Submit Form"}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
