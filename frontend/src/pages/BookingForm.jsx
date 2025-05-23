@@ -168,6 +168,7 @@ const BookingForm = () => {
                               "Content-Type": "application/json",
                           },
                         });
+
                       const booking = await response.json();
                       
                       if (booking && isMounted) {

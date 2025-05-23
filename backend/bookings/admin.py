@@ -118,26 +118,26 @@ class BookingAdmin(admin.ModelAdmin):
     number.admin_order_field = 'id'
 
     def departure_time_display(self, obj):
-        return obj.departure_time.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.departure_time).strftime('%d %b %Y %H:%M')
     departure_time_display.admin_order_field = 'departure_time'
     departure_time_display.short_description = 'Departure Time'
 
     def return_time_display(self, obj):
-        return obj.return_time.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.return_time).strftime('%d %b %Y %H:%M')
     return_time_display.admin_order_field = 'return_time'
     return_time_display.short_description = 'Return Time'
 
     def created_at_display(self, obj):
-        return obj.created_at.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.created_at).strftime('%d %b %Y %H:%M')
     created_at_display.admin_order_field = 'created_at'
     created_at_display.short_description = 'Created At'
 
     def created_at_field(self, obj):
-        return obj.created_at.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.created_at).strftime('%d %b %Y %H:%M')
     created_at_field.short_description = 'Created At'
 
     def modified_at_field(self, obj):
-        return obj.modified_at.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.modified_at).strftime('%d %b %Y %H:%M')
     modified_at_field.short_description = 'Modified At'
 
     def get_list_display(self, request):

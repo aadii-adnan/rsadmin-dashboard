@@ -1,10 +1,11 @@
 from django.contrib import admin
 from .models import ContactMessage
+from django.utils import timezone
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
     def timestamp_display(self, obj):
-        return obj.timestamp.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.timestamp).strftime('%d %b %Y %H:%M')        
     timestamp_display.short_description = 'Timestamp'
     timestamp_display.admin_order_field = 'timestamp' 
 

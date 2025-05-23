@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Service, AddOn, Coupon
-
+from django.utils import timezone
 
 
 @admin.register(Service)
@@ -82,12 +82,12 @@ class AddOnAdmin(admin.ModelAdmin):
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
     def valid_from_display(self, obj):
-        return obj.valid_from.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.valid_from).strftime('%d %b %Y %H:%M')
     valid_from_display.short_description = 'Valid From'
     valid_from_display.admin_order_field = 'valid_from'
 
     def valid_to_display(self, obj):
-        return obj.valid_to.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.valid_to).strftime('%d %b %Y %H:%M')
     valid_to_display.short_description = 'Valid To'
     valid_to_display.admin_order_field = 'valid_to'
     list_display = ('id', 'code', 'discount_percent', 'active', 'valid_from_display', 

@@ -30,7 +30,14 @@ const Home = () => {
             carFlightDetails: null,
           }));}
         else{
-            setBookingData(null);
+            setBookingData(() => ({
+            bookingDates: null,
+            bookingDetails: null,
+            paymentDetails: null,
+            carFlightDetails: null,
+            userDetails: null,
+            selectedOption: null,
+          }));
         }
         localStorage.removeItem("payment_status");
     }, []);

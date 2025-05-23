@@ -4,18 +4,19 @@ from django.utils.html import format_html
 from .models import CustomUser
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django.utils import timezone
 
 admin.site.unregister(Group)
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     def date_joined_display(self, obj):
-        return obj.date_joined.strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.date_joined).strftime('%d %b %Y %H:%M')
     date_joined_display.short_description = 'Date Joined'
     date_joined_display.admin_order_field = 'date_joined'
 
     def last_login_display(self, obj):
         if obj.last_login:
-            return obj.last_login.strftime('%d %b %Y %H:%M')
+            return timezone.localtime(obj.last_login).strftime('%d %b %Y %H:%M')
         return '-'
     last_login_display.short_description = 'Last Login'
     last_login_display.admin_order_field = 'last_login'
