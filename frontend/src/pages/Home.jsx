@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import BookingDatesForm from '../components/HomePage/BookingDatesForm'
 import { useBooking } from "../context/BookingContext";
 import bannerImg1 from "../assets/banner-img1.webp"
@@ -20,6 +20,8 @@ import FAQSection from "../components/HomePage/FAQSection";
 const Home = () => {
 
     const { setBookingData } = useBooking();
+    const [faqs, setFaqs] = useState([]);
+    const [loading, setLoading] = useState(true);
     useEffect(() => {
         if(localStorage.getItem("access_token")){
         setBookingData((prev) => ({
@@ -40,6 +42,22 @@ const Home = () => {
           }));
         }
         localStorage.removeItem("payment_status");
+    }, []);
+
+    useEffect(() => {
+    const fetchFAQs = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            setFaqs(data);
+        } catch (error) {
+            console.error('Error fetching FAQs:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchFAQs();
     }, []);
     
   return (
@@ -117,18 +135,32 @@ const Home = () => {
     "areaServed": "IE"
     },
     {
-    "@type": "WebSite",
-    "@id": "https://rsexpressparking.com/#website",
-    "url": "https://rsexpressparking.com/",
-    "name": "RS Express Parking",
-    "publisher": {
-        "@id": "https://rsexpressparking.com/#organization"
+        "@type": "WebSite",
+        "@id": "https://rsexpressparking.com/#website",
+        "url": "https://rsexpressparking.com/",
+        "name": "RS Express Parking",
+        "publisher": {
+            "@id": "https://rsexpressparking.com/#organization"
+        },
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://rsexpressparking.com/?s={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
     },
-    "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://rsexpressparking.com/?s={search_term_string}",
-        "query-input": "required name=search_term_string"
-    }
+    {
+        "@type": "FAQPage",
+        "@id": "https://rsexpressparking.com/#faq",
+        "mainEntity": ${JSON.stringify(
+            faqs.map(faq => ({
+                "@type": "Question",
+                "name": faq.question,
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": faq.answer.replace(/<[^>]*>/g, '')
+                }
+            }))
+        )}
     }
 ]
 }
@@ -340,8 +372,7 @@ const Home = () => {
                 </div>
             </div>
         </div>
-        {/* <div className="elementor-element elementor-element-404ae19c e-flex e-con-boxed e-con e-parent e-lazyloaded" data-id="404ae19c" data-element_type="container" id="reviews" data-settings="{&quot;background_background&quot;:&quot;classic&quot;}"> */}
-        {/* <div className="e-con-inner"> */}
+        
         <div className="testimonials-main">
             <div className="testimonials-section">
                 <div className="testimonials-header">
@@ -412,9 +443,8 @@ const Home = () => {
                 </div>
             </div>
         </div>
-        {/* </div> */}
 
-<FAQSection />
+<FAQSection faqs={faqs} loading={loading}/>
 
 
 

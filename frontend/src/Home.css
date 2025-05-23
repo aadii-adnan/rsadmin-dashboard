@@ -617,7 +617,7 @@ body .home-banner {
         font-size: 30px;
     }
     .banner-subheading {
-      display: none;
+      font-size: 14px;
     }
     body .home-banner {
         height: 250px;

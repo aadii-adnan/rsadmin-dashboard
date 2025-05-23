@@ -12,6 +12,12 @@ def send_completion_email(booking_id):
     booking.status = status_obj
     booking.save()
 
+    if booking.completion_email_sent:
+        return "Email already sent"
+
+    departure_time = booking.departure_time.strftime('%d %b %Y %H:%M')
+    return_time = booking.return_time.strftime('%d %b %Y %H:%M')
+
     html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
@@ -26,8 +32,8 @@ def send_completion_email(booking_id):
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
         <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-        <li><strong>Drop-Off Date & Time:</strong> {booking.departure_time}</li>
-        <li><strong>Pick-Up Date & Time:</strong> {booking.return_time}</li>
+        <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
+        <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
         </ul>
 
@@ -66,8 +72,8 @@ We hope you had a smooth experience with our Meet & Greet Parking service.
 🚗 Booking Summary
 -----------------------------
 Booking ID: {booking.booking_id}
-Drop-Off Date & Time: {booking.departure_time}
-Pick-Up Date & Time: {booking.return_time}
+Drop-Off Date & Time: {departure_time}
+Pick-Up Date & Time: {return_time}
 Vehicle: {booking.car_model} – {booking.car_registration_no}
 
 -----------------------------

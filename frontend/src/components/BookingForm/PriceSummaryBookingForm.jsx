@@ -34,7 +34,7 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
   }, [totalPrice])
 
   return (
-    <div className='price-summary' style={{ height: "fit-content", backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", padding: "20px", marginTop: "30px" }}>
+    <div className='price-summary' style={{ height: "fit-content", backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", padding: "20px", marginTop: "30px", marginBottom: "30px" }}>
       <div className="panel panel-default">
         <div className="panel-body">
           <div className="row">

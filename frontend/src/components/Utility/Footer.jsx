@@ -22,25 +22,17 @@ const Footer = () => {
                         <p style={{color:"#fff"}}>RS Express Parking ensures hassle-free, secure meet and greet parking at Dublin Airport, combining convenience, safety, and affordability for all travelers.</p>
                     </div>
                     </div>
-                    <div className="elementor-element elementor-element-4dc97545 elementor-shape-circle e-grid-align-left e-grid-align-tablet-center elementor-hidden-desktop elementor-hidden-tablet elementor-hidden-mobile elementor-grid-0 elementor-widget elementor-widget-social-icons" data-id="4dc97545" data-element_type="widget" data-widget_type="social-icons.default">
-                    <div className="elementor-widget-container">
-                        <div className="elementor-social-icons-wrapper elementor-grid">
-                            <span className="elementor-grid-item">
-                                <a className="elementor-icon elementor-social-icon elementor-social-icon-facebook-f elementor-repeater-item-aea8238" target="_blank">
-                                <span className="elementor-screen-only">Facebook-f</span>
-                                <svg className="e-font-icon-svg e-fab-facebook-f" viewBox="0 0 320 512" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"></path>
-                                </svg>
-                                </a>
-                            </span>
-                            <span className="elementor-grid-item">
-                            <a className="elementor-icon elementor-social-icon elementor-social-icon-icon-instagram-1 elementor-repeater-item-49f853b" target="_blank">
-                            <span className="elementor-screen-only">Icon-instagram-1</span>
-                            <i className="icon icon-instagram-1"></i>					</a>
-                            </span>
-                        </div>
+                    <div class="elementor-element elementor-element-4dc97545 elementor-shape-circle e-grid-align-left e-grid-align-tablet-center elementor-grid-0 elementor-widget elementor-widget-social-icons" data-id="4dc97545" data-element_type="widget" data-widget_type="social-icons.default">
+                        <div class="elementor-widget-container">
+                            <div class="elementor-social-icons-wrapper elementor-grid">
+                            <span class="elementor-grid-item">
+                                <a style={{color:"#fff"}} class="elementor-icon elementor-social-icon elementor-social-icon-icon-instagram-1 elementor-repeater-item-49f853b" href="https://www.instagram.com/rsexpressparking/" target="_blank">
+                                <span class="elementor-screen-only">Icon-instagram-1</span>
+                                <i class="icon icon-instagram-1"></i>					</a>
+				            </span>
+					    </div>
                     </div>
-                    </div>
+				</div>
                 </div>
                 <div className="elementor-element elementor-element-515c0793 e-con-full e-flex e-con e-child" data-id="515c0793" data-element_type="container">
                     <div className="elementor-element elementor-element-3fbe053 elementor-widget elementor-widget-heading" data-id="3fbe053" data-element_type="widget" data-widget_type="heading.default">

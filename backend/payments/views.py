@@ -290,12 +290,12 @@ class StripeWebhookView(APIView):
                 payment.status = status_obj
                 payment.save()                
 
-                ireland_offset = tz(timedelta(hours=1))
-                corrected = booking.return_time.replace(tzinfo=ireland_offset)
-                real_utc = corrected.astimezone(tz.utc)
+                if not booking.completion_email_sent:
+                    eta = booking.return_time + timedelta(minutes=15)
+                    send_completion_email.apply_async((booking.id,), eta=eta)
 
-                eta = real_utc + timedelta(minutes=15)
-                send_completion_email.apply_async((booking.id,), eta=eta)
+                    booking.completion_email_sent = True
+                    booking.save(update_fields=['completion_email_sent'])
 
                 # Award a new coupon to the user
                 code = generate_coupon_code()
@@ -322,6 +322,8 @@ class StripeWebhookView(APIView):
                         response, error = generate_invoice(booking)
                         if error:
                             return HttpResponse(f'Error: {error}', status=500)
+                        departure_time = booking.departure_time.strftime('%d %b %Y %H:%M')
+                        return_time = booking.return_time.strftime('%d %b %Y %H:%M')
                         pdf_content = response.getvalue()
                         html_body = f"""
     <html>
@@ -338,8 +340,8 @@ class StripeWebhookView(APIView):
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
         <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-        <li><strong>Drop-Off Date & Time:</strong> {booking.departure_time}</li>
-        <li><strong>Pick-Up Date & Time:</strong> {booking.return_time}</li>
+        <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
+        <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
         </ul>
 
@@ -387,8 +389,8 @@ class StripeWebhookView(APIView):
     🚗 Booking Summary
     -----------------------------
     Booking ID: {booking.booking_id}
-    Drop-Off Date & Time: {booking.departure_time}
-    Pick-Up Date & Time: {booking.return_time}
+    Drop-Off Date & Time: {departure_time}
+    Pick-Up Date & Time: {return_time}
     Vehicle: {booking.car_model} – {booking.car_registration_no}
 
     -----------------------------

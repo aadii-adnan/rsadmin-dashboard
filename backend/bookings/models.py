@@ -38,6 +38,7 @@ class Booking(models.Model):
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'booking'})
     discount_coupon_awarded = models.CharField(max_length=50, blank=True, null=True)
     email_sent = models.BooleanField(default=False)
+    completion_email_sent = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
