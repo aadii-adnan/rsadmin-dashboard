@@ -208,25 +208,29 @@ class BookingAdmin(admin.ModelAdmin):
     full_name.short_description = 'Customer Name'
 
     def download_invoice(self, obj):
-        url = reverse('invoice-download', args=[obj.id])
-        return format_html(
-            '<a class="button" href="javascript:void(0)" onclick="printInvoice(\'{}\'); return false;">'
-            '<img src="/static/admin/img/icon-yes.svg" alt="Print Invoice"> Print Invoice</a>',
-            url
-        )
+        if obj.id:  # Only show the link if the object exists
+            url = reverse('invoice-download', args=[obj.id])
+            return format_html(
+                '<a class="button" href="javascript:void(0)" onclick="printInvoice(\'{}\'); return false;">'
+                '<img src="/static/admin/img/icon-yes.svg" alt="Print Invoice"> Print Invoice</a>',
+                url
+            )
+        return '-'  # Return a dash if object doesn't exist yet
 
     download_invoice.short_description = 'Invoice'
     download_invoice.allow_tags = True
 
     def download_booking_form(self, obj):
-        url = reverse('booking-form-download', args=[obj.id])
-        return format_html(
-            '<a class="button" href="javascript:void(0)" onclick="printBookingForm(\'{}\'); return false;">'
-            '<img src="/static/admin/img/icon-yes.svg" alt="Print Form"> Booking Form</a>',
-            url
-        )
+        if obj.id:  # Only show the link if the object exists
+            url = reverse('booking-form-download', args=[obj.id])
+            return format_html(
+                '<a class="button" href="javascript:void(0)" onclick="printBookingForm(\'{}\'); return false;">'
+                '<img src="/static/admin/img/icon-yes.svg" alt="Print Form"> Booking Form</a>',
+                url
+            )
+        return '-'  # Return a dash if object doesn't exist yet
 
-    download_booking_form.short_description = 'Download Booking Form'  # Fixed attribute name
+    download_booking_form.short_description = 'Download Booking Form'
     download_booking_form.allow_tags = True
 
 
