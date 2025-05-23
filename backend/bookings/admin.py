@@ -23,7 +23,9 @@ class CustomDateFieldListFilter(DateFieldListFilter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        tomorrow = timezone.localdate() + timedelta(days=1)
+        # Get tomorrow's date in the local timezone
+        today = timezone.localtime().date()
+        tomorrow = today + timedelta(days=1)
 
         # Convert to list so we can insert
         links = list(self.links)
@@ -32,9 +34,8 @@ class CustomDateFieldListFilter(DateFieldListFilter):
         links.insert(1, (
             _('Tomorrow'),
             {
-                self.field.name + '__year': str(tomorrow.year),
-                self.field.name + '__month': str(tomorrow.month),
-                self.field.name + '__day': str(tomorrow.day),
+                self.field.name + '__gte': timezone.make_aware(datetime.combine(tomorrow, datetime.min.time())),
+                self.field.name + '__lt': timezone.make_aware(datetime.combine(tomorrow + timedelta(days=1), datetime.min.time())),
             }
         ))
 
