@@ -3,6 +3,7 @@ from users.models import CustomUser
 from services.models import Service, AddOn, Coupon
 from core.models import Status
 import uuid
+from django.utils import timezone
 
 class Booking(models.Model):
     booking_id = models.CharField(max_length=20, unique=True, editable=False, blank=True, null=True)
@@ -40,15 +41,20 @@ class Booking(models.Model):
     email_sent = models.BooleanField(default=False)
     completion_email_sent = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(null=True, blank=True)
     modified_at = models.DateTimeField(auto_now=True)
+    note = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.booking_id:
-            # Generate a unique ID, e.g., RS-1A2B3C4D
             self.booking_id = f"RS-{uuid.uuid4().hex[:8].upper()}"
             while Booking.objects.filter(booking_id=self.booking_id).exists():
                 self.booking_id = f"RS-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Set created_at for new bookings if not provided
+        if not self.pk and not self.created_at:
+            self.created_at = timezone.now()
+            
         super().save(*args, **kwargs)
 
     def __str__(self):

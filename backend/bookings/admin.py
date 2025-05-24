@@ -186,7 +186,14 @@ class BookingAdmin(admin.ModelAdmin):
             }))
 
         # Add status section with appropriate fields based on user type
-        status_fields = ['status', ('created_at_field', 'modified_at_field')]
+        status_fields = ['status', 'note']
+        if obj:
+            # For existing bookings, show the formatted display
+            status_fields.extend([('created_at_field', 'modified_at_field')])
+        else:
+            # For new bookings, show the editable field
+            status_fields.extend(['created_at'])
+
         if not request.user.is_manager:
             status_fields.append('download_invoice')
         status_fields.append('download_booking_form')
@@ -199,7 +206,12 @@ class BookingAdmin(admin.ModelAdmin):
     
     list_filter = ('status', 'service', 'created_at', ('departure_time', CustomDateFieldListFilter),)
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
-    readonly_fields = ('created_at_field', 'modified_at_field', 'download_invoice', 'download_booking_form')
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # If editing existing object
+            return ('modified_at_field', 'download_invoice', 'download_booking_form', 'created_at_field')
+        return ('modified_at_field', 'download_invoice', 'download_booking_form')
+    
     list_per_page = 20 
     show_full_result_count = True  # Shows total number of items
     
