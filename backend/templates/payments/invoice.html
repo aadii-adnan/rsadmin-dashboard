@@ -126,7 +126,15 @@
     <table class="summary-table" style="margin-top: 12px;">
         <tr>
             <td>Total</td>
-            <td>€{{ total_price }}</td>
+            {% if booking.discounted_price > 0 and booking.discounted_price < booking.total_price %}
+            <td>
+                <span style="text-decoration: line-through;">€{{ booking.total_price }}</span>
+                <br>
+                <strong>€{{ booking.discounted_price }}</strong>
+            </td>
+            {% else %}
+            <td>€{{ booking.total_price }}</td>
+            {% endif %}
         </tr>
         <tr>
             <td>Payment method</td>

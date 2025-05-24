@@ -93,8 +93,6 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
     no_of_days = duration.days + (1 if duration.seconds > 0 else 0)
 
     total_days_price = no_of_days * service.per_day_price
-    add_ons_price = sum(addon.price for addon in add_ons)
-    total_price = total_days_price + add_ons_price + service.base_price
 
     # Prepare logo base64 if available
     logo_data = None
@@ -110,8 +108,7 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
         'service': service,
         'no_of_days': no_of_days,
         'total_days_price': total_days_price,
-        'add_ons': add_ons,
-        'total_price': total_price,
+        'add_ons': add_ons, 
         'logo_data': f"data:image/png;base64,{logo_data}" if logo_data else None,
     }
 
