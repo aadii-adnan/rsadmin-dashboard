@@ -30,7 +30,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', cast=bool)
 
 
-ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com', 'www.new.rsexpressparking.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com', 'www.new.rsexpressparking.com', 'localhost', '127.0.0.1', 'rsexpressparking.com', 'www.rsexpressparking.com']
 
 
 # Application definition
@@ -160,6 +160,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS  = [
     'https://new.rsexpressparking.com',
     'https://www.new.rsexpressparking.com',
+    'https://www.rsexpressparking.com',
+    'https://new.rsexpressparking.com',
     'http://localhost:3000',
     'http://localhost:5173',
 ]
@@ -211,6 +213,8 @@ CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
     'https://new.rsexpressparking.com/',
+    'https://www.rsexpressparking.com',
+    'https://new.rsexpressparking.com',
 ]
 
 # Celery Configuration
