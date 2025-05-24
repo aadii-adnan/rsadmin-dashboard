@@ -18,7 +18,6 @@ import zipfile
 from django.http import HttpResponse
 from payments.views import generate_invoice, generate_booking_form_pdf
 
-
 class CustomDateFieldListFilter(DateFieldListFilter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -204,7 +203,7 @@ class BookingAdmin(admin.ModelAdmin):
 
         return base_fieldsets
     
-    list_filter = ('status', 'service', 'created_at', ('departure_time', CustomDateFieldListFilter),)
+    list_filter = ('status', 'service', 'created_at', ('departure_time', CustomDateFieldListFilter),('return_time', CustomDateFieldListFilter), )
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
 
     def get_readonly_fields(self, request, obj=None):
