@@ -12,7 +12,7 @@ class StaticReactSitemap(Sitemap):
             "home",
             "services",
             "contact-us",
-            "terms-and-conditions",
+            "terms-conditions",
             "privacy-policy",
         ]
 
@@ -21,7 +21,7 @@ class StaticReactSitemap(Sitemap):
             "home": "/",
             "services": "/services",
             "contact-us": "/contact-us",
-            "terms-and-conditions": "/terms-and-conditions",
+            "terms-conditions": "/terms-conditions",
             "privacy-policy": "/privacy-policy",
         }
         return route_map[item]
