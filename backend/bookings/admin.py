@@ -17,29 +17,84 @@ import io
 import zipfile
 from django.http import HttpResponse
 from payments.views import generate_invoice, generate_booking_form_pdf
+from django import forms
+from django.contrib.admin import FieldListFilter
+from django.db.models import Q
 
-class CustomDateFieldListFilter(DateFieldListFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-        # Get tomorrow's date in the local timezone
-        today = timezone.localtime().date()
-        tomorrow = today + timedelta(days=1)
 
-        # Convert to list so we can insert
-        links = list(self.links)
+class SingleDateFilter(FieldListFilter):
+    template = 'admin/single_date_filter.html'
 
-        # Insert "Tomorrow" after "Today"
-        links.insert(1, (
-            _('Tomorrow'),
-            {
-                self.field.name + '__gte': timezone.make_aware(datetime.combine(tomorrow, datetime.min.time())),
-                self.field.name + '__lt': timezone.make_aware(datetime.combine(tomorrow + timedelta(days=1), datetime.min.time())),
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        self.field_path = field_path
+        self.date_params = {
+            'gte': f'{field_path}__gte',
+            'lt': f'{field_path}__lt'
+        }
+        if 'departure_time' in field_path:
+            field.verbose_name = 'Departure Date'
+        elif 'return_time' in field_path:
+            field.verbose_name = 'Arrival Date'
+        super().__init__(field, request, params, model, model_admin, field_path)
+
+    def expected_parameters(self):
+        return [self.date_params['gte'], self.date_params['lt']]
+
+    def queryset(self, request, queryset):
+        # Get both departure and return date parameters
+        departure_gte = request.GET.get('departure_time__gte')
+        departure_lt = request.GET.get('departure_time__lt')
+        return_gte = request.GET.get('return_time__gte')
+        return_lt = request.GET.get('return_time__lt')
+        
+        q_objects = Q()
+
+        # Handle departure date filter
+        if departure_gte and departure_lt:
+            try:
+                start_date = datetime.strptime(departure_gte, '%Y-%m-%d')
+                end_date = datetime.strptime(departure_lt, '%Y-%m-%d')
+                start_datetime = timezone.make_aware(datetime.combine(start_date.date(), datetime.min.time()))
+                end_datetime = timezone.make_aware(datetime.combine(end_date.date(), datetime.min.time()))
+                q_objects |= Q(departure_time__gte=start_datetime, departure_time__lt=end_datetime)
+            except (ValueError, TypeError) as e:
+                print(f"Error in departure date filtering: {e}")
+
+        # Handle return date filter
+        if return_gte and return_lt:
+            try:
+                start_date = datetime.strptime(return_gte, '%Y-%m-%d')
+                end_date = datetime.strptime(return_lt, '%Y-%m-%d')
+                start_datetime = timezone.make_aware(datetime.combine(start_date.date(), datetime.min.time()))
+                end_datetime = timezone.make_aware(datetime.combine(end_date.date(), datetime.min.time()))
+                q_objects |= Q(return_time__gte=start_datetime, return_time__lt=end_datetime)
+            except (ValueError, TypeError) as e:
+                print(f"Error in return date filtering: {e}")
+
+        # Apply the combined filters if any exist
+        if q_objects:
+            return queryset.filter(q_objects)
+        return queryset
+
+    def value(self):
+        value = self.used_parameters.get(self.date_params['gte'])
+        if isinstance(value, list):
+            return value[0] if value else ''
+        return value or ''
+
+    def choices(self, changelist):
+        yield {
+            'selected': self.value() is None,
+            'query_string': changelist.get_query_string(remove=self.expected_parameters()),
+            'display': _('All')
+        }
+        if self.value():
+            yield {
+                'selected': True,
+                'query_string': changelist.get_query_string(),
+                'display': f'Selected Date: {self.value()}'
             }
-        ))
-
-        # Assign back to self.links
-        self.links = tuple(links)
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
@@ -93,24 +148,42 @@ class BookingAdmin(admin.ModelAdmin):
 
     def colored_status(self, obj):
         status_colors = {
-            'completed': '#28a745',  # green
-            'confirmed': '#ffc107',    # yellow
-            'cancelled': '#dc3545',  # red
-            'payment failed': '#dc3545',  # red
-            'rescheduled': '#fd7e14', # orange
-            'pending': 'gray' # orange
+            'completed': '#28a745',
+            'confirmed': '#ffc107',
+            'cancelled': '#dc3545',
+            'payment failed': '#dc3545',
+            'rescheduled': '#fd7e14',
+            'pending': 'gray'
         }
+        
+        status_html = ''
+        # Add NEW tag if booking hasn't been viewed
+        if not obj.is_viewed:
+            status_html += '<span style="background: linear-gradient(45deg, #ff6b6b, #ee0979); '\
+                     'color: #fff; padding: 2px 8px; border-radius: 4px; '\
+                     'margin-right: 5px; box-shadow: 0 2px 4px rgba(238,9,121,0.15); font-size: 1em; '\
+                     'font-weight: bold;'\
+                     'text-transform: uppercase; letter-spacing: 0.5px; position: absolute; margin-top: 30px; ">NEW</span>'
         
         if obj.status:
             status_name = obj.status.name.lower()
             color = status_colors.get(status_name, 'inherit')
-            return format_html(
+            status_html += format_html(
                 '<span style="background-color: {}; color: #fff; padding: 4px 8px; '
                 'border-radius: 4px; font-weight: bold;">{}</span>',
                 color, obj.status.name
             )
-        return '-'
+        return format_html(status_html) if status_html else '-'
+    
     colored_status.short_description = 'Status'
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        # Mark the booking as viewed when opening its details
+        obj = self.get_object(request, object_id)
+        if obj and not obj.is_viewed:
+            obj.is_viewed = True
+            obj.save()
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def number(self, obj):  # Change method name from 'id' to 'number'
         return obj.id
@@ -203,7 +276,8 @@ class BookingAdmin(admin.ModelAdmin):
 
         return base_fieldsets
     
-    list_filter = ('status', 'service', 'created_at', ('departure_time', CustomDateFieldListFilter),('return_time', CustomDateFieldListFilter), )
+    list_filter = (('departure_time', SingleDateFilter),
+        ('return_time', SingleDateFilter),'status', 'service', 'created_at', )
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
 
     def get_readonly_fields(self, request, obj=None):
@@ -327,4 +401,4 @@ class BookingAdmin(admin.ModelAdmin):
         css = {
             'all': ('admin/css/custom_admin.css','admin/css/clickable_rows.css',)
         }
-        js = ('admin/js/print_invoice.js','admin/js/clickable_rows_bookings.js',)
+        js = ('admin/js/print_invoice.js','admin/js/clickable_rows_bookings.js')

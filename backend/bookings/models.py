@@ -44,6 +44,7 @@ class Booking(models.Model):
     created_at = models.DateTimeField(null=True, blank=True)
     modified_at = models.DateTimeField(auto_now=True)
     note = models.TextField(blank=True, null=True)
+    is_viewed = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.booking_id:

@@ -1,0 +1,98 @@
+{% load i18n %}
+
+<h3>{% blocktrans with filter_title=spec.field.verbose_name %}By {{ filter_title }}{% endblocktrans %}</h3>
+<div class="single-date-filter">
+    <form method="GET" class="date-filter-form">
+        {% comment %} Preserve all existing parameters except current filter's params {% endcomment %}
+        {% for key, value in request.GET.items %}
+            {% if key != spec.date_params.gte and key != spec.date_params.lt %}
+                {% if value|length > 1 %}
+                    {% for v in value %}
+                        <input type="hidden" name="{{ key }}" value="{{ v }}">
+                    {% endfor %}
+                {% else %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        <input 
+            type="date" 
+            name="{{ spec.date_params.gte }}"
+            value="{{ spec.value|default:'' }}"
+            class="single-date-picker"
+            onchange="submitDateFilter(this, '{{ spec.date_params.gte }}', '{{ spec.date_params.lt }}')"
+        >
+        {% if spec.value %}
+            <a href="javascript:void(0)" onclick="clearThisFilter('{{ spec.date_params.gte }}', '{{ spec.date_params.lt }}')" class="clear-filter">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+function submitDateFilter(input, gteParam, ltParam) {
+    const form = input.form;
+    const selectedDate = input.value;
+    
+    // Preserve existing filters
+    const currentParams = new URLSearchParams(window.location.search);
+    for (const [key, value] of currentParams.entries()) {
+        if (key !== gteParam && key !== ltParam) {
+            const existingInput = form.querySelector(`input[name="${key}"]`);
+            if (!existingInput) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+        }
+    }
+
+    if (selectedDate) {
+        const nextDay = new Date(selectedDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const ltDate = nextDay.toISOString().split('T')[0];
+        
+        let ltInput = form.querySelector(`input[name="${ltParam}"]`);
+        if (!ltInput) {
+            ltInput = document.createElement('input');
+            ltInput.type = 'hidden';
+            ltInput.name = ltParam;
+            form.appendChild(ltInput);
+        }
+        ltInput.value = ltDate;
+    }
+    form.submit();
+}
+
+function clearThisFilter(gteParam, ltParam) {
+    const params = new URLSearchParams(window.location.search);
+    params.delete(gteParam);
+    params.delete(ltParam);
+    window.location.search = params.toString();
+}
+</script>
+
+<style>
+.single-date-filter {
+    padding: 0 15px;
+    margin-bottom: 10px;
+}
+.single-date-picker {
+    width: 100%;
+    max-width: 200px;
+    padding: 5px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.clear-filter {
+    display: inline-block;
+    margin-left: 10px;
+    color: #999;
+    text-decoration: none;
+}
+.clear-filter:hover {
+    color: #666;
+}
+</style>
