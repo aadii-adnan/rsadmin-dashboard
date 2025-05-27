@@ -340,6 +340,47 @@ class BookingAdmin(admin.ModelAdmin):
             # Remove the download_invoices_zip action for managers
             actions.pop('download_invoices_zip', None)
         return actions
+    
+    def get_dynamic_filename(self, departure_date, return_date, created_date):
+        parts = []
+        dates = set()  # To track unique dates
+        
+        # Convert dates to datetime objects for better formatting
+        if departure_date:
+            dt = datetime.strptime(departure_date, '%Y-%m-%d')
+            dates.add(dt)
+            parts.append('Departures')
+            
+        if return_date:
+            dt = datetime.strptime(return_date, '%Y-%m-%d')
+            dates.add(dt)
+            parts.append('Arrivals')
+            
+        if created_date:
+            dt = datetime.strptime(created_date, '%Y-%m-%d')
+            dates.add(dt)
+            parts.append('Created')
+
+        # If all dates are the same
+        if len(dates) == 1:
+            date_str = list(dates)[0].strftime('%d_%b_%Y')
+            return f"{'_'.join(parts)}_{date_str}.xlsx"
+        
+        # If dates are different
+        filename_parts = []
+        if departure_date:
+            dt = datetime.strptime(departure_date, '%Y-%m-%d')
+            filename_parts.append(f"Departures_{dt.strftime('%d_%b')}")
+        
+        if return_date:
+            dt = datetime.strptime(return_date, '%Y-%m-%d')
+            filename_parts.append(f"Arrivals_{dt.strftime('%d_%b')}")
+        
+        if created_date:
+            dt = datetime.strptime(created_date, '%Y-%m-%d')
+            filename_parts.append(f"Created_{dt.strftime('%d_%b')}")
+        
+        return f"{'_'.join(filename_parts)}_{dt.strftime('%Y')}.xlsx"
 
     def export_as_csv(self, request, queryset):
         """
@@ -441,6 +482,10 @@ class BookingAdmin(admin.ModelAdmin):
                     
             return start_row + filtered_queryset.count() + 4  # Return next available row
 
+        def format_date_display(date_str):
+            """Convert date string from YYYY-MM-DD to DD Mon"""
+            dt = datetime.strptime(date_str, '%Y-%m-%d')
+            return dt.strftime('%d %b')
         # Write sections based on active filters
         if departure_date:
             departure_qs = queryset.filter(
@@ -448,7 +493,7 @@ class BookingAdmin(admin.ModelAdmin):
                 departure_time__lt=timezone.make_aware(datetime.strptime(departure_date, '%Y-%m-%d') + timedelta(days=1))
             )
             if departure_qs.exists():
-                current_row = write_section(f"Departure Date: {departure_date}", departure_qs, current_row)
+                current_row = write_section(f"Departures {format_date_display(departure_date)}", departure_qs, current_row)
                 current_row += 1  # Add spacing between sections
 
         if return_date:
@@ -457,7 +502,7 @@ class BookingAdmin(admin.ModelAdmin):
                 return_time__lt=timezone.make_aware(datetime.strptime(return_date, '%Y-%m-%d') + timedelta(days=1))
             )
             if return_qs.exists():
-                current_row = write_section(f"Return Date: {return_date}", return_qs, current_row)
+                current_row = write_section(f"Returns {format_date_display(return_date)}", return_qs, current_row)
                 current_row += 1
 
         if created_date:
@@ -466,7 +511,7 @@ class BookingAdmin(admin.ModelAdmin):
                 created_at__lt=timezone.make_aware(datetime.strptime(created_date, '%Y-%m-%d') + timedelta(days=1))
             )
             if created_qs.exists():
-                current_row = write_section(f"Created Date: {created_date}", created_qs, current_row)
+                current_row = write_section(f"Created {format_date_display(created_date)}", created_qs, current_row)
 
         # Auto-adjust column widths
         for col_idx in range(1, len(headers) + 1):
@@ -488,11 +533,12 @@ class BookingAdmin(admin.ModelAdmin):
             if max_length > 0:
                 ws.column_dimensions[column_letter].width = max_length + 2
 
+        filename = self.get_dynamic_filename(departure_date, return_date, created_date)
         # Create response
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; filename=bookings.xlsx'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         wb.save(response)
         return response
 
