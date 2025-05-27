@@ -45,11 +45,7 @@ class BookingListCreate(APIView):
                 return Response({'error': 'Invalid or expired coupon'}, status=400)
 
             if coupon.times_used >= coupon.max_uses:
-                return Response({'error': 'Coupon has been fully used'}, status=400)
-
-            # Increment the coupon's times_used
-            coupon.times_used += 1
-            coupon.save()
+                return Response({'error': 'Coupon has been fully used'}, status=400)            
         
         serializer = BookingSerializer(data=data)
         if serializer.is_valid():

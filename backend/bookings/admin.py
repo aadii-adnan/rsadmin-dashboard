@@ -2,25 +2,23 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from .models import Booking
-import csv
 from django.utils import timezone
-from django.contrib.admin import SimpleListFilter
 from django.http import HttpResponse
-from django.contrib.admin import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
-from datetime import datetime, timedelta
-from django.contrib.admin.filters import DateFieldListFilter
+from datetime import datetime
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
-from datetime import timedelta
 import io
 import zipfile
 from django.http import HttpResponse
 from payments.views import generate_invoice, generate_booking_form_pdf
-from django import forms
 from django.contrib.admin import FieldListFilter
 from django.db.models import Q
-
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from datetime import timedelta
+from openpyxl.utils import get_column_letter
+from openpyxl.cell.cell import MergedCell
+from openpyxl.styles import Font, Alignment, PatternFill
 
 
 class SingleDateFilter(FieldListFilter):
@@ -35,18 +33,22 @@ class SingleDateFilter(FieldListFilter):
         if 'departure_time' in field_path:
             field.verbose_name = 'Departure Date'
         elif 'return_time' in field_path:
-            field.verbose_name = 'Arrival Date'
+            field.verbose_name = 'Return Date'
+        elif 'created_at' in field_path:
+            field.verbose_name = 'Created Date'
         super().__init__(field, request, params, model, model_admin, field_path)
 
     def expected_parameters(self):
         return [self.date_params['gte'], self.date_params['lt']]
 
     def queryset(self, request, queryset):
-        # Get both departure and return date parameters
+        # Get all date parameters
         departure_gte = request.GET.get('departure_time__gte')
         departure_lt = request.GET.get('departure_time__lt')
         return_gte = request.GET.get('return_time__gte')
         return_lt = request.GET.get('return_time__lt')
+        created_gte = request.GET.get('created_at__gte')
+        created_lt = request.GET.get('created_at__lt')
         
         q_objects = Q()
 
@@ -71,6 +73,17 @@ class SingleDateFilter(FieldListFilter):
                 q_objects |= Q(return_time__gte=start_datetime, return_time__lt=end_datetime)
             except (ValueError, TypeError) as e:
                 print(f"Error in return date filtering: {e}")
+
+        # Handle created date filter
+        if created_gte and created_lt:
+            try:
+                start_date = datetime.strptime(created_gte, '%Y-%m-%d')
+                end_date = datetime.strptime(created_lt, '%Y-%m-%d')
+                start_datetime = timezone.make_aware(datetime.combine(start_date.date(), datetime.min.time()))
+                end_datetime = timezone.make_aware(datetime.combine(end_date.date(), datetime.min.time()))
+                q_objects |= Q(created_at__gte=start_datetime, created_at__lt=end_datetime)
+            except (ValueError, TypeError) as e:
+                print(f"Error in created date filtering: {e}")
 
         # Apply the combined filters if any exist
         if q_objects:
@@ -276,8 +289,7 @@ class BookingAdmin(admin.ModelAdmin):
 
         return base_fieldsets
     
-    list_filter = (('departure_time', SingleDateFilter),
-        ('return_time', SingleDateFilter),'status', 'service', 'created_at', )
+    list_filter = (('departure_time', SingleDateFilter), ('return_time', SingleDateFilter), ('created_at', SingleDateFilter), 'status', 'service',)
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
 
     def get_readonly_fields(self, request, obj=None):
@@ -331,70 +343,160 @@ class BookingAdmin(admin.ModelAdmin):
 
     def export_as_csv(self, request, queryset):
         """
-        Export selected bookings as a CSV file.
-        Exclude price-related details if the admin is a manager.
+        Export bookings organized by active date filters
         """
-        # Create the HTTP response with the appropriate CSV headers
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="bookings.csv"'
+        wb = Workbook()
+        ws = wb.active
+        
+        # Get active filters
+        departure_date = request.GET.get('departure_time__gte')
+        return_date = request.GET.get('return_time__gte')
+        created_date = request.GET.get('created_at__gte')
 
-        writer = csv.writer(response)
-
-        # Define the header row
+        # Define headers once
         headers = [
-            'ID', 'Service', 'Add-ons', 'Car Registration No', 'Car Model',
-            'Car Colour', 'Car Manufacturer', 'Departure Terminal', 'Return Terminal',
-            'Departure Flight Number', 'Return Flight Number', 'First Name', 'Last Name',
-            'Email', 'Contact No', 'Total Passengers', 'Departure Time', 'Return Time',
-            'Status', 'Created At', 'Modified At'
+            'ID', 'Service', 'Add-ons', 'First Name', 'Last Name',
+            'Email', 'Contact No', 'Departure Time', 'Return Time',
+            'Car Registration No', 'Car Model', 'Car Colour', 'Car Manufacturer',
+            'Departure Terminal', 'Return Terminal', 'Departure Flight Number',
+            'Return Flight Number', 'Total Passengers', 'Created At'
         ]
-
-        # Exclude price-related fields if the admin is a manager
         if not request.user.is_manager:
             headers.extend(['Total Price', 'Coupon', 'Discounted Price'])
 
-        # Write the header row
-        writer.writerow(headers)
+        current_row = 1  # Keep track of current row
 
-        # Write data rows
-        for booking in queryset:
-            row = [
-                booking.booking_id,
-                booking.service.name if booking.service else '',
-                ', '.join([addon.name for addon in booking.add_ons.all()]),
-                booking.car_registration_no,
-                booking.car_model,
-                booking.car_colour,
-                booking.car_manufacturer,
-                booking.departure_terminal,
-                booking.return_terminal,
-                booking.departure_flight_number,
-                booking.return_flight_number,
-                booking.first_name,
-                booking.last_name,
-                booking.email,
-                booking.contact_no,
-                booking.total_passengers,
-                booking.departure_time,
-                booking.return_time,
-                booking.status.name if booking.status else '',                
-                booking.created_at,
-                booking.modified_at,
-            ]
+        # Function to write section
+        def write_section(title, filtered_queryset, start_row):
+            # Write section title
+            title_cell = ws.cell(row=start_row, column=1, value=title)
+            title_cell.font = Font(bold=True, size=16, color="FFFFFF")  # White text
+            title_cell.alignment = Alignment(
+                vertical='center',     # Center vertically
+                horizontal='left',     # Align text to left
+                indent=10             # Add left padding/indent to the text
+            )
+            title_cell.fill = PatternFill(
+                start_color="000000",  # Black background
+                end_color="000000",
+                fill_type="solid"
+            )
+            
+            # Merge cells for title (single row, full width)
+            ws.merge_cells(start_row=start_row, start_column=1, 
+                end_row=start_row, end_column=len(headers))
+            
+            # Fill merged cells with black background
+            for col in range(1, len(headers) + 1):
+                cell = ws.cell(row=start_row, column=col)
+                cell.fill = PatternFill(
+                    start_color="000000",
+                    end_color="000000",
+                    fill_type="solid"
+                )
+            
+            # Set row height for better spacing
+            ws.row_dimensions[start_row].height = 40 
+    
+            # Write headers (now starting 3 rows below title)
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=start_row + 1, column=col, value=header)
+                cell.font = Font(bold=True)
+                cell.alignment = Alignment(horizontal='center')
+            
+            # Write data
+            for idx, booking in enumerate(filtered_queryset, start_row + 2):
+                row_data = [
+                    booking.booking_id,
+                    booking.service.name if booking.service else '',
+                    ', '.join([addon.name for addon in booking.add_ons.all()]),
+                    booking.first_name,
+                    booking.last_name,
+                    booking.email,
+                    booking.contact_no,
+                    timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M'),
+                    timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M'),
+                    booking.car_registration_no,
+                    booking.car_model,
+                    booking.car_colour,
+                    booking.car_manufacturer,
+                    booking.departure_terminal,
+                    booking.return_terminal,
+                    booking.departure_flight_number,
+                    booking.return_flight_number,
+                    booking.total_passengers,
+                    timezone.localtime(booking.created_at).strftime('%d %b %Y %H:%M'),
+                ]
+                
+                if not request.user.is_manager:
+                    row_data.extend([
+                        booking.total_price,
+                        booking.coupon.code if booking.coupon else '',
+                        booking.discounted_price,
+                    ])
+                    
+                for col, value in enumerate(row_data, 1):
+                    cell = ws.cell(row=idx, column=col, value=value)
+                    cell.alignment = Alignment(horizontal='left')
+                    
+            return start_row + filtered_queryset.count() + 4  # Return next available row
 
-            # Add price-related fields if the admin is not a manager
-            if not request.user.is_manager:
-                row.extend([
-                    booking.total_price,
-                    booking.coupon.code if booking.coupon else '',
-                    booking.discounted_price,
-                ])
+        # Write sections based on active filters
+        if departure_date:
+            departure_qs = queryset.filter(
+                departure_time__gte=timezone.make_aware(datetime.strptime(departure_date, '%Y-%m-%d')),
+                departure_time__lt=timezone.make_aware(datetime.strptime(departure_date, '%Y-%m-%d') + timedelta(days=1))
+            )
+            if departure_qs.exists():
+                current_row = write_section(f"Departure Date: {departure_date}", departure_qs, current_row)
+                current_row += 1  # Add spacing between sections
 
-            writer.writerow(row)
+        if return_date:
+            return_qs = queryset.filter(
+                return_time__gte=timezone.make_aware(datetime.strptime(return_date, '%Y-%m-%d')),
+                return_time__lt=timezone.make_aware(datetime.strptime(return_date, '%Y-%m-%d') + timedelta(days=1))
+            )
+            if return_qs.exists():
+                current_row = write_section(f"Return Date: {return_date}", return_qs, current_row)
+                current_row += 1
 
+        if created_date:
+            created_qs = queryset.filter(
+                created_at__gte=timezone.make_aware(datetime.strptime(created_date, '%Y-%m-%d')),
+                created_at__lt=timezone.make_aware(datetime.strptime(created_date, '%Y-%m-%d') + timedelta(days=1))
+            )
+            if created_qs.exists():
+                current_row = write_section(f"Created Date: {created_date}", created_qs, current_row)
+
+        # Auto-adjust column widths
+        for col_idx in range(1, len(headers) + 1):
+            max_length = 0
+            column_letter = get_column_letter(col_idx)
+            
+            # Check all cells in column
+            for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
+                cell = row[col_idx - 1]
+                if isinstance(cell, MergedCell):
+                    continue
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            
+            # Set width if content was found
+            if max_length > 0:
+                ws.column_dimensions[column_letter].width = max_length + 2
+
+        # Create response
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=bookings.xlsx'
+        wb.save(response)
         return response
 
-    export_as_csv.short_description = "Export Selected Bookings as CSV"
+    export_as_csv.short_description = "Export Selected Bookings as Excel"
 
 
     class Media:

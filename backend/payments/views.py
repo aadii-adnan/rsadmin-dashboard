@@ -313,6 +313,10 @@ class StripeWebhookView(APIView):
                 booking.discount_coupon_awarded = coupon.code
                 booking.save()
 
+                if booking.coupon:
+                    booking.coupon.times_used += 1
+                    booking.coupon.save()
+
                 # Generate and email the invoice    
                 if not booking.email_sent:            
                     try:
