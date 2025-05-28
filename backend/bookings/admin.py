@@ -396,14 +396,11 @@ class BookingAdmin(admin.ModelAdmin):
 
         # Define headers once
         headers = [
-            'ID', 'Service', 'Add-ons', 'First Name', 'Last Name',
-            'Email', 'Contact No', 'Departure Time', 'Return Time',
-            'Car Registration No', 'Car Model', 'Car Colour', 'Car Manufacturer',
-            'Departure Terminal', 'Return Terminal', 'Departure Flight Number',
-            'Return Flight Number', 'Total Passengers', 'Created At'
+            'PRODUCT CODE','Booking Ref', 'Customer/Contact', 'Entry Date & Time', 'Return Date & Time', 'Vehicle/Registration',
+            'Out Flight Number', 'In Flight Number', 'Add Onns'
         ]
         if not request.user.is_manager:
-            headers.extend(['Total Price', 'Coupon', 'Discounted Price'])
+            headers.extend(['Cost'])
 
         current_row = 1  # Keep track of current row
 
@@ -411,11 +408,11 @@ class BookingAdmin(admin.ModelAdmin):
         def write_section(title, filtered_queryset, start_row):
             # Write section title
             title_cell = ws.cell(row=start_row, column=1, value=title)
-            title_cell.font = Font(bold=True, size=16, color="FFFFFF")  # White text
+            title_cell.font = Font(bold=True, size=24, color="FFFFFF")  # White text
             title_cell.alignment = Alignment(
                 vertical='center',     # Center vertically
-                horizontal='left',     # Align text to left
-                indent=10             # Add left padding/indent to the text
+                horizontal='center',     # Align text to left
+               
             )
             title_cell.fill = PatternFill(
                 start_color="000000",  # Black background
@@ -448,32 +445,20 @@ class BookingAdmin(admin.ModelAdmin):
             # Write data
             for idx, booking in enumerate(filtered_queryset, start_row + 2):
                 row_data = [
-                    booking.booking_id,
                     booking.service.name if booking.service else '',
-                    ', '.join([addon.name for addon in booking.add_ons.all()]),
-                    booking.first_name,
-                    booking.last_name,
-                    booking.email,
-                    booking.contact_no,
+                    booking.booking_id,                 
+                    f'{booking.first_name} {booking.last_name} {booking.contact_no}',                
                     timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M'),
                     timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M'),
-                    booking.car_registration_no,
-                    booking.car_model,
-                    booking.car_colour,
-                    booking.car_manufacturer,
-                    booking.departure_terminal,
-                    booking.return_terminal,
+                    f'{booking.car_manufacturer} {booking.car_model} {booking.car_colour} {booking.car_registration_no}',
                     booking.departure_flight_number,
                     booking.return_flight_number,
-                    booking.total_passengers,
-                    timezone.localtime(booking.created_at).strftime('%d %b %Y %H:%M'),
+                    ', '.join([addon.name for addon in booking.add_ons.all()]),
                 ]
                 
                 if not request.user.is_manager:
                     row_data.extend([
-                        booking.total_price,
-                        booking.coupon.code if booking.coupon else '',
-                        booking.discounted_price,
+                        booking.total_price if (booking.discounted_price is None or booking.discounted_price <= 0 ) else booking.discounted_price,
                     ])
                     
                 for col, value in enumerate(row_data, 1):

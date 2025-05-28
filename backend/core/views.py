@@ -16,12 +16,12 @@ class StatusListView(APIView):
 
 
 def robots_txt(request):
-    content = (
-        "User-agent: *\n"
-        "Disallow: /admin/\n"
-        "Disallow: /logout\n"
-        "Disallow: /unauthorized\n"
-        "Allow: /\n"
-        "Sitemap: https://rsexpressparking.com/sitemap.xml"
-    )
-    return HttpResponse(content, content_type="text/plain")
+    content = """User-agent: *
+Allow: /
+Disallow: /admin-dashboard/
+Disallow: /api/auth/
+Disallow: /api/payments/
+
+Sitemap: https://rsexpressparking.com/sitemap.xml
+"""
+    return HttpResponse(content, content_type='text/plain')
