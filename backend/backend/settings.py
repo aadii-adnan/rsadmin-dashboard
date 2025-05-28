@@ -63,7 +63,6 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-    'middleware.prerender.PrerenderMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
