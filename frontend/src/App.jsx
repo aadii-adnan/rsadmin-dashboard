@@ -15,6 +15,7 @@ import avatar from "./assets/avatar.png";
 import 'react-toastify/dist/ReactToastify.css';
 import NotFound404 from "./pages/NotFound404";
 import ThankYouPage from "./pages/ThankYouPage";
+import { useEffect } from "react";
 
 function Logout() {
   const { logout } = useAuth();
@@ -27,6 +28,17 @@ function Logout() {
 }
 
 function App() {
+
+  useEffect(() => {
+    window.prerenderReady = false;
+
+    // You can tweak the timeout or make it dynamic if you're fetching data
+    const timeout = setTimeout(() => {
+      window.prerenderReady = true;
+    }, 1000); // wait 1 second to ensure everything is mounted
+
+    return () => clearTimeout(timeout);
+  }, []);
   
   return (
     <>
