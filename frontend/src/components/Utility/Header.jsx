@@ -8,6 +8,8 @@ const Header = () => {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showLegalDropdown, setShowLegalDropdown] = useState(false);
+  const [isLegalInfoDropdownOpen, setIsLegalInfoDropdownOpen] = useState(false);
   const { bookingData } = useBooking();
   const { userDetails } = bookingData || {};
 
@@ -15,6 +17,7 @@ const Header = () => {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 1024);
+      setShowLegalDropdown(window.innerWidth <= 1285 && window.innerWidth > 1024);
     };
 
     // Add listener on mount
@@ -34,7 +37,7 @@ const Header = () => {
         className="elementor elementor-319 elementor-location-header"
         data-elementor-post-type="elementor_library"
         >
-        <div style={{ backgroundColor: "#F5F4EE" }}
+        <div style={{ backgroundColor: "#F5F4EE", justifyContent: "space-between" }}
             className="elementor-element elementor-element-71809993 e-con-full e-flex e-con e-parent e-lazyloaded"
             data-id="71809993"
             data-element_type="container"
@@ -76,24 +79,112 @@ const Header = () => {
                         {((isMobile && isOpen) || !isMobile) && (<>
                         <div id="ekit-megamenu-main-menu" className="active elementskit-menu-container elementskit-menu-offcanvas-elements elementskit-navbar-nav-default ekit-nav-menu-one-page- ekit-nav-dropdown-hover" ekit-dom-added="yes">
                           <ul id="menu-main-menu" className="elementskit-navbar-nav elementskit-menu-po-right submenu-click-on-icon">
-                              {/* <li id="menu-item-576" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-576 nav-item elementskit-mobile-builder-content active" data-vertical-menu="750px"><Link to={"/"} className="ekit-menu-nav-link">Home</Link></li> */}
-                                                      
-                              
-                              
-                              {/* <li id="menu-item-922" className="menu-item menu-item-type-custom menu-item-object-custom current-menu-ancestor current-menu-parent menu-item-has-children menu-item-922 nav-item elementskit-dropdown-has relative_position elementskit-dropdown-menu-default_width elementskit-mobile-builder-content" data-vertical-menu="750px">
-                                <Link to={"#"} className="ekit-menu-nav-link ekit-menu-dropdown-toggle">Legal Information<i onClick={() => setIsLegalInfoDropdownOpen(prev => !prev)} aria-hidden="true" className="icon icon-plus elementskit-submenu-indicator"></i></Link>
-                                <ul className={`elementskit-dropdown elementskit-submenu-panel ${(isMobile && isLegalInfoDropdownOpen) ? "elementskit-dropdown-open" : ""}`}> */}
-                              <li onClick={() => setIsOpen(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/"}>Home</Link></li>
-                              <li onClick={() => setIsOpen(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/privacy-policy"}>Privacy Policy</Link></li>
-                              <li onClick={() => setIsOpen(false)} id="menu-item-924" className="menu-item menu-item-type-post_type menu-item-object-page page_item page-item-596 menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/terms-conditions"}>Terms &amp; Conditions</Link></li>
-                                {/* </ul>
-                              </li> */}
-
-                              <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><a className='footer-link' href="/blog"><div className="ekit-menu-nav-link">Blog</div></a></li>
-                              <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
-
-                              {userDetails?.id && <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/logout"}><div className="ekit-menu-nav-link">Logout</div></Link></li>}
-                              
+                            <li onClick={() => setIsOpen(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/"}>Home</Link></li>
+                            {/* Legal Information Dropdown for 1025px - 1285px */}
+                            {showLegalDropdown ? (
+                                <li
+                                  className={`menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item elementskit-dropdown-has relative_position elementskit-dropdown-menu-default_width elementskit-mobile-builder-content`}
+                                  data-vertical-menu="750px"
+                                  onMouseEnter={() => setIsLegalInfoDropdownOpen(true)}
+                                  onMouseLeave={() => setIsLegalInfoDropdownOpen(false)}
+                                  style={{
+                                    position: "relative",
+                                    listStyle: "none",
+                                    padding: 0,
+                                    margin: 0,
+                                  }}
+                                >
+                                  <span
+                                    className="ekit-menu-nav-link ekit-menu-dropdown-toggle footer-link"
+                                    style={{
+                                      cursor: "pointer",
+                                      padding: "0px 15px",
+                                      color: "#010659",
+                                      fontWeight: 600,
+                                      borderRadius: "8px",
+                                      transition: "background 0.2s, color 0.2s",
+                                      background: isLegalInfoDropdownOpen ? "#f5f4ee" : "transparent",
+                                      fontSize: "14px",
+                                      textTransform: "uppercase",
+                                      height: "100%",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      lineHeight: "1.6",
+                                    }}
+                                    onClick={() => setIsLegalInfoDropdownOpen(prev => !prev)}
+                                  >
+                                    Legal Information
+                                    <i aria-hidden="true" className="icon icon-plus elementskit-submenu-indicator" style={{ marginLeft: 6, lineHeight: "1.6", fontWeight: 600, }}></i>
+                                  </span>
+                                  <ul
+                                    className={`elementskit-dropdown elementskit-submenu-panel${isLegalInfoDropdownOpen ? " elementskit-dropdown-open" : ""}`}
+                                    style={{
+                                      minWidth: 180,
+                                      background: "#fff",
+                                      borderRadius: 8,
+                                      boxShadow: "0 4px 18px rgba(40,144,205,0.10)",
+                                      padding: "8px 0",
+                                      marginTop: 4,
+                                      position: "absolute",
+                                      left: 0,
+                                      zIndex: 100,
+                                    }}
+                                  >
+                                    <li
+                                      onClick={() => setIsOpen(false)}
+                                      className="menu-item"
+                                      style={{
+                                        padding: 0,
+                                      }}
+                                    >
+                                      <Link
+                                        className="footer-link"
+                                        to={"/privacy-policy"}
+                                        style={{
+                                          display: "block",
+                                          padding: "10px 18px",
+                                          color: "#010659",
+                                          fontWeight: 500,
+                                          borderRadius: "8px",
+                                          transition: "background 0.2s, color 0.2s",
+                                        }}
+                                      >
+                                        Privacy Policy
+                                      </Link>
+                                    </li>
+                                    <li
+                                      onClick={() => setIsOpen(false)}
+                                      className="menu-item"
+                                      style={{
+                                        padding: 0,
+                                      }}
+                                    >
+                                      <Link
+                                        className="footer-link"
+                                        to={"/terms-conditions"}
+                                        style={{
+                                          display: "block",
+                                          padding: "10px 18px",
+                                          color: "#010659",
+                                          fontWeight: 500,
+                                          borderRadius: "8px",
+                                          transition: "background 0.2s, color 0.2s",
+                                        }}
+                                      >
+                                        Terms &amp; Conditions
+                                      </Link>
+                                    </li>
+                                  </ul>
+                                </li>
+                              ) : (
+                                <>
+                                  <li onClick={() => setIsOpen(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/privacy-policy"}>Privacy Policy</Link></li>
+                                  <li onClick={() => setIsOpen(false)} id="menu-item-924" className="menu-item menu-item-type-post_type menu-item-object-page page_item page-item-596 menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/terms-conditions"}>Terms &amp; Conditions</Link></li>
+                                </>
+                              )}
+                            <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><a className='footer-link' href="/blog"><div className="ekit-menu-nav-link">Blog</div></a></li>
+                            <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
+                            {userDetails?.id ? <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/logout"}><div className="ekit-menu-nav-link">Logout</div></Link></li> : <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/login"}><div className="ekit-menu-nav-link">Login</div></Link></li>}
                           </ul>
                           <div onClick={() => setIsOpen(false)} className="elementskit-nav-identity-panel">
                               <Link to={"/"} className="elementskit-nav-logo" target="" rel="">

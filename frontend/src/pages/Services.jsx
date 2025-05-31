@@ -60,8 +60,8 @@ const Services = () => {
 
 		</Helmet>
 		<div style={{ padding: "40px 20px", backgroundColor: "#f8f9fa", minHeight: "100vh", }}>
-			<h1 style={{ textAlign: "center", color: "#010659", marginBottom: "40px", fontSize: "36px", fontWeight: "700",}}>Select Parking Option</h1>
-			<div className="each-service" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px', margin: '0 auto'}}>
+			<h1 className="services-heading" style={{ textAlign: "center", color: "#010659", marginBottom: "40px", fontSize: "36px", fontWeight: "700",}}>Select Parking Option</h1>
+			<div className="each-service" style={{ display: 'flex', gap: '20px', maxWidth: '1200px', margin: '0 auto'}}>
 			{loading ? ([...Array(3)].map((_, index) => (<ServiceShimmer key={index} />))
           		) : (services.map((service, index) => (
 					<ServicesItem key={service.id} service={service} openModal={openModal} index={index}/>
