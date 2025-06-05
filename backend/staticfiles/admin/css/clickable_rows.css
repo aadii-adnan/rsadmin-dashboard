@@ -3,10 +3,6 @@
     transition: background-color 0.2s;
 }
 
-#result_list tbody tr:hover {
-    background-color: #00363a;
-}
-
 #result_list tbody tr a,
 #result_list tbody tr input,
 #result_list tbody tr .button {
@@ -129,8 +125,24 @@ p.paginator .show-all:hover {
     min-width: 80px;
 }
 
-@media (prefers-color-scheme: light) {
-    #result_list tbody tr:hover {
-        background-color: #e3f2fd !important; /* Light blue */
-    }
+#result_list tbody tr:hover,
+#result_list tbody tr:focus,
+#result_list tbody tr:active {
+    background-color: #e3f2fd !important;
+    color: #222 !important;
+}
+
+html[data-theme="light"] #result_list tbody tr:hover,
+html[data-theme="light"] #result_list tbody tr:focus,
+html[data-theme="light"] #result_list tbody tr:active {
+    background-color: #e3f2fd !important;
+    color: #222 !important;
+}
+
+/* For Django admin's dark theme */
+html[data-theme="dark"] #result_list tbody tr:hover,
+html[data-theme="dark"] #result_list tbody tr:focus,
+html[data-theme="dark"] #result_list tbody tr:active {
+    background-color: #00363a !important;
+    color: #fff !important;
 }
