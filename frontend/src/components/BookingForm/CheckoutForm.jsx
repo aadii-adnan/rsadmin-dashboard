@@ -29,20 +29,23 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
     if (paymentTimeout) clearTimeout(paymentTimeout);
   };
 
-  const updatePaymentStatus = async (paymentId, status) => {
+  const updatePaymentStatus = async (paymentId, status, statusMessage = null) => {
     try {
+      const body = { status };
+      if (statusMessage) body.status_message = statusMessage;
+
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payments/update-status/${paymentId}/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(body),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to update payment status");
       }
-  
+
       return response.json();
     } catch (error) {
       console.error("Error updating payment status:", error);
@@ -203,7 +206,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
       console.error("Payment error:", err);
       setError(err.message || "Payment failed. Please try again.");
       if(localPaymentId)
-      await updatePaymentStatus(localPaymentId, "Failed");
+      await updatePaymentStatus(localPaymentId, "Failed", err.message);
     } finally {
       setProcessing(false);
       clearTimeout(paymentTimeout);
