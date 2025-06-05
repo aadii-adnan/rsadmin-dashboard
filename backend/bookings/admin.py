@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import Booking
+from .models import Booking, BookingUser
 from django.utils import timezone
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
@@ -535,3 +535,42 @@ class BookingAdmin(admin.ModelAdmin):
             'all': ('admin/css/custom_admin.css','admin/css/clickable_rows.css',)
         }
         js = ('admin/js/print_invoice.js','admin/js/clickable_rows_bookings.js')
+
+@admin.register(BookingUser)
+class BookingUserAdmin(admin.ModelAdmin):
+    def created_at_display(self, obj):
+        return timezone.localtime(obj.created_at).strftime('%d %b %Y %H:%M')
+    created_at_display.admin_order_field = 'created_at'
+    created_at_display.short_description = 'Created At'
+
+    list_display = ('id', 'first_name', 'last_name', 'email', 'booking_completion_status', 'created_at_display')
+    search_fields = ('first_name', 'last_name', 'email', 'contact_no')
+    list_filter = ('booking_completion_status', 'created_at',)
+    readonly_fields = ('created_at_display',)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            (None, {
+                'fields': ('first_name', 'last_name', 'email', 'contact_no', 'booking_completion_status')
+            }),
+            ('Created At', {
+                'fields': ('created_at_display',)
+            }),
+        ]
+        return fieldsets
+    
+    def has_module_permission(self, request):
+        """
+        Restrict access for managers.
+        """
+        user = request.user
+        if user.is_authenticated and getattr(user, "is_manager", False):
+            return False
+        return super().has_module_permission(request)
+
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css','admin/css/clickable_rows.css',)
+        }
+        js = ('admin/js/print_invoice.js','admin/js/clickable_rows.js')
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Booking
+from .models import Booking, BookingUser
 from services.models import AddOn, Coupon
 from core.models import Status
 from core.serializers import StatusSerializer
@@ -23,3 +23,8 @@ class BookingSerializer(serializers.ModelSerializer):
             'discounted_price': {'required': False, 'allow_null': True},
             'status': {'required': False},
         }
+
+class BookingUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookingUser
+        fields = '__all__'

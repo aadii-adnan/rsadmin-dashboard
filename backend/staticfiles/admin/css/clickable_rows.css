@@ -128,3 +128,9 @@ p.paginator .show-all:hover {
     display: inline-block;
     min-width: 80px;
 }
+
+@media (prefers-color-scheme: light) {
+    #result_list tbody tr:hover {
+        background-color: #e3f2fd !important; /* Light blue */
+    }
+}
