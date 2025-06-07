@@ -18,14 +18,12 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
   const navigate = useNavigate();
   
   // Add payment recovery state
-  const [retryCount, setRetryCount] = useState(0);
   const [paymentTimeout, setPaymentTimeout] = useState(null);
 
   const resetPaymentState = () => {
     setError(null);
     setMessage(null);
     setProcessing(false);
-    setRetryCount(0);
     if (paymentTimeout) clearTimeout(paymentTimeout);
   };
 
@@ -117,11 +115,6 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
   };
 
   const retryPayment = async (clientSecret, paymentMethod) => {
-    if (retryCount >= 3) {
-      throw new Error("Payment failed after multiple attempts. Please try again.");
-    }
-
-    setRetryCount(prev => prev + 1);
     return await stripe.confirmCardPayment(clientSecret, paymentMethod);
   };
 
