@@ -127,6 +127,8 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
 from django.core.mail import EmailMultiAlternatives
 
 def send_manager_new_booking_email(booking, pdf_content):
+    departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
+    return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
     
     html_body = f"""
     <html>
@@ -143,8 +145,8 @@ def send_manager_new_booking_email(booking, pdf_content):
         <li><strong>Customer Name:</strong> {booking.first_name} {booking.last_name}</li>
         <li><strong>Email:</strong> {booking.email}</li>
         <li><strong>Phone:</strong> {booking.contact_no}</li>
-        <li><strong>Drop-Off Date & Time:</strong> {booking.departure_time}</li>
-        <li><strong>Pick-Up Date & Time:</strong> {booking.return_time}</li>
+        <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
+        <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
         <li><strong>Service:</strong> {booking.service.name}</li>
         <li><strong>Add-ons:</strong> {', '.join([a.name for a in booking.add_ons.all()])}</li>
@@ -178,8 +180,8 @@ Booking ID: {booking.booking_id}
 Customer Name: {booking.first_name} {booking.last_name}
 Email: {booking.email}
 Phone: {booking.contact_no}
-Drop-Off Date & Time: {booking.departure_time}
-Pick-Up Date & Time: {booking.return_time}
+Drop-Off Date & Time: {departure_time}
+Pick-Up Date & Time: {return_time}
 Vehicle: {booking.car_model} – {booking.car_registration_no}
 Service: {booking.service.name}
 Add-ons: {', '.join([a.name for a in booking.add_ons.all()])}
@@ -323,8 +325,8 @@ class StripeWebhookView(APIView):
                         response, error = generate_invoice(booking)
                         if error:
                             return HttpResponse(f'Error: {error}', status=500)
-                        departure_time = booking.departure_time.strftime('%d %b %Y %H:%M')
-                        return_time = booking.return_time.strftime('%d %b %Y %H:%M')
+                        departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
+                        return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
                         pdf_content = response.getvalue()
                         html_body = f"""
     <html>
