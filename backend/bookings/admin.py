@@ -290,7 +290,7 @@ class BookingAdmin(admin.ModelAdmin):
         return base_fieldsets
     
     list_filter = (('departure_time', SingleDateFilter), ('return_time', SingleDateFilter), ('created_at', SingleDateFilter), 'status', 'service',)
-    search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id')
+    search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id', 'id')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # If editing existing object
