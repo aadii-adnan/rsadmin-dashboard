@@ -171,13 +171,13 @@ const BookingDatesForm = () => {
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Parking From Date */}
           <div className="form-date">
-            <label htmlFor="parkingFromDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>Departure Date:</label>
+            <label htmlFor="parkingFromDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>Drop-off Date:</label>
             <input type="date" id="parkingFromDate" name="parkingFromDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.parkingFromDate} min={today} required/>
           </div>
 
           {/* Parking From Time */}
           <div className="form-time">
-            <label htmlFor="parkingFromTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Departure Time</label>
+            <label htmlFor="parkingFromTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Drop-off Time</label>
             <select id="parkingFromTime" name="parkingFromTime" value={formData.parkingFromTime} onChange={handleChange} required style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px",   backgroundColor: "#fff",   cursor: "pointer" }}>
               <option value="">Select time</option>
               {generate24HourTimeOptions().map((time) => (
@@ -192,13 +192,13 @@ const BookingDatesForm = () => {
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Car Collection Date */}
           <div className="form-date">
-            <label htmlFor="carCollectionDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>Arrival Date:</label>
+            <label htmlFor="carCollectionDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>Pickup Date:</label>
             <input type="date" id="carCollectionDate" name="carCollectionDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.carCollectionDate} min={formData.parkingFromDate || today} required/>
           </div>
 
           {/* Car Collection Time */}
           <div className="form-time">
-            <label htmlFor="carCollectionTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Arrival Time</label>
+            <label htmlFor="carCollectionTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Pickup Time</label>
             <select id="carCollectionTime" name="carCollectionTime" value={formData.carCollectionTime} onChange={handleChange} required style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px",   backgroundColor: "#fff",   cursor: "pointer" }}>
               <option value="">Select time</option>
               {generate24HourTimeOptions().map((time) => (
