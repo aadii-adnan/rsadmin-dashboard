@@ -4,6 +4,7 @@ from .models import Booking
 from django.conf import settings
 from core.models import Status
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 @shared_task
 def send_completion_email(booking_id):
@@ -15,8 +16,8 @@ def send_completion_email(booking_id):
     if booking.completion_email_sent:
         return "Email already sent"
 
-    departure_time = booking.departure_time.strftime('%d %b %Y %H:%M')
-    return_time = booking.return_time.strftime('%d %b %Y %H:%M')
+    departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
+    return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
 
     html_body = f"""
     <html>

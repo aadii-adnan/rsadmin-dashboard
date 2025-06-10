@@ -544,7 +544,7 @@ class BookingUserAdmin(admin.ModelAdmin):
     created_at_display.short_description = 'Created At'
 
     list_display = ('id', 'first_name', 'last_name', 'email', 'booking_completion_status', 'created_at_display')
-    search_fields = ('first_name', 'last_name', 'email', 'contact_no')
+    search_fields = ('first_name', 'last_name', 'email', 'contact_no', 'booking_id')
     list_filter = ('booking_completion_status', 'created_at',)
     readonly_fields = ('created_at_display',)
 
