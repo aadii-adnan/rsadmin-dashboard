@@ -402,7 +402,7 @@ class BookingAdmin(admin.ModelAdmin):
         # Define headers once
         headers = [
             'PRODUCT CODE','Booking Ref', 'Customer/Contact', 'Entry Date & Time', 'Return Date & Time', 'Vehicle/Registration',
-            'Out Flight Number', 'In Flight Number', 'Add Onns', 'email'
+            'Out Flight Number', 'In Flight Number', 'Add Onns'
         ]
         if not request.user.is_manager:
             headers.extend(['Cost'])
@@ -459,7 +459,6 @@ class BookingAdmin(admin.ModelAdmin):
                     booking.departure_flight_number,
                     booking.return_flight_number,
                     ', '.join([addon.name for addon in booking.add_ons.all()]),
-                    booking.email,
                 ]
                 
                 if not request.user.is_manager:
