@@ -380,7 +380,12 @@ class BookingAdmin(admin.ModelAdmin):
             dt = datetime.strptime(created_date, '%Y-%m-%d')
             filename_parts.append(f"Created_{dt.strftime('%d_%b')}")
         
-        return f"{'_'.join(filename_parts)}_{dt.strftime('%Y')}.xlsx"
+        if filename_parts:
+            # Use the last dt assigned for the year
+            return f"{'_'.join(filename_parts)}_{dt.strftime('%Y')}.xlsx"
+        else:
+            # Fallback if no date filters are applied
+            return "Selected_Bookings.xlsx"
 
     def export_as_csv(self, request, queryset):
         """
@@ -497,6 +502,10 @@ class BookingAdmin(admin.ModelAdmin):
             )
             if created_qs.exists():
                 current_row = write_section(f"Created {format_date_display(created_date)}", created_qs, current_row)
+        
+        if not (departure_date or return_date or created_date):
+            if queryset.exists():
+                current_row = write_section("All Selected", queryset, current_row)
 
         # Auto-adjust column widths
         for col_idx in range(1, len(headers) + 1):
