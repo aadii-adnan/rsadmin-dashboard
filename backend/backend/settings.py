@@ -30,7 +30,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', cast=bool)
 
 
-ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com', 'www.new.rsexpressparking.com', 'localhost', '127.0.0.1', 'rsexpressparking.com', 'www.rsexpressparking.com']
+ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com', 'www.new.rsexpressparking.com', 'localhost', '127.0.0.1', 'rsexpressparking.com', 'www.rsexpressparking.com', '4f64-139-135-41-90.ngrok-free.app']
 
 
 # Application definition
@@ -190,8 +190,8 @@ CORS_ALLOW_METHODS = [
 ]
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # default is 5 minutes
-    'REFRESH_TOKEN_LIFETIME': timedelta(hours=12),     # default is 1 day
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=3),  # default is 5 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # default is 1 day
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,

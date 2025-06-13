@@ -21,22 +21,27 @@ const Step0BookingForm = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateFields = (fields) => {
   const errors = [];
 
-  if (!fields.first_name) {
-    errors.push("First name is required.");
+  if (!login) {
+
+    if (!fields.first_name) {
+      errors.push("First name is required.");
+    }
+    if (!fields.last_name) {
+      errors.push("Last name is required.");
+    }
+    if (!fields.contact_no || fields.contact_no.length < 10) {
+      errors.push("Contact number must be at least 10 digits.");
+    }
+    if (!fields.email || !/^\S+@\S+\.\S+$/.test(fields.email)) {
+      errors.push("A valid email is required.");
+    }
   }
-  if (!fields.last_name) {
-    errors.push("Last name is required.");
-  }
-  if (!fields.contact_no || fields.contact_no.length < 10) {
-    errors.push("Contact number must be at least 10 digits.");
-  }
-  if (!fields.email || !/^\S+@\S+\.\S+$/.test(fields.email)) {
-    errors.push("A valid email is required.");
-  }
+
   if (rescheduleOption) {
     if (!login) {
       if (!fields.username || fields.username.length < 3) {
@@ -164,7 +169,7 @@ useEffect(() => {
         </div>
 
         {/* Checkbox for Reschedule Option */}
-        <div style={{ marginBottom: "20px", display:"none" }}>
+        <div style={{ marginBottom: "20px" }}>
           <label style={{ fontSize: "14px", color: "#555" }}>
             <input
               type="checkbox"
@@ -206,20 +211,31 @@ useEffect(() => {
               type="text"
               name="username"
               placeholder="UserName"
-              style={inputStyle}
+              style={styles.input}
               value={formData?.username}
               onChange={handleChange}
               required
             />
             <label style={labelStyle}>Password: *</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              style={inputStyle}
-              value={formData?.password}
-              onChange={handleChange}
-              required />
+            <div style={styles.passwordWrap}>
+              <input
+                style={{ ...styles.input, marginBottom: 0 }}
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                value={formData?.password}
+                onChange={handleChange}
+                required />
+                <button
+                    type="button"
+                    style={styles.showBtn}
+                    tabIndex={-1}
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "🔒" : "👁️‍🗨️"}
+                  </button>
+              </div>
 
             {/* Login Option */}
             {!login && (
@@ -287,6 +303,33 @@ useEffect(() => {
       />
       </>
   );
+};
+
+const styles = {
+  label: {
+    fontWeight: 600,
+    color: "#010659",
+    fontSize: "15px",
+    marginBottom: "2px",
+    marginTop: "8px",
+  },
+  input: {
+    padding: "10px 14px",
+    borderRadius: "8px",
+    border: "1px solid #e3eafc",
+    fontSize: "15px",
+    marginBottom: "8px",
+    outline: "none",
+    transition: "border 0.2s",
+    background: "#f8fafc",
+    width: "100%",
+  },
+  passwordWrap: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "8px",
+  },
 };
 
 export default Step0BookingForm;

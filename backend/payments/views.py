@@ -23,9 +23,10 @@ import os
 from rest_framework.renderers import BaseRenderer
 from django.core.mail import EmailMultiAlternatives
 from rest_framework.permissions import AllowAny
-from bookings.tasks import send_completion_email
+from bookings.tasks import send_completion_email, set_booking_started_status
 from datetime import timezone as tz, timedelta
 from django.utils import timezone
+from decimal import Decimal
 
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -127,6 +128,8 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
 from django.core.mail import EmailMultiAlternatives
 
 def send_manager_new_booking_email(booking, pdf_content):
+    departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
+    return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
     
     html_body = f"""
     <html>
@@ -143,8 +146,8 @@ def send_manager_new_booking_email(booking, pdf_content):
         <li><strong>Customer Name:</strong> {booking.first_name} {booking.last_name}</li>
         <li><strong>Email:</strong> {booking.email}</li>
         <li><strong>Phone:</strong> {booking.contact_no}</li>
-        <li><strong>Drop-Off Date & Time:</strong> {booking.departure_time}</li>
-        <li><strong>Pick-Up Date & Time:</strong> {booking.return_time}</li>
+        <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
+        <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
         <li><strong>Service:</strong> {booking.service.name}</li>
         <li><strong>Add-ons:</strong> {', '.join([a.name for a in booking.add_ons.all()])}</li>
@@ -178,8 +181,8 @@ Booking ID: {booking.booking_id}
 Customer Name: {booking.first_name} {booking.last_name}
 Email: {booking.email}
 Phone: {booking.contact_no}
-Drop-Off Date & Time: {booking.departure_time}
-Pick-Up Date & Time: {booking.return_time}
+Drop-Off Date & Time: {departure_time}
+Pick-Up Date & Time: {return_time}
 Vehicle: {booking.car_model} – {booking.car_registration_no}
 Service: {booking.service.name}
 Add-ons: {', '.join([a.name for a in booking.add_ons.all()])}
@@ -216,44 +219,59 @@ class CreateStripePaymentIntent(APIView):
     permission_classes = [AllowAny]
     def post(self, request, booking_id):
         booking = get_object_or_404(Booking, id=booking_id)
+        user = booking.user  # adjust if your Booking model uses a different field
 
         try:
-            # Create Stripe Customer (optional: attach email)
+            extra_amount = request.data.get("amount")
+            is_reschedule_extra = request.data.get("is_reschedule_extra", False)
+            bonus_points_used = Decimal(str(request.data.get("bonus_points_used", 0)))
+
             customer = stripe.Customer.create(email=booking.email)
-
-            discounted_total = booking.total_price
-
-            if booking.coupon and booking.coupon.active and booking.coupon.valid_from <= timezone.now() <= booking.coupon.valid_to:
-                discount_amount = (booking.total_price * booking.coupon.discount_percent) / 100
-                discounted_total = booking.total_price - discount_amount
-                booking.discounted_price = discounted_total
-                booking.save()
+            amount_to_charge = float(booking.discounted_price if booking.discounted_price > 0 else booking.total_price)
+            
+            if is_reschedule_extra and extra_amount:
+                amount_to_charge = float(extra_amount)
+            else:
+                discounted_total = booking.total_price
+                if booking.coupon and booking.coupon.active and booking.coupon.valid_from <= timezone.now() <= booking.coupon.valid_to:
+                    discount_amount = (booking.total_price * booking.coupon.discount_percent) / 100
+                    discounted_total = booking.total_price - discount_amount
+                    discounted_total = max(0, discounted_total - bonus_points_used)
+                    booking.discounted_price = discounted_total
+                    booking.save()
+                amount_to_charge = float(booking.discounted_price if booking.discounted_price > 0 else booking.total_price)
 
             # Create PaymentIntent
             intent = stripe.PaymentIntent.create(
-                amount=int(discounted_total * 100),  # in cents
+                amount=int(amount_to_charge * 100),  # in cents
                 currency='eur',
                 customer=customer.id,
-                metadata={'booking_id': booking.id},
+                metadata={
+                    'booking_id': booking.id,
+                    'is_reschedule_extra': str(is_reschedule_extra),
+                    'bonus_points_used': str(bonus_points_used),
+                },
             )
 
             status_name = 'Pending'
             status_obj = get_object_or_404(Status, name=status_name, type='payment')
-
-            booking_price = booking.discounted_price if booking.discounted_price > 0 else booking.total_price
 
             # Save to Payment model
             payment = Payment.objects.create(
                 booking=booking,
                 stripe_payment_intent=intent['id'],
                 stripe_customer_id=customer.id,
-                amount=booking_price,
+                amount=amount_to_charge,
                 status=status_obj
             )
 
+            # Store bonus points used in booking or payment if you want to track it
+            booking.bonus_points_used = bonus_points_used
+            booking.save(update_fields=['bonus_points_used'])
+
             return Response({
                 'clientSecret': intent['client_secret'],
-                'amount': booking_price,
+                'amount': amount_to_charge,
                 'payment_id': payment.id,
             })
 
@@ -280,6 +298,13 @@ class StripeWebhookView(APIView):
 
                 payment = Payment.objects.get(stripe_payment_intent=payment_intent_id)
                 booking = payment.booking
+                user = booking.user
+
+                # Deduct bonus points if used
+                bonus_points_used = float(intent['metadata'].get('bonus_points_used', 0))
+                if bonus_points_used > 0 and user:
+                    user.bonus_points = max(Decimal('0.00'), getattr(user, 'bonus_points', Decimal('0.00')) - Decimal(str(bonus_points_used)))
+                    user.save(update_fields=['bonus_points'])
 
                 # Update booking and payment statuses
                 new_status = 'Succeeded'
@@ -290,6 +315,8 @@ class StripeWebhookView(APIView):
                 if not booking.completion_email_sent:
                     eta = booking.return_time + timedelta(minutes=15)
                     send_completion_email.apply_async((booking.id,), eta=eta)
+
+                    set_booking_started_status.apply_async((booking.id,), eta=booking.departure_time)
 
                     booking.completion_email_sent = True
                     booking.save(update_fields=['completion_email_sent'])
@@ -323,8 +350,8 @@ class StripeWebhookView(APIView):
                         response, error = generate_invoice(booking)
                         if error:
                             return HttpResponse(f'Error: {error}', status=500)
-                        departure_time = booking.departure_time.strftime('%d %b %Y %H:%M')
-                        return_time = booking.return_time.strftime('%d %b %Y %H:%M')
+                        departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
+                        return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
                         pdf_content = response.getvalue()
                         html_body = f"""
     <html>
@@ -550,13 +577,27 @@ class VerifyBookingAmountView(APIView):
         try:
             # Get the amount from request body
             amount_to_verify = request.data.get('amount')
+            is_reschedule_extra = request.data.get('is_reschedule_extra', False)
             if not amount_to_verify:
                 return Response({
                     'error': 'Amount is required'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Get the booking
-            booking = get_object_or_404(Booking, id=booking_id)
+            booking = get_object_or_404(Booking, id=booking_id)            
+            amount_to_verify = Decimal(str(amount_to_verify))
+
+            if is_reschedule_extra:
+                # Accept any positive amount for extra days (frontend must ensure correct calculation)
+                if amount_to_verify > 0:
+                    return Response({
+                        'valid': True,
+                        'message': 'Extra payment for reschedule accepted'
+                    })
+                else:
+                    return Response({
+                        'valid': False,
+                        'message': 'Extra payment must be positive'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             
             # Calculate the actual amount
             service = booking.service
@@ -572,10 +613,8 @@ class VerifyBookingAmountView(APIView):
                 discount_amount = (total_price * booking.coupon.discount_percent) / 100
                 total_price = total_price - discount_amount
 
-            # Convert amount_to_verify to Decimal for comparison
-            from decimal import Decimal
-            amount_to_verify = Decimal(str(amount_to_verify))
-
+            if booking.bonus_points_used:
+                total_price = total_price - booking.bonus_points_used
             # Compare amounts
             if amount_to_verify == total_price:
                 return Response({

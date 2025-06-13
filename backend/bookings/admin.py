@@ -166,26 +166,28 @@ class BookingAdmin(admin.ModelAdmin):
             'cancelled': '#dc3545',
             'payment failed': '#dc3545',
             'rescheduled': '#fd7e14',
-            'pending': 'gray'
+            'pending': 'gray',
+            'started': "#3552b1",
         }
-        
         status_html = ''
-        # Add NEW tag if booking hasn't been viewed
-        if not obj.is_viewed:
-            status_html += '<span style="background: linear-gradient(45deg, #ff6b6b, #ee0979); '\
-                     'color: #fff; padding: 2px 8px; border-radius: 4px; '\
-                     'margin-right: 5px; box-shadow: 0 2px 4px rgba(238,9,121,0.15); font-size: 1em; '\
-                     'font-weight: bold;'\
-                     'text-transform: uppercase; letter-spacing: 0.5px; position: absolute; margin-top: 30px; ">NEW</span>'
-        
+
         if obj.status:
             status_name = obj.status.name.lower()
             color = status_colors.get(status_name, 'inherit')
             status_html += format_html(
-                '<span style="background-color: {}; color: #fff; padding: 4px 8px; '
-                'border-radius: 4px; font-weight: bold;">{}</span>',
+                '<div><span style="background-color: {}; color: #fff; padding: 4px 8px; '
+                'border-radius: 4px; font-weight: bold; display: inline-block;">{}</span></div>',
                 color, obj.status.name
             )
+        
+        if not obj.is_viewed:
+            status_html += format_html(
+                '<div style="margin-top: 6px;"><span style="background: linear-gradient(45deg, #ff6b6b, #ee0979); '
+                'color: #fff; padding: 2px 8px; border-radius: 4px; '
+                'box-shadow: 0 2px 4px rgba(238,9,121,0.15); font-size: 1em; '
+                'font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">NEW</span></div>'
+            )
+            
         return format_html(status_html) if status_html else '-'
     
     colored_status.short_description = 'Status'
@@ -266,7 +268,7 @@ class BookingAdmin(admin.ModelAdmin):
         if not request.user.is_manager:
             base_fieldsets.append(('Pricing', {
                 'fields': (
-                    ('total_price', 'coupon', 'discounted_price'),
+                    ('total_price', 'coupon', 'discounted_price', 'bonus_points_used'),
                 )
             }))
 

@@ -15,7 +15,8 @@ import avatar from "./assets/avatar.png";
 import 'react-toastify/dist/ReactToastify.css';
 import NotFound404 from "./pages/NotFound404";
 import ThankYouPage from "./pages/ThankYouPage";
-import { useEffect } from "react";
+import CustomerDashboard from "./pages/CustomerDashboard";
+import Login from "./pages/Login";
 
 function Logout() {
   const { logout } = useAuth();
@@ -28,17 +29,6 @@ function Logout() {
 }
 
 function App() {
-
-  useEffect(() => {
-    window.prerenderReady = false;
-
-    // You can tweak the timeout or make it dynamic if you're fetching data
-    const timeout = setTimeout(() => {
-      window.prerenderReady = true;
-    }, 1000); // wait 1 second to ensure everything is mounted
-
-    return () => clearTimeout(timeout);
-  }, []);
   
   return (
     <>
@@ -53,10 +43,12 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="*" element={<NotFound404/>} />
         <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/services/standard-meet-and-greet-parking" element={<Home />} />
         <Route path="/services/flexible-meet-and-greet-parking" element={<Home />} />
+        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound404/>} />
       </Routes>
       <Footer />
       <FloatingWhatsApp

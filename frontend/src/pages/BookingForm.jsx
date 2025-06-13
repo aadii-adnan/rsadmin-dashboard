@@ -33,6 +33,7 @@ const BookingForm = () => {
     const [couponId, setCouponId] = useState(null); // State to store coupon ID
     const [selectedAddOns, setSelectedAddOns] = useState([]);
     const [addOnsDetails, setAddOnsDetails] = useState([]);
+    const [bonusUsed, setBonusUsed] = useState(0);
     const navigate = useNavigate();
     
     const [formData, setFormData] = useState({
@@ -204,15 +205,21 @@ const BookingForm = () => {
               // Handle logged-in user
               const storedUser = bookingData?.userDetails;
               if (storedUser?.id && isMounted) {
-                  const user = storedUser;
                   setFormData(prev => ({
                       ...prev,
-                      first_name: user.first_name,
-                      last_name: user.last_name,
-                      email: user.email,
-                      username: user.username,                      
+                      first_name: prev.first_name || storedUser.first_name,
+                      last_name: prev.last_name || storedUser.last_name,
+                      email: prev.email || storedUser.email,
+                      username: prev.username || storedUser.username,
                   }));
-                  setContactNo(user?.phone);
+                  setContactNo(prev => {
+                      // Only set if prev is empty or just country code
+                      if (!prev || prev === "" || prev === "+353") {
+                          if (storedUser?.phone) return storedUser.phone;
+                          return "";
+                      }
+                      return prev;
+                  });
                   if (currentStep === 0) {
                       setCurrentStep(1);
                   }
@@ -291,14 +298,14 @@ const BookingForm = () => {
 
                 {currentStep === 2 && <Step2BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo} serviceDetails={serviceDetails} couponId={couponId} totalPrice={totalPrice} discountedPrice={discountedPrice} goNext={goNext} statuses={statuses} goBack={goBack} prevButtonStyle={prevButtonStyle} setFormData={setFormData} addOnsDetails={addOnsDetails} setTotalPrice={setTotalPrice}  selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} setAddOnsDetails={setAddOnsDetails}/>}
 
-                {currentStep === 3 && <Step3BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} prevButtonStyle={prevButtonStyle} goNext={goNext} goBack={goBack} totalPrice={totalPrice} discountedPrice={discountedPrice} />}
+                {currentStep === 3 && <Step3BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} prevButtonStyle={prevButtonStyle} goNext={goNext} goBack={goBack} totalPrice={totalPrice} discountedPrice={discountedPrice}  bonusUsed={bonusUsed}/>}
 
                 {currentStep === 4 && <Step4BookingForm />}
 
             </form>
         </div>
 
-            <PriceSummaryBookingForm serviceDetails={serviceDetails} totalPrice={totalPrice} perDayPrice={perDayPrice} price={price} discountedPrice={discountedPrice} setDiscountedPrice={setDiscountedPrice} setCouponId={setCouponId} addOnsDetails={addOnsDetails}/>
+            <PriceSummaryBookingForm serviceDetails={serviceDetails} totalPrice={totalPrice} perDayPrice={perDayPrice} price={price} discountedPrice={discountedPrice} setDiscountedPrice={setDiscountedPrice} setCouponId={setCouponId} addOnsDetails={addOnsDetails} bonusUsed={bonusUsed} setBonusUsed={setBonusUsed}/>
 
         </div>
     </div>

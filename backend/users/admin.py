@@ -33,7 +33,7 @@ class CustomUserAdmin(UserAdmin):
             'fields': (
                 ('first_name', 'last_name'),
                 ('email', 'phone'),
-                'username',
+                'username', 'bonus_points'
             )
         }),
         ('Permissions', {

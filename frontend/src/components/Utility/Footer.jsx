@@ -7,10 +7,10 @@ const Footer = () => {
     return (
     <div style={{backgroundColor : "#010659"}} data-elementor-type="footer" data-elementor-id="330" className="elementor elementor-330 elementor-location-footer" data-elementor-post-type="elementor_library">
         <div className="elementor-element elementor-element-365e4719 e-flex e-con-boxed e-con e-parent e-lazyloaded" data-id="365e4719" data-element_type="container" data-settings="{&quot;background_background&quot;:&quot;classNameic&quot;}">
-            <div className="e-con-inner">
+            <div className="e-con-inner footer-main">
                 <div className="elementor-element elementor-element-106f7bd8 e-con-full e-flex e-con e-child" data-id="106f7bd8" data-element_type="container">
                     <div className="elementor-element elementor-element-76fdb7f elementor-widget elementor-widget-image" data-id="76fdb7f" data-element_type="widget" data-widget_type="image.default">
-                    <div className="elementor-widget-container">
+                    <div className="elementor-widget-container footer-logo">
                         <Link to={"/"}>
                             <img width="2170" height="548" src={logo} className="attachment-full size-full wp-image-324 entered lazyloaded" alt=""/>
                             <noscript><img width="2170" height="548" src={logo} className="attachment-full size-full wp-image-324" alt=""/></noscript>
@@ -85,7 +85,7 @@ const Footer = () => {
                     </div>
                     </div>
                 </div>
-                <div className="elementor-element elementor-element-1fff1ac6 e-con-full e-flex e-con e-child" data-id="1fff1ac6" data-element_type="container">
+                <div className="elementor-element elementor-element-1fff1ac6 e-con-full e-flex e-con e-child footer-address" data-id="1fff1ac6" data-element_type="container">
                     <div className="elementor-element elementor-element-72e4aceb elementor-widget elementor-widget-heading" data-id="72e4aceb" data-element_type="widget" data-widget_type="heading.default">
                     <div className="elementor-widget-container">
                         <h3 className="elementor-heading-title elementor-size-default">Contact Us</h3>

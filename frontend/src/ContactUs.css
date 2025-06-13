@@ -1625,12 +1625,6 @@ li,ul {
     margin-inline-start:auto;margin-inline-end:auto;width: 100%
 }
 
-@media (max-width: 575px) {
-    .site-header:not(.dynamic-header) {
-        padding-inline-start:10px;
-        padding-inline-end:10px}
-}
-
 @media (min-width: 576px) {
     .site-header:not(.dynamic-header) {
         max-width:500px
@@ -2168,7 +2162,7 @@ body.rtl .e-con {
     flex-grow: 1;
     flex-shrink: 1;
     flex-wrap: var(--flex-wrap);
-    justify-content: var(--justify-content)
+    justify-content: center;
 }
 
 .e-con.e-grid>.e-con-inner {
@@ -2267,6 +2261,9 @@ body.rtl .e-con {
     .e-con.e-flex {
         --width: 100%;
         --flex-wrap: var(--flex-wrap-mobile)
+    }
+    .e-con.e-flex.footer-address {
+        width: 50%;
     }
 
     .elementor .elementor-hidden-mobile {
@@ -4203,6 +4200,13 @@ button.metform-btn:focus,button.metform-btn:hover {
         --padding-left: 30px;
         --padding-right: 30px
     }
+    .footer-main {
+        gap: 5px;
+        justify-content: center;
+    }
+    .footer-logo {
+        text-align: center;
+    }
 
     .elementor-637 .elementor-element.elementor-element-3ad1a84>.elementor-widget-container {
         margin: -5px 0 -10px
@@ -4878,7 +4882,7 @@ button.metform-btn:focus,button.metform-btn:hover {
     }
 
     .elementor-319 .elementor-element.elementor-element-79e6e754 {
-        --width: 40%;
+        --width: 30%;
         --flex-direction: row;
         --container-widget-width: calc( ( 1 - var( --container-widget-flex-grow ) ) * 100% );
         --container-widget-height: 100%;
@@ -5769,28 +5773,12 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
 
     .elementor-330 .elementor-element.elementor-element-1e228699>.elementor-widget-container {
         margin: 0 0 -5px
-    }
-
-    .elementor-330 .elementor-element.elementor-element-515c0793 {
-        --width: 40%;
-        --margin-top: 0px;
-        --margin-bottom: 10px;
-        --margin-left: 0px;
-        --margin-right: 0px
-    }
+    } 
 
     .elementor-330 .elementor-element.elementor-element-3fbe053 .elementor-heading-title {
         font-size: var( --e-global-typography-8ec3326-font-size );
         line-height: var( --e-global-typography-8ec3326-line-height );
         letter-spacing: var( --e-global-typography-8ec3326-letter-spacing )
-    }
-
-    .elementor-330 .elementor-element.elementor-element-8062ae6 {
-        --width: 50%;
-        --margin-top: 0px;
-        --margin-bottom: 10px;
-        --margin-left: 0px;
-        --margin-right: 0px
     }
 
     .elementor-330 .elementor-element.elementor-element-f1cba09 .elementor-heading-title {
@@ -5903,7 +5891,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     }
 
     .elementor-330 .elementor-element.elementor-element-1fff1ac6 {
-        --width: 21%
+        --width: 25%
     }
 
     .elementor-330 .elementor-element.elementor-element-418a45d7 {
@@ -5917,15 +5905,15 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     }
 
     .elementor-330 .elementor-element.elementor-element-515c0793 {
-        --width: 48%
+        --width: 30%
     }
 
     .elementor-330 .elementor-element.elementor-element-8062ae6 {
-        --width: 48%
+        --width: 30%
     }
 
     .elementor-330 .elementor-element.elementor-element-1fff1ac6 {
-        --width: 48%
+        --width: 30%
     }
 
     .elementor-330 .elementor-element.elementor-element-59554bc3 {
@@ -10366,4 +10354,47 @@ button.mfp-close.ekit-popup-close:hover {
 
 .fadeIn {
     animation-name: fadeIn
+}
+
+@media (max-width: 900px) {
+    .elementor-330 .elementor-element.elementor-element-8062ae6 {
+        --width: 20%;
+        --margin-top: 0px;
+        --margin-bottom: 10px;
+        --margin-left: 0px;
+        --margin-right: 0px
+    }
+    .elementor-330 .elementor-element.elementor-element-515c0793 {
+        --width: 20%;
+        --margin-top: 0px;
+        --margin-bottom: 10px;
+        --margin-left: 0px;
+        --margin-right: 0px
+    }
+}
+
+@media (max-width: 575px) {
+    .site-header:not(.dynamic-header) {
+        padding-inline-start:10px;
+        padding-inline-end:10px}
+
+    .footer-main {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .footer-main .e-child {
+        width: 100%;
+        margin-left: 0;
+    }
+    .e-con.e-flex.footer-address {
+        width: 100% !important;
+    }
+}
+
+
+@media (max-width: 1100px) {
+    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a {
+        padding:  0 15px;
+    }
 }

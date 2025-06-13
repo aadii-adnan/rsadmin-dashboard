@@ -9,7 +9,7 @@ import CheckoutForm from "./CheckoutForm";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY); // Replace with your real Stripe public key
 
-const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, handleChange, nextButtonStyle, labelStyle, inputStyle }) => {
+const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, handleChange, nextButtonStyle, labelStyle, inputStyle,  bonusUsed}) => {
 
   useEffect(() => {
     window.scrollTo(0, 600);
@@ -39,12 +39,12 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
                   <div className="fs-4"><strong>€{discountedPrice > 0 ? discountedPrice.toFixed(2) : totalPrice.toFixed(2)}</strong></div>
                   <img src={wifi} alt="Wifi Svg" width="60px" style={{ transform: "rotate(90deg)", filter: "invert(1)" }} />
                 </div>
-                <div className="mt-4 fs-3">{formData.card_number ? "**** **** **** " + formData.card_number.slice(-4) : "**** **** **** ****"}</div>
+                <div className="mt-4 fs-3">**** **** **** ****</div>
                 <div>
-                  <small className="text-secondary">Valid Thru <span>{formData.expiry_month || "**"}</span> / <span>{formData.expiry_year || "**"}</span></small>
+                  <small className="text-secondary">Valid Thru <span>**</span> / <span>**</span></small>
                 </div>
                 <div className="mt-3 d-flex justify-content-between align-items-center">
-                  <div className="text-warning fs-5"><strong>{formData.card_name || "XXXX X X"}</strong></div>
+                  <div className="text-warning fs-5"><strong>XXXX X X</strong></div>
                   <img src={masterCardLogo} alt="Card Logo" style={{ width: "60px", height: "60px" }} />
                 </div>
               </div>
@@ -59,6 +59,7 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
                     labelStyle={labelStyle}
                     nextButtonStyle={nextButtonStyle}
                     handleChange={handleChange}
+                    bonusUsed={bonusUsed}
                   />
                 </Elements>
               </div>

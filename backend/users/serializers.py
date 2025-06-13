@@ -8,7 +8,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'first_name', 'last_name', 'phone']  # Include phone field
+        fields = ['username', 'email', 'password', 'first_name', 'last_name', 'phone', 'bonus_points']  # Include phone field
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)

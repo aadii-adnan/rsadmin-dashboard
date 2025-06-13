@@ -1,37 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { useBooking } from "../../context/BookingContext";
 import { Link } from 'react-router-dom';
+import { useAuth } from "../../auth/AuthContext"; // or wherever you get user info
 
-const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPrice, setCouponId, discountedPrice, setDiscountedPrice, addOnsDetails }) => {
+const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPrice, setCouponId, discountedPrice, setDiscountedPrice, addOnsDetails, bonusUsed, setBonusUsed }) => {
     const { bookingData } = useBooking();
+    const { user } = useAuth();
     const [discount, setDiscount] = useState(0); 
     const [amountSaved, setAmountSaved] = useState(0); 
     const [isCouponApplied, setIsCouponApplied] = useState(false); 
     const [coupon, setCoupon] = useState(""); 
+    const [finalPrice, setFinalPrice] = useState(totalPrice);
 
   const calculateDiscountedPrice = async () => {
-    
-      try {      
-          if(bookingData?.paymentDetails?.discount > 0){
-            const discountPercentage = bookingData?.paymentDetails?.discount;
-            const savedAmount = (totalPrice * discountPercentage) / 100;
-          
-            setCouponId(bookingData?.paymentDetails?.couponId); 
-            setCoupon(bookingData?.paymentDetails?.coupon)
-            setDiscount(discountPercentage);
-            setAmountSaved(savedAmount);
-            setDiscountedPrice(totalPrice - savedAmount); 
-            setIsCouponApplied(true);            
-          }      
-        
-      } catch (error) {
-        alert("An error occurred while calculating the amounts.");
+    try {
+      let tempPrice = totalPrice;
+      let tempDiscount = 0;
+      let tempBonusUsed = 0;
+
+      // Apply coupon if any
+      if (bookingData?.paymentDetails?.discount > 0) {
+        const discountPercentage = bookingData?.paymentDetails?.discount;
+        const savedAmount = (totalPrice * discountPercentage) / 100;
+        setCouponId(bookingData?.paymentDetails?.couponId);
+        setCoupon(bookingData?.paymentDetails?.coupon);
+        setDiscount(discountPercentage);
+        setAmountSaved(savedAmount);
+        tempPrice = totalPrice - savedAmount;
+        setDiscountedPrice(tempPrice);
+        setIsCouponApplied(true);
       }
+
+      // Deduct bonus points if user is logged in and has any
+      if (user && user.bonus_points > 0) {
+        // Ensure at least €0.5 remains to be paid
+        const maxBonusUsable = Math.max(0, tempPrice - 0.5);
+        tempBonusUsed = Math.min(user.bonus_points, maxBonusUsable);
+        tempPrice = tempPrice - tempBonusUsed;
+        setDiscountedPrice(tempPrice);
+        setBonusUsed(tempBonusUsed);
+      } else {
+        setBonusUsed(0);
+      }
+
+      setFinalPrice(tempPrice);
+    } catch (error) {
+      alert("An error occurred while calculating the amounts.");
+    }
   };
 
   useEffect(() => {
     calculateDiscountedPrice();
-  }, [totalPrice])
+    // eslint-disable-next-line
+  }, [totalPrice, user]);
 
   return (
     <div className='price-summary' style={{ height: "fit-content", backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", padding: "20px", marginTop: "30px", marginBottom: "30px" }}>
@@ -160,11 +181,21 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
             </div>
           )}
 
+          {/* Show bonus points deduction if any */}
+          {bonusUsed > 0 && (
+            <div className="row">
+              <div className="col">
+                <h6 style={{ fontSize: "14px", color: "#43a047", marginBottom: "10px" }}>
+                  Bonus Points Used: <span style={{ fontWeight: "bold", color: "#2890cd" }}>€{bonusUsed.toFixed(2)}</span>
+                </h6>
+              </div>
+            </div>
+          )}
+
           <div className="row">
             <div className="col">
               <h5 className="prices" style={{ fontSize: "16px", fontWeight: "bold", color: "#010659", marginBottom: "15px" }}>
-                Total to pay:{" "}
-                <span style={{ color: "#2890cd" }}>€{isCouponApplied ? discountedPrice.toFixed(2) : totalPrice.toFixed(2)}</span>
+                Total to pay: <span style={{ color: "#2890cd" }}>€{finalPrice.toFixed(2)}</span>
               </h5>
             </div>
           </div>

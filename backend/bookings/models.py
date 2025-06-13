@@ -38,6 +38,7 @@ class Booking(models.Model):
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'booking'})
     discount_coupon_awarded = models.CharField(max_length=50, blank=True, null=True)
+    bonus_points_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     email_sent = models.BooleanField(default=False)
     completion_email_sent = models.BooleanField(default=False)
 

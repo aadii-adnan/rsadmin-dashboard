@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import customFetch from "../auth/fetch";
 
 const ThankYouPage = () => {
-  const { bookingData } = useBooking();
+  const { bookingData, setBookingData } = useBooking();
   const navigate = useNavigate();
   const [coupon, setCoupon] = useState("");
   const booking_id = bookingData?.bookingDetails?.booking_id;
@@ -11,6 +13,31 @@ const ThankYouPage = () => {
   const bookingDates = bookingData?.bookingDates || {};
   const selectedService = bookingData?.bookingDetails?.service || "N/A";
   const selectedAddOns = bookingData?.carFlightDetails?.addOnsDetails || [];
+  const { setUser } = useAuth();
+  const { userDetails } = bookingData || {};
+
+  useEffect(() => {
+    const fetchLatestUser = async () => {
+      try {
+        const res = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/auth/me/`);
+        if (res.ok) {
+          const userData = await res.json();
+          setUser(userData);
+          setBookingData((prev) => ({
+            ...prev,
+            userDetails: userData,
+          }));
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+
+    if (userDetails) {
+      fetchLatestUser();
+    }
+    
+  }, [setUser]);
 
   // Fetch the latest coupon
   const getLatestCoupon = async () => {

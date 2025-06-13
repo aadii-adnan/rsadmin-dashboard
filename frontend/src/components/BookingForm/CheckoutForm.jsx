@@ -8,7 +8,7 @@ const PAYMENT_CHECK_INTERVAL = 2000; // 2 seconds
 const MAX_PAYMENT_CHECKS = 5;
 const PAYMENT_TIMEOUT = 60000; // 1 minute
 
-const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
+const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed , onPaymentSuccess = null }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
@@ -58,7 +58,11 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
 
   const verifyAmount = async (bookingId, amount) => {
     try {
-      const { valid, expected_amount } = await verifyPaymentAmount(bookingId, amount);
+      const { valid, expected_amount } = await verifyPaymentAmount(
+        bookingId,
+        amount,
+        formData.isRescheduleExtra || false
+      );
       if (!valid) {
         throw new Error(`Amount mismatch. Expected: ${expected_amount}`);
       }
@@ -80,8 +84,10 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
           case 'Succeeded':
             setMessage("Payment confirmed!");
             clearTimeout(paymentTimeout);
-            localStorage.setItem("payment_status", "succeeded");
-            
+            localStorage.setItem("payment_status", "succeeded");   
+            if (onPaymentSuccess) {
+              await onPaymentSuccess(); // <-- await here!
+            }
             navigate("/thank-you");
             break;
           case 'Failed':
@@ -139,7 +145,12 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
       let bookingId = formData.booking_id;
   
       // --- Create Payment Intent and check response manually ---
-      const paymentIntentResponse = await createPaymentIntent(bookingId);
+      const paymentIntentResponse = await createPaymentIntent(
+        formData.booking_id,
+        formData.isRescheduleExtra ? formData.total_price : null,
+        formData.isRescheduleExtra || false,
+        bonusUsed || 0
+      );
       if (!paymentIntentResponse?.clientSecret) {
         
         if (
@@ -167,7 +178,11 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle }) => {
       localPaymentId = paymentIntentResponse?.payment_id;
       setPaymentId(localPaymentId);
       // --- Verify amount ---
-      const amountVerified = await verifyAmount(bookingId, paymentIntentResponse?.amount);
+      const amountVerified = await verifyAmount(
+        bookingId,
+        paymentIntentResponse?.amount,
+        formData.isRescheduleExtra || false
+      );
       if (!amountVerified) {
         throw new Error("Payment amount verification failed");
       }

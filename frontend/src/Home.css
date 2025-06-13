@@ -524,6 +524,15 @@ body .home-banner {
         .elementor-319 .elementor-element.elementor-element-32b2338c img {
         width: 200px;
     }
+    .banner-content {
+      margin-top: 50px;
+    }
+    .banner-heading {
+      font-size: 50px;
+    }
+    .banner-subheading {
+      font-size: 16px;
+    }
 
 }
 
@@ -537,6 +546,12 @@ body .home-banner {
 
     .info-heading {
         font-size: 24px;
+    }
+    .banner-content h6 {
+      display: none;
+    }
+    .banner-content {
+      margin-top: 0px;
     }
 
     .info-description,
@@ -609,9 +624,6 @@ body .home-banner {
     .banner-content {
         top: 53%;
         width: 90%;
-    }
-    .banner-content h6 {
-      display: none;
     }
     .banner-heading {
         font-size: 30px;

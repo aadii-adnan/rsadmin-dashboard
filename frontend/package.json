@@ -22,10 +22,9 @@
     "react-helmet-async": "^2.0.5",
     "react-international-phone": "^4.5.0",
     "react-modal": "^3.16.3",
-    "react-router-dom": "^7.5.3",
+    "react-router-dom": "^7.6.1",
     "react-toastify": "^11.0.5",
-    "swiper": "^11.2.6",
-    "vite-plugin-prerender": "^1.0.8"
+    "swiper": "^11.2.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
