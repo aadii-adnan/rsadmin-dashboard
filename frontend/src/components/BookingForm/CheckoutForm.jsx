@@ -18,31 +18,32 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
   const navigate = useNavigate();
   
   // Add payment recovery state
-  const [retryCount, setRetryCount] = useState(0);
   const [paymentTimeout, setPaymentTimeout] = useState(null);
 
   const resetPaymentState = () => {
     setError(null);
     setMessage(null);
     setProcessing(false);
-    setRetryCount(0);
     if (paymentTimeout) clearTimeout(paymentTimeout);
   };
 
-  const updatePaymentStatus = async (paymentId, status) => {
+  const updatePaymentStatus = async (paymentId, status, statusMessage = null) => {
     try {
+      const body = { status };
+      if (statusMessage) body.status_message = statusMessage;
+
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payments/update-status/${paymentId}/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(body),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to update payment status");
       }
-  
+
       return response.json();
     } catch (error) {
       console.error("Error updating payment status:", error);
@@ -120,11 +121,6 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
   };
 
   const retryPayment = async (clientSecret, paymentMethod) => {
-    if (retryCount >= 3) {
-      throw new Error("Payment failed after multiple attempts. Please try again.");
-    }
-
-    setRetryCount(prev => prev + 1);
     return await stripe.confirmCardPayment(clientSecret, paymentMethod);
   };
 
@@ -218,7 +214,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
       console.error("Payment error:", err);
       setError(err.message || "Payment failed. Please try again.");
       if(localPaymentId)
-      await updatePaymentStatus(localPaymentId, "Failed");
+      await updatePaymentStatus(localPaymentId, "Failed", err.message);
     } finally {
       setProcessing(false);
       clearTimeout(paymentTimeout);

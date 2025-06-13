@@ -32,6 +32,22 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
         }));
     }, [selectedAddOns, setFormData]);
 
+    const updateBookingUserStatus = async (bookingUserId) => {
+      if (!bookingUserId) return;
+      try {
+        await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/${bookingUserId}/status/`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ booking_completion_status: true }),
+          }
+        );
+      } catch (err) {
+        console.error("Failed to update booking user status", err);
+      }
+    };
+
     const handleAddOnChange = (addon) => {
         const isSelected = selectedAddOns.includes(addon.id);
     
@@ -114,7 +130,10 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                         ...prev.carFlightDetails,
                         addOnsDetails: addOnsDetails,
                     }
-                }));             
+                }));  
+                if (formData.booking_user_id) {
+                  await updateBookingUserStatus(formData.booking_user_id);
+                }           
                 goNext();
             } else {
                 if (data.error === "Coupon has been fully used") {

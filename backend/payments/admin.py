@@ -39,7 +39,7 @@ class PaymentAdmin(admin.ModelAdmin):
         ('Payment Information', {
             'fields': (
                 ('booking', 'amount'),
-                ('status','stripe_payment_intent'),
+                ('status','stripe_payment_intent', 'status_message'),
             )
         }),
         ('Timestamps', {

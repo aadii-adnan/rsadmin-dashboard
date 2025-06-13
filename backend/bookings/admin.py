@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import Booking
+from .models import Booking, BookingUser
 from django.utils import timezone
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
@@ -292,7 +292,7 @@ class BookingAdmin(admin.ModelAdmin):
         return base_fieldsets
     
     list_filter = (('departure_time', SingleDateFilter), ('return_time', SingleDateFilter), ('created_at', SingleDateFilter), 'status', 'service',)
-    search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no')
+    search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id', 'id')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # If editing existing object
@@ -382,7 +382,12 @@ class BookingAdmin(admin.ModelAdmin):
             dt = datetime.strptime(created_date, '%Y-%m-%d')
             filename_parts.append(f"Created_{dt.strftime('%d_%b')}")
         
-        return f"{'_'.join(filename_parts)}_{dt.strftime('%Y')}.xlsx"
+        if filename_parts:
+            # Use the last dt assigned for the year
+            return f"{'_'.join(filename_parts)}_{dt.strftime('%Y')}.xlsx"
+        else:
+            # Fallback if no date filters are applied
+            return "Selected_Bookings.xlsx"
 
     def export_as_csv(self, request, queryset):
         """
@@ -499,6 +504,10 @@ class BookingAdmin(admin.ModelAdmin):
             )
             if created_qs.exists():
                 current_row = write_section(f"Created {format_date_display(created_date)}", created_qs, current_row)
+        
+        if not (departure_date or return_date or created_date):
+            if queryset.exists():
+                current_row = write_section("All Selected", queryset, current_row)
 
         # Auto-adjust column widths
         for col_idx in range(1, len(headers) + 1):
@@ -537,3 +546,42 @@ class BookingAdmin(admin.ModelAdmin):
             'all': ('admin/css/custom_admin.css','admin/css/clickable_rows.css',)
         }
         js = ('admin/js/print_invoice.js','admin/js/clickable_rows_bookings.js')
+
+@admin.register(BookingUser)
+class BookingUserAdmin(admin.ModelAdmin):
+    def created_at_display(self, obj):
+        return timezone.localtime(obj.created_at).strftime('%d %b %Y %H:%M')
+    created_at_display.admin_order_field = 'created_at'
+    created_at_display.short_description = 'Created At'
+
+    list_display = ('id', 'first_name', 'last_name', 'email', 'booking_completion_status', 'created_at_display')
+    search_fields = ('first_name', 'last_name', 'email', 'contact_no', 'booking_id')
+    list_filter = ('booking_completion_status', 'created_at',)
+    readonly_fields = ('created_at_display',)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            (None, {
+                'fields': ('first_name', 'last_name', 'email', 'contact_no', 'booking_completion_status')
+            }),
+            ('Created At', {
+                'fields': ('created_at_display',)
+            }),
+        ]
+        return fieldsets
+    
+    def has_module_permission(self, request):
+        """
+        Restrict access for managers.
+        """
+        user = request.user
+        if user.is_authenticated and getattr(user, "is_manager", False):
+            return False
+        return super().has_module_permission(request)
+
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css','admin/css/clickable_rows.css',)
+        }
+        js = ('admin/js/print_invoice.js','admin/js/clickable_rows.js')
+

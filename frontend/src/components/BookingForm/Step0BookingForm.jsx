@@ -79,6 +79,33 @@ const Step0BookingForm = ({
   }
 
   try {
+
+    // 1. Always create BookingUser
+    const bookingUserRes = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: trimmedFormData.first_name,
+          last_name: trimmedFormData.last_name,
+          email: trimmedFormData.email,
+          contact_no: trimmedFormData.contact_no,
+        }),
+      }
+    );
+    const bookingUserData = await bookingUserRes.json();
+    if (!bookingUserRes.ok) {
+      setLoading(false);
+      throw new Error(bookingUserData?.error || "Failed to save contact info.");
+    }
+
+    // 2. Save bookingUserId in formData
+    setFormData((prev) => ({
+      ...prev,
+      booking_user_id: bookingUserData.id,
+    }));
+    
     if (rescheduleOption && login) {
       await loginUser(trimmedFormData.username, trimmedFormData.password);
       if (userDetails?.id) {

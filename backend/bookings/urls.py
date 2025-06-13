@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import BookingListCreate, BookingRescheduleView, CancelBookingView, ManagerBookingList, ManagerBookingStatusUpdate, BookingDetailView, UserBookingsView
+from .views import BookingListCreate, BookingRescheduleView, CancelBookingView, ManagerBookingList, ManagerBookingStatusUpdate, BookingDetailView, UserBookingsView, BookingUserCreateView, BookingUserStatusUpdateView
 
 urlpatterns = [
     path('', BookingListCreate.as_view(), name='booking-list-create'),
@@ -9,4 +9,6 @@ urlpatterns = [
     path('manager/<int:pk>/status/', ManagerBookingStatusUpdate.as_view(), name='manager-booking-status'),
     path('<int:pk>/', BookingDetailView.as_view(), name='booking-detail'),
     path('user/<int:user_id>/', UserBookingsView.as_view(), name='user-bookings'),
+    path('booking-user/', BookingUserCreateView.as_view(), name='booking-user-create'),
+    path('booking-user/<int:pk>/status/', BookingUserStatusUpdateView.as_view(), name='booking-user-status-update'),
 ]

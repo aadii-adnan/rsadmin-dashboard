@@ -657,13 +657,20 @@ class UpdatePaymentStatusView(APIView):
 
             # Update the payment status
             payment.status = new_status
+
+            # Update status_message if provided
+            status_message = request.data.get('status_message')
+            if status_message is not None:
+                payment.status_message = status_message
+
             payment.save()
 
             return Response({
                 'message': 'Payment status updated successfully',
                 'payment_id': payment.id,
-                'new_status': new_status.name
+                'new_status': new_status.name,
+                'status_message': payment.status_message
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

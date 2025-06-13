@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.shortcuts import get_object_or_404
-from .models import Booking
-from .serializers import BookingSerializer
+from .models import Booking, BookingUser
+from .serializers import BookingSerializer, BookingUserSerializer
 from core.permissions import IsManagerOrAdmin
 from core.models import Status
 from services.models import Coupon
@@ -540,3 +540,26 @@ class UpdatePaymentStatusView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
+        
+class BookingUserCreateView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = BookingUserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+class BookingUserStatusUpdateView(APIView):
+    permission_classes = [AllowAny]
+    def put(self, request, pk):
+        try:
+            booking_user = BookingUser.objects.get(pk=pk)
+            status_value = request.data.get('booking_completion_status')
+            if status_value is None:
+                return Response({'error': 'booking_completion_status is required'}, status=400)
+            booking_user.booking_completion_status = bool(status_value)
+            booking_user.save()
+            return Response({'message': 'Status updated', 'booking_completion_status': booking_user.booking_completion_status})
+        except BookingUser.DoesNotExist:
+            return Response({'error': 'BookingUser not found'}, status=404)

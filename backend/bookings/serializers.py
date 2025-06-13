@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Booking
+from .models import Booking, BookingUser
 from services.models import AddOn, Coupon, Service
 from core.models import Status
 from core.serializers import StatusSerializer
@@ -41,3 +41,8 @@ class BookingSerializer(serializers.ModelSerializer):
     
     def get_service_per_day_price(self, obj):
         return obj.service.per_day_price if obj.service else None
+
+class BookingUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookingUser
+        fields = '__all__'
