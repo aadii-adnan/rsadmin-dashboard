@@ -22,6 +22,7 @@ const Step0BookingForm = ({
   const [error, setError] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [pendingBookingUser, setPendingBookingUser] = useState(false);
 
   const validateFields = (fields) => {
   const errors = [];
@@ -79,46 +80,19 @@ const Step0BookingForm = ({
   }
 
   try {
-
-    // 1. Always create BookingUser
-    const bookingUserRes = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: trimmedFormData.first_name,
-          last_name: trimmedFormData.last_name,
-          email: trimmedFormData.email,
-          contact_no: trimmedFormData.contact_no,
-        }),
-      }
-    );
-    const bookingUserData = await bookingUserRes.json();
-    if (!bookingUserRes.ok) {
-      setLoading(false);
-      throw new Error(bookingUserData?.error || "Failed to save contact info.");
-    }
-
-    // 2. Save bookingUserId in formData
-    setFormData((prev) => ({
-      ...prev,
-      booking_user_id: bookingUserData.id,
-    }));
+    const bookingUserBody = {
+      first_name: trimmedFormData.first_name,
+      last_name: trimmedFormData.last_name,
+      email: trimmedFormData.email,
+      contact_no: trimmedFormData.contact_no,
+    };
     
     if (rescheduleOption && login) {
       await loginUser(trimmedFormData.username, trimmedFormData.password);
-      if (userDetails?.id) {
-        const user = userDetails;
-        setFormData((prev) => ({
-          ...prev,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          email: user.email,
-          username: user.username,
-        }));
-        setContactNo(user.phone)
-      }
+      setPendingBookingUser(true);
+      setLoading(false);
+      return;
+      
     } else if (rescheduleOption && !login) {
       const registerRes = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/auth/register/`,
@@ -151,6 +125,27 @@ const Step0BookingForm = ({
       setLoading(false);
     }
 
+    // 1. Always create BookingUser
+    const bookingUserRes = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingUserBody),
+      }
+    );
+    const bookingUserData = await bookingUserRes.json();
+    if (!bookingUserRes.ok) {
+      setLoading(false);
+      throw new Error(bookingUserData?.error || "Failed to save contact info.");
+    }
+
+    // 2. Save bookingUserId in formData
+    setFormData((prev) => ({
+      ...prev,
+      booking_user_id: bookingUserData.id,
+    }));
+
     goNext(); // Redirect or next action
   } catch (err) {
     console.error(err);
@@ -162,6 +157,45 @@ const Step0BookingForm = ({
 useEffect(() => {
     window.scrollTo(0, 300)
   }, []);
+
+  useEffect(() => {
+    if (pendingBookingUser && userDetails?.id) {
+      // Now userDetails is available, create booking user
+      const bookingUserBody = {
+        first_name: userDetails.first_name,
+        last_name: userDetails.last_name,
+        email: userDetails.email,
+        contact_no: userDetails.phone,
+      };
+      (async () => {
+        setLoading(true);
+        try {
+          const bookingUserRes = await fetch(
+            `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(bookingUserBody),
+            }
+          );
+          const bookingUserData = await bookingUserRes.json();
+          if (!bookingUserRes.ok) {
+            throw new Error(bookingUserData?.error || "Failed to save contact info.");
+          }
+          setFormData((prev) => ({
+            ...prev,
+            booking_user_id: bookingUserData.id,
+          }));
+          setPendingBookingUser(false);
+          goNext();
+        } catch (err) {
+          alert(err.message || "An unexpected error occurred.");
+          setPendingBookingUser(false);
+        }
+        setLoading(false);
+      })();
+    }
+  }, [pendingBookingUser, userDetails]);
 
   return (
     <>

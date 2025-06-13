@@ -40,7 +40,8 @@ const CustomerDashboard = () => {
 
   useEffect(() => {
     if (!userDetails) {
-      navigate("/login");
+      alert("Please log in to view your bookings.");
+      navigate("/login");      
       return;
     }
     const fetchBookings = async () => {

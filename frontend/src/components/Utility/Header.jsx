@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useBooking } from "../../context/BookingContext";
 import logo from "../../assets/logo-white.webp";
 import simpleLogo from "../../assets/logo.png";
+import { FaUserCircle } from "react-icons/fa";
 
 const Header = () => {
 
@@ -12,6 +13,7 @@ const Header = () => {
   const [isLegalInfoDropdownOpen, setIsLegalInfoDropdownOpen] = useState(false);
   const { bookingData } = useBooking();
   const { userDetails } = bookingData || {};
+  const [isMeDropdownOpen, setIsMeDropdownOpen] = useState(false);
 
 
   useEffect(() => {
@@ -31,12 +33,31 @@ const Header = () => {
   }, []);
 
   return (
+    <>
+    {/* Promo Stripe */}
+      <div
+        className="w-100 text-center"
+        style={{
+          background: "#010659",
+          color: "#fff",
+          fontWeight: 600,
+          fontSize: "1rem",
+          letterSpacing: "0.5px",
+          padding: "7px 0",
+          zIndex: 2000,
+          width: "100vw",
+        }}
+      >
+        SAVE 10% – USE CODE DUBRS10!
+      </div>
+      {/* Main Header */}
       <div
         data-elementor-type="header"
         data-elementor-id="319"
         className="elementor elementor-319 elementor-location-header"
         data-elementor-post-type="elementor_library"
         >
+        
         <div style={{ backgroundColor: "#F5F4EE", justifyContent: "space-between" }}
             className="elementor-element elementor-element-71809993 e-con-full e-flex e-con e-parent e-lazyloaded"
             data-id="71809993"
@@ -184,7 +205,115 @@ const Header = () => {
                               )}
                             <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><a className='footer-link' href="/blog"><div className="ekit-menu-nav-link">Blog</div></a></li>
                             <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
-                            {userDetails?.id ? <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/logout"}><div className="ekit-menu-nav-link">Logout</div></Link></li> : <li id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/login"}><div className="ekit-menu-nav-link">Login</div></Link></li>}
+                           {/* Me Dropdown */}
+              {isMobile ? <>
+                                  <li onClick={() => setIsOpen(false)} id="menu-item-925" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-925 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/customer-dashboard"}>My Bookings</Link></li>
+                                  {userDetails?.id ? <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/logout"}><div className="ekit-menu-nav-link">Logout</div></Link></li> : <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/login"}><div className="ekit-menu-nav-link">Login</div></Link></li>}
+                                </> : <li
+                style={{
+                  position: "relative",
+                }}
+                onMouseEnter={() => setIsMeDropdownOpen(true)}
+                onMouseLeave={() => setIsMeDropdownOpen(false)}
+              >
+                <span
+                  style={{
+                    cursor: "pointer",
+                    padding: "0px 15px",
+                    color: "#010659",
+                    fontWeight: 600,
+                    borderRadius: "8px",
+                    transition: "background 0.2s, color 0.2s",
+                    background: isMeDropdownOpen ? "#f5f4ee" : "transparent",
+                    fontSize: "14px",
+                    textTransform: "uppercase",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    lineHeight: "1.6",
+                    gap: 6,
+                  }}
+                  onClick={() => setIsMeDropdownOpen(prev => !prev)}
+                  tabIndex={0}
+                >
+                  <FaUserCircle
+                  style={{
+                    fontSize: 20,
+                    marginRight: 4,
+                    color: userDetails?.id ? "#28a745" : "#888" // Green if logged in, gray if not
+                  }} />
+                  Me
+                  <i className={`icon icon-plus elementskit-submenu-indicator`} style={{ marginLeft: 6 }} />
+                </span>
+                <ul
+                  style={{
+                    display: isMeDropdownOpen ? "block" : "none",
+                    minWidth: 180,
+                    background: "rgb(245, 244, 238)",
+                    borderRadius: 8,
+                    boxShadow: "0 4px 18px rgba(40,144,205,0.10)",
+                    padding: "8px 0",
+                    marginTop: -4,
+                    position: "absolute",
+                    left: 0,
+                    zIndex: 100,
+                    listStyle: "none",
+                  }}
+                >
+                  <li style={{ padding: 0 }}>
+                    <Link
+                      to="/customer-dashboard"
+                      style={{
+                        display: "block",
+                        padding: "10px 18px",
+                        color: "#010659",
+                        fontWeight: 500,
+                        borderRadius: "8px",
+                        transition: "background 0.2s, color 0.2s",
+                        textDecoration: "none",
+                      }}
+                      onClick={() => setIsMeDropdownOpen(false)}
+                    >
+                      My Bookings
+                    </Link>
+                  </li>
+                  <li style={{ padding: 0 }}>
+                    {userDetails?.id ? (
+                      <Link
+                        to="/logout"
+                        style={{
+                          display: "block",
+                          padding: "10px 18px",
+                          color: "#010659",
+                          fontWeight: 500,
+                          borderRadius: "8px",
+                          transition: "background 0.2s, color 0.2s",
+                          textDecoration: "none",
+                        }}
+                        onClick={() => setIsMeDropdownOpen(false)}
+                      >
+                        Logout
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/login"
+                        style={{
+                          display: "block",
+                          padding: "10px 18px",
+                          color: "#010659",
+                          fontWeight: 500,
+                          borderRadius: "8px",
+                          transition: "background 0.2s, color 0.2s",
+                          textDecoration: "none",
+                        }}
+                        onClick={() => setIsMeDropdownOpen(false)}
+                      >
+                        Login
+                      </Link>
+                    )}
+                  </li>
+                </ul>
+              </li>}
                           </ul>
                           <div onClick={() => setIsOpen(false)} className="elementskit-nav-identity-panel">
                               <Link to={"/"} className="elementskit-nav-logo" target="" rel="">
@@ -231,6 +360,7 @@ const Header = () => {
             </div>
         </div>
       </div>
+      </>
   );
 };
 

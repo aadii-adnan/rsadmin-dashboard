@@ -58,6 +58,16 @@ const Footer = () => {
                                 <span className="elementor-icon-list-text">Contact</span>
                                 </Link>
                             </li>
+                            <li className="elementor-icon-list-item">
+                                <Link className='footer-link' to={"/customer-dashboard"}>
+                                <span className="elementor-icon-list-text">My Bookings</span>
+                                </Link>
+                            </li>
+                            <li className="elementor-icon-list-item">
+                                <Link className='footer-link' to={"/login"}>
+                                <span className="elementor-icon-list-text">Login/Signup</span>
+                                </Link>
+                            </li>
                         </ul>
                     </div>
                     </div>
