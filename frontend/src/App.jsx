@@ -46,6 +46,10 @@ function App() {
         <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/services/standard-meet-and-greet-parking" element={<Home />} />
         <Route path="/services/flexible-meet-and-greet-parking" element={<Home />} />
+        <Route path="/book-now-flexible" element={<Home />} />
+        <Route path="/book-now-standard" element={<Home />} />
+        <Route path="/book-now" element={<Home />} />
+        <Route path="/dublin-airport-parking-offer" element={<Home />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="*" element={<NotFound404/>} />
