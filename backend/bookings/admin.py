@@ -483,7 +483,7 @@ class BookingAdmin(admin.ModelAdmin):
             departure_qs = queryset.filter(
                 departure_time__gte=timezone.make_aware(datetime.strptime(departure_date, '%Y-%m-%d')),
                 departure_time__lt=timezone.make_aware(datetime.strptime(departure_date, '%Y-%m-%d') + timedelta(days=1))
-            )
+            ).order_by('departure_time')
             if departure_qs.exists():
                 current_row = write_section(f"Departures {format_date_display(departure_date)}", departure_qs, current_row)
                 current_row += 1  # Add spacing between sections
@@ -492,7 +492,7 @@ class BookingAdmin(admin.ModelAdmin):
             return_qs = queryset.filter(
                 return_time__gte=timezone.make_aware(datetime.strptime(return_date, '%Y-%m-%d')),
                 return_time__lt=timezone.make_aware(datetime.strptime(return_date, '%Y-%m-%d') + timedelta(days=1))
-            )
+            ).order_by('return_time')
             if return_qs.exists():
                 current_row = write_section(f"Returns {format_date_display(return_date)}", return_qs, current_row)
                 current_row += 1
@@ -501,13 +501,13 @@ class BookingAdmin(admin.ModelAdmin):
             created_qs = queryset.filter(
                 created_at__gte=timezone.make_aware(datetime.strptime(created_date, '%Y-%m-%d')),
                 created_at__lt=timezone.make_aware(datetime.strptime(created_date, '%Y-%m-%d') + timedelta(days=1))
-            )
+            ).order_by('created_at')
             if created_qs.exists():
                 current_row = write_section(f"Created {format_date_display(created_date)}", created_qs, current_row)
-        
+
         if not (departure_date or return_date or created_date):
             if queryset.exists():
-                current_row = write_section("All Selected", queryset, current_row)
+                current_row = write_section("All Selected", queryset.order_by('created_at'), current_row)
 
         # Auto-adjust column widths
         for col_idx in range(1, len(headers) + 1):

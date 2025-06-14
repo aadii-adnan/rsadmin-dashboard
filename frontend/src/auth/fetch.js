@@ -1,83 +1,85 @@
-const customFetch = async (url, { method = 'GET', body = null, headers = {}, ...options } = {}) => {
+const customFetch = async (url, { method = 'GET', body = null, headers = {}, useFinanceJwt = false, ...options } = {}) => {
     let refresh = false;
     let response;
-  
-    const token = localStorage.getItem('access_token');
-  
-    // Don't set Content-Type if body is FormData
+
+    // Use finance dashboard tokens if requested
+    const accessKey = useFinanceJwt ? 'finance_jwt' : 'access_token';
+    const refreshKey = useFinanceJwt ? 'finance_jwt_refresh' : 'refresh_token';
+
+    let token = localStorage.getItem(accessKey);
+
     const mergedHeaders = {
       'Authorization': `Bearer ${token}`,
       ...headers,
     };
-  
-    // Remove Content-Type if body is FormData
+
     if (!(body instanceof FormData)) {
       mergedHeaders['Content-Type'] = 'application/json';
     }
-  
+
     const fetchOptions = {
       method,
       headers: mergedHeaders,
       body: body && !(body instanceof FormData) ? JSON.stringify(body) : body,
       ...options,
     };
-  
-    // Make the fetch request
+
     response = await fetch(url, fetchOptions);
-  
+
     if (response.status === 401 && !refresh) {
       refresh = true;
-  
-      const refreshToken = localStorage.getItem('refresh_token');
-  
-      const refreshResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/token/refresh/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          refresh: refreshToken,
-        }),
-      });
-  
+
+      const refreshToken = localStorage.getItem(refreshKey);
+
+      const refreshResponse = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/token/refresh/`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            refresh: refreshToken,
+          }),
+        }
+      );
+
       if (refreshResponse.status === 401) {
         alert("Session expired. Please log in again.");
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem(accessKey);
+        localStorage.removeItem(refreshKey);
         window.location.href = "/";
         return;
-    }
-  
+      }
+
       if (refreshResponse.ok) {
         const data = await refreshResponse.json();
-  
+
         // Store new tokens in local storage
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
-  
+        localStorage.setItem(accessKey, data.access);
+        localStorage.setItem(refreshKey, data.refresh);
+
         // Update the Authorization header with the new token
         fetchOptions.headers['Authorization'] = `Bearer ${data.access}`;
-  
+
         // Retry the original request with the new token
         response = await fetch(url, fetchOptions);
       } else {
-          alert("Session expired. Please log in again.");
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = "/";
-          return;
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem(accessKey);
+        localStorage.removeItem(refreshKey);
+        window.location.href = "/";
+        return;
       }
     }
-  
+
     refresh = false;
-  
-    // Handle errors if needed
+
     if (!response.ok) {
       console.error('Fetch error:', response.statusText);
     }
-  
+
     return response;
   };
-  
-  export default customFetch;
-  
+
+export default customFetch;

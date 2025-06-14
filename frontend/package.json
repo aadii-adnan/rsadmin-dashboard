@@ -24,7 +24,9 @@
     "react-international-phone": "^4.5.0",
     "react-modal": "^3.16.3",
     "react-router-dom": "^7.6.1",
+    "react-spinners": "^0.17.0",
     "react-toastify": "^11.0.5",
+    "recharts": "^2.15.3",
     "swiper": "^11.2.6"
   },
   "devDependencies": {

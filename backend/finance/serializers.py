@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Expense
 
 class ExpenseSerializer(serializers.ModelSerializer):
+    for_month = serializers.DateField(allow_null=True, required=False)
+
     class Meta:
         model = Expense
         fields = '__all__'

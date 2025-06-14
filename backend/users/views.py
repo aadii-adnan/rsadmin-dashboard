@@ -37,6 +37,7 @@ class CurrentUserView(APIView):
             "phone": user.phone,
             "is_manager": user.is_manager,
             "bonus_points": str(user.bonus_points),  # Convert Decimal to string for JSON serialization
+            "is_superuser": user.is_superuser
         })
     
 

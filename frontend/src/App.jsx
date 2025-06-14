@@ -17,6 +17,8 @@ import NotFound404 from "./pages/NotFound404";
 import ThankYouPage from "./pages/ThankYouPage";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import Login from "./pages/Login";
+import FinanceDashboard from "./pages/FinanceDashboard";
+import { useLocation } from "react-router-dom";
 
 function Logout() {
   const { logout } = useAuth();
@@ -29,11 +31,13 @@ function Logout() {
 }
 
 function App() {
+  const location = useLocation();
+  const hideHeaderFooter = location.pathname.startsWith("/finance-dashboard");
   
   return (
     <>
       <CookieBanner />
-      <Header />       
+      {!hideHeaderFooter && <Header />}   
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
@@ -52,9 +56,10 @@ function App() {
         <Route path="/dublin-airport-parking-offer" element={<Home />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/finance-dashboard" element={<FinanceDashboard />} />
         <Route path="*" element={<NotFound404/>} />
       </Routes>
-      <Footer />
+      {!hideHeaderFooter && <Footer />}
       <FloatingWhatsApp
         phoneNumber="353834896505"
         accountName="Meet & Greet"

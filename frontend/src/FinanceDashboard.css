@@ -1,0 +1,134 @@
+/* FinanceDashboard.css */
+
+body, .finance-dashboard-bg {
+  background: #f0f4f8;
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+
+.finance-dashboard-bg {
+  padding: 32px 32px;
+}
+
+.admin-card {
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  background: #fff;
+}
+
+.admin-card .card-title {
+  color: #447e9b;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.admin-table th {
+  background: #e4e9f3;
+  color: #20435c;
+  font-weight: 600;
+}
+
+.admin-table td, .admin-table th {
+  vertical-align: middle !important;
+}
+
+.admin-btn {
+  background: #447e9b;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.admin-btn:hover {
+  background: #20435c;
+  color: #fff;
+}
+
+.admin-modal .modal-content {
+  border-radius: 8px;
+}
+
+.admin-alert {
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+/* FinanceDashboard.css */
+
+.admin-btn {
+  background: #447e9b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 8px 20px;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(68,126,155,0.08);
+}
+
+.admin-btn:hover, .admin-btn:focus {
+  background: #20435c;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(68,126,155,0.15);
+}
+
+.admin-btn-outline {
+  background: #fff;
+  color: #447e9b;
+  border: 1.5px solid #447e9b;
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 8px 20px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.admin-btn-outline:hover, .admin-btn-outline:focus {
+  background: #447e9b;
+  color: #fff;
+}
+
+.admin-btn-danger {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  padding: 7px 10px;
+  margin-left: 4px;
+  transition: background 0.2s;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-btn-danger:hover, .admin-btn-danger:focus {
+  background: #a71d2a;
+  color: #fff;
+}
+
+.admin-btn-edit {
+  background: #ffc107;
+  color: #20435c;
+  border: none;
+  border-radius: 50%;
+  padding: 7px 10px;
+  margin-right: 4px;
+  transition: background 0.2s;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-btn-edit:hover, .admin-btn-edit:focus {
+  background: #e0a800;
+  color: #20435c;
+}
+
+@media (max-width: 768px) {
+  .admin-card {
+    margin-bottom: 16px;
+  }
+}

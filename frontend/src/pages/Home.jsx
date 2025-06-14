@@ -15,7 +15,10 @@ import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/autoplay";
 import { Autoplay, EffectFade } from "swiper/modules";
+import { ClipLoader } from "react-spinners";
 import FAQSection from "../components/HomePage/FAQSection";
+import { FaCarSide } from "react-icons/fa"; // Example icon
+import logo from "../assets/logo.png";
 
 const Home = () => {
 
@@ -60,6 +63,49 @@ const Home = () => {
     fetchFAQs();
     }, []);
     
+    if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #e4e9f3 0%, #f0f4f8 100%)",
+          animation: "fadeIn 1s"
+        }}
+      >
+        <img
+          src={logo}
+          alt="Logo"
+          style={{
+            width: 80,
+            marginBottom: 24,
+            filter: "drop-shadow(0 2px 8px rgba(68,126,155,0.10))"
+          }}
+        />
+        <ClipLoader color="#447e9b" size={60} />
+        <div style={{ marginTop: 24, color: "#447e9b", fontWeight: 600, fontSize: "1.2rem", letterSpacing: 1 }}>
+          Loading your experience...
+        </div>
+        <FaCarSide size={32} color="#fd7e14" style={{ marginTop: 16, animation: "bounce 1.2s infinite" }} />
+        <style>
+          {`
+            @keyframes bounce {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-10px); }
+            }
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
+
   return (
     <>
     <Helmet>

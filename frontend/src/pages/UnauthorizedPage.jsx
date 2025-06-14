@@ -9,53 +9,68 @@ const UnauthorizedPage = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.heading}>403 - Unauthorized</h1>
-      <p style={styles.message}>
-        You don't have permission to access this page. Please contact the administrator if you believe this is a mistake.
-      </p>
-      <button style={styles.button} onClick={handleGoBack}>
-        Go Back
-      </button>
+    <div style={styles.bg}>
+      <div style={styles.card}>
+        <h1 style={styles.heading}>403 - Unauthorized</h1>
+        <p style={styles.message}>
+          You don't have permission to access this page.<br />
+          Please contact the administrator if you believe this is a mistake.
+        </p>
+        <button
+          style={styles.button}
+          onClick={handleGoBack}
+          onMouseOver={e => (e.currentTarget.style.backgroundColor = '#20435c')}
+          onMouseOut={e => (e.currentTarget.style.backgroundColor = '#447e9b')}
+        >
+          Go Back
+        </button>
+      </div>
     </div>
   );
 };
 
 const styles = {
-  container: {
+  bg: {
+    minHeight: '100vh',
+    background: '#f0f4f8',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100vh',
-    backgroundColor: '#f8f9fa',
+  },
+  card: {
+    background: '#fff',
+    borderRadius: '12px',
+    boxShadow: '0 4px 24px rgba(68,126,155,0.12)',
+    padding: '48px 32px',
+    maxWidth: '400px',
+    width: '100%',
     textAlign: 'center',
-    padding: '20px',
+    border: '1px solid #e5e5e5',
   },
   heading: {
-    fontSize: '36px',
+    fontSize: '2.2rem',
     fontWeight: 'bold',
-    color: '#dc3545', // Red color for unauthorized
-    marginBottom: '20px',
+    color: '#dc3545',
+    marginBottom: '18px',
+    letterSpacing: '1px',
   },
   message: {
-    fontSize: '18px',
-    color: '#6c757d', // Gray color for the message
-    marginBottom: '30px',
+    fontSize: '1.1rem',
+    color: '#20435c',
+    marginBottom: '32px',
+    lineHeight: 1.6,
   },
   button: {
-    padding: '10px 20px',
-    fontSize: '16px',
+    padding: '12px 32px',
+    fontSize: '1rem',
     fontWeight: 'bold',
     color: '#fff',
-    backgroundColor: '#007bff', // Blue button
+    backgroundColor: '#447e9b',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '6px',
     cursor: 'pointer',
-    transition: 'background-color 0.3s ease',
-  },
-  buttonHover: {
-    backgroundColor: '#0056b3', // Darker blue on hover
+    transition: 'background-color 0.2s',
+    boxShadow: '0 2px 8px rgba(68,126,155,0.08)',
   },
 };
 
