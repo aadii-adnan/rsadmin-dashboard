@@ -267,7 +267,9 @@ class BookingsOverTimeView(APIView):
             day = today - timedelta(days=i)
             start_dt = timezone.make_aware(datetime.combine(day, time.min))
             end_dt = timezone.make_aware(datetime.combine(day + timedelta(days=1), time.min))
-            count = Booking.objects.filter(
+            count = Booking.objects.exclude(
+                status__name__in=["Payment Failed", "Pending"]
+            ).filter(
                 created_at__gte=start_dt,
                 created_at__lt=end_dt
             ).count()
