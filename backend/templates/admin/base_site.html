@@ -40,8 +40,10 @@
 </style>
 <div id="branding">
     <img src="{% static 'images/logo.webp' %}" alt="Site Logo">
-    <a id="finance-dashboard-btn" href="{% url 'finance-jwt-login' %}">
-        Finance Dashboard
-    </a>
+    {% if request.user.is_authenticated and request.user.is_superuser and not request.user.is_manager %}
+        <a id="finance-dashboard-btn" href="{% url 'finance-jwt-login' %}">
+            Finance Dashboard
+        </a>
+    {% endif %}
 </div>
 {% endblock %}
