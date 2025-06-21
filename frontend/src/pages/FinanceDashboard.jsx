@@ -224,7 +224,6 @@ function FinancialDashboard() {
                     setAllTime(false);
                   }}
                   style={{ maxWidth: 140 }}
-                  disabled={allTime}
                 />
                 <Form.Select
                   value={year}
@@ -234,7 +233,6 @@ function FinancialDashboard() {
                     setAllTime(false);
                   }}
                   style={{ maxWidth: 110 }}
-                  disabled={allTime}
                 >
                   <option value="">Year</option>
                   {Array.from({ length: 4 }, (_, i) => {
