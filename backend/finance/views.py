@@ -53,79 +53,112 @@ class AdminFinancialOverview(APIView):
     permission_classes = [IsSuperAdminNotManager]
 
     def get(self, request):
-        month_str = request.query_params.get('month')  # format: '2025-04'
-        if not month_str:
-            return Response({'error': 'Month is required. Format: YYYY-MM'}, status=400)
+        month_str = request.query_params.get('month')
+        year_str = request.query_params.get('year')
+        all_time = request.query_params.get('all')
+
+        if not month_str and not year_str and not all_time:
+            return Response({'error': 'Month, year, or all is required.'}, status=400)
 
         try:
-            # Calculate start and end of the month
-            start_date = parse_date(f"{month_str}-01")
-            if not start_date:
-                return Response({'error': 'Invalid month format.'}, status=400)
-            # Get the first day of the next month, then subtract one day for end_date
-            if start_date.month == 12:
-                end_date = start_date.replace(year=start_date.year+1, month=1, day=1) - timedelta(days=1)
+            if all_time == "true":
+                first_booking = Booking.objects.order_by('created_at').first()
+                last_booking = Booking.objects.order_by('-created_at').first()
+                if not first_booking or not last_booking:
+                    return Response({'error': 'No bookings found.'}, status=404)
+                start_date = first_booking.created_at.date()
+                end_date = last_booking.created_at.date()
+                period_label = "All Time"
+            elif year_str:
+                year = int(year_str)
+                start_date = datetime(year, 1, 1).date()
+                end_date = datetime(year, 12, 31).date()
+                period_label = str(year)
             else:
-                end_date = start_date.replace(month=start_date.month+1, day=1) - timedelta(days=1)
+                start_date = parse_date(f"{month_str}-01")
+                if not start_date:
+                    return Response({'error': 'Invalid month format.'}, status=400)
+                if start_date.month == 12:
+                    end_date = start_date.replace(year=start_date.year+1, month=1, day=1) - timedelta(days=1)
+                else:
+                    end_date = start_date.replace(month=start_date.month+1, day=1) - timedelta(days=1)
+                period_label = month_str
 
             start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
-            end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))        
+            end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 
-            # Get all payments in this month
-            payments_in_month = Payment.objects.filter(
+            # Get all relevant bookings in this period
+            bookings_in_period = Booking.objects.filter(
                 created_at__gte=start_datetime,
-                created_at__lte=end_datetime,
-                status__name="Succeeded"
-            ).select_related('booking', 'booking__service', 'booking__status').prefetch_related('booking__add_ons')
+                created_at__lte=end_datetime
+            ).exclude(
+                status__name__in=["Pending", "Payment Failed"]
+            ).select_related('service', 'status').prefetch_related('add_ons')
 
-            # Calculate total earnings
+            # Calculate total balance (old logic)
+            total_balance = Decimal('0.00')
+            for booking in bookings_in_period:
+                price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price
+                if booking.status.name.lower() == "cancelled":
+                    total_balance += Decimal('15.00')
+                else:
+                    total_balance += price
+
+            # Calculate total earnings (completed only, minus add-ons, +15 for cancelled)
             total_earnings = Decimal('0.00')
-            for payment in payments_in_month:
-                total_earnings += calculate_payment_earning(payment, payment.booking.status)
+            for booking in bookings_in_period:
+                status_name = booking.status.name.lower()
+                if status_name == "cancelled":
+                    total_earnings += Decimal('15.00')
+                elif status_name == "completed":
+                    # Subtract add-ons price
+                    addons_total = sum([addon.price for addon in booking.add_ons.all()])
+                    price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price
+                    total_earnings += (price - Decimal(addons_total))
+                # else: do not count for earnings
 
-            # Expenses for this month
-            fixed_expenses = Expense.objects.filter(for_month__year=start_date.year, for_month__month=start_date.month)
+            # Expenses for this period
+            if year_str:
+                fixed_expenses = Expense.objects.filter(for_month__year=year)
+            else:
+                fixed_expenses = Expense.objects.filter(for_month__year=start_date.year, for_month__month=start_date.month)
             recurring_expenses = Expense.objects.filter(recurring=True)
             total_expenses = sum(e.amount for e in fixed_expenses) + sum(e.amount for e in recurring_expenses)
             profit = total_earnings - total_expenses
 
-            # Service earning details
+            # Service earning details (use new earning logic)
             service_details = []
             for service in Service.objects.all():
-                service_payments = payments_in_month.filter(booking__service=service)
-                completed_orders = service_payments.filter(booking__status__name__in=["Completed", "Confirmed", "Rescheduled"]).count()
-                cancelled_orders = service_payments.filter(booking__status__name="Cancelled").count()
+                service_bookings = bookings_in_period.filter(service=service)
+                completed_orders = service_bookings.filter(status__name="Completed").count()
+                cancelled_orders = service_bookings.filter(status__name="Cancelled").count()
                 completed_earning = sum(
-                    calculate_payment_earning(p, p.booking.status)
-                    for p in service_payments.filter(booking__status__name__in=["Completed", "Confirmed", "Rescheduled"])
+                    ( (b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price) -
+                      sum([addon.price for addon in b.add_ons.all()]) )
+                    for b in service_bookings.filter(status__name="Completed")
                 )
-                cancelled_earning = sum(
-                    calculate_payment_earning(p, p.booking.status)
-                    for p in service_payments.filter(booking__status__name="Cancelled")
-                )
+                cancelled_earning = Decimal('15.00') * cancelled_orders
                 service_details.append({
                     "service_id": service.id,
                     "service_name": service.name,
-                    "completed_orders": completed_orders,
+                    "completed_orders": service_bookings.exclude(
+                status__name__in=["Pending", "Payment Failed"]
+                    ).count(),
                     "cancelled_orders": cancelled_orders,
                     "completed_earning": float(completed_earning),
                     "cancelled_earning": float(cancelled_earning),
                 })
 
+            # Addon earning details (optional: you may want to update this logic as well)
             # Addon earning details
             addon_details = []
             for addon in AddOn.objects.all():
-                addon_payments = payments_in_month.filter(booking__add_ons=addon)
-                completed_orders = addon_payments.filter(booking__status__name__in=["Completed", "Confirmed", "Rescheduled"]).count()
-                cancelled_orders = addon_payments.filter(booking__status__name="Cancelled").count()
-                completed_earning = sum(
-                    calculate_payment_earning(p, p.booking.status)
-                    for p in addon_payments.filter(booking__status__name__in=["Completed", "Confirmed", "Rescheduled"])
-                )
-                cancelled_earning = sum(
-                    calculate_payment_earning(p, p.booking.status)
-                    for p in addon_payments.filter(booking__status__name="Cancelled")
-                )
+                addon_bookings = bookings_in_period.filter(add_ons=addon)
+                completed_orders = addon_bookings.filter(status__name__in=["Completed", "Confirmed", "Rescheduled", "Started"]).count()
+                cancelled_orders = addon_bookings.filter(status__name="Cancelled").count()
+                # Earning is just the addon's price times the number of completed/cancelled orders
+                completed_earning = Decimal(addon.price) * completed_orders
+                cancelled_earning = Decimal(addon.price) * cancelled_orders
                 addon_details.append({
                     "addon_id": addon.id,
                     "addon_name": addon.name,
@@ -136,7 +169,8 @@ class AdminFinancialOverview(APIView):
                 })
 
             return Response({
-                'month': month_str,
+                'period': period_label,
+                'balance': float(total_balance),
                 'earnings': float(total_earnings),
                 'expenses': float(total_expenses),
                 'profit_or_loss': float(profit),
@@ -244,15 +278,25 @@ class MonthlyEarningsTrendView(APIView):
                 end = month.replace(month=month.month+1, day=1) - timedelta(days=1)
             start_dt = timezone.make_aware(datetime.combine(start, datetime.min.time()))
             end_dt = timezone.make_aware(datetime.combine(end, datetime.max.time()))
-            payments = Payment.objects.filter(
+            bookings = Booking.objects.filter(
                 created_at__gte=start_dt,
-                created_at__lte=end_dt,
-                status__name="Succeeded"
-            )
-            earning = sum(p.amount for p in payments)
+                created_at__lte=end_dt
+            ).exclude(
+                status__name__in=["Pending", "Payment Failed"]
+            ).select_related('status').prefetch_related('add_ons')
+            earning = Decimal('0.00')
+            for b in bookings:
+                status_name = b.status.name.lower()
+                if status_name == "cancelled":
+                    earning += Decimal('15.00')
+                elif status_name == "completed":
+                    addons_total = sum([addon.price for addon in b.add_ons.all()])
+                    price = b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price
+                    earning += (price - Decimal(addons_total))
+                # else: do not count for earnings
             data.append({
                 "month": start.strftime("%Y-%m"),
-                "earning": float(earning)
+                "earning": round(float(earning), 2)
             })
         return Response(data)
 

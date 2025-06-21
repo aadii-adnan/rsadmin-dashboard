@@ -48,7 +48,7 @@ const Header = () => {
           width: "100vw",
         }}
       >
-        SAVE 10% – USE CODE DUBRS10!
+        SAVE 10% – USE CODE DUBRS10
       </div>
       {/* Main Header */}
       <div

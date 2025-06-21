@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { getBookingsSummary, getOrdersCount, getFinancialOverview, addExpense, getMonthlyEarnings, getBookingsOverTime, getExpenseBreakdown, getProfitMargin } from "../components/FinanceDashboard/APIHelper";
+import { getBookingsSummary, getOrdersCount, getFinancialOverview, addExpense, getMonthlyEarnings, getBookingsOverTime } from "../components/FinanceDashboard/APIHelper";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import '../FinanceDashboard.css';
 import customFetch from "../auth/fetch";
@@ -33,14 +33,14 @@ function FinancialDashboard() {
   const [ordersCount, setOrdersCount] = useState({ services: [], addons: [] });
   const [overview, setOverview] = useState(null);
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [year, setYear] = useState(""); // NEW: year filter state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [expenseForm, setExpenseForm] = useState({ name: "", amount: "", recurring: false, for_month: "" });
   const [expenseAlert, setExpenseAlert] = useState(null);
   const [editingExpense, setEditingExpense] = useState(null);
   const [monthlyEarnings, setMonthlyEarnings] = useState([]);
   const [bookingsOverTime, setBookingsOverTime] = useState([]);
-  const [expenseBreakdown, setExpenseBreakdown] = useState([]);
-  const [profitMargin, setProfitMargin] = useState([]);
+  const [allTime, setAllTime] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('finance_jwt')) {
@@ -53,8 +53,6 @@ function FinancialDashboard() {
       try {
         setMonthlyEarnings(await getMonthlyEarnings());
         setBookingsOverTime(await getBookingsOverTime());
-        setExpenseBreakdown(await getExpenseBreakdown());
-        setProfitMargin(await getProfitMargin());
       } catch (e) {
         // handle error
       }
@@ -63,27 +61,33 @@ function FinancialDashboard() {
   }, []);
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const bookingsRes = await getBookingsSummary();
-      setBookingsSummary(bookingsRes);
+    const fetchData = async () => {
+      try {
+        const bookingsRes = await getBookingsSummary();
+        setBookingsSummary(bookingsRes);
 
-      const ordersRes = await getOrdersCount();
-      setOrdersCount(ordersRes);
+        const ordersRes = await getOrdersCount();
+        setOrdersCount(ordersRes);
 
-      const overviewRes = await getFinancialOverview(month);
-      setOverview(overviewRes);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    }
-  };
+        let overviewRes;
+        if (allTime) {
+          overviewRes = await getFinancialOverview(undefined, undefined, true);
+        } else if (year) {
+          overviewRes = await getFinancialOverview(undefined, year);
+        } else {
+          overviewRes = await getFinancialOverview(month);
+        }
+        setOverview(overviewRes);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
 
-  fetchData();
-}, [month, expenseAlert]);
+    fetchData();
+  }, [month, year, allTime, expenseAlert]);
 
   // Chart data
   const bookingsStatusData = Object.entries(bookingsSummary || {})
-  .filter(([status]) => status.toLowerCase() !== "payment failed")
   .map(([status, count]) => ({
     status,
     count
@@ -170,28 +174,28 @@ function FinancialDashboard() {
 
   return (
     <div className="finance-dashboard-bg">
-    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
-  <a
-    href="/admin-dashboard/"
-    style={{
-      background: "#447e9b",
-      color: "#fff",
-      padding: "10px 22px",
-      borderRadius: "6px",
-      textDecoration: "none",
-      fontWeight: "bold",
-      fontSize: "1rem",
-      boxShadow: "0 2px 8px rgba(68,126,155,0.08)",
-      transition: "background 0.2s"
-    }}
-    onMouseOver={e => (e.currentTarget.style.background = "#20435c")}
-    onMouseOut={e => (e.currentTarget.style.background = "#447e9b")}
-  >
-    Go to Admin Dashboard
-  </a>
-</div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+        <a
+          href="/admin-dashboard/"
+          style={{
+            background: "#447e9b",
+            color: "#fff",
+            padding: "10px 22px",
+            borderRadius: "6px",
+            textDecoration: "none",
+            fontWeight: "bold",
+            fontSize: "1rem",
+            boxShadow: "0 2px 8px rgba(68,126,155,0.08)",
+            transition: "background 0.2s"
+          }}
+          onMouseOver={e => (e.currentTarget.style.background = "#20435c")}
+          onMouseOut={e => (e.currentTarget.style.background = "#447e9b")}
+        >
+          Go to Admin Dashboard
+        </a>
+      </div>
       <Container fluid className="py-4">
-      {/* Alert */}
+        {/* Alert */}
         {expenseAlert && (
           <Alert
             variant={expenseAlert.type}
@@ -203,109 +207,179 @@ function FinancialDashboard() {
           </Alert>
         )}
       <Row>
-          <Col md={4}>
-            <Card className="mb-4 text-center">
-              <Card.Body>
-                <Card.Title>Total Earnings</Card.Title>
-                <h2 className="text-success">
-                  {overview ? `€${overview.earnings.toLocaleString()}` : "--"}
-                </h2>
+        <Col md={6}>
+          <Card className="mb-4 text-center">
+            <Card.Body>
+              <Card.Title>Total Balance</Card.Title>
+              <h2 className="text-primary">
+                {overview ? `€${overview.balance.toLocaleString()}` : "--"}
+              </h2>
+              <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "center" }}>
                 <Form.Control
                   type="month"
                   value={month}
-                  onChange={e => setMonth(e.target.value)}
-                  className="mt-2"
+                  onChange={e => {
+                    setMonth(e.target.value);
+                    setYear("");
+                    setAllTime(false);
+                  }}
+                  style={{ maxWidth: 140 }}
+                  disabled={allTime}
                 />
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}>
-            <Card className="mb-4 text-center">
-              <Card.Body>
-                <Card.Title>Total Expenses</Card.Title>
-                <h2 className="text-danger">
-                  {overview ? `€${overview.expenses.toLocaleString()}` : "--"}
-                </h2>
-                <Button className="admin-btn" onClick={() => setShowExpenseModal(true)}>
-                  Add Expense
+                <Form.Select
+                  value={year}
+                  onChange={e => {
+                    setYear(e.target.value);
+                    setMonth("");
+                    setAllTime(false);
+                  }}
+                  style={{ maxWidth: 110 }}
+                  disabled={allTime}
+                >
+                  <option value="">Year</option>
+                  {Array.from({ length: 4 }, (_, i) => {
+                    const y = new Date().getFullYear() - 1 + i;
+                    return (
+                      <option key={y} value={y}>{y}</option>
+                    );
+                  })}
+                </Form.Select>
+                <Button
+                  variant={allTime ? "primary" : "outline-primary"}
+                  onClick={() => {
+                    setAllTime(true);
+                    setMonth("");
+                    setYear("");
+                  }}
+                  style={{ minWidth: 90 }}
+                >
+                  All Time
                 </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}>
-            <Card className="mb-4 text-center">
-              <Card.Body>
-                <Card.Title>Profit / Loss</Card.Title>
-                <h2 className={overview && overview.profit_or_loss >= 0 ? "text-success" : "text-danger"}>
-                  {overview ? `€${overview.profit_or_loss.toLocaleString()}` : "--"}
-                </h2>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+              </div>              
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card className="mb-4 text-center">
+            <Card.Body>
+              <Card.Title>Total Expenses</Card.Title>
+              <h2 className="text-danger">
+                {overview ? `€${overview.expenses.toLocaleString()}` : "--"}
+              </h2>
+              <Button className="admin-btn" onClick={() => setShowExpenseModal(true)}>
+                Add Expense
+              </Button>
+            </Card.Body>
+          </Card>          
+        </Col>        
+      </Row>
 
-        <Row>
-          <Card className="mb-4">
+      <Row>
+        <Col md={6}>
+          <Card className="mb-4 text-center">
             <Card.Body>
-              <Card.Title>Service Earning Details</Card.Title>
-              <div style={{ maxHeight: 300, overflowY: "auto" }}>
-                <table className="table table-sm table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Service</th>
-                      <th>Successful Orders</th>
-                      <th>Cancelled Orders</th>
-                      <th>Earning (Successful)</th>
-                      <th>Earning (Cancelled)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {overview?.details?.service_details?.map((s) => (
-                      <tr key={s.service_id}>
-                        <td>{s.service_name}</td>
-                        <td>{s.completed_orders}</td>
-                        <td>{s.cancelled_orders}</td>
-                        <td>€{s.completed_earning.toLocaleString()}</td>
-                        <td>€{s.cancelled_earning.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Card.Title>Total Earnings</Card.Title>
+              <h2 className="text-success">
+                {overview ? `€${overview.earnings.toLocaleString()}` : "--"}
+              </h2>
             </Card.Body>
           </Card>
-        </Row>
-        <Row>
-          <Card className="mb-4">
+        </Col>
+        
+        <Col md={6}>
+          <Card className="mb-4 text-center">
             <Card.Body>
-              <Card.Title>Add-on Earning Details</Card.Title>
-              <div style={{ maxHeight: 300, overflowY: "auto" }}>
-                <table className="table table-sm table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Add-on</th>
-                      <th>Successful Orders</th>
-                      <th>Cancelled Orders</th>
-                      <th>Earning (Successful)</th>
-                      <th>Earning (Cancelled)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {overview?.details?.addon_details?.map((a) => (
-                      <tr key={a.addon_id}>
-                        <td>{a.addon_name}</td>
-                        <td>{a.completed_orders}</td>
-                        <td>{a.cancelled_orders}</td>
-                        <td>€{a.completed_earning.toLocaleString()}</td>
-                        <td>€{a.cancelled_earning.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Card.Title>Profit / Loss</Card.Title>
+              <h2 className={overview && overview.profit_or_loss >= 0 ? "text-success" : "text-danger"}>
+                {overview ? `€${overview.profit_or_loss.toLocaleString()}` : "--"}
+              </h2>
             </Card.Body>
           </Card>
-        </Row>
+        </Col>
+      </Row>
+
+      <Row>
+        <Card className="mb-4">
+          <Card.Body>
+            <Card.Title>Service Earning Details</Card.Title>
+            <div style={{ maxHeight: 300, overflowY: "auto" }}>
+              <table className="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>Successful Orders</th>
+                    <th>Cancelled Orders</th>
+                    <th>Earning (Completed)</th>
+                    <th>Earning (Cancelled)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overview?.details?.service_details?.map((s) => (
+                    <tr key={s.service_id}>
+                      <td>{s.service_name}</td>
+                      <td>{s.completed_orders}</td>
+                      <td>{s.cancelled_orders}</td>
+                      <td>€{s.completed_earning.toLocaleString()}</td>
+                      <td>€{s.cancelled_earning.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card.Body>
+        </Card>
+      </Row>
+      <Row>
+      <Card className="mb-4">
+        <Card.Body>
+          <Card.Title>Add-on Earning Details</Card.Title>
+          <div style={{ maxHeight: 300, overflowY: "auto" }}>
+            <table className="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>Add-on</th>
+                  <th>Successful Orders</th>
+                  <th>Cancelled Orders</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overview?.details?.addon_details?.map((a) => (
+                  <tr key={a.addon_id}>
+                    <td>{a.addon_name}</td>
+                    <td>{a.completed_orders}</td>
+                    <td>{a.cancelled_orders}</td>
+                    <td>€{a.completed_earning.toLocaleString()}</td>
+                  </tr>
+                ))}
+                {/* All Add-ons Combined row */}
+                {overview?.details?.addon_details?.length > 0 && (
+                  <tr style={{ fontWeight: "bold", background: "#f8f9fa" }}>
+                    <td>All Add-ons Combined</td>
+                    <td>
+                      {overview.details.addon_details
+                        .reduce((sum, a) => sum + a.completed_orders, 0)
+                        .toLocaleString()}
+                    </td>
+                    <td>
+                      {overview.details.addon_details
+                        .reduce((sum, a) => sum + a.cancelled_orders, 0)
+                        .toLocaleString()}
+                    </td>
+                    <td>
+                      €
+                      {overview.details.addon_details
+                        .reduce((sum, a) => sum + a.completed_earning, 0)
+                        .toLocaleString()}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card.Body>
+      </Card>
+    </Row>
 
         {/* Expenses Section */}
         <Row>
@@ -463,50 +537,7 @@ function FinancialDashboard() {
             </Card>
           </Col>
         </Row>
-
-        <Row>
-          <Col md={6}>
-            <Card className="mb-4 admin-card">
-              <Card.Body>
-                <Card.Title>Expense Breakdown (Current Month)</Card.Title>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={expenseBreakdown}
-                      dataKey="amount"
-                      nameKey="type"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {expenseBreakdown.map((entry, idx) => (
-                        <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6}>
-            <Card className="mb-4 admin-card">
-              <Card.Body>
-                <Card.Title>Profit Margin Over Time</Card.Title>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={profitMargin}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis domain={[0, 100]} tickFormatter={tick => `${tick}%`} />
-                    <Tooltip formatter={value => `${value}%`} />
-                    <Line type="monotone" dataKey="profit_margin" stroke="#28a745" strokeWidth={3} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>   
+ 
 
         {/* Expense Modal */}
 

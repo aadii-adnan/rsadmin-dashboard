@@ -228,10 +228,39 @@ class BookingAdmin(admin.ModelAdmin):
         return timezone.localtime(obj.modified_at).strftime('%d %b %Y %H:%M')
     modified_at_field.short_description = 'Modified At'
 
+    def terminal_display(self, obj):
+        return format_html(
+            '{}<br><span style="color: #888;">{}</span>',
+            obj.departure_terminal, obj.return_terminal
+        )
+    terminal_display.short_description = 'Terminal'
+
+    def customer_display(self, obj):
+        return format_html(
+            '{} {}<br><span style="color: #888;">{}</span>',
+            obj.first_name, obj.last_name, obj.contact_no
+        )
+    customer_display.short_description = 'Customer'
+
+    def vehicle_display(self, obj):
+        return format_html(
+            '{} {}<br><span style="color: #888;">{}, {}</span>',
+            obj.car_manufacturer, obj.car_model, obj.car_colour, obj.car_registration_no
+        )
+    vehicle_display.short_description = 'Car Registration'
+
+    def service_display(self, obj):
+        service_name = obj.service.name if obj.service else 'N/A'
+        addons = ', '.join([addon.name for addon in obj.add_ons.all()])
+        if addons:
+            return format_html('{}<br><span style="color: #888;">{}</span>', service_name, addons)
+        return service_name
+    service_display.short_description = 'Service & Add-ons'
+
     def get_list_display(self, request):
         if request.user.is_manager:
-            return ('number', 'booking_id', 'full_name', 'service', 'departure_time_display', 'return_time_display', 'colored_status', 'created_at_display', 'download_booking_form')
-        return ('number', 'booking_id', 'full_name', 'service', 'departure_time_display', 'return_time_display', 
+            return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display','service', 'vehicle_display', 'terminal_display',  'colored_status', 'created_at_display', 'download_booking_form')
+        return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
                 'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
     
 

@@ -52,7 +52,7 @@ def send_completion_email(booking_id):
         <h3 style="color: #444;">💬 Feedback</h3>
         <p>
             We would love to hear about your experience. If you have a moment, please consider leaving us a review on Google Maps:<br>
-            <a href="https://g.page/r/CZW2D3u4VHTOEAI/review" target="_blank" style="color:#0066cc;">Leave a Google Review</a>
+            <a href="https://ie.trustpilot.com/review/rsexpressparking.com" target="_blank" style="color:#0066cc;">Leave a Google Review</a>
         </p>
 
         <p>
@@ -92,7 +92,7 @@ Thank you for choosing RS Express Parking. We appreciate your trust and hope to 
 💬 Feedback
 -----------------------------
 We would love to hear about your experience. If you have a moment, please consider leaving us a review on Google Maps:
-https://g.page/r/CZW2D3u4VHTOEAI/review
+https://ie.trustpilot.com/review/rsexpressparking.com
 
 Warm regards,  
 The RS Express Parking Team  

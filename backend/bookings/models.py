@@ -41,6 +41,8 @@ class Booking(models.Model):
     bonus_points_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     email_sent = models.BooleanField(default=False)
     completion_email_sent = models.BooleanField(default=False)
+    completion_email_task_id = models.CharField(max_length=255, null=True, blank=True)
+    started_status_task_id = models.CharField(max_length=255, null=True, blank=True)
 
     created_at = models.DateTimeField(null=True, blank=True)
     modified_at = models.DateTimeField(auto_now=True)

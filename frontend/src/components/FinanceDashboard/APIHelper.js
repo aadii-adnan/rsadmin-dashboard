@@ -14,11 +14,18 @@ export const getOrdersCount = async () => {
   return res.json();
 };
 
-export const getFinancialOverview = async (month) => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + API_BASE + `overview/?month=${month}`, { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch financial overview");
+export async function getFinancialOverview(month, year, allTime) {
+  let url = `${import.meta.env.VITE_API_BASE_URL}/finance/overview/`;
+  if (allTime) {
+    url += `?all=true`;
+  } else if (year) {
+    url += `?year=${year}`;
+  } else if (month) {
+    url += `?month=${month}`;
+  }
+  const res = await customFetch(url, { useFinanceJwt: true });
   return res.json();
-};
+}
 
 export const addExpense = async (data) => {
   const res = await customFetch(import.meta.env.VITE_API_BASE_URL + API_BASE + "add-expense/", {

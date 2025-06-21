@@ -314,12 +314,14 @@ class StripeWebhookView(APIView):
 
                 if not booking.completion_email_sent:
                     eta = booking.return_time + timedelta(minutes=15)
-                    send_completion_email.apply_async((booking.id,), eta=eta)
+                    completion_task = send_completion_email.apply_async((booking.id,), eta=eta)
+                    started_task = set_booking_started_status.apply_async((booking.id,), eta=booking.departure_time)
 
-                    set_booking_started_status.apply_async((booking.id,), eta=booking.departure_time)
-
+                    # Save the task IDs to the booking
+                    booking.completion_email_task_id = completion_task.id
+                    booking.started_status_task_id = started_task.id
                     booking.completion_email_sent = True
-                    booking.save(update_fields=['completion_email_sent'])
+                    booking.save(update_fields=['completion_email_sent', 'completion_email_task_id', 'started_status_task_id'])
 
                 # Award a new coupon to the user
                 code = generate_coupon_code()
