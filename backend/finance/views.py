@@ -118,7 +118,9 @@ class AdminFinancialOverview(APIView):
                 # else: do not count for earnings
 
             # Expenses for this period
-            if year_str:
+            if all_time == "true":
+                fixed_expenses = Expense.objects.filter(recurring=False)
+            elif year_str:
                 fixed_expenses = Expense.objects.filter(for_month__year=year)
             else:
                 fixed_expenses = Expense.objects.filter(for_month__year=start_date.year, for_month__month=start_date.month)

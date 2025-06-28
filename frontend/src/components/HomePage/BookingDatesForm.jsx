@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useBooking } from "../../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
+import { DateTime } from "luxon";
 
 
 const BookingDatesForm = () => {
@@ -119,19 +120,29 @@ const BookingDatesForm = () => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    const now = new Date();
-    const parkingFromDateTime = new Date(`${formData.parkingFromDate}T${formData.parkingFromTime}`);
-    const carCollectionDateTime = new Date(`${formData.carCollectionDate}T${formData.carCollectionTime}`);
-  
-    if (parkingFromDateTime - now < 4 * 60 * 60 * 1000 || carCollectionDateTime - now < 4 * 60 * 60 * 1000) {
-      setPopupMessage("Departure date and time must be at least 4 hours from the current time.");
+
+    const now = DateTime.now().setZone("Europe/Dublin");
+
+    const parkingFromDateTime = DateTime.fromISO(
+      `${formData.parkingFromDate}T${formData.parkingFromTime}`,
+      { zone: "Europe/Dublin" }
+    );
+    const carCollectionDateTime = DateTime.fromISO(
+      `${formData.carCollectionDate}T${formData.carCollectionTime}`,
+      { zone: "Europe/Dublin" }
+    );
+
+    if (
+      parkingFromDateTime.diff(now, "hours").hours < 4 ||
+      carCollectionDateTime.diff(now, "hours").hours < 4
+    ) {
+      setPopupMessage("Drop-off date and time must be at least 4 hours from the current Dublin time.");
       setIsPopupOpen(true);
       return;
     }
-  
+
     if (parkingFromDateTime >= carCollectionDateTime) {
-      setPopupMessage("Arrival date and time must be after Departure date and time.");
+      setPopupMessage("Pickup date and time must be after Drop-off date and time.");
       setIsPopupOpen(true);
       return;
     }

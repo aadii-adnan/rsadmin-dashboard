@@ -62,6 +62,29 @@ const Home = () => {
     };
     fetchFAQs();
     }, []);
+
+     useEffect(() => {
+        // Only add the script if it doesn't already exist
+        if (!document.getElementById("shapo-embed-js")) {
+        const script = document.createElement("script");
+        script.id = "shapo-embed-js";
+        script.type = "text/javascript";
+        script.src = "https://cdn.shapo.io/js/embed.js";
+        script.defer = true;
+        document.body.appendChild(script);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!document.getElementById("shapo-booster-js")) {
+        const script = document.createElement("script");
+        script.id = "shapo-booster-js";
+        script.type = "text/javascript";
+        script.src = "https://cdn.shapo.io/booster/c58eb11aee.js";
+        script.defer = true;
+        document.body.appendChild(script);
+        }
+    }, []);
     
     if (loading) {
     return (
@@ -488,6 +511,13 @@ const Home = () => {
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div style={{ margin: "40px 0" }}>
+            <h2 className="testimonials-title" style={{ textAlign: "center" }}>
+            What Our Customers Say
+            </h2>
+            <div id="shapo-widget-8140d0389c6eedda5fc4"></div>
         </div>
 
 <FAQSection faqs={faqs} loading={loading}/>
