@@ -19,6 +19,7 @@ import { ClipLoader } from "react-spinners";
 import FAQSection from "../components/HomePage/FAQSection";
 import { FaCarSide } from "react-icons/fa"; // Example icon
 import logo from "../assets/logo.png";
+import { FcGoogle } from "react-icons/fc";
 
 const Home = () => {
 
@@ -54,6 +55,16 @@ const Home = () => {
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setFaqs(data);
+
+            if (!document.getElementById("shapo-embed-js")) {
+                const script = document.createElement("script");
+                script.id = "shapo-embed-js";
+                script.type = "text/javascript";
+                script.src = "https://cdn.shapo.io/js/embed.js";
+                script.defer = true;
+                document.body.appendChild(script);
+            }
+        
         } catch (error) {
             console.error('Error fetching FAQs:', error);
         } finally {
@@ -61,29 +72,6 @@ const Home = () => {
         }
     };
     fetchFAQs();
-    }, []);
-
-     useEffect(() => {
-        // Only add the script if it doesn't already exist
-        if (!document.getElementById("shapo-embed-js")) {
-        const script = document.createElement("script");
-        script.id = "shapo-embed-js";
-        script.type = "text/javascript";
-        script.src = "https://cdn.shapo.io/js/embed.js";
-        script.defer = true;
-        document.body.appendChild(script);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!document.getElementById("shapo-booster-js")) {
-        const script = document.createElement("script");
-        script.id = "shapo-booster-js";
-        script.type = "text/javascript";
-        script.src = "https://cdn.shapo.io/booster/c58eb11aee.js";
-        script.defer = true;
-        document.body.appendChild(script);
-        }
     }, []);
     
     if (loading) {
@@ -441,83 +429,24 @@ const Home = () => {
                 </div>
             </div>
         </div>
-        
+
         <div className="testimonials-main">
-            <div className="testimonials-section">
-                <div className="testimonials-header">
-                    <p className="testimonials-subtitle">Testimonial</p>
-                    <h2 className="testimonials-title">What Our Customers Say</h2>
+            <div className="testimonials-section">  
+                <div className="testimonials-header" style={{display:"flex", flexDirection:"column"}}>
+                    <div style={{display:"flex", justifyContent:"end", marginBottom:"20px"}}>
+                        <a href="https://g.page/r/CZW2D3u4VHTOEAI/review" target="_blank" rel="noopener noreferrer" style= {{background:"#010659",color:"#fff",borderRadius:24,padding:"12px 36px 12px 24px",fontWeight:500,fontSize:18,textDecoration:"none",boxShadow:"0 2px 8px rgba(1,6,89,0.08)", display:"flex", alignItems:"center", justifyContent:"center"}}>
+                                <FcGoogle size={28} style={{marginRight:10,background:"#fff",borderRadius:"50%"}}/>
+                            Leave a Review
+                        </a>
+                    </div>       
+
+                    <p className="testimonials-subtitle">Testimonial</p>                                                            
+                    <h2 className="testimonials-title" style={{ marginBottom : 0 }}>What Our Customers Say</h2>                                            
                 </div>
                 <div className="testimonials-container">
-                    <div className="testimonial-card">
-                        <div className="testimonial-stars">★★★★★</div>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-text">
-                            “Amazing service! Hassle-free and very professional. Highly recommend RS Express Parking!”
-                        </p>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-author">Cindy Starlite</p>
-                        <p className="testimonial-role">Customer</p>
-                    </div>
-                    <div className="testimonial-card">
-                        <div className="testimonial-stars">★★★★★</div>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-text">
-                            “The staff were so friendly and helpful. Parking made simple!”
-                        </p>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-author">Mark Wellberg</p>
-                        <p className="testimonial-role">Customer</p>
-                    </div>
-                    <div className="testimonial-card">
-                        <div className="testimonial-stars">★★★★★</div>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-text">
-                            “Secure and reliable. Will definitely book again!”
-                        </p>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-author">Wanda Young</p>
-                        <p className="testimonial-role">Customer</p>
-                    </div>
-                    <div className="testimonial-card">
-                        <div className="testimonial-stars">★★★★★</div>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-text">
-                            “Easy to use and worth every penny. Excellent parking service!”
-                        </p>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-author">Manda Houston</p>
-                        <p className="testimonial-role">Customer</p>
-                    </div>
-                    <div className="testimonial-card">
-                        <div className="testimonial-stars">★★★★★</div>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-text">
-                            “Great value for money. Convenient and secure!”
-                        </p>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-author">Peter Lawson</p>
-                        <p className="testimonial-role">Customer</p>
-                    </div>
-                    <div className="testimonial-card">
-                        <div className="testimonial-stars">★★★★★</div>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-text">
-                            “Highly efficient. The meet-and-greet option saved me so much time!”
-                        </p>
-                        <hr className="testimonial-divider" />
-                        <p className="testimonial-author">Tamara Frans</p>
-                        <p className="testimonial-role">Customer</p>
-                    </div>
+                    <div id="shapo-widget-fda43f215da1b6f977dd"></div>
                 </div>
             </div>
-        </div>
-
-        <div style={{ margin: "40px 0" }}>
-            <h2 className="testimonials-title" style={{ textAlign: "center" }}>
-            What Our Customers Say
-            </h2>
-            <div id="shapo-widget-8140d0389c6eedda5fc4"></div>
         </div>
 
 <FAQSection faqs={faqs} loading={loading}/>

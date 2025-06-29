@@ -273,7 +273,31 @@ function FinancialDashboard() {
       </Row>
 
       <Row>
-        <Col md={6}>
+        <Col md={3}>
+          <Card className="mb-4 text-center">
+            <Card.Body>
+              <Card.Title>Total Add-ons Price</Card.Title>
+              <h2 className="text-info">
+                {overview?.details?.addon_details
+                  ? "€" + overview.details.addon_details.reduce((sum, a) => sum + a.completed_earning, 0).toLocaleString()
+                  : "--"}
+              </h2>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="mb-4 text-center">
+            <Card.Body>
+              <Card.Title>Total Parking Price</Card.Title>
+              <h2 className="text-primary">
+                {overview && overview.details?.addon_details
+                  ? "€" + (overview.balance - overview.details.addon_details.reduce((sum, a) => sum + a.completed_earning, 0)).toLocaleString()
+                  : "--"}
+              </h2>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Total Earnings</Card.Title>
@@ -283,8 +307,7 @@ function FinancialDashboard() {
             </Card.Body>
           </Card>
         </Col>
-        
-        <Col md={6}>
+        <Col md={3}>
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Profit / Loss</Card.Title>

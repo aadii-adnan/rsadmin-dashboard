@@ -3,8 +3,8 @@ import { useBooking } from "../../context/BookingContext";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../auth/AuthContext"; // or wherever you get user info
 
-const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPrice, setCouponId, discountedPrice, setDiscountedPrice, addOnsDetails, bonusUsed, setBonusUsed }) => {
-    const { bookingData } = useBooking();
+const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPrice, setCouponId, discountedPrice, setDiscountedPrice, addOnsDetails, bonusUsed, setBonusUsed, currentStep }) => {
+    const { bookingData, setBookingData } = useBooking();
     const { user } = useAuth();
     const [discount, setDiscount] = useState(0); 
     const [amountSaved, setAmountSaved] = useState(0); 
@@ -33,7 +33,6 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
 
       // Deduct bonus points if user is logged in and has any
       if (user && user.bonus_points > 0) {
-        // Ensure at least €0.5 remains to be paid
         const maxBonusUsable = Math.max(0, tempPrice - 0.5);
         tempBonusUsed = Math.min(user.bonus_points, maxBonusUsable);
         tempPrice = tempPrice - tempBonusUsed;
@@ -52,7 +51,43 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
   useEffect(() => {
     calculateDiscountedPrice();
     // eslint-disable-next-line
-  }, [totalPrice, user]);
+  }, [totalPrice, user, amountSaved]);
+
+
+  const handleCoupon = async () => {
+    if (isCouponApplied) {
+      setCoupon(""); setDiscount(0); setAmountSaved(0); setIsCouponApplied(false); setDiscountedPrice(totalPrice); setCouponId(null);
+      setBookingData(prev => ({
+        ...prev,
+        paymentDetails: {
+          ...prev.paymentDetails,
+          couponId: null,
+          discount: 0,
+          coupon: ""
+        }
+      }));
+    } else {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/coupons/validate/`, {
+          method: "POST",
+          body: JSON.stringify({ code: coupon.trim() }),
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        if (!response.ok) { alert(data.message || "Invalid coupon."); return; }
+        setCouponId(data.id); setDiscount(data.discount_percent); setAmountSaved((totalPrice * data.discount_percent) / 100); setDiscountedPrice(totalPrice - (totalPrice * data.discount_percent / 100)); setIsCouponApplied(true);
+        setBookingData(prev => ({
+          ...prev,
+          paymentDetails: {
+            ...prev.paymentDetails,
+            couponId: data.id,
+            discount: data.discount_percent,
+            coupon: coupon
+          }
+        }));
+      } catch { alert("An error occurred while validating the coupon."); }
+    }
+  };
 
   return (
     <div className='price-summary' style={{ height: "fit-content", backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", padding: "20px", marginTop: "30px", marginBottom: "30px" }}>
@@ -163,7 +198,18 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
               <span style={{ display: "inline-block", width: "40px", height: "2px", backgroundColor: "#2890cd", marginLeft: "5px" }}></span>
             </div>
           </>
-          )}          
+          )}      
+
+          {(currentStep !== 3 && currentStep !== 4) && (
+            <div className="row" style={{marginBottom:10}}>
+              <div className="col" style={{display:"flex",alignItems:"center",gap:8}}>
+                <input type="text" value={coupon} onChange={e=>setCoupon(e.target.value)} placeholder="Enter coupon code" style={{flex:1,padding:"8px",borderRadius:"5px",border:"1px solid #ccc",fontSize:"14px"}} disabled={isCouponApplied}/>
+                <button type="button" onClick={handleCoupon} style={{padding:"8px 16px",background:isCouponApplied?"#e74c3c":"#2890cd",color:"#fff",border:"none",borderRadius:"5px",fontWeight:600,cursor:"pointer"}}>
+                  {isCouponApplied?"Remove":"Apply"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Discount Details */}
           {discount > 0 && (

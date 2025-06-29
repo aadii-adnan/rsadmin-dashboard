@@ -98,19 +98,14 @@ class AdminFinancialOverview(APIView):
             # Calculate total balance (old logic)
             total_balance = Decimal('0.00')
             for booking in bookings_in_period:
-                price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price
-                if booking.status.name.lower() == "cancelled":
-                    total_balance += Decimal('15.00')
-                else:
-                    total_balance += price
+                price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price                
+                total_balance += price
 
             # Calculate total earnings (completed only, minus add-ons, +15 for cancelled)
             total_earnings = Decimal('0.00')
             for booking in bookings_in_period:
                 status_name = booking.status.name.lower()
-                if status_name == "cancelled":
-                    total_earnings += Decimal('15.00')
-                elif status_name == "completed":
+                if status_name in ("completed", "cancelled"):
                     # Subtract add-ons price
                     addons_total = sum([addon.price for addon in booking.add_ons.all()])
                     price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price
@@ -139,7 +134,11 @@ class AdminFinancialOverview(APIView):
                       sum([addon.price for addon in b.add_ons.all()]) )
                     for b in service_bookings.filter(status__name="Completed")
                 )
-                cancelled_earning = Decimal('15.00') * cancelled_orders
+                cancelled_earning = sum(
+                    ( (b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price) -
+                      sum([addon.price for addon in b.add_ons.all()]) )
+                    for b in service_bookings.filter(status__name="Cancelled")
+                )
                 service_details.append({
                     "service_id": service.id,
                     "service_name": service.name,
@@ -289,9 +288,7 @@ class MonthlyEarningsTrendView(APIView):
             earning = Decimal('0.00')
             for b in bookings:
                 status_name = b.status.name.lower()
-                if status_name == "cancelled":
-                    earning += Decimal('15.00')
-                elif status_name == "completed":
+                if status_name in ("completed", "cancelled"):
                     addons_total = sum([addon.price for addon in b.add_ons.all()])
                     price = b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price
                     earning += (price - Decimal(addons_total))
