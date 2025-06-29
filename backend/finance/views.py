@@ -95,6 +95,10 @@ class AdminFinancialOverview(APIView):
                 status__name__in=["Pending", "Payment Failed"]
             ).select_related('service', 'status').prefetch_related('add_ons')
 
+            all_addons_total = 0
+            for booking in bookings_in_period.exclude(status__name="Cancelled"):
+                all_addons_total += sum([addon.price for addon in booking.add_ons.all()])
+
             # Calculate total balance (old logic)
             total_balance = Decimal('0.00')
             for booking in bookings_in_period:
@@ -180,6 +184,7 @@ class AdminFinancialOverview(APIView):
                     'recurring_expenses': [{ 'id': e.id, 'name': e.name, 'amount': float(e.amount) } for e in recurring_expenses],
                     'service_details': service_details,
                     'addon_details': addon_details,
+                    'all_addons_total': float(all_addons_total),
                 }
             })
 

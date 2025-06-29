@@ -278,8 +278,8 @@ function FinancialDashboard() {
             <Card.Body>
               <Card.Title>Total Add-ons Price</Card.Title>
               <h2 className="text-info">
-                {overview?.details?.addon_details
-                  ? "€" + overview.details.addon_details.reduce((sum, a) => sum + a.completed_earning, 0).toLocaleString()
+                {overview?.details?.all_addons_total !== undefined
+                  ? "€" + Number(overview.details.all_addons_total).toLocaleString()
                   : "--"}
               </h2>
             </Card.Body>
@@ -290,8 +290,8 @@ function FinancialDashboard() {
             <Card.Body>
               <Card.Title>Total Parking Price</Card.Title>
               <h2 className="text-primary">
-                {overview && overview.details?.addon_details
-                  ? "€" + (overview.balance - overview.details.addon_details.reduce((sum, a) => sum + a.completed_earning, 0)).toLocaleString()
+                {overview && overview.details?.all_addons_total !== undefined
+                  ? "€" + (overview.balance - Number(overview.details.all_addons_total)).toLocaleString()
                   : "--"}
               </h2>
             </Card.Body>
