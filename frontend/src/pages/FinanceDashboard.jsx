@@ -122,7 +122,7 @@ function FinancialDashboard() {
   const handleDeleteExpense = async (id) => {
     if (window.confirm("Are you sure you want to delete this expense?")) {
       try {
-        await customFetch(`${import.meta.env.VITE_API_BASE_URL}/finance/expense/${id}/delete/`, { method: "DELETE" });
+        await customFetch(`${import.meta.env.VITE_API_BASE_URL}/finance/expense/${id}/delete/`, { method: "DELETE", useFinanceJwt: true });
         setExpenseAlert({ type: "success", msg: "Expense deleted!" });
       } catch {
         setExpenseAlert({ type: "danger", msg: "Failed to delete expense." });
@@ -155,6 +155,7 @@ function FinancialDashboard() {
       method,
       headers: { "Content-Type": "application/json" },
       body: data,
+      useFinanceJwt: true
     })
       .then((res) => res.json())
       .then(() => {
