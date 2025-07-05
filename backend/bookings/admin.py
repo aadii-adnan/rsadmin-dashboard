@@ -42,52 +42,32 @@ class SingleDateFilter(FieldListFilter):
         return [self.date_params['gte'], self.date_params['lt']]
 
     def queryset(self, request, queryset):
-        # Get all date parameters
-        departure_gte = request.GET.get('departure_time__gte')
-        departure_lt = request.GET.get('departure_time__lt')
-        return_gte = request.GET.get('return_time__gte')
-        return_lt = request.GET.get('return_time__lt')
-        created_gte = request.GET.get('created_at__gte')
-        created_lt = request.GET.get('created_at__lt')
-        
-        q_objects = Q()
-
-        # Handle departure date filter
-        if departure_gte and departure_lt:
-            try:
-                start_date = datetime.strptime(departure_gte, '%Y-%m-%d')
-                end_date = datetime.strptime(departure_lt, '%Y-%m-%d')
-                start_datetime = timezone.make_aware(datetime.combine(start_date.date(), datetime.min.time()))
-                end_datetime = timezone.make_aware(datetime.combine(end_date.date(), datetime.min.time()))
-                q_objects |= Q(departure_time__gte=start_datetime, departure_time__lt=end_datetime)
-            except (ValueError, TypeError) as e:
-                print(f"Error in departure date filtering: {e}")
-
-        # Handle return date filter
-        if return_gte and return_lt:
-            try:
-                start_date = datetime.strptime(return_gte, '%Y-%m-%d')
-                end_date = datetime.strptime(return_lt, '%Y-%m-%d')
-                start_datetime = timezone.make_aware(datetime.combine(start_date.date(), datetime.min.time()))
-                end_datetime = timezone.make_aware(datetime.combine(end_date.date(), datetime.min.time()))
-                q_objects |= Q(return_time__gte=start_datetime, return_time__lt=end_datetime)
-            except (ValueError, TypeError) as e:
-                print(f"Error in return date filtering: {e}")
-
-        # Handle created date filter
-        if created_gte and created_lt:
-            try:
-                start_date = datetime.strptime(created_gte, '%Y-%m-%d')
-                end_date = datetime.strptime(created_lt, '%Y-%m-%d')
-                start_datetime = timezone.make_aware(datetime.combine(start_date.date(), datetime.min.time()))
-                end_datetime = timezone.make_aware(datetime.combine(end_date.date(), datetime.min.time()))
-                q_objects |= Q(created_at__gte=start_datetime, created_at__lt=end_datetime)
-            except (ValueError, TypeError) as e:
-                print(f"Error in created date filtering: {e}")
-
-        # Apply the combined filters if any exist
-        if q_objects:
-            return queryset.filter(q_objects)
+        # Collect all date filters from all SingleDateFilters
+        filters = []
+        for field in ['departure_time', 'return_time', 'created_at']:
+            gte = request.GET.get(f"{field}__gte")
+            lt = request.GET.get(f"{field}__lt")
+            q = Q()
+            if gte:
+                try:
+                    start_datetime = timezone.make_aware(datetime.strptime(gte, '%Y-%m-%d'))
+                    q &= Q(**{f"{field}__gte": start_datetime})
+                except Exception:
+                    pass
+            if lt:
+                try:
+                    end_datetime = timezone.make_aware(datetime.strptime(lt, '%Y-%m-%d')) + timedelta(days=1)
+                    q &= Q(**{f"{field}__lt": end_datetime})
+                except Exception:
+                    pass
+            if q:
+                filters.append(q)
+        if filters:
+            # Combine all filters with OR
+            query = filters[0]
+            for f in filters[1:]:
+                query |= f
+            return queryset.filter(query).distinct()
         return queryset
 
     def value(self):
@@ -337,27 +317,27 @@ class BookingAdmin(admin.ModelAdmin):
     full_name.short_description = 'Customer Name'
 
     def download_invoice(self, obj):
-        if obj.id:  # Only show the link if the object exists
+        if obj.id:
             url = reverse('invoice-download', args=[obj.id])
             return format_html(
-                '<a class="button" href="javascript:void(0)" onclick="printInvoice(\'{}\'); return false;">'
+                '<a class="button" href="{}" download>'
                 '<img src="/static/admin/img/icon-yes.svg" alt="Print Invoice"> Print Invoice</a>',
                 url
             )
-        return '-'  # Return a dash if object doesn't exist yet
+        return '-'
 
     download_invoice.short_description = 'Invoice'
     download_invoice.allow_tags = True
 
     def download_booking_form(self, obj):
-        if obj.id:  # Only show the link if the object exists
+        if obj.id:
             url = reverse('booking-form-download', args=[obj.id])
             return format_html(
-                '<a class="button" href="javascript:void(0)" onclick="printBookingForm(\'{}\'); return false;">'
+                '<a class="button" href="{}" download>'
                 '<img src="/static/admin/img/icon-yes.svg" alt="Print Form"> Booking Form</a>',
                 url
             )
-        return '-'  # Return a dash if object doesn't exist yet
+        return '-'
 
     download_booking_form.short_description = 'Download Booking Form'
     download_booking_form.allow_tags = True
@@ -372,65 +352,66 @@ class BookingAdmin(admin.ModelAdmin):
             actions.pop('download_invoices_zip', None)
         return actions
     
-    def get_dynamic_filename(self, departure_date, return_date, created_date):
-        parts = []
-        dates = set()  # To track unique dates
-        
-        # Convert dates to datetime objects for better formatting
-        if departure_date:
-            dt = datetime.strptime(departure_date, '%Y-%m-%d')
-            dates.add(dt)
-            parts.append('Departures')
-            
-        if return_date:
-            dt = datetime.strptime(return_date, '%Y-%m-%d')
-            dates.add(dt)
-            parts.append('Arrivals')
-            
-        if created_date:
-            dt = datetime.strptime(created_date, '%Y-%m-%d')
-            dates.add(dt)
-            parts.append('Created')
+    def get_dynamic_filename(self, departure_start, departure_end, return_start, return_end, created_start, created_end):
+        def format_range(label, start, end):
+            if start and end and start != end:
+                start_str = datetime.strptime(start, '%Y-%m-%d').strftime('%d_%b')
+                end_str = datetime.strptime(end, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_{start_str}-{end_str}"
+            elif start and end and start == end:
+                start_str = datetime.strptime(start, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_{start_str}"
+            elif start:
+                start_str = datetime.strptime(start, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_from_{start_str}"
+            elif end:
+                end_str = datetime.strptime(end, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_until_{end_str}"
+            return ""
 
-        # If all dates are the same
-        if len(dates) == 1:
-            date_str = list(dates)[0].strftime('%d_%b_%Y')
-            return f"{'_'.join(parts)}_{date_str}.xlsx"
-        
-        # If dates are different
-        filename_parts = []
-        if departure_date:
-            dt = datetime.strptime(departure_date, '%Y-%m-%d')
-            filename_parts.append(f"Departures_{dt.strftime('%d_%b')}")
-        
-        if return_date:
-            dt = datetime.strptime(return_date, '%Y-%m-%d')
-            filename_parts.append(f"Arrivals_{dt.strftime('%d_%b')}")
-        
-        if created_date:
-            dt = datetime.strptime(created_date, '%Y-%m-%d')
-            filename_parts.append(f"Created_{dt.strftime('%d_%b')}")
-        
-        if filename_parts:
-            # Use the last dt assigned for the year
-            return f"{'_'.join(filename_parts)}_{dt.strftime('%Y')}.xlsx"
+        parts = []
+        dep = format_range("Departures", departure_start, departure_end)
+        arr = format_range("Arrivals", return_start, return_end)
+        cre = format_range("Created", created_start, created_end)
+        for part in (dep, arr, cre):
+            if part:
+                parts.append(part)
+
+        # Use year from the first available date, fallback to current year
+        for date in (departure_start, departure_end, return_start, return_end, created_start, created_end):
+            if date:
+                year = datetime.strptime(date, '%Y-%m-%d').strftime('%Y')
+                break
         else:
-            # Fallback if no date filters are applied
+            year = datetime.now().strftime('%Y')
+
+        if parts:
+            return f"{'_&_'.join(parts)}_{year}.xlsx"
+        else:
             return "Selected_Bookings.xlsx"
+        
+    def filter_by_range(self, qs, field, start, end):
+        if start:
+            qs = qs.filter(**{f"{field}__gte": timezone.make_aware(datetime.strptime(start, '%Y-%m-%d'))})
+        if end:
+            qs = qs.filter(**{f"{field}__lt": timezone.make_aware(datetime.strptime(end, '%Y-%m-%d')) + timedelta(days=1)})
+        return qs
 
     def export_as_csv(self, request, queryset):
         """
-        Export bookings organized by active date filters
+        Export bookings organized by active date filters (now supports start/end for each)
         """
         wb = Workbook()
         ws = wb.active
-        
-        # Get active filters
-        departure_date = request.GET.get('departure_time__gte')
-        return_date = request.GET.get('return_time__gte')
-        created_date = request.GET.get('created_at__gte')
 
-        # Define headers once
+        # Get active filters (start and end for each)
+        departure_start = request.GET.get('departure_time__gte')
+        departure_end = request.GET.get('departure_time__lt')
+        return_start = request.GET.get('return_time__gte')
+        return_end = request.GET.get('return_time__lt')
+        created_start = request.GET.get('created_at__gte')
+        created_end = request.GET.get('created_at__lt')
+
         headers = [
             'PRODUCT CODE','Booking Ref', 'Customer/Contact', 'Entry Date & Time', 'Return Date & Time', 'Vehicle/Registration',
             'Out Flight Number', 'In Flight Number', 'Add Onns'
@@ -438,48 +419,28 @@ class BookingAdmin(admin.ModelAdmin):
         if not request.user.is_manager:
             headers.extend(['Cost'])
 
-        current_row = 1  # Keep track of current row
+        current_row = 1
 
-        # Function to write section
         def write_section(title, filtered_queryset, start_row):
             # Write section title
             title_cell = ws.cell(row=start_row, column=1, value=title)
-            title_cell.font = Font(bold=True, size=24, color="FFFFFF")  # White text
-            title_cell.alignment = Alignment(
-                vertical='center',     # Center vertically
-                horizontal='center',     # Align text to left
-               
-            )
-            title_cell.fill = PatternFill(
-                start_color="000000",  # Black background
-                end_color="000000",
-                fill_type="solid"
-            )
-            
-            # Merge cells for title (single row, full width)
-            ws.merge_cells(start_row=start_row, start_column=1, 
-                end_row=start_row, end_column=len(headers))
-            
-            # Fill merged cells with black background
+            title_cell.font = Font(bold=True, size=24, color="FFFFFF")
+            title_cell.alignment = Alignment(vertical='center', horizontal='center')
+            title_cell.fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+            ws.merge_cells(start_row=start_row, start_column=1, end_row=start_row, end_column=len(headers))
             for col in range(1, len(headers) + 1):
                 cell = ws.cell(row=start_row, column=col)
-                cell.fill = PatternFill(
-                    start_color="000000",
-                    end_color="000000",
-                    fill_type="solid"
-                )
-            
-            # Set row height for better spacing
-            ws.row_dimensions[start_row].height = 40 
-    
-            # Write headers (now starting 3 rows below title)
+                cell.fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+            ws.row_dimensions[start_row].height = 40
+
+            # Write headers
             for col, header in enumerate(headers, 1):
                 cell = ws.cell(row=start_row + 1, column=col, value=header)
                 cell.font = Font(bold=True)
                 cell.alignment = Alignment(horizontal='center')
-            
+
             # Write data
-            for idx, booking in enumerate(filtered_queryset, start_row + 2):
+            for idx, booking in enumerate(filtered_queryset, start=start_row + 2):
                 row_data = [
                     booking.service.name if booking.service else '',
                     booking.booking_id,                 
@@ -491,50 +452,43 @@ class BookingAdmin(admin.ModelAdmin):
                     booking.return_flight_number,
                     ', '.join([addon.name for addon in booking.add_ons.all()]),
                 ]
-                
                 if not request.user.is_manager:
-                    row_data.extend([
+                    row_data.append(
                         booking.total_price if (booking.discounted_price is None or booking.discounted_price <= 0 ) else booking.discounted_price,
-                    ])
-                    
+                    )
                 for col, value in enumerate(row_data, 1):
-                    cell = ws.cell(row=idx, column=col, value=value)
-                    cell.alignment = Alignment(horizontal='left')
-                    
-            return start_row + filtered_queryset.count() + 4  # Return next available row
+                    ws.cell(row=idx, column=col, value=value)
+                    ws.cell(row=idx, column=col).alignment = Alignment(horizontal='left')
+            return start_row + filtered_queryset.count() + 4
 
-        def format_date_display(date_str):
-            """Convert date string from YYYY-MM-DD to DD Mon"""
-            dt = datetime.strptime(date_str, '%Y-%m-%d')
-            return dt.strftime('%d %b')
-        # Write sections based on active filters
-        if departure_date:
-            departure_qs = queryset.filter(
-                departure_time__gte=timezone.make_aware(datetime.strptime(departure_date, '%Y-%m-%d')),
-                departure_time__lt=timezone.make_aware(datetime.strptime(departure_date, '%Y-%m-%d') + timedelta(days=1))
-            ).order_by('departure_time')
+        def format_date_display(start, end):
+            if start and end:
+                return f"{datetime.strptime(start, '%Y-%m-%d').strftime('%d %b')} - {datetime.strptime(end, '%Y-%m-%d').strftime('%d %b')}"
+            elif start:
+                return f"from {datetime.strptime(start, '%Y-%m-%d').strftime('%d %b')}"
+            elif end:
+                return f"until {datetime.strptime(end, '%Y-%m-%d').strftime('%d %b')}"
+            return ""
+
+        # Write sections for each filter if either start or end is set
+        if departure_start or departure_end:
+            departure_qs = self.filter_by_range(queryset, 'departure_time', departure_start, departure_end).order_by('departure_time')
             if departure_qs.exists():
-                current_row = write_section(f"Departures {format_date_display(departure_date)}", departure_qs, current_row)
-                current_row += 1  # Add spacing between sections
-
-        if return_date:
-            return_qs = queryset.filter(
-                return_time__gte=timezone.make_aware(datetime.strptime(return_date, '%Y-%m-%d')),
-                return_time__lt=timezone.make_aware(datetime.strptime(return_date, '%Y-%m-%d') + timedelta(days=1))
-            ).order_by('return_time')
-            if return_qs.exists():
-                current_row = write_section(f"Returns {format_date_display(return_date)}", return_qs, current_row)
+                current_row = write_section(f"Departures {format_date_display(departure_start, departure_end)}", departure_qs, current_row)
                 current_row += 1
 
-        if created_date:
-            created_qs = queryset.filter(
-                created_at__gte=timezone.make_aware(datetime.strptime(created_date, '%Y-%m-%d')),
-                created_at__lt=timezone.make_aware(datetime.strptime(created_date, '%Y-%m-%d') + timedelta(days=1))
-            ).order_by('created_at')
-            if created_qs.exists():
-                current_row = write_section(f"Created {format_date_display(created_date)}", created_qs, current_row)
+        if return_start or return_end:
+            return_qs = self.filter_by_range(queryset, 'return_time', return_start, return_end).order_by('return_time')
+            if return_qs.exists():
+                current_row = write_section(f"Returns {format_date_display(return_start, return_end)}", return_qs, current_row)
+                current_row += 1
 
-        if not (departure_date or return_date or created_date):
+        if created_start or created_end:
+            created_qs = self.filter_by_range(queryset, 'created_at', created_start, created_end).order_by('created_at')
+            if created_qs.exists():
+                current_row = write_section(f"Created {format_date_display(created_start, created_end)}", created_qs, current_row)
+
+        if not (departure_start or departure_end or return_start or return_end or created_start or created_end):
             if queryset.exists():
                 current_row = write_section("All Selected", queryset.order_by('created_at'), current_row)
 
@@ -542,8 +496,6 @@ class BookingAdmin(admin.ModelAdmin):
         for col_idx in range(1, len(headers) + 1):
             max_length = 0
             column_letter = get_column_letter(col_idx)
-            
-            # Check all cells in column
             for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
                 cell = row[col_idx - 1]
                 if isinstance(cell, MergedCell):
@@ -553,19 +505,16 @@ class BookingAdmin(admin.ModelAdmin):
                         max_length = max(max_length, len(str(cell.value)))
                 except:
                     pass
-            
-            # Set width if content was found
             if max_length > 0:
                 ws.column_dimensions[column_letter].width = max_length + 2
 
-        filename = self.get_dynamic_filename(departure_date, return_date, created_date)
-        # Create response
+        filename = self.get_dynamic_filename(departure_start, departure_end, return_start, return_end, created_start, created_end)
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         wb.save(response)
-        return response
+        return response    
 
     export_as_csv.short_description = "Export Selected Bookings as Excel"
 
