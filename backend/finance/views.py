@@ -19,6 +19,8 @@ from rest_framework.permissions import BasePermission
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from dateutil.relativedelta import relativedelta
 
 @login_required
 def finance_jwt_login(request):
@@ -31,6 +33,19 @@ def finance_jwt_login(request):
     # Redirect to React dashboard with tokens in URL (or use POST if you prefer)
     redirect_url = f"/finance-dashboard/?access={access}&refresh={refresh_token}"
     return HttpResponseRedirect(redirect_url)
+
+def count_overlapping_months(start1, end1, start2, end2):
+    """
+    Returns the number of months (as int) that [start1, end1] and [start2, end2] overlap.
+    Both intervals are inclusive.
+    """
+    latest_start = max(start1, start2)
+    earliest_end = min(end1, end2)
+    if latest_start > earliest_end:
+        return 0
+    # Count months inclusive
+    months = (earliest_end.year - latest_start.year) * 12 + (earliest_end.month - latest_start.month) + 1
+    return months
 
 class IsSuperAdminNotManager(BasePermission):
     def has_permission(self, request, view):
@@ -132,11 +147,31 @@ class AdminFinancialOverview(APIView):
             if all_time == "true":
                 fixed_expenses = Expense.objects.filter(recurring=False)
             elif year_str:
-                fixed_expenses = Expense.objects.filter(for_month__year=year)
+                fixed_expenses = Expense.objects.filter(
+                    recurring=False,
+                    for_month__year=year
+                )
             else:
-                fixed_expenses = Expense.objects.filter(for_month__year=start_date.year, for_month__month=start_date.month)
-            recurring_expenses = Expense.objects.filter(recurring=True)
-            total_expenses = sum(e.amount for e in fixed_expenses) + sum(e.amount for e in recurring_expenses)
+                fixed_expenses = Expense.objects.filter(
+                    recurring=False,
+                    for_month__gte=start_date,
+                    for_month__lte=end_date
+                )
+            recurring_expenses = Expense.objects.filter(
+                recurring=True
+            ).filter(
+                Q(recurring_start_month__lte=end_date) | Q(recurring_start_month__isnull=True),
+                Q(recurring_end_month__gte=start_date) | Q(recurring_end_month__isnull=True)
+            )
+
+            recurring_total = Decimal('0.00')
+            for e in recurring_expenses:
+                exp_start = e.recurring_start_month or start_date
+                exp_end = e.recurring_end_month or end_date
+                months = count_overlapping_months(start_date, end_date, exp_start, exp_end)
+                recurring_total += (e.amount * Decimal(months))
+
+            total_expenses = sum(e.amount for e in fixed_expenses) + recurring_total
             profit = total_earnings - total_expenses
 
             # Service earning details (use new earning logic)
@@ -193,7 +228,7 @@ class AdminFinancialOverview(APIView):
                 'profit_or_loss': float(profit),
                 'details': {
                     'fixed_expenses': [{ 'id': e.id, 'name': e.name, 'amount': float(e.amount) } for e in fixed_expenses],
-                    'recurring_expenses': [{ 'id': e.id, 'name': e.name, 'amount': float(e.amount) } for e in recurring_expenses],
+                    'recurring_expenses': [{ 'id': e.id, 'name': e.name, 'amount': float(e.amount), 'months_counted': count_overlapping_months(start_date, end_date, e.recurring_start_month or start_date, e.recurring_end_month or end_date), 'total': float(e.amount) * count_overlapping_months(start_date, end_date, e.recurring_start_month or start_date, e.recurring_end_month or end_date)} for e in recurring_expenses],
                     'service_details': service_details,
                     'addon_details': addon_details,
                     'all_addons_total': float(all_addons_total),

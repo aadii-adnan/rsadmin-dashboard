@@ -3,6 +3,8 @@ from .models import Expense
 
 class ExpenseSerializer(serializers.ModelSerializer):
     for_month = serializers.DateField(allow_null=True, required=False)
+    recurring_start_month = serializers.DateField(allow_null=True, required=False)
+    recurring_end_month = serializers.DateField(allow_null=True, required=False)
 
     class Meta:
         model = Expense

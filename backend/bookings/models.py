@@ -34,6 +34,7 @@ class Booking(models.Model):
     departure_time = models.DateTimeField()
     return_time = models.DateTimeField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    previous_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'booking'})

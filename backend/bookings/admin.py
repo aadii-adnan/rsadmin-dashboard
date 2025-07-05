@@ -277,7 +277,7 @@ class BookingAdmin(admin.ModelAdmin):
         if not request.user.is_manager:
             base_fieldsets.append(('Pricing', {
                 'fields': (
-                    ('total_price', 'coupon', 'discounted_price', 'bonus_points_used'),
+                    ('total_price', 'coupon', 'discounted_price', 'bonus_points_used', 'previous_price'),
                 )
             }))
 

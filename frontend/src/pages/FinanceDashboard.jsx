@@ -42,7 +42,7 @@ function FinancialDashboard() {
   const [endMonth, setEndMonth] = useState(getCurrentMonth());
   const [year, setYear] = useState(""); // NEW: year filter state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [expenseForm, setExpenseForm] = useState({ name: "", amount: "", recurring: false, for_month: "" });
+  const [expenseForm, setExpenseForm] = useState({ name: "", amount: "", recurring: false, for_month: "", recurring_start_month: "", recurring_end_month: "" });
   const [expenseAlert, setExpenseAlert] = useState(null);
   const [editingExpense, setEditingExpense] = useState(null);
   const [monthlyEarnings, setMonthlyEarnings] = useState([]);
@@ -125,6 +125,8 @@ function FinancialDashboard() {
       amount: expense.amount,
       recurring: expense.recurring,
       for_month: expense.for_month ? expense.for_month.slice(0, 7) : "",
+      recurring_start_month: expense.recurring_start_month ? expense.recurring_start_month.slice(0, 7) : "",
+      recurring_end_month: expense.recurring_end_month ? expense.recurring_end_month.slice(0, 7) : ""
     });
     setShowExpenseModal(true);
   };
@@ -155,8 +157,13 @@ function FinancialDashboard() {
     let data = { ...expenseForm };
     if (data.recurring) {
       data.for_month = null;
-    } else if (data.for_month) {
-      data.for_month = data.for_month + "-01";
+      // Format recurring months as YYYY-MM-01 for backend
+      data.recurring_start_month = data.recurring_start_month ? data.recurring_start_month + "-01" : null;
+      data.recurring_end_month = data.recurring_end_month ? data.recurring_end_month + "-01" : null;
+    } else {
+      data.for_month = data.for_month ? data.for_month + "-01" : null;
+      data.recurring_start_month = null;
+      data.recurring_end_month = null;
     }
     const url = editingExpense
       ? `/finance/expense/${editingExpense.id}/update/`
@@ -173,7 +180,14 @@ function FinancialDashboard() {
         setExpenseAlert({ type: "success", msg: editingExpense ? "Expense updated!" : "Expense added!" });
         setShowExpenseModal(false);
         setEditingExpense(null);
-        setExpenseForm({ name: "", amount: "", recurring: false, for_month: "" });
+        setExpenseForm({
+          name: "",
+          amount: "",
+          recurring: false,
+          for_month: "",
+          recurring_start_month: "",
+          recurring_end_month: ""
+        });
       })
       .catch(() => {
         setExpenseAlert({ type: "danger", msg: "Failed to save expense." });
@@ -463,7 +477,10 @@ function FinancialDashboard() {
                       {(overview?.details?.recurring_expenses || []).map((e) => (
                         <tr key={e.id}>
                           <td>{e.name}</td>
-                          <td>€{e.amount.toLocaleString()}</td>
+                          <td>
+                            €{e.amount.toLocaleString()}
+                            {e.months_counted > 1 ? ` x ${e.months_counted} Month(s)` : ""}
+                          </td>
                           <td>Recurring</td>
                           <td>
                             <button type="button" className="admin-btn-edit" onClick={() => handleEditExpense(e)}>
@@ -632,6 +649,30 @@ function FinancialDashboard() {
                   onChange={handleExpenseChange}
                 />
               </Form.Group>
+              {expenseForm.recurring && (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Form.Group>
+                    <Form.Label>Recurring Start Month</Form.Label>
+                    <Form.Control
+                      name="recurring_start_month"
+                      type="month"
+                      value={expenseForm.recurring_start_month || ""}
+                      onChange={handleExpenseChange}
+                      required={expenseForm.recurring}
+                    />
+                  </Form.Group>
+                  <Form.Group>
+                    <Form.Label>Recurring End Month</Form.Label>
+                    <Form.Control
+                      name="recurring_end_month"
+                      type="month"
+                      value={expenseForm.recurring_end_month || ""}
+                      onChange={handleExpenseChange}
+                      required={expenseForm.recurring}
+                    />
+                  </Form.Group>
+                </div>
+              )}
             </Modal.Body>
             <Modal.Footer>
               <button className="admin-btn-outline" onClick={() => { setShowExpenseModal(false); setEditingExpense(null); }}>
