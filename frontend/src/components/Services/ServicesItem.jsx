@@ -6,19 +6,44 @@ import standard from "../../assets/parking.jpg"
 import "../../BookingForm.css";
 import { useNavigate } from 'react-router-dom';
 
-const ServicesItem = ({ service, openModal, index }) => {
+const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOpen }) => {
   const { bookingData, setBookingData } = useBooking();
   const [amountSaved, setAmountSaved] = useState(0);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [price, setPrice] = useState(0);
   const navigate = useNavigate();
 
-  const handleBookNow = () => {
+  const handleBookNow = async () => {
+    // Get selected drop-off date from bookingData
+    const bookingDates = bookingData?.bookingDates;
+    if (!bookingDates?.parkingFromDate) {
+      setPopupMessage("Please select your drop-off date and time first.");
+      setIsPopupOpen(true);
+      return;
+    }
+
+    // Fetch order limit for this service and date
+    const bookingDate = bookingDates.parkingFromDate;
+    const serviceSlug = service.slug;
+    const limitRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/core/order-limit/?date=${bookingDate}&service=${serviceSlug}`);
+    const limitData = await limitRes.json();
+
+    if (limitData.max_orders !== null && limitData.max_orders !== -1) {
+      // Fetch current order count
+      const countRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/core/orders-count/?date=${bookingDate}&service=${serviceSlug}`);
+      const countData = await countRes.json();
+      if (countData.count >= limitData.max_orders) {
+        setPopupMessage("Sorry, we are fully booked for this service on the selected date.");
+        setIsPopupOpen(true);
+        return;
+      }
+    }
+
     setBookingData({
       ...bookingData,
       bookingDetails: {
         ...bookingData?.bookingDetails,
-        service: service.name, // Set the service name
+        service: service.name,
       },
     });
     navigate(`/book/${service.slug}`);

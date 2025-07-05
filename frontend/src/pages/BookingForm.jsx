@@ -305,7 +305,7 @@ const BookingForm = () => {
             </form>
         </div>
 
-            <PriceSummaryBookingForm serviceDetails={serviceDetails} totalPrice={totalPrice} perDayPrice={perDayPrice} price={price} discountedPrice={discountedPrice} setDiscountedPrice={setDiscountedPrice} setCouponId={setCouponId} addOnsDetails={addOnsDetails} bonusUsed={bonusUsed} setBonusUsed={setBonusUsed}/>
+            <PriceSummaryBookingForm serviceDetails={serviceDetails} totalPrice={totalPrice} perDayPrice={perDayPrice} price={price} discountedPrice={discountedPrice} setDiscountedPrice={setDiscountedPrice} setCouponId={setCouponId} addOnsDetails={addOnsDetails} bonusUsed={bonusUsed} setBonusUsed={setBonusUsed} currentStep={currentStep}/>
 
         </div>
     </div>

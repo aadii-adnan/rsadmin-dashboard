@@ -92,15 +92,12 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
 
         <div className="bookingform-row">
           <div className="bookingform-col">
-              <label style={labelStyle}>Total Passengers:</label>
-              <input className='custom-input'
-              type="number"
-              name="total_passengers"
-              placeholder="Passengers"
-              style={inputStyle}
-              value={formData?.total_passengers}
-              onChange={handleChange}
-            />
+            <label style={labelStyle}>Total Passengers:</label>
+            <input className='custom-input' type="number" name="total_passengers" placeholder="Passengers" style={inputStyle} min={0} value={formData?.total_passengers} onChange={e=>{
+              const val = Number(e.target.value);
+              if(val < 0) return;
+              handleChange(e);
+            }}/>
           </div>
         </div>
 

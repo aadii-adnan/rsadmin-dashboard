@@ -3,12 +3,15 @@ import ServiceModal from "../components/Services/ServiceModal";
 import ServicesItem from "../components/Services/ServicesItem";
 import { Helmet } from "react-helmet-async";
 import ServiceShimmer from "../components/Services/ServiceShimmer"
+import PopupDialog from "../components/Utility/PopupDialog";
 
 const Services = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
   	const [selectedService, setSelectedService] = useState(null);
 	const [services, setServices] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [isPopupOpen, setIsPopupOpen] = useState(false);
+	const [popupMessage, setPopupMessage] = useState("");
 
 	const fetchServices = async () => {
 		try {
@@ -64,12 +67,13 @@ const Services = () => {
 			<div className="each-service" style={{ display: 'flex', gap: '20px', maxWidth: '1200px', margin: '0 auto'}}>
 			{loading ? ([...Array(3)].map((_, index) => (<ServiceShimmer key={index} />))
           		) : (services.map((service, index) => (
-					<ServicesItem key={service.id} service={service} openModal={openModal} index={index}/>
+					<ServicesItem key={service.id} service={service} openModal={openModal} index={index} setPopupMessage={setPopupMessage} setIsPopupOpen={setIsPopupOpen} />
 				))
 			)}
 			</div>
 
 			<ServiceModal isOpen={isModalOpen} onClose={closeModal} long_description={selectedService ? selectedService.long_description : ""}/>
+			<PopupDialog isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} title="Invalid Parking Time" message={popupMessage}/>
 
 		</div>
 	</>

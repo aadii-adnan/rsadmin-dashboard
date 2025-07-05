@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useBooking } from "../../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
@@ -19,6 +19,7 @@ const BookingDatesForm = () => {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+  const [minHours, setMinHours] = useState(4);
 
   const generate24HourTimeOptions = () => {
     const times = [];
@@ -133,10 +134,10 @@ const BookingDatesForm = () => {
     );
 
     if (
-      parkingFromDateTime.diff(now, "hours").hours < 4 ||
-      carCollectionDateTime.diff(now, "hours").hours < 4
+      parkingFromDateTime.diff(now, "hours").hours < minHours ||
+      carCollectionDateTime.diff(now, "hours").hours < minHours
     ) {
-      setPopupMessage("Drop-off date and time must be at least 4 hours from the current Dublin time.");
+      setPopupMessage(`Drop-off date and time must be at least ${minHours} hours from the current Dublin time.`);
       setIsPopupOpen(true);
       return;
     }
@@ -146,7 +147,7 @@ const BookingDatesForm = () => {
       setIsPopupOpen(true);
       return;
     }
-    
+
     let couponData = null; 
     if (coupon.trim() !== "") {
       couponData = await handleApplyCoupon();
@@ -172,6 +173,15 @@ const BookingDatesForm = () => {
   
     navigate("/services");
   };
+
+    useEffect(() => {
+      // Fetch booking settings from backend
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/core/booking-settings/`)
+        .then(res => res.json())
+        .then(data => {
+          setMinHours(data.min_hours_before_booking || 4);
+        });
+    }, []);
   
 
   const today = new Date().toISOString().split("T")[0];
