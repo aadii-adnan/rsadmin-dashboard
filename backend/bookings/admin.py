@@ -12,7 +12,7 @@ import zipfile
 from django.http import HttpResponse
 from payments.views import generate_invoice, generate_booking_form_pdf
 from django.contrib.admin import FieldListFilter
-from django.db.models import Q
+from django.db.models import Q, Func, Value, CharField
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from datetime import timedelta
@@ -89,6 +89,13 @@ class SingleDateFilter(FieldListFilter):
                 'display': f'Selected Date: {self.value()}'
             }
 
+class RemoveSpaces(Func):
+    function = 'REPLACE'
+    arity = 3
+
+    def __init__(self, expression):
+        super().__init__(expression, Value(' '), Value(''), output_field=CharField())            
+
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
@@ -102,6 +109,20 @@ class BookingAdmin(admin.ModelAdmin):
         return f"€{obj.total_price}"
 
     price_display.short_description = 'Total Price'
+
+    def get_search_results(self, request, queryset, search_term):
+        # Remove spaces from the search term for car_registration_no search
+        search_term_no_spaces = search_term.replace(' ', '')
+        qs, use_distinct = super().get_search_results(request, queryset, search_term)
+
+        if search_term_no_spaces:
+            qs |= self.model.objects.annotate(
+                reg_no_no_spaces=RemoveSpaces('car_registration_no')
+            ).filter(
+                reg_no_no_spaces__icontains=search_term_no_spaces
+            )
+
+        return qs, use_distinct
 
     def download_invoices_zip(self, request, queryset):
         zip_buffer = io.BytesIO()
