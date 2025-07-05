@@ -8,8 +8,9 @@ from django.contrib.sitemaps.views import sitemap
 from payments.views import StripeWebhookView
 from django.views.decorators.cache import cache_page
 from django.contrib.sitemaps.views import sitemap as sitemap_view
-from django.urls import re_path
+from django.urls import reverse_lazy
 from finance.views import finance_jwt_login
+from django.contrib.auth import views as auth_views
 
 sitemaps = {
     "static": StaticReactSitemap,
@@ -29,6 +30,11 @@ urlpatterns = [
     path("robots.txt", robots_txt, name="robots_txt"),
     path("sitemap.xml", cache_page(86400)(sitemap_view), {"sitemaps": sitemaps}, name="sitemap"),
     path("api/finance/jwt-login/", finance_jwt_login, name="finance-jwt-login"),
+    path('admin-forgot-password/', auth_views.PasswordResetView.as_view(), name='admin_password_reset'),
+    path('admin-forgot-password/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
+
 ]
 
 if settings.DEBUG:

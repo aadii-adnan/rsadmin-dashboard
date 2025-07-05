@@ -27,12 +27,19 @@ function useFinanceJwtFromUrl() {
 
 function FinancialDashboard() {
   useFinanceJwtFromUrl(); // Custom hook to handle JWT from URL
+
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  };
+
   const { user, loading } = useAuth(); // assumes user object has is_superuser and is_manager
   const navigate = useNavigate();
   const [bookingsSummary, setBookingsSummary] = useState({});
   const [ordersCount, setOrdersCount] = useState({ services: [], addons: [] });
   const [overview, setOverview] = useState(null);
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [startMonth, setStartMonth] = useState(getCurrentMonth());
+  const [endMonth, setEndMonth] = useState(getCurrentMonth());
   const [year, setYear] = useState(""); // NEW: year filter state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [expenseForm, setExpenseForm] = useState({ name: "", amount: "", recurring: false, for_month: "" });
@@ -74,8 +81,12 @@ function FinancialDashboard() {
           overviewRes = await getFinancialOverview(undefined, undefined, true);
         } else if (year) {
           overviewRes = await getFinancialOverview(undefined, year);
+        } else if (startMonth && endMonth) {
+          overviewRes = await getFinancialOverview(startMonth, undefined, false, endMonth);
+        } else if (startMonth) {
+          overviewRes = await getFinancialOverview(startMonth);
         } else {
-          overviewRes = await getFinancialOverview(month);
+          overviewRes = await getFinancialOverview();
         }
         setOverview(overviewRes);
       } catch (error) {
@@ -83,8 +94,8 @@ function FinancialDashboard() {
       }
     };
 
-    fetchData();
-  }, [month, year, allTime, expenseAlert]);
+  fetchData();
+}, [startMonth, endMonth, year, allTime, expenseAlert]);
 
   // Chart data
   const bookingsStatusData = Object.entries(bookingsSummary || {})
@@ -122,7 +133,7 @@ function FinancialDashboard() {
   const handleDeleteExpense = async (id) => {
     if (window.confirm("Are you sure you want to delete this expense?")) {
       try {
-        await customFetch(`${import.meta.env.VITE_API_BASE_URL}/finance/expense/${id}/delete/`, { method: "DELETE" });
+        await customFetch(`${import.meta.env.VITE_API_BASE_URL}/finance/expense/${id}/delete/`, { method: "DELETE", useFinanceJwt: true });
         setExpenseAlert({ type: "success", msg: "Expense deleted!" });
       } catch {
         setExpenseAlert({ type: "danger", msg: "Failed to delete expense." });
@@ -155,6 +166,7 @@ function FinancialDashboard() {
       method,
       headers: { "Content-Type": "application/json" },
       body: data,
+      useFinanceJwt: true
     })
       .then((res) => res.json())
       .then(() => {
@@ -217,19 +229,32 @@ function FinancialDashboard() {
               <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "center" }}>
                 <Form.Control
                   type="month"
-                  value={month}
+                  value={startMonth}
                   onChange={e => {
-                    setMonth(e.target.value);
-                    setYear("");
+                    setStartMonth(e.target.value);
                     setAllTime(false);
+                    setYear("");
                   }}
                   style={{ maxWidth: 140 }}
+                  placeholder="Start Month"
+                />
+                <Form.Control
+                  type="month"
+                  value={endMonth}
+                  onChange={e => {
+                    setEndMonth(e.target.value);
+                    setAllTime(false);
+                    setYear("");
+                  }}
+                  style={{ maxWidth: 140 }}
+                  placeholder="End Month"
                 />
                 <Form.Select
                   value={year}
                   onChange={e => {
                     setYear(e.target.value);
-                    setMonth("");
+                    setStartMonth("");
+                    setEndMonth("");
                     setAllTime(false);
                   }}
                   style={{ maxWidth: 110 }}
@@ -246,7 +271,8 @@ function FinancialDashboard() {
                   variant={allTime ? "primary" : "outline-primary"}
                   onClick={() => {
                     setAllTime(true);
-                    setMonth("");
+                    setStartMonth("");
+                    setEndMonth("");
                     setYear("");
                   }}
                   style={{ minWidth: 90 }}

@@ -54,6 +54,7 @@ class AdminFinancialOverview(APIView):
 
     def get(self, request):
         month_str = request.query_params.get('month')
+        end_month_str = request.query_params.get('end_month')
         year_str = request.query_params.get('year')
         all_time = request.query_params.get('all')
 
@@ -74,6 +75,17 @@ class AdminFinancialOverview(APIView):
                 start_date = datetime(year, 1, 1).date()
                 end_date = datetime(year, 12, 31).date()
                 period_label = str(year)
+            elif month_str and end_month_str:
+                start_date = parse_date(f"{month_str}-01")
+                end_date = parse_date(f"{end_month_str}-01")
+                if not start_date or not end_date:
+                    return Response({'error': 'Invalid month format.'}, status=400)
+                # Set end_date to last day of end_month
+                if end_date.month == 12:
+                    end_date = end_date.replace(year=end_date.year+1, month=1, day=1) - timedelta(days=1)
+                else:
+                    end_date = end_date.replace(month=end_date.month+1, day=1) - timedelta(days=1)
+                period_label = f"{month_str} to {end_month_str}"
             else:
                 start_date = parse_date(f"{month_str}-01")
                 if not start_date:
