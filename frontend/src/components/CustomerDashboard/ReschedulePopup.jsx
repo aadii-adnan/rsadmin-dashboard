@@ -132,7 +132,7 @@ const ReschedulePopup = ({
               {/* Add this note */}
               <div className="alert alert-info d-flex align-items-center py-2 mb-3" style={{ fontSize: "0.98rem" }}>
                 <span className="me-2" style={{ fontSize: "1.2em" }}>💡</span>
-                If you reduce your booking days, the saved amount will be instantly added as bonus points to your account for future discounts.
+                If you reduce your booking days, the saved amount will be instantly added as credit points to your account for future discounts.
               </div>
               {error && <div className="alert alert-danger py-2">{error}</div>}
               <div className="row g-3">

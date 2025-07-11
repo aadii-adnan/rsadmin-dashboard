@@ -129,7 +129,7 @@ const CustomerDashboard = () => {
             ...prev,
             userDetails: updatedUser,
           }));       
-        alert(`Your booking was cancelled. €15 cancellation fee has been deducted. Bonus points (€${bonusToAdd.toFixed(2)}) have been added to your account.`);
+        alert(`Your booking was cancelled. €15 cancellation fee has been deducted. Credit points (€${bonusToAdd.toFixed(2)}) have been added to your account.`);
       }
       // Update status in frontend immediately
       setBookings((prev) =>
@@ -249,7 +249,7 @@ const CustomerDashboard = () => {
             userDetails: updatedUser,
           }));       
       } catch (err) {
-        alert("Failed to add bonus points.");
+        alert("Failed to add credit points.");
       }
     }
 
@@ -361,7 +361,7 @@ const CustomerDashboard = () => {
                     color: "#fff",
                   }}
                 >
-                  Bonus Points: €{Number(user.bonus_points).toFixed(2)}
+                  Credit Points: €{Number(user.bonus_points).toFixed(2)}
                 </div>
               )}
               <a
@@ -714,10 +714,10 @@ const CustomerDashboard = () => {
                 </span>
               </div>
               <div className="mb-3 p-3 rounded bg-light border">
-                <strong>Bonus Points</strong>
+                <strong>Credit Points</strong>
                 <br />
                 <span className="text-muted" style={{ fontSize: "0.97rem" }}>
-                  Instantly receive the booking amount as bonus points in your account. You can use these points for discounts on your next booking.
+                  Instantly receive the booking amount as credit points in your account. You can use these points for discounts on your next booking.
                 </span>
               </div>
               <div className="alert alert-warning mt-3 mb-0 text-center" style={{ fontSize: "0.98rem" }}>
@@ -741,7 +741,7 @@ const CustomerDashboard = () => {
                   await handleCancel(cancelModal.booking.id, "points");
                 }}
               >
-                Get Bonus Points
+                Get Credit Points
               </button>
               <button
                 className="btn btn-outline-secondary w-100"

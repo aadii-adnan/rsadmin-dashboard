@@ -232,7 +232,7 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
             <div className="row">
               <div className="col">
                 <h6 style={{ fontSize: "14px", color: "#43a047", marginBottom: "10px" }}>
-                  Bonus Points Used: <span style={{ fontWeight: "bold", color: "#2890cd" }}>€{bonusUsed.toFixed(2)}</span>
+                  Credit Points Used: <span style={{ fontWeight: "bold", color: "#2890cd" }}>€{bonusUsed.toFixed(2)}</span>
                 </h6>
               </div>
             </div>
