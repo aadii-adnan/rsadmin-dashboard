@@ -5,10 +5,20 @@ from .models import CustomUser
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.utils import timezone
+from django import forms
 
 admin.site.unregister(Group)
+
+class CustomUserForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = '__all__'
+        labels = {
+            'bonus_points': 'Credit Points',
+        }
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
+    form = CustomUserForm
     def date_joined_display(self, obj):
         return timezone.localtime(obj.date_joined).strftime('%d %b %Y %H:%M')
     date_joined_display.short_description = 'Date Joined'
@@ -21,8 +31,12 @@ class CustomUserAdmin(UserAdmin):
     last_login_display.short_description = 'Last Login'
     last_login_display.admin_order_field = 'last_login'
 
+    def credits(self, obj):
+        return obj.bonus_points
+    credits.short_description = 'Credit Points'
+
     list_display = ('id', 'username', 'email', 'full_name', 'phone', 
-                   'is_manager', 'is_active', 'date_joined_display', 'last_login_display')
+                   'is_manager', 'is_active', 'credits', 'date_joined_display', 'last_login_display')
     list_filter = ('is_manager', 'is_active', 'is_staff', 'date_joined')
     search_fields = ('username', 'first_name', 'last_name', 'email', 'phone')
     ordering = ('-date_joined',)
@@ -64,7 +78,7 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
-    readonly_fields = ('date_joined_display', 'last_login_display')
+    readonly_fields = ('date_joined_display', 'last_login_display', 'username')
 
     def full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}"

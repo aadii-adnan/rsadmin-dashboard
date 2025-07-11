@@ -17,7 +17,7 @@ from services.models import Service
 from services.models import Coupon
 import random
 import string
-from core.models import Status
+from core.models import Status, BookingSettings
 import base64
 import os
 from rest_framework.renderers import BaseRenderer
@@ -198,12 +198,15 @@ Please check the admin panel for more details or to manage this booking.
 Regards,
 RS Express Parking System
 """
+    
+    settings = BookingSettings.objects.first()
+    manager_emails = settings.get_manager_email_list() if settings else ["rsexpressparking@gmail.com"]
 
     email = EmailMultiAlternatives(
         subject="New Booking Received – " + str(booking.service.name),
         body=text_body,
         from_email='RS Express Parking <support@rsexpressparking.com>',
-        to=["rsexpressparking@gmail.com"], 
+        to=manager_emails, 
     )
     email.attach_alternative(html_body, "text/html")
     email.attach(f"Invoice-{booking.booking_id}.pdf", pdf_content, 'application/pdf')

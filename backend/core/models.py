@@ -19,6 +19,10 @@ class Status(models.Model):
 
 class BookingSettings(models.Model):
     min_hours_before_booking = models.PositiveIntegerField(default=4, help_text="Minimum hours before drop-off allowed for booking")
+    manager_emails = models.TextField(
+        blank=True,
+        help_text="Comma-separated list of manager emails to notify for bookings"
+    )
 
     class Meta:
         db_table = 'booking_settings'
@@ -27,6 +31,11 @@ class BookingSettings(models.Model):
 
     def __str__(self):
         return f"Settings (min_hours={self.min_hours_before_booking})"
+
+    def get_manager_email_list(self):
+        if not self.manager_emails:
+            return []
+        return [email.strip() for email in self.manager_emails.split(",") if email.strip()]
 
 class OrderLimit(models.Model):
     date = models.DateField()

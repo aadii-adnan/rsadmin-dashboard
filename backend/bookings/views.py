@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from .models import Booking, BookingUser
 from .serializers import BookingSerializer, BookingUserSerializer
 from core.permissions import IsManagerOrAdmin
-from core.models import Status
+from core.models import Status, BookingSettings
 from services.models import Coupon
 from payments.models import Payment
 from rest_framework.permissions import AllowAny
@@ -135,11 +135,14 @@ Regards,
 RS Express Parking System
 """
 
+    settings = BookingSettings.objects.first()
+    manager_emails = settings.get_manager_email_list() if settings else ["rsexpressparking@gmail.com"]
+
     email_manager = EmailMultiAlternatives(
         subject=subject_manager,
         body=text_body_manager,
         from_email='RS Express Parking <support@rsexpressparking.com>',
-        to=["rsexpressparking@gmail.com"],
+        to=manager_emails,
     )
     email_manager.attach_alternative(html_body_manager, "text/html")
     email_manager.attach(f"Invoice_{booking.booking_id}.pdf", pdf_content, "application/pdf")
@@ -468,11 +471,14 @@ class CancelBookingView(APIView):
         RS Express Parking System
         """
 
+        settings = BookingSettings.objects.first()
+        manager_emails = settings.get_manager_email_list() if settings else ["rsexpressparking@gmail.com"]
+
         email_manager = EmailMultiAlternatives(
             subject=subject_manager,
             body=text_body_manager,
             from_email='RS Express Parking <support@rsexpressparking.com>',
-            to=["rsexpressparking@gmail.com"],
+            to=manager_emails,
         )
         email_manager.attach_alternative(html_body_manager, "text/html")
         email_manager.send()

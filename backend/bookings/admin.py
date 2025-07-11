@@ -19,6 +19,7 @@ from datetime import timedelta
 from openpyxl.utils import get_column_letter
 from openpyxl.cell.cell import MergedCell
 from openpyxl.styles import Font, Alignment, PatternFill
+import pytz
 
 
 class SingleDateFilter(FieldListFilter):
@@ -96,6 +97,7 @@ class RemoveSpaces(Func):
     def __init__(self, expression):
         super().__init__(expression, Value(' '), Value(''), output_field=CharField())            
 
+IRELAND_TZ = pytz.timezone('Europe/Dublin')
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
@@ -181,6 +183,18 @@ class BookingAdmin(admin.ModelAdmin):
                 color, obj.status.name
             )
         
+        ireland_today = timezone.now().astimezone(IRELAND_TZ).date()
+        departure_time_ireland = timezone.localtime(obj.departure_time, IRELAND_TZ).date()
+        if departure_time_ireland == ireland_today:
+            status_html += format_html(
+                '<div style="margin-top: 6px;">'
+                '<span style="background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%); '
+                'color: #fff; padding: 4px 8px; border-radius: 4px; '
+                'font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; '
+                'display: inline-block; box-shadow: 0 2px 8px rgba(24,90,157,0.10);">'
+                'TODAY</span></div>'
+            )
+
         if not obj.is_viewed:
             status_html += format_html(
                 '<div style="margin-top: 6px;"><span style="background: linear-gradient(45deg, #ff6b6b, #ee0979); '

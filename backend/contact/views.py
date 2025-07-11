@@ -6,6 +6,7 @@ from .models import ContactMessage
 from .serializers import ContactMessageSerializer
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from core.models import BookingSettings
 
 class ContactMessageCreate(APIView):
     def post(self, request):
@@ -14,13 +15,13 @@ class ContactMessageCreate(APIView):
             contact = serializer.save()
 
             # --- Send Email to Admin ---
-            subject = f"New Contact Form Submission from {contact.name}"
+            subject = f"New Contact Form Submission from {contact.first_name} {contact.last_name}"
             html_body = f"""
             <html>
             <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
                 <h2 style="color: #0066cc;">New Contact Form Submission</h2>
                 <ul>
-                    <li><strong>Name:</strong> {contact.name}</li>
+                    <li><strong>Name:</strong> {contact.first_name} {contact.last_name}</li>
                     <li><strong>Email:</strong> {contact.email}</li>
                     <li><strong>Phone:</strong> {contact.phone if hasattr(contact, 'phone') else ''}</li>
                 </ul>
@@ -34,19 +35,22 @@ class ContactMessageCreate(APIView):
             text_body = f"""
 New Contact Form Submission
 
-Name: {contact.name}
+Name: {contact.first_name} {contact.last_name}
 Email: {contact.email}
 Phone: {getattr(contact, 'phone', '')}
 
 Message:
 {contact.message}
 """
+            
+            settings = BookingSettings.objects.first()
+            manager_emails = settings.get_manager_email_list() if settings else ["rsexpressparking@gmail.com"]
 
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=text_body,
                 from_email='RS Express Parking <support@rsexpressparking.com>',
-                to=["rsexpressparking@gmail.com"],
+                to=manager_emails,
             )
             email.attach_alternative(html_body, "text/html")
             email.send()
