@@ -185,14 +185,13 @@ class BookingAdmin(admin.ModelAdmin):
         
         ireland_today = timezone.now().astimezone(IRELAND_TZ).date()
         departure_time_ireland = timezone.localtime(obj.departure_time, IRELAND_TZ).date()
-        if departure_time_ireland == ireland_today:
+        created_at_ireland = timezone.localtime(obj.created_at, IRELAND_TZ).date()
+        if departure_time_ireland == ireland_today and created_at_ireland == ireland_today:
             status_html += format_html(
                 '<div style="margin-top: 6px;">'
-                '<span style="background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%); '
-                'color: #fff; padding: 4px 8px; border-radius: 4px; '
+                '<span style="background: #e53935; color: #fff; padding: 4px 8px; border-radius: 4px; '
                 'font-size: 1.1em; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; '
-                'display: inline-block; box-shadow: 0 2px 8px rgba(24,90,157,0.10);">'
-                'TODAY</span></div>'
+                'display: inline-block;">TODAY</span></div>'
             )
 
         if not obj.is_viewed:
