@@ -78,7 +78,12 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
-    readonly_fields = ('date_joined_display', 'last_login_display', 'username')
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Editing an existing user
+            return self.readonly_fields + ('username',)
+        return self.readonly_fields  # Adding a new user
+
+    readonly_fields = ('date_joined_display', 'last_login_display')
 
     def full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}"
