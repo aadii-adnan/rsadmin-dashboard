@@ -125,8 +125,8 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
     resetPaymentState();
+    if (processing) return; // Prevent double submit
     setProcessing(true);
   
     const timeout = setTimeout(handlePaymentTimeout, PAYMENT_TIMEOUT);
@@ -143,7 +143,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
       // --- Create Payment Intent and check response manually ---
       const paymentIntentResponse = await createPaymentIntent(
         formData.booking_id,
-        formData.isRescheduleExtra ? formData.total_price : null,
+        formData.isRescheduleExtra ? formData.total_price.toFixed(2) : null,
         formData.isRescheduleExtra || false,
         bonusUsed || 0
       );
@@ -256,9 +256,9 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
 
       <div className="mt-4">
         <button
+          type="button"
           onClick={handleSubmit}
           className="btn btn-primary w-100 next-button"
-          type="submit"
           disabled={processing || !stripe}
           style={nextButtonStyle}
         >

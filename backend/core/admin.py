@@ -8,6 +8,15 @@ class BookingSettingsAdmin(admin.ModelAdmin):
     search_fields = ('min_hours_before_booking', 'manager_emails')
     list_filter = ('min_hours_before_booking', 'manager_emails')
 
+    def has_module_permission(self, request):
+        """
+        Restrict access for managers.
+        """
+        user = request.user
+        if user.is_authenticated and getattr(user, "is_manager", False):
+            return False
+        return super().has_module_permission(request)
+
     class Media:
         css = {
             'all': ('admin/css/clickable_rows.css','admin/css/custom_admin.css',)
@@ -16,6 +25,16 @@ class BookingSettingsAdmin(admin.ModelAdmin):
     
 @admin.register(OrderLimit)
 class OrderLimitAdmin(admin.ModelAdmin):
+
+    def has_module_permission(self, request):
+        """
+        Restrict access for managers.
+        """
+        user = request.user
+        if user.is_authenticated and getattr(user, "is_manager", False):
+            return False
+        return super().has_module_permission(request)
+    
     list_display = ('id', 'date', 'service', 'max_orders')
     search_fields = ('date', 'service__name')
     list_filter = ('date', 'service')

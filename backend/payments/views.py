@@ -246,7 +246,7 @@ class CreateStripePaymentIntent(APIView):
 
             # Create PaymentIntent
             intent = stripe.PaymentIntent.create(
-                amount=int(amount_to_charge * 100),  # in cents
+                amount=int(round(amount_to_charge * 100)),  # in cents
                 currency='eur',
                 customer=customer.id,
                 metadata={

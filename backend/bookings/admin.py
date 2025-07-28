@@ -101,6 +101,28 @@ IRELAND_TZ = pytz.timezone('Europe/Dublin')
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Check for active date filters and order accordingly
+        departure_start = request.GET.get('departure_time__gte')
+        departure_end = request.GET.get('departure_time__lt')
+        return_start = request.GET.get('return_time__gte')
+        return_end = request.GET.get('return_time__lt')
+        created_start = request.GET.get('created_at__gte')
+        created_end = request.GET.get('created_at__lt')
+
+        # Hide "pending" and "payment failed" for managers
+        if request.user.is_manager:
+            qs = qs.exclude(status__name__iexact="pending").exclude(status__name__iexact="payment failed")
+
+        if departure_start or departure_end:
+            return qs.order_by('departure_time')
+        elif return_start or return_end:
+            return qs.order_by('return_time')
+        elif created_start or created_end:
+            return qs.order_by('created_at')
+        return qs
+
     def price_display(self, obj):
         if obj.discounted_price is not None and obj.discounted_price < obj.total_price:
             return format_html(
@@ -354,7 +376,7 @@ class BookingAdmin(admin.ModelAdmin):
         if obj.id:
             url = reverse('invoice-download', args=[obj.id])
             return format_html(
-                '<a class="button" href="{}" download>'
+                '<a class="button" href="{}" target="_blank">'
                 '<img src="/static/admin/img/icon-yes.svg" alt="Print Invoice"> Print Invoice</a>',
                 url
             )

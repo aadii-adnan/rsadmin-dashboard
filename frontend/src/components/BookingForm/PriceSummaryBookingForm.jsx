@@ -35,9 +35,10 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
       if (user && user.bonus_points > 0) {
         const maxBonusUsable = Math.max(0, tempPrice - 0.5);
         tempBonusUsed = Math.min(user.bonus_points, maxBonusUsable);
+        tempBonusUsed = Number(tempBonusUsed).toFixed(2);
         tempPrice = tempPrice - tempBonusUsed;
         setDiscountedPrice(tempPrice);
-        setBonusUsed(tempBonusUsed);
+        setBonusUsed(Number(tempBonusUsed));
       } else {
         setBonusUsed(0);
       }
