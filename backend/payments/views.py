@@ -323,8 +323,7 @@ class StripeWebhookView(APIView):
                     # Save the task IDs to the booking
                     booking.completion_email_task_id = completion_task.id
                     booking.started_status_task_id = started_task.id
-                    booking.completion_email_sent = True
-                    booking.save(update_fields=['completion_email_sent', 'completion_email_task_id', 'started_status_task_id'])
+                    booking.save(update_fields=['completion_email_task_id', 'started_status_task_id'])
 
                 # Award a new coupon to the user
                 code = generate_coupon_code()
