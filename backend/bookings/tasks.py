@@ -1,18 +1,58 @@
 from celery import shared_task
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from .models import Booking
-from django.conf import settings
 from core.models import Status
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from datetime import timedelta
+from decouple import config
 
 @shared_task
-def send_completion_email(booking_id):
-    booking = Booking.objects.get(id=booking_id)
-    status_obj = get_object_or_404(Status, name="Completed", type='booking')
-    booking.status = status_obj
-    booking.save()
+def process_bookings_for_completion():
+    """
+    Periodic task: Find bookings where return_time + 15min has passed,
+    status is not 'Completed', and completion_email_sent is False.
+    Mark as completed and send thank you email.
+    """
+    now = timezone.now()
+    threshold = now - timedelta(minutes=10)
+    completed_status = Status.objects.get(name="Completed", type='booking')
+    started_status = Status.objects.get(name="Started", type='booking')
 
+    # Only process bookings that are not completed and haven't had the email sent
+    bookings = Booking.objects.filter(
+        return_time__lte=threshold,
+        completion_email_sent=False,
+        status=started_status
+    )
+
+    for booking in bookings:
+        booking.status = completed_status
+        booking.save()
+        send_completion_email_to_user(booking.id)
+
+@shared_task
+def process_bookings_for_started():
+    """
+    Periodic task: Find bookings where departure_time has passed,
+    status is not 'Started', and current time is less than return_time.
+    Set status to 'Started'.
+    """
+    now = timezone.now()
+    started_status = Status.objects.get(name="Started", type='booking')
+    confirmed_status = Status.objects.get(name="Confirmed", type='booking')
+
+    bookings = Booking.objects.filter(
+        departure_time__lte=now, return_time__gt=now,
+        status=confirmed_status
+    )
+
+    for booking in bookings:
+        booking.status = started_status
+        booking.save()
+
+@shared_task
+def send_completion_email_to_user(booking_id):
+    booking = Booking.objects.get(id=booking_id)
     if booking.completion_email_sent:
         return "Email already sent"
 
@@ -23,13 +63,10 @@ def send_completion_email(booking_id):
     <html>
     <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
         <h2 style="color: #0066cc;">Thank You for Parking with RS Express Parking!</h2>
-
         <p>Hi {booking.first_name},</p>
-
         <p>
         We hope you had a smooth experience with our <strong>{booking.service.name}</strong> service.
         </p>
-
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
         <li><strong>Booking ID:</strong> {booking.booking_id}</li>
@@ -37,24 +74,20 @@ def send_completion_email(booking_id):
         <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
         </ul>
-
         <h3 style="color: #444;">🎁 Your Coupon</h3>
         <p>
             As a thank you, here’s a coupon for <strong>15% off</strong> your next booking:<br>
             <span style="font-size: 18px; font-weight: bold; color: #0066cc;">{booking.discount_coupon_awarded}</span>
         </p>
-
         <h3 style="color: #444;">🙏 Thank You!</h3>
         <p>
         Thank you for choosing <strong>RS Express Parking</strong>. We appreciate your trust and hope to see you again soon!
         </p>
-
         <h3 style="color: #444;">💬 Feedback</h3>
         <p>
             We would love to hear about your experience. If you have a moment, please consider leaving us a review on Google Maps:<br>
             <a href="https://g.page/r/CZW2D3u4VHTOEAI/review" target="_blank" style="color:#0066cc;">Leave a Google Review</a>
         </p>
-
         <p>
         Warm regards,<br>
         <strong>The RS Express Parking Team</strong><br>
@@ -107,10 +140,50 @@ https://rsexpressparking.com/ | +353 1 964 0011
     )
     email.attach_alternative(html_body, "text/html")
     email.send()
+    booking.completion_email_sent = True
+    booking.save(update_fields=['completion_email_sent'])
 
 @shared_task
-def set_booking_started_status(booking_id):
-    booking = get_object_or_404(Booking, id=booking_id)
-    started_status = get_object_or_404(Status, name="Started", type='booking')
-    booking.status = started_status
-    booking.save()
+def send_promotional_emails():
+    """
+    Send promotional emails to users whose bookings are not confirmed or started,
+    using a custom sender email and password.
+    Handles HTML content from BookingSettings.promotional_email_content.
+    """
+    from core.models import BookingSettings
+    settings_obj = BookingSettings.objects.first()
+    email_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
+
+    # Get all bookings where status is not confirmed or started
+    target_bookings = Booking.objects.exclude(
+        status__name__in=["Confirmed", "Started"]
+    )
+
+    # Collect unique emails
+    emails = set(target_bookings.values_list('email', flat=True))
+
+    subject = "Special Offers from RS Express Parking"
+
+    # Custom email credentials
+    custom_email = "hello@rsexpressparking.com"
+    custom_password = "sxVhsSm1BYfZC1!G"
+
+    # Create a custom SMTP connection
+    connection = get_connection(
+        host=config('EMAIL_HOST'),
+        port=config('EMAIL_PORT', cast=int),
+        username=custom_email,
+        password=custom_password,
+        use_tls=config('EMAIL_USE_TLS', cast=bool)
+    )
+
+    for email in emails:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body="This email requires an HTML-compatible email client.",  # fallback plain text
+            from_email=f'RS Express Parking <{custom_email}>',
+            to=[email],
+            connection=connection
+        )
+        msg.attach_alternative(email_content, "text/html")
+        msg.send()

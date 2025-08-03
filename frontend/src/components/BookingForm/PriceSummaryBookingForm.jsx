@@ -165,7 +165,7 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
             <div className="col">
               <h6 style={{ fontSize: "14px", color: "#555", marginBottom: "10px" }}>
                 Price for {bookingData?.paymentDetails?.noOfDays} day(s):{" "}
-                <span style={{ fontWeight: "bold", color: "#2890cd" }}>{bookingData?.paymentDetails?.noOfDays} day(s) X €{serviceDetails?.per_day_price} = €{perDayPrice}</span>
+                <span style={{ fontWeight: "bold", color: "#2890cd" }}>{bookingData?.paymentDetails?.noOfDays} day(s) X €{serviceDetails?.per_day_price} = €{perDayPrice.toFixed(2)}</span>
               </h6>
             </div>
           </div>

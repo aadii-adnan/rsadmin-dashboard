@@ -3,9 +3,6 @@ from django.apps import apps
 from django.contrib import admin
 
 for model_name in [
-    'Periodictask',
-    'Intervalschedule',
-    'Crontabschedule',
     'Solarschedule',
     'Clockedschedule',
 ]:

@@ -23,6 +23,10 @@ class BookingSettings(models.Model):
         blank=True,
         help_text="Comma-separated list of manager emails to notify for bookings"
     )
+    promotional_email_content = models.TextField(
+        blank=True,
+        help_text="Content for promotional emails sent to users"
+    )
 
     class Meta:
         db_table = 'booking_settings'

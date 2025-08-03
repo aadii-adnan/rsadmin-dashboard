@@ -23,7 +23,6 @@ import os
 from rest_framework.renderers import BaseRenderer
 from django.core.mail import EmailMultiAlternatives
 from rest_framework.permissions import AllowAny
-from bookings.tasks import send_completion_email, set_booking_started_status
 from datetime import timezone as tz, timedelta
 from django.utils import timezone
 from decimal import Decimal
@@ -314,16 +313,6 @@ class StripeWebhookView(APIView):
                 status_obj = get_object_or_404(Status, name=new_status, type='payment')
                 payment.status = status_obj
                 payment.save()                
-
-                if not booking.completion_email_sent:
-                    eta = booking.return_time + timedelta(minutes=15)
-                    completion_task = send_completion_email.apply_async((booking.id,), eta=eta)
-                    started_task = set_booking_started_status.apply_async((booking.id,), eta=booking.departure_time)
-
-                    # Save the task IDs to the booking
-                    booking.completion_email_task_id = completion_task.id
-                    booking.started_status_task_id = started_task.id
-                    booking.save(update_fields=['completion_email_task_id', 'started_status_task_id'])
 
                 # Award a new coupon to the user
                 code = generate_coupon_code()

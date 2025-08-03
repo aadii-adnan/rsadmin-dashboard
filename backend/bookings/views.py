@@ -225,13 +225,6 @@ class BookingRescheduleView(APIView):
         if timezone.is_naive(end):
             end = ireland_tz.localize(end)
 
-        # --- REVOKE OLD TASKS ---
-        app = current_app
-        if booking.completion_email_task_id:
-            app.control.revoke(booking.completion_email_task_id, terminate=True)
-        if booking.started_status_task_id:
-            app.control.revoke(booking.started_status_task_id, terminate=True)
-
         # --- UPDATE BOOKING ---
         booking.departure_time = start
         booking.return_time = end
@@ -239,18 +232,6 @@ class BookingRescheduleView(APIView):
         status_obj = get_object_or_404(Status, name=new_status)
         booking.status = status_obj
         booking.save()
-
-        # --- SCHEDULE NEW TASKS ---
-        from bookings.tasks import send_completion_email, set_booking_started_status
-        eta_completion = booking.return_time + timedelta(minutes=15)
-        eta_started = booking.departure_time
-
-        completion_task = send_completion_email.apply_async((booking.id,), eta=eta_completion)
-        started_task = set_booking_started_status.apply_async((booking.id,), eta=eta_started)
-
-        booking.completion_email_task_id = completion_task.id
-        booking.started_status_task_id = started_task.id
-        booking.save(update_fields=['completion_email_task_id', 'started_status_task_id'])
 
         send_reschedule_email(booking)
 
