@@ -6,8 +6,7 @@ from django.utils import timezone
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'base_price', 'per_day_price', 'is_featured')
-    list_filter = ('is_featured',)
+    list_display = ('id', 'name', 'base_price', 'per_day_price', 'order', 'enabled')
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
 
@@ -18,15 +17,15 @@ class ServiceAdmin(admin.ModelAdmin):
                 'slug',
                 'description',
                 'long_description',
+                'image',
+                'order',
+                'enabled',
             )
         }),
         ('Pricing', {
             'fields': (
                 ('base_price', 'per_day_price'),
             )
-        }),
-        ('Display Options', {
-            'fields': ('is_featured',),
         }),
     )
 

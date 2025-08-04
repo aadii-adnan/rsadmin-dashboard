@@ -10,6 +10,9 @@ class Service(models.Model):
     is_featured = models.BooleanField(default=False)
     base_price = models.DecimalField(max_digits=8, decimal_places=2)
     per_day_price = models.DecimalField(max_digits=8, decimal_places=2)
+    image = models.ImageField(upload_to='service_images/', blank=True, null=True)
+    order = models.PositiveIntegerField(default=1, help_text="Lower numbers appear first in the list")
+    enabled = models.BooleanField(default=True, help_text="Uncheck to disable this service")
 
     def save(self, *args, **kwargs):    
         if not self.slug:
@@ -27,6 +30,7 @@ class Service(models.Model):
     
     class Meta:
         db_table = 'services'
+        ordering = ['order', 'id']
 
 
 class AddOn(models.Model):

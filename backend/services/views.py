@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 
 class ServiceList(APIView):
     def get(self, request):
-        services = Service.objects.all().order_by('base_price')
+        services = Service.objects.all().order_by('order', 'id')
         serializer = ServiceSerializer(services, many=True)
         return Response(serializer.data)
 

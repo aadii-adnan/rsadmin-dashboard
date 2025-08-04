@@ -69,11 +69,17 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
     calculateTotalPrice();
   }, []);
 
-  const imageSrc = index === 0 ? standard : flexible;
+  const imageSrc = service.image
+  ? `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${service.image}`
+  : (index === 0 ? standard : flexible);
 
   return (
     <div className='service-card'
       key={service.id}
+      style={{
+        opacity: service.enabled ? 1 : 0.6,
+        pointerEvents: 'auto'
+      }}
       onMouseOver={(e) => {
         e.currentTarget.style.transform = 'scale(1.02)';
         e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.2)';
@@ -151,17 +157,19 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
             <div
               style={{
                 padding: '10px 20px',
-                backgroundColor: '#010659',
+                backgroundColor: service.enabled ? '#010659' : '#aaa',
                 color: '#fff',
                 borderRadius: '8px',
                 fontSize: '14px',
                 fontWeight: 'bold',
                 transition: 'background-color 0.3s ease',
-                cursor: 'pointer',
+                cursor: service.enabled ? 'pointer' : 'not-allowed',
+                opacity: service.enabled ? 1 : 0.7
               }}
-              onClick={handleBookNow}
+              onClick={service.enabled ? handleBookNow : undefined}
               onMouseOver={(e) => (e.target.style.backgroundColor = '#0056b3')}
               onMouseOut={(e) => (e.target.style.backgroundColor = '#010659')}
+              disabled={!service.enabled}
             >
               Book Now
             </div>
@@ -183,6 +191,25 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
             More Details
           </div>
         </div>
+        {!service.enabled && (
+          <div
+            style={{
+              marginTop: '20px',
+              textAlign: 'right',
+              background: '#ffeaea',
+              color: '#e53935',
+              fontSize: '15px',
+              fontWeight: 'bold',
+              padding: '4px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e53935',
+              display: 'inline-block',
+              letterSpacing: '0.5px'
+            }}
+          >
+            Not Available
+          </div>
+        )}
       </div>
     </div>
   );
