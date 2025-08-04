@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Django media uploads
+media/
+
 # Distribution / packaging
 .Python
 build/

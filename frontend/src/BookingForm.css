@@ -442,6 +442,7 @@ button.btn {
 
   .service-card-details {
     padding: 0;
+    width: 90%;
   }
 
   .service-card-actions {

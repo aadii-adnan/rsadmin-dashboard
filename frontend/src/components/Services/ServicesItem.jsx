@@ -90,13 +90,13 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
       }}
     >
       {/* Left Section: Image */}
-      <div className='service-card-image'>
+      <div className='service-card-image' style={{width: '-webkit-fill-available'}}>
         <img
           src={imageSrc}
           alt={service.name}
           style={{
             width: '100%',
-            height: 'auto',
+            height: '210px',
             borderRadius: '10px',
             objectFit: 'cover',
           }}
