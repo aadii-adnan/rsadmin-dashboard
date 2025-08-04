@@ -389,7 +389,7 @@ class BookingAdmin(admin.ModelAdmin):
         if obj.id:
             url = reverse('booking-form-download', args=[obj.id])
             return format_html(
-                '<a class="button" href="{}" download>'
+                '<a class="button" href="{}" target="_blank">'
                 '<img src="/static/admin/img/icon-yes.svg" alt="Print Form"> Booking Form</a>',
                 url
             )
