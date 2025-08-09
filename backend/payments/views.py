@@ -377,6 +377,30 @@ class StripeWebhookView(APIView):
         You can download your invoice from the attached PDF.
         </p>
 
+        {(
+        '''
+        <h3 style="color: #444;">🅿️ Parking Details</h3>
+        <ul>
+            <li><strong>Customer Support:</strong> +353 (01) 221 0589</li>
+            <li><strong>Address:</strong> Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29</li>
+            <li><strong>Navigation:</strong> <a href="https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb" style="color: #010659;">View on Google Maps</a></li>
+        </ul>
+        <h3 style="color: #444;">🚐 Arrival Instructions</h3>
+        <p>
+            Dublin Airport Park & Fly will greet you on site, assist with parking, and arrange a frequent minibus/coach to the airport.<br>
+            <strong>Note:</strong> Please report any delay, damage, or issues directly to Dublin Airport Park & Fly.<br>
+            <strong>IMPORTANT:</strong> Extra passengers may delay shuttle dispatch to/from the airport.
+        </p>
+        <h3 style="color: #444;">📝 What To Do When You Arrive</h3>
+        <p>
+            Call us just before arriving so our driver can assist and park your car.<br>
+            <strong>Contact:</strong> +353 (01) 221 0589<br>
+            (Pick Ups and Drop Offs only)<br>
+            On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
+        </p>
+        '''
+        if "Park & Fly" in booking.service.name else
+        '''
         <h3 style="color: #444;">📞 Important Instructions</h3>
         <ul>
             <li>
@@ -386,6 +410,8 @@ class StripeWebhookView(APIView):
                 For any other queries, feel free to reply to this email or contact us directly.
             </li>
         </ul>
+        '''
+        )}
 
         <p>
         Thanks again, and we look forward to seeing you soon!

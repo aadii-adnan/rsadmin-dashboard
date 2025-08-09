@@ -30,6 +30,7 @@
             font-weight: 700;
             font-size: 14px;
             border-bottom: 1px solid #ccc;
+            border-top: 1px solid #ccc;
             margin: 0;
             text-align: center;
         }
@@ -83,19 +84,19 @@
 <div style="padding: 10px;">
 
     <div class="logo">
-        <img src="{{ logo_data }}" alt="RS Express Parking Logo" style="width: 150px; height: auto;"/><br/><br/>
+        <img src="{{ logo_data }}" alt="RS Express Parking Logo" style="width: 150px; height: auto;"/><br/>
         <strong>RS Express Parking</strong><br/>
         <span>Seamless Parking, Stress-Free Travel</span>
     </div>
 
     <div style="margin-bottom: 0px;">
         <strong style="font-size: 20px;">Thank You!</strong><br/>
-        <strong>We appreciate your trust in RS Express Parking. Your booking is confirmed, and we look forward to serving you.</strong><br/><br/>
+        <strong>We appreciate your trust in RS Express Parking. Your booking is confirmed, and we look forward to serving you.</strong><br/>
     </div>
 
     <div style="text-align: right; margin-bottom: 2px; margin-top: 0px;">
-        <p><strong>Order ID:</strong> {{ booking.booking_id }}</p>
-        <p><strong>Order Creation Date:</strong> {{ booking.created_at|date:"d/m/Y H:i" }}</p>
+        <strong>Order ID:</strong> {{ booking.booking_id }}<br/>
+        <strong>Order Creation Date:</strong> {{ booking.created_at|date:"d/m/Y H:i" }}
     </div>
 
     <table class="info-table">
@@ -104,11 +105,13 @@
             <th>Price per unit</th>
             <th>Subtotal</th>
         </tr>
-        <tr>
-            <td>{{ service.name }} Base Price</td>
-            <td>€{{ service.base_price }}</td>
-            <td>€{{ service.base_price }}</td>
-        </tr>
+        {% if not "Park & Fly" in booking.service.name %}
+            <tr>
+                <td>{{ service.name }} Base Price</td>
+                <td>€{{ service.base_price }}</td>
+                <td>€{{ service.base_price }}</td>
+            </tr>
+        {% endif %}
         <tr>
             <td>Price for {{ no_of_days }} day(s)</td>
             <td>€{{ service.per_day_price }}</td>
@@ -124,58 +127,85 @@
     </table>
 
     <table class="summary-table" style="margin-top: 12px;">
-        <tr>
-            <td>Total</td>
+        <tr style="border-bottom: none;">
+            <td style="border-bottom: none;">Total: </td>
             {% if booking.discounted_price > 0 and booking.discounted_price < booking.total_price %}
-            <td>
-                <span style="text-decoration: line-through;">€{{ booking.total_price }}</span>
-                <br>
+            <td style="border-bottom: none;">
+                <span style="text-decoration: line-through">€{{ booking.total_price }}</span>   &nbsp;&nbsp;&nbsp;            
                 <strong>€{{ booking.discounted_price }}</strong>
             </td>
             {% else %}
-            <td>€{{ booking.total_price }}</td>
+            <td style="border-bottom: none;">€{{ booking.total_price }}</td>
             {% endif %}
         </tr>
-        <tr>
-            <td>Payment method</td>
-            <td>Stripe</td>
+        <tr style="border-bottom: none;">
+            <td style="border-bottom: none; border-top: none;">Payment method: </td>
+            <td style="border-bottom: none; border-top: none;">Stripe</td>
         </tr>
     </table>
     
     <div class="section">
-        <p class="section-title" style="margin-top: 20px;">Your Details</p>
+        <p class="section-title" style="margin-top: 10px;">Your Details</p>
         <p>
             <strong>Name:</strong> {{ booking.first_name }} {{ booking.last_name }}<br/><br/>
             <strong>Email:</strong> {{ booking.email }}<br/><br/>
-            <strong>Phone:</strong> {{ booking.contact_no }}<br/><br/>            
+            <strong>Phone:</strong> {{ booking.contact_no }}<br/><br/>   
         </p>
     </div>
     
     <div class="section">
         <p class="section-title">Booking Details</p>
-        <p>
-            <strong>Drop-off Date:</strong> {{ booking.departure_time|date:"d.m.Y H:i" }}<br/><br/>
-            <strong>Pickup Date:</strong> {{ booking.return_time|date:"d.m.Y H:i" }}<br/><br/>
-            <strong>Car Registration:</strong> {{ booking.car_registration_no }}<br/><br/>
-            <strong>Car Model:</strong> {{ booking.car_model }}
-        </p>
+        <table class="summary-table" style="margin-top: 12px;">
+            <tr>
+                <td style="border-bottom: none;"><strong>Drop-off Date:</strong> <span style="font-weight: 400;">{{ booking.departure_time|date:"d.m.Y H:i" }}</span></td>
+                <td style="border-bottom: none;"><strong>Pickup Date:</strong> <span style="font-weight: 400;">{{ booking.return_time|date:"d.m.Y H:i" }}</span></td>
+            </tr>
+            <tr>
+                <td><strong>Car Registration:</strong> <span style="font-weight: 400;">{{ booking.car_registration_no }}<br/></span></td>
+                <td><strong>Car Model:</strong> <span style="font-weight: 400;">{{ booking.car_model }}<br/></span></td>
+            </tr>
+        </table>
     </div>
-
     <div class="section">
-        <p class="section-title">Our Company Details</p>
-        <p>
-            <strong>Customer Support:</strong> +353 1 964 0011<br/><br/>
-            <strong>Driver:</strong> +353 83 489 6505<br/><br/>
-            <strong>Email:</strong> support@rsexpressparking.com<br/><br/>
-            <strong>Website:</strong> rsexpressparking.com
-        </p>
+        {% if "Park & Fly" in booking.service.name %}
+            <p class="section-title">Parking Details</p>
+            <p>            
+                <strong>Customer Support:</strong> +353 (01) 221 0589<br/><br/>
+                <strong>Address:</strong> Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29<br/><br/>
+                <strong>Navigation:</strong> <a href="https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb" style="color: #010659;">View on Google Maps</a><br/><br/>
+            </p>
+            {% else %}
+                <p class="section-title">Our Company Details</p>
+                <p>
+                    <strong>Customer Support:</strong> +353 1 964 0011<br/><br/>
+                    <strong>Driver:</strong> +353 83 489 6505<br/><br/>
+                    <strong>Email:</strong> support@rsexpressparking.com<br/><br/>
+                    <strong>Website:</strong> rsexpressparking.com<br/><br/>
+                </p>
+            {% endif %}
+        
     </div>
 
-
-    <p class="section-title">Important Instructions</p>
-    <p>
-        Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
-    </p>
+    {% if "Park & Fly" in booking.service.name %}
+        <p class="section-title">Arrival Instructions</p>
+        <p>
+            Dublin Airport Park & Fly will greet you on site, assist with parking, and arrange a frequent minibus/coach to the airport.<br/><br/>
+            <strong>Note:</strong> Please report any delay, damage, or issues directly to Dublin Airport Park & Fly.<br/><br/>
+            <strong>IMPORTANT:</strong> Extra passengers may delay shuttle dispatch to/from the airport.<br/><br/>
+        </p>
+        <p class="section-title">What To Do When You Arrive</p>
+        <p>
+            Call us just before arriving so our driver can assist and park your car.<br/><br/>
+            <strong>Contact:</strong> +353 (01) 221 0589<br/><br/>
+            (Pick Ups and Drop Offs only)<br/><br/>
+            On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
+        </p>
+    {% else %}
+        <p class="section-title">Important Instructions</p>
+        <p>
+            Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#010659;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+        </p>
+    {% endif %}
 
 
 </div>
