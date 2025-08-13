@@ -3,7 +3,7 @@ from django.core.mail import EmailMultiAlternatives, get_connection
 from .models import Booking
 from core.models import Status
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from decouple import config
 
 @shared_task
@@ -146,29 +146,25 @@ https://rsexpressparking.com/ | +353 1 964 0011
 @shared_task
 def send_promotional_emails():
     """
-    Send promotional emails to users whose bookings are not confirmed or started,
-    using a custom sender email and password.
-    Handles HTML content from BookingSettings.promotional_email_content.
+    Send promotional emails to users whose bookings are not confirmed, started, or pending.
+    Send a separate email to users with pending bookings.
     """
     from core.models import BookingSettings
     settings_obj = BookingSettings.objects.first()
-    email_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
+    promo_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
+    pending_content = settings_obj.pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at RS Express Parking!</p>"
 
-    # Get all bookings where status is not confirmed or started
-    target_bookings = Booking.objects.exclude(
-        status__name__in=["Confirmed", "Started"]
-    )
+    # Get all bookings by status
+    all_bookings = Booking.objects.all()
+    promo_bookings = all_bookings.exclude(status__name__in=["Confirmed", "Started", "Pending"])
+    pending_bookings = all_bookings.filter(status__name="Pending")
 
-    # Collect unique emails
-    emails = set(target_bookings.values_list('email', flat=True))
+    subject_promo = "Park With Us Again & Save 15%"
+    subject_pending = "Complete Your Booking & Save 20% Today!"
 
-    subject = "Special Offers from RS Express Parking"
-
-    # Custom email credentials
     custom_email = "hello@rsexpressparking.com"
     custom_password = "sxVhsSm1BYfZC1!G"
 
-    # Create a custom SMTP connection
     connection = get_connection(
         host=config('EMAIL_HOST'),
         port=config('EMAIL_PORT', cast=int),
@@ -177,13 +173,50 @@ def send_promotional_emails():
         use_tls=config('EMAIL_USE_TLS', cast=bool)
     )
 
-    for email in emails:
+    current_year = datetime.now().year
+
+    emails_sent = set()
+
+    # Send promotional emails
+    for booking in promo_bookings.values('email', 'first_name'):
+        email = booking['email']
+        first_name = booking['first_name'] or "Customer"
+        if email in emails_sent:
+            continue
+        personalized_content = (
+            promo_content
+            .replace("{{first_name}}", first_name)
+            .replace("{{current_year}}", str(current_year))
+        )
         msg = EmailMultiAlternatives(
-            subject=subject,
-            body="This email requires an HTML-compatible email client.",  # fallback plain text
+            subject=subject_promo,
+            body="This email requires an HTML-compatible email client.",
             from_email=f'RS Express Parking <{custom_email}>',
             to=[email],
             connection=connection
         )
-        msg.attach_alternative(email_content, "text/html")
+        msg.attach_alternative(personalized_content, "text/html")
         msg.send()
+        emails_sent.add(email)
+
+    # Send pending booking emails
+    for booking in pending_bookings.values('email', 'first_name'):
+        email = booking['email']
+        first_name = booking['first_name'] or "Customer"
+        if email in emails_sent:
+            continue
+        personalized_content = (
+            pending_content
+            .replace("{{first_name}}", first_name)
+            .replace("{{current_year}}", str(current_year))
+        )
+        msg = EmailMultiAlternatives(
+            subject=subject_pending,
+            body="This email requires an HTML-compatible email client.",
+            from_email=f'RS Express Parking <{custom_email}>',
+            to=[email],
+            connection=connection
+        )
+        msg.attach_alternative(personalized_content, "text/html")
+        msg.send()
+        emails_sent.add(email)
