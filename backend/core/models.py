@@ -31,6 +31,10 @@ class BookingSettings(models.Model):
         blank=True,
         help_text="Content for promotional emails sent to users"
     )
+    pending_bookings_email_content = models.TextField(
+        blank=True,
+        help_text="Content for promotional emails sent to users with pending bookings"
+    )
 
     class Meta:
         db_table = 'booking_settings'
