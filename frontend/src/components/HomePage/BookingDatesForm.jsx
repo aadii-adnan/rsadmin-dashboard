@@ -48,29 +48,28 @@ const BookingDatesForm = () => {
       setIsPopupOpen(true);
       return 0;
     }
-  
-    const fromDateTimeStr = `${parkingFromDate}T${parkingFromTime}`;
-    const toDateTimeStr = `${carCollectionDate}T${carCollectionTime}`;
-  
-    const fromDateTime = new Date(fromDateTimeStr);
-    const toDateTime = new Date(toDateTimeStr);
-  
-    if (isNaN(fromDateTime) || isNaN(toDateTime)) {
+
+    const fromDate = new Date(parkingFromDate);
+    const toDate = new Date(carCollectionDate);
+
+    if (isNaN(fromDate) || isNaN(toDate)) {
       setPopupMessage("Invalid dates");
-      setIsPopupOpen(true); 
+      setIsPopupOpen(true);
       return 0;
     }
-  
-    const diffInMs = toDateTime - fromDateTime;
+
+    // Calculate the difference in days, inclusive of both start and end date
+    const diffInMs = toDate - fromDate;
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
 
-    if(Math.ceil(diffInDays) <= 0) {
+    if (diffInDays < 0) {
       setPopupMessage("Invalid dates");
-      setIsPopupOpen(true); 
+      setIsPopupOpen(true);
       return 0;
     }
-  
-    return Math.ceil(diffInDays); 
+
+    // Add 1 to include both the start and end date as chargeable days
+    return diffInDays + 1;
   }
 
   const handleApplyCoupon = async () => {

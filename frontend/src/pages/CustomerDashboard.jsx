@@ -217,8 +217,16 @@ const CustomerDashboard = () => {
     const newArr = new Date(data.return_time);
 
     // Calculate days (round up to next day if time is not midnight)
-    const prevDays = Math.ceil((prevArr - prevDep) / (1000 * 60 * 60 * 24));
-    const newDays = Math.ceil((newArr - newDep) / (1000 * 60 * 60 * 24));
+    const prevDays =
+      Math.floor(
+        (prevArr.setHours(0, 0, 0, 0) - prevDep.setHours(0, 0, 0, 0)) /
+          (1000 * 60 * 60 * 24)
+      ) + 1;
+    const newDays =
+      Math.floor(
+        (newArr.setHours(0, 0, 0, 0) - newDep.setHours(0, 0, 0, 0)) /
+          (1000 * 60 * 60 * 24)
+      ) + 1;
     const extraDays = newDays - prevDays;
     const perDay = Number(booking.service_per_day_price);
 

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0006_bookingsettings_promotional_email_content'),
+        ('core', '0007_bookingsettings_pending_bookings_email_content'),
     ]
 
     operations = [

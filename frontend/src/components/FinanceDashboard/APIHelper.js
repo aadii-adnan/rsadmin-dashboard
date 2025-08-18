@@ -14,12 +14,13 @@ export const getOrdersCount = async () => {
   return res.json();
 };
 
-export async function getFinancialOverview(month, year, all, end_month) {
+export async function getFinancialOverview(month, year, all, end_month, website) {
   let url = `${import.meta.env.VITE_API_BASE_URL}/finance/overview/?`;
   if (all) url += "all=true&";
   if (year) url += `year=${year}&`;
   if (month) url += `month=${month}&`;
   if (end_month) url += `end_month=${end_month}&`;
+  if (website && website !== "all") url += `website=${website}&`;
   return customFetch(url, { useFinanceJwt: true }).then(res => res.json());
 }
 

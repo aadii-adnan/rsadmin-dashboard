@@ -72,6 +72,7 @@ class AdminFinancialOverview(APIView):
         end_month_str = request.query_params.get('end_month')
         year_str = request.query_params.get('year')
         all_time = request.query_params.get('all')
+        website = request.query_params.get('website')
 
         if not month_str and not year_str and not all_time:
             return Response({'error': 'Month, year, or all is required.'}, status=400)
@@ -122,6 +123,9 @@ class AdminFinancialOverview(APIView):
                 status__name__in=["Pending", "Payment Failed"]
             ).select_related('service', 'status').prefetch_related('add_ons')
 
+            if website and website.lower() != "all":
+                bookings_in_period = bookings_in_period.filter(website__iexact=website)
+
             all_addons_total = 0
             for booking in bookings_in_period.exclude(status__name="Cancelled"):
                 all_addons_total += sum([addon.price for addon in booking.add_ons.all()])
@@ -144,21 +148,28 @@ class AdminFinancialOverview(APIView):
                 # else: do not count for earnings
 
             # Expenses for this period
+            expense_filter = {}
+            if website and website.lower() != "all":
+                expense_filter["website__in"] = [website, "both"]
+
             if all_time == "true":
-                fixed_expenses = Expense.objects.filter(recurring=False)
+                fixed_expenses = Expense.objects.filter(recurring=False, **expense_filter)
             elif year_str:
                 fixed_expenses = Expense.objects.filter(
                     recurring=False,
-                    for_month__year=year
+                    for_month__year=year,
+                    **expense_filter
                 )
             else:
                 fixed_expenses = Expense.objects.filter(
                     recurring=False,
                     for_month__gte=start_date,
-                    for_month__lte=end_date
+                    for_month__lte=end_date,
+                    **expense_filter
                 )
             recurring_expenses = Expense.objects.filter(
-                recurring=True
+                recurring=True,
+                **expense_filter
             ).filter(
                 Q(recurring_start_month__lte=end_date) | Q(recurring_start_month__isnull=True),
                 Q(recurring_end_month__gte=start_date) | Q(recurring_end_month__isnull=True)

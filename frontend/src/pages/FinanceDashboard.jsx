@@ -42,12 +42,13 @@ function FinancialDashboard() {
   const [endMonth, setEndMonth] = useState(getCurrentMonth());
   const [year, setYear] = useState(""); // NEW: year filter state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [expenseForm, setExpenseForm] = useState({ name: "", amount: "", recurring: false, for_month: "", recurring_start_month: "", recurring_end_month: "" });
+  const [expenseForm, setExpenseForm] = useState({ name: "", amount: "", recurring: false, for_month: "", recurring_start_month: "", recurring_end_month: "", website: "both", });
   const [expenseAlert, setExpenseAlert] = useState(null);
   const [editingExpense, setEditingExpense] = useState(null);
   const [monthlyEarnings, setMonthlyEarnings] = useState([]);
   const [bookingsOverTime, setBookingsOverTime] = useState([]);
   const [allTime, setAllTime] = useState(false);
+  const [websiteFilter, setWebsiteFilter] = useState("all");
 
   useEffect(() => {
     if (!localStorage.getItem('finance_jwt')) {
@@ -78,15 +79,15 @@ function FinancialDashboard() {
 
         let overviewRes;
         if (allTime) {
-          overviewRes = await getFinancialOverview(undefined, undefined, true);
+          overviewRes = await getFinancialOverview(undefined, undefined, true, undefined, websiteFilter);
         } else if (year) {
-          overviewRes = await getFinancialOverview(undefined, year);
+          overviewRes = await getFinancialOverview(undefined, year, false, undefined, websiteFilter);
         } else if (startMonth && endMonth) {
-          overviewRes = await getFinancialOverview(startMonth, undefined, false, endMonth);
+          overviewRes = await getFinancialOverview(startMonth, undefined, false, endMonth, websiteFilter);
         } else if (startMonth) {
-          overviewRes = await getFinancialOverview(startMonth);
+          overviewRes = await getFinancialOverview(startMonth, undefined, false, undefined, websiteFilter);
         } else {
-          overviewRes = await getFinancialOverview();
+          overviewRes = await getFinancialOverview(undefined, undefined, false, undefined, websiteFilter);
         }
         setOverview(overviewRes);
       } catch (error) {
@@ -94,8 +95,8 @@ function FinancialDashboard() {
       }
     };
 
-  fetchData();
-}, [startMonth, endMonth, year, allTime, expenseAlert]);
+    fetchData();
+  }, [startMonth, endMonth, year, allTime, expenseAlert, websiteFilter]);
 
   // Chart data
   const bookingsStatusData = Object.entries(bookingsSummary || {})
@@ -126,7 +127,8 @@ function FinancialDashboard() {
       recurring: expense.recurring,
       for_month: expense.for_month ? expense.for_month.slice(0, 7) : "",
       recurring_start_month: expense.recurring_start_month ? expense.recurring_start_month.slice(0, 7) : "",
-      recurring_end_month: expense.recurring_end_month ? expense.recurring_end_month.slice(0, 7) : ""
+      recurring_end_month: expense.recurring_end_month ? expense.recurring_end_month.slice(0, 7) : "",
+      website: expense.website || "both",
     });
     setShowExpenseModal(true);
   };
@@ -219,6 +221,17 @@ function FinancialDashboard() {
         >
           Go to Admin Dashboard
         </a>
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+        <Form.Select
+          style={{ width: 220, maxWidth: "100%" }}
+          value={websiteFilter}
+          onChange={e => setWebsiteFilter(e.target.value)}
+        >
+          <option value="all">All Websites</option>
+          <option value="rsexpressparking">RS Express Parking</option>
+          <option value="dublinairportparking">Dublin Airport Parking</option>
+        </Form.Select>
       </div>
       <Container fluid className="py-4">
         {/* Alert */}
@@ -640,6 +653,19 @@ function FinancialDashboard() {
                   required={!expenseForm.recurring}
                   disabled={expenseForm.recurring}
                 />
+              </Form.Group>
+              <Form.Group style={{ marginBottom: 16 }}>
+                <Form.Label>Website</Form.Label>
+                <Form.Select
+                  name="website"
+                  value={expenseForm.website}
+                  onChange={handleExpenseChange}
+                  required
+                >
+                  <option value="both">Both Websites</option>
+                  <option value="rsexpressparking">RS Express Parking</option>
+                  <option value="dublinairportparking">Dublin Airport Parking</option>
+                </Form.Select>
               </Form.Group>
               <Form.Group>
                 <Form.Check

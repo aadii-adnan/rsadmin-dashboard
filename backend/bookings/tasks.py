@@ -177,6 +177,8 @@ def send_promotional_emails():
     settings_obj = BookingSettings.objects.first()
     promo_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
     pending_content = settings_obj.pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at RS Express Parking!</p>"
+    dublin_promo_content = settings_obj.dublin_promotional_email_content if settings_obj else "<p>Check out our latest offers at Dublin Airport Parking!</p>"
+    dublin_pending_content = settings_obj.dublin_pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at Dublin Airport Parking!</p>"
 
     # Get all bookings by status
     all_bookings = Booking.objects.all()
@@ -184,38 +186,56 @@ def send_promotional_emails():
     pending_bookings = all_bookings.filter(status__name="Pending")
 
     subject_promo = "Park With Us Again & Save 15%"
-    subject_pending = "Complete Your Booking & Save 20% Today!"
-
-    custom_email = "hello@rsexpressparking.com"
-    custom_password = "sxVhsSm1BYfZC1!G"
-
-    connection = get_connection(
-        host=config('EMAIL_HOST'),
-        port=config('EMAIL_PORT', cast=int),
-        username=custom_email,
-        password=custom_password,
-        use_tls=config('EMAIL_USE_TLS', cast=bool)
-    )
+    subject_pending = "Complete Your Booking & Save 15% Today!"
 
     current_year = datetime.now().year
-
     emails_sent = set()
 
     # Send promotional emails
-    for booking in promo_bookings.values('email', 'first_name'):
-        email = booking['email']
-        first_name = booking['first_name'] or "Customer"
-        if email in emails_sent:
+    for booking in promo_bookings:
+        email = booking.email
+        first_name = booking.first_name or "Customer"
+        website = getattr(booking, 'website', 'rsexpressparking').lower()
+        if not email or email in emails_sent:
             continue
-        personalized_content = (
-            promo_content
-            .replace("{{first_name}}", first_name)
-            .replace("{{current_year}}", str(current_year))
-        )
+
+        if website == "dublinairportparking":
+            personalized_content = (
+                dublin_promo_content
+                .replace("{{first_name}}", first_name)
+                .replace("{{current_year}}", str(current_year))
+            )
+            custom_email = "hello@dublinairportparkingservices.ie"
+            from_email = f"Dublin Airport Parking <{custom_email}>"
+            subject = subject_promo
+            connection = get_connection(
+                host=config('EMAIL_HOST'),
+                port=config('EMAIL_PORT', cast=int),
+                username=custom_email,
+                password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+                use_tls=config('EMAIL_USE_TLS', cast=bool)
+            )
+        else:
+            personalized_content = (
+                promo_content
+                .replace("{{first_name}}", first_name)
+                .replace("{{current_year}}", str(current_year))
+            )
+            custom_email = "hello@rsexpressparking.com"
+            from_email = f"RS Express Parking <{custom_email}>"
+            subject = subject_promo
+            connection = get_connection(
+                host=config('EMAIL_HOST'),
+                port=config('EMAIL_PORT', cast=int),
+                username=custom_email,
+                password=config('EMAIL_HOST_PASSWORD'),
+                use_tls=config('EMAIL_USE_TLS', cast=bool)
+            )
+
         msg = EmailMultiAlternatives(
-            subject=subject_promo,
+            subject=subject,
             body="This email requires an HTML-compatible email client.",
-            from_email=f'RS Express Parking <{custom_email}>',
+            from_email=from_email,
             to=[email],
             connection=connection
         )
@@ -224,20 +244,50 @@ def send_promotional_emails():
         emails_sent.add(email)
 
     # Send pending booking emails
-    for booking in pending_bookings.values('email', 'first_name'):
-        email = booking['email']
-        first_name = booking['first_name'] or "Customer"
-        if email in emails_sent:
+    for booking in pending_bookings:
+        email = booking.email
+        first_name = booking.first_name or "Customer"
+        website = getattr(booking, 'website', 'rsexpressparking').lower()
+        if not email or email in emails_sent:
             continue
-        personalized_content = (
-            pending_content
-            .replace("{{first_name}}", first_name)
-            .replace("{{current_year}}", str(current_year))
-        )
+
+        if website == "dublinairportparking":
+            personalized_content = (
+                dublin_pending_content
+                .replace("{{first_name}}", first_name)
+                .replace("{{current_year}}", str(current_year))
+            )
+            custom_email = "hello@dublinairportparkingservices.ie"
+            from_email = f"Dublin Airport Parking <{custom_email}>"
+            subject = subject_pending
+            connection = get_connection(
+                host=config('EMAIL_HOST'),
+                port=config('EMAIL_PORT', cast=int),
+                username=custom_email,
+                password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+                use_tls=config('EMAIL_USE_TLS', cast=bool)
+            )
+        else:
+            personalized_content = (
+                pending_content
+                .replace("{{first_name}}", first_name)
+                .replace("{{current_year}}", str(current_year))
+            )
+            custom_email = "hello@rsexpressparking.com"
+            from_email = f"RS Express Parking <{custom_email}>"
+            subject = subject_pending
+            connection = get_connection(
+                host=config('EMAIL_HOST'),
+                port=config('EMAIL_PORT', cast=int),
+                username=custom_email,
+                password=config('EMAIL_HOST_PASSWORD'),
+                use_tls=config('EMAIL_USE_TLS', cast=bool)
+            )
+
         msg = EmailMultiAlternatives(
-            subject=subject_pending,
+            subject=subject,
             body="This email requires an HTML-compatible email client.",
-            from_email=f'RS Express Parking <{custom_email}>',
+            from_email=from_email,
             to=[email],
             connection=connection
         )
