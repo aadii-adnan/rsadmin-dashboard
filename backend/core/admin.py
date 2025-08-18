@@ -4,7 +4,7 @@ from .models import BookingSettings, OrderLimit
 
 @admin.register(BookingSettings)
 class BookingSettingsAdmin(admin.ModelAdmin):   
-    list_display = ('id', 'min_hours_before_booking', 'manager_emails')
+    list_display = ('id', 'min_hours_before_booking', 'manager_emails', 'dublin_manager_emails')
     search_fields = ('min_hours_before_booking', 'manager_emails')
     list_filter = ('min_hours_before_booking', 'manager_emails')
 

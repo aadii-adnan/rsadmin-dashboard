@@ -21,7 +21,11 @@ class BookingSettings(models.Model):
     min_hours_before_booking = models.PositiveIntegerField(default=4, help_text="Minimum hours before drop-off allowed for booking")
     manager_emails = models.TextField(
         blank=True,
-        help_text="Comma-separated list of manager emails to notify for bookings"
+        help_text="Comma-separated list of manager emails to notify for RS Express bookings"
+    )
+    dublin_manager_emails = models.TextField(
+        blank=True,
+        help_text="Comma-separated list of manager emails to notify for Dublin Airport Parking bookings"
     )
     promotional_email_content = models.TextField(
         blank=True,
@@ -36,10 +40,16 @@ class BookingSettings(models.Model):
     def __str__(self):
         return f"Settings (min_hours={self.min_hours_before_booking})"
 
-    def get_manager_email_list(self):
-        if not self.manager_emails:
-            return []
-        return [email.strip() for email in self.manager_emails.split(",") if email.strip()]
+    def get_manager_email_list(self, website=None):
+        if website and website.lower() == "dublinairportparking":
+            emails = self.dublin_manager_emails
+            default = ["dublinairportparkingservices@gmail.com"]
+        else:
+            emails = self.manager_emails
+            default = ["rsexpressparking@gmail.com"]
+        if not emails:
+            return default
+        return [email.strip() for email in emails.split(",") if email.strip()]
 
 class OrderLimit(models.Model):
     date = models.DateField()

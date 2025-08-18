@@ -9,7 +9,7 @@ class ContactMessageAdmin(admin.ModelAdmin):
     timestamp_display.short_description = 'Timestamp'
     timestamp_display.admin_order_field = 'timestamp' 
 
-    list_display = ('id', 'first_name', 'last_name', 'email', 'phone', 'timestamp_display')
+    list_display = ('id', 'first_name', 'last_name', 'email', 'phone', 'website', 'timestamp_display')
     search_fields = ('first_name', 'last_name', 'email', 'phone')
     list_filter = ('timestamp',)
     ordering = ('-timestamp',)
@@ -18,7 +18,7 @@ class ContactMessageAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             (None, {
-                'fields': ('first_name', 'last_name', 'email', 'phone', 'message', 'timestamp_display')
+                'fields': ('first_name', 'last_name', 'email', 'phone', 'message', 'website', 'timestamp_display')
             }),
         ]
         return fieldsets

@@ -49,12 +49,18 @@ class Booking(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
     note = models.TextField(blank=True, null=True)
     is_viewed = models.BooleanField(default=False)
+    website = models.CharField(
+        max_length=50,
+        default="rsexpressparking",
+        help_text="Source website for this booking"
+    )
 
     def save(self, *args, **kwargs):
         if not self.booking_id:
-            self.booking_id = f"RS-{uuid.uuid4().hex[:8].upper()}"
+            prefix = "DA" if self.website.lower() == "dublinairportparking" else "RS"
+            self.booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
             while Booking.objects.filter(booking_id=self.booking_id).exists():
-                self.booking_id = f"RS-{uuid.uuid4().hex[:8].upper()}"
+                self.booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
         
         # Set created_at for new bookings if not provided
         if not self.pk and not self.created_at:

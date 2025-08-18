@@ -30,7 +30,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', cast=bool)
 
 
-ALLOWED_HOSTS = ['77.37.54.56', 'new.rsexpressparking.com', 'www.new.rsexpressparking.com', 'localhost', '127.0.0.1', 'rsexpressparking.com', 'www.rsexpressparking.com', '4f64-139-135-41-90.ngrok-free.app']
+ALLOWED_HOSTS = ['77.37.54.56', 'localhost', '127.0.0.1', 'rsexpressparking.com', 'www.rsexpressparking.com', 'dublinairportparkingservices.ie', 'www.dublinairportparkingservices.ie']
 
 
 # Application definition
@@ -157,10 +157,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS  = [
-    'https://new.rsexpressparking.com',
-    'https://www.new.rsexpressparking.com',
     'https://www.rsexpressparking.com',
-    'https://new.rsexpressparking.com',
+    'https://dublinairportparkingservices.ie',
+    'https://www.dublinairportparkingservices.ie',
     'http://localhost:3000',
     'http://localhost:5173',
 ]
@@ -204,6 +203,7 @@ SIMPLE_JWT = {
 }
 
 PDF_LOGO_PATH = os.path.join(BASE_DIR, 'static', 'images', 'logo.jpg')
+DUBLIN_PDF_LOGO_PATH = os.path.join(BASE_DIR, 'static', 'images', 'dublin-logo.png')
 PDF_IMAGE_PATH = os.path.join(BASE_DIR, 'static', 'images', 'car.png')
 
 SECURE_SSL_REDIRECT = True
@@ -211,9 +211,8 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://new.rsexpressparking.com/',
     'https://www.rsexpressparking.com',
-    'https://new.rsexpressparking.com',
+    'https://www.dublinairportparkingservices.ie',
 ]
 
 # Celery Configuration

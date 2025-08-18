@@ -11,7 +11,7 @@ from payments.models import Payment
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.utils import timezone
 from django.template.loader import render_to_string
 from payments.views import generate_invoice  # You need to implement this utility
@@ -19,11 +19,32 @@ from django.http import HttpResponse
 import pytz
 from celery import current_app
 from datetime import timedelta
+from decouple import config
 
 
 def send_reschedule_email(booking):
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
     return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
+
+    # Website-specific names, emails, and SMTP connection
+    if booking.website.lower() == "dublinairportparking":
+        site_name = "Dublin Airport Parking"
+        site_url = "https://dublinairportparkingservices.ie/"
+        team_name = "The Dublin Airport Parking Team"
+        from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
+        connection = get_connection(
+            host=config('EMAIL_HOST'),
+            port=config('EMAIL_PORT', cast=int),
+            username="support@dublinairportparkingservices.ie",
+            password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+            use_tls=config('EMAIL_USE_TLS', cast=bool)
+        )
+    else:
+        site_name = "RS Express Parking"
+        site_url = "https://rsexpressparking.com/"
+        team_name = "The RS Express Parking Team"
+        from_email = "RS Express Parking <support@rsexpressparking.com>"
+        connection = None  # Use default
 
     # Generate invoice PDF (implement this utility to return bytes or file path)
     response, error = generate_invoice(booking)
@@ -51,7 +72,10 @@ def send_reschedule_email(booking):
         </ul>
         <p>
         If you have any questions, please reply to this email or contact our support team.<br>
-        <strong>RS Express Parking System</strong>
+        <strong>{team_name}</strong>
+        </p>
+        <p>
+        <a href="{site_url}" style="color: #0066cc;">{site_url}</a>
         </p>
     </body>
     </html>
@@ -70,17 +94,18 @@ Add-ons: {', '.join([a.name for a in booking.add_ons.all()])}
 
 If you have any questions, please reply to this email or contact our support team.
 
-RS Express Parking System
+{team_name}
+{site_url}
 """
 
     email_user = EmailMultiAlternatives(
         subject=subject_customer,
         body=text_body_customer,
-        from_email='RS Express Parking <support@rsexpressparking.com>',
+        from_email=from_email,
         to=[booking.email],
+        connection=connection
     )
     email_user.attach_alternative(html_body_customer, "text/html")
-    # Attach invoice PDF
     email_user.attach(f"Invoice_{booking.booking_id}.pdf", pdf_content, "application/pdf")
     email_user.send()
 
@@ -110,7 +135,7 @@ RS Express Parking System
         </p>
         <p>
         Regards,<br>
-        <strong>RS Express Parking System</strong>
+        <strong>{site_name} System</strong>
         </p>
     </body>
     </html>
@@ -132,17 +157,21 @@ Please check the admin panel for more details or to manage this booking.
 The updated invoice is attached.
 
 Regards,
-RS Express Parking System
+{site_name} System
 """
 
     settings = BookingSettings.objects.first()
-    manager_emails = settings.get_manager_email_list() if settings else ["rsexpressparking@gmail.com"]
+    if settings:
+        manager_emails = settings.get_manager_email_list(booking.website)
+    else:
+        manager_emails = ["rsexpressparking@gmail.com"]  # fallback
 
     email_manager = EmailMultiAlternatives(
         subject=subject_manager,
         body=text_body_manager,
-        from_email='RS Express Parking <support@rsexpressparking.com>',
+        from_email=from_email,
         to=manager_emails,
+        connection=connection
     )
     email_manager.attach_alternative(html_body_manager, "text/html")
     email_manager.attach(f"Invoice_{booking.booking_id}.pdf", pdf_content, "application/pdf")
@@ -269,6 +298,25 @@ class CancelBookingView(APIView):
         booking_amount = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
         refund_amount = max(0, booking_amount - 15)
 
+        if booking.website.lower() == "dublinairportparking":
+            site_name = "Dublin Airport Parking"
+            site_url = "https://dublinairportparkingservices.ie/"
+            team_name = "The Dublin Airport Parking Team"
+            from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
+            connection = get_connection(
+                host=config('EMAIL_HOST'),
+                port=config('EMAIL_PORT', cast=int),
+                username="support@dublinairportparkingservices.ie",
+                password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+                use_tls=config('EMAIL_USE_TLS', cast=bool)
+            )
+        else:
+            site_name = "RS Express Parking"
+            site_url = "https://rsexpressparking.com/"
+            team_name = "The RS Express Parking Team"
+            from_email = "RS Express Parking <support@rsexpressparking.com>"
+            connection = None
+
         # --- Customer Email ---
         if refund:
             subject_customer = f"Your Booking Has Been Cancelled – Refund Initiated"
@@ -292,7 +340,10 @@ class CancelBookingView(APIView):
                 </ul>
                 <p>
                 If you have any questions, please reply to this email or contact our support team.<br>
-                <strong>RS Express Parking System</strong>
+                <strong>{team_name}</strong>
+                </p>
+                <p>
+                <a href="{site_url}" style="color: #0066cc;">{site_url}</a>
                 </p>
             </body>
             </html>
@@ -313,7 +364,8 @@ class CancelBookingView(APIView):
 
         If you have any questions, please reply to this email or contact our support team.
 
-        RS Express Parking System
+        {team_name}
+        {site_url}
         """
         else:
             subject_customer = f"Your Booking Has Been Cancelled – Bonus Points Added"
@@ -337,7 +389,10 @@ class CancelBookingView(APIView):
                 </ul>
                 <p>
                 If you have any questions, please reply to this email or contact our support team.<br>
-                <strong>RS Express Parking System</strong>
+                <strong>{team_name}</strong>
+                </p>
+                <p>
+                <a href="{site_url}" style="color: #0066cc;">{site_url}</a>
                 </p>
             </body>
             </html>
@@ -358,14 +413,16 @@ class CancelBookingView(APIView):
 
         If you have any questions, please reply to this email or contact our support team.
 
-        RS Express Parking System
+        {team_name}
+        {site_url}
         """
 
         email_user = EmailMultiAlternatives(
             subject=subject_customer,
             body=text_body_customer,
-            from_email='RS Express Parking <support@rsexpressparking.com>',
+            from_email=from_email,
             to=[booking.email],
+            connection=connection
         )
         email_user.attach_alternative(html_body_customer, "text/html")
         email_user.send()
@@ -391,7 +448,7 @@ class CancelBookingView(APIView):
                 </ul>
                 <p>
                 Please process the refund in Stripe.<br>
-                <strong>RS Express Parking System</strong>
+                <strong>{site_name} System</strong>
                 </p>
             </body>
             </html>
@@ -409,7 +466,7 @@ class CancelBookingView(APIView):
 
         Please process the refund in Stripe.
 
-        RS Express Parking System
+        {site_name} System
         """
         else:
             subject_manager = f"Booking Cancelled – Bonus Points Issued"
@@ -431,7 +488,7 @@ class CancelBookingView(APIView):
                 </ul>
                 <p>
                 No Stripe refund is required for this booking.<br>
-                <strong>RS Express Parking System</strong>
+                <strong>{site_name} System</strong>
                 </p>
             </body>
             </html>
@@ -449,17 +506,21 @@ class CancelBookingView(APIView):
 
         No Stripe refund is required for this booking.
 
-        RS Express Parking System
+        {site_name} System
         """
 
         settings = BookingSettings.objects.first()
-        manager_emails = settings.get_manager_email_list() if settings else ["rsexpressparking@gmail.com"]
+        if settings:
+            manager_emails = settings.get_manager_email_list(booking.website)
+        else:
+            manager_emails = ["rsexpressparking@gmail.com"]  # fallback
 
         email_manager = EmailMultiAlternatives(
             subject=subject_manager,
             body=text_body_manager,
-            from_email='RS Express Parking <support@rsexpressparking.com>',
+            from_email=from_email,
             to=manager_emails,
+            connection=connection
         )
         email_manager.attach_alternative(html_body_manager, "text/html")
         email_manager.send()

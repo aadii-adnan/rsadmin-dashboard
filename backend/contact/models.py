@@ -5,6 +5,7 @@ class ContactMessage(models.Model):
     last_name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
+    website = models.CharField(max_length=50, default="rsexpressparking", help_text="Source website for this contact message")  # <-- Add this field
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 

@@ -297,7 +297,7 @@ class BookingAdmin(admin.ModelAdmin):
         if request.user.is_manager:
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display','service', 'vehicle_display', 'terminal_display',  'colored_status', 'created_at_display', 'download_booking_form')
         return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
-                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
+                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form', 'website')
     
 
     def get_fieldsets(self, request, obj=None):
@@ -306,7 +306,7 @@ class BookingAdmin(admin.ModelAdmin):
                 'fields': (
                     ('first_name', 'last_name'),
                     ('email', 'contact_no'),
-                    'total_passengers'
+                    ('total_passengers', 'website'),
                 )
             }),
             ('Vehicle Details', {

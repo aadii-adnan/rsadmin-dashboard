@@ -84,14 +84,24 @@
 <div style="padding: 10px;">
 
     <div class="logo">
-        <img src="{{ logo_data }}" alt="RS Express Parking Logo" style="width: 150px; height: auto;"/><br/>
-        <strong>RS Express Parking</strong><br/>
-        <span>Seamless Parking, Stress-Free Travel</span>
+        {% if booking.website and booking.website|lower == "dublinairportparking" %}
+            <img src="{{ dublin_logo_data }}" alt="Dublin Airport Parking Logo" style="width: 150px; height: auto;"/><br/>
+            <strong>Dublin Airport Parking</strong><br/>
+            <span>Seamless Parking, Stress-Free Travel</span>
+        {% else %}
+            <img src="{{ logo_data }}" alt="RS Express Parking Logo" style="width: 150px; height: auto;"/><br/>
+            <strong>RS Express Parking</strong><br/>
+            <span>Seamless Parking, Stress-Free Travel</span>
+        {% endif %}
     </div>
 
     <div style="margin-bottom: 0px;">
         <strong style="font-size: 20px;">Thank You!</strong><br/>
-        <strong>We appreciate your trust in RS Express Parking. Your booking is confirmed, and we look forward to serving you.</strong><br/>
+        {% if booking.website and booking.website|lower == "dublinairportparking" %}
+            <strong>We appreciate your trust in Dublin Airport Parking. Your booking is confirmed, and we look forward to serving you.</strong><br/>
+        {% else %}
+            <strong>We appreciate your trust in RS Express Parking. Your booking is confirmed, and we look forward to serving you.</strong><br/>
+        {% endif %}
     </div>
 
     <div style="text-align: right; margin-bottom: 2px; margin-top: 0px;">
@@ -174,6 +184,14 @@
                 <strong>Address:</strong> Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29<br/><br/>
                 <strong>Navigation:</strong> <a href="https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb" style="color: #010659;">View on Google Maps</a><br/><br/>
             </p>
+        {% else %}
+            {% if booking.website and booking.website|lower == "dublinairportparking" %}
+                <p class="section-title">Our Company Details</p>
+                <p>
+                    <strong>Customer Support:</strong> +353 1 964 0011<br/><br/>
+                    <strong>Email:</strong> support@dublinairportparkingservices.ie<br/><br/>
+                    <strong>Website:</strong> dublinairportparkingservices.ie<br/><br/>
+                </p>
             {% else %}
                 <p class="section-title">Our Company Details</p>
                 <p>
@@ -183,7 +201,7 @@
                     <strong>Website:</strong> rsexpressparking.com<br/><br/>
                 </p>
             {% endif %}
-        
+        {% endif %}
     </div>
 
     {% if "Park & Fly" in booking.service.name %}

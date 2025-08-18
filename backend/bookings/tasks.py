@@ -59,10 +59,30 @@ def send_completion_email_to_user(booking_id):
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
     return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
 
+    # Set website name and URL based on booking.website
+    if booking.website.lower() == "dublinairportparking":
+        site_name = "Dublin Airport Parking"
+        site_url = "https://dublinairportparkingservices.ie/"
+        team_name = "The Dublin Airport Parking Team"
+        from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
+        connection = get_connection(
+            host=config('EMAIL_HOST'),
+            port=config('EMAIL_PORT', cast=int),
+            username="support@dublinairportparkingservices.ie",
+            password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+            use_tls=config('EMAIL_USE_TLS', cast=bool)
+        )
+    else:
+        site_name = "RS Express Parking"
+        site_url = "https://rsexpressparking.com/"
+        team_name = "The RS Express Parking Team"
+        from_email = "RS Express Parking <support@rsexpressparking.com>"
+        connection = None  # Use default
+
     html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #0066cc;">Thank You for Parking with RS Express Parking!</h2>
+        <h2 style="color: #0066cc;">Thank You for Parking with {site_name}!</h2>
         <p>Hi {booking.first_name},</p>
         <p>
         We hope you had a smooth experience with our <strong>{booking.service.name}</strong> service.
@@ -81,17 +101,17 @@ def send_completion_email_to_user(booking_id):
         </p>
         <h3 style="color: #444;">🙏 Thank You!</h3>
         <p>
-        Thank you for choosing <strong>RS Express Parking</strong>. We appreciate your trust and hope to see you again soon!
+        Thank you for choosing <strong>{site_name}</strong>. We appreciate your trust and hope to see you again soon!
         </p>
         <h3 style="color: #444;">💬 Feedback</h3>
         <p>
-            We would love to hear about your experience. If you have a moment, please consider leaving us a review on Google Maps:<br>
-            <a href="https://g.page/r/CZW2D3u4VHTOEAI/review" target="_blank" style="color:#0066cc;">Leave a Google Review</a>
+            We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:<br>
+            <a href="https://ie.trustpilot.com/evaluate/rsexpressparking.com" target="_blank" style="color:#0066cc;">Leave a Trustpilot Review</a>
         </p>
         <p>
         Warm regards,<br>
-        <strong>The RS Express Parking Team</strong><br>
-        <a href="https://rsexpressparking.com/" style="color: #0066cc;">rsexpressparking.com</a> | +353 1 964 0011
+        <strong>{team_name}</strong><br>
+        <a href="{site_url}" style="color: #0066cc;">{site_url}</a> | +353 1 964 0011
         </p>
     </body>
     </html>
@@ -119,25 +139,29 @@ As a thank you, here’s a coupon for 15% off your next booking:
 -----------------------------
 🙏 Thank You!
 -----------------------------
-Thank you for choosing RS Express Parking. We appreciate your trust and hope to see you again soon!
+Thank you for choosing {site_name}. We appreciate your trust and hope to see you again soon!
 
 -----------------------------
 💬 Feedback
 -----------------------------
-We would love to hear about your experience. If you have a moment, please consider leaving us a review on Google Maps:
-https://g.page/r/CZW2D3u4VHTOEAI/review
+We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:
+https://ie.trustpilot.com/evaluate/rsexpressparking.com
 
 Warm regards,  
-The RS Express Parking Team  
-https://rsexpressparking.com/ | +353 1 964 0011
+{team_name}  
+{site_url} | +353 1 964 0011
 """
 
-    email = EmailMultiAlternatives(
-        subject='Thank you for parking with us!',
+    email_kwargs = dict(
+        subject=f'Thank you for parking with us!',
         body=text_body,
-        from_email='RS Express Parking <support@rsexpressparking.com>',
+        from_email=from_email,
         to=[booking.email],
     )
+    if connection:
+        email_kwargs['connection'] = connection
+
+    email = EmailMultiAlternatives(**email_kwargs)
     email.attach_alternative(html_body, "text/html")
     email.send()
     booking.completion_email_sent = True

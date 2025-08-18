@@ -109,7 +109,8 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                 coupon: couponId,
                 discounted_price : discountedPrice==0 ? totalPrice.toFixed(2) : discountedPrice.toFixed(2),                
                 total_price: totalPrice.toFixed(2),
-                status: statusId
+                status: statusId,
+                website: "rsexpressparking",
                 }),
             });
             const data = await response.json();

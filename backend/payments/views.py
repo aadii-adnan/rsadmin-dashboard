@@ -21,7 +21,7 @@ from core.models import Status, BookingSettings
 import base64
 import os
 from rest_framework.renderers import BaseRenderer
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from rest_framework.permissions import AllowAny
 from datetime import timezone as tz, timedelta
 from django.utils import timezone
@@ -102,6 +102,13 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
     except FileNotFoundError:
         pass  # gracefully handle missing logo
 
+    dublin_logo_data = None
+    try:
+        with open(settings.DUBLIN_PDF_LOGO_PATH, 'rb') as f:
+            dublin_logo_data = base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        pass  # gracefully handle missing logo
+
     # Render HTML
     context = {
         'booking': booking,
@@ -110,6 +117,7 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
         'total_days_price': total_days_price,
         'add_ons': add_ons, 
         'logo_data': f"data:image/png;base64,{logo_data}" if logo_data else None,
+        'dublin_logo_data': f"data:image/png;base64,{dublin_logo_data}" if dublin_logo_data else None,
     }
 
     template = get_template(template_name)
@@ -129,16 +137,34 @@ from django.core.mail import EmailMultiAlternatives
 def send_manager_new_booking_email(booking, pdf_content):
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
     return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
-    
+
+    # Website-specific manager emails and from_email
+    settings = BookingSettings.objects.first()
+    website = getattr(booking, 'website', 'rsexpressparking')
+    manager_emails = settings.get_manager_email_list(website) if settings else ["rsexpressparking@gmail.com"]
+
+    if website.lower() == "dublinairportparking":
+        from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
+        system_name = "Dublin Airport Parking System"
+        connection = get_connection(
+            host=config('EMAIL_HOST'),
+            port=config('EMAIL_PORT', cast=int),
+            username="support@dublinairportparkingservices.ie",
+            password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+            use_tls=config('EMAIL_USE_TLS', cast=bool)
+        )
+    else:
+        from_email = "RS Express Parking <support@rsexpressparking.com>"
+        system_name = "RS Express Parking System"
+        connection = None  # Use default
+
     html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
         <h2 style="color: #0066cc;">New Booking Received – {booking.service.name}</h2>
-
         <p>
-        A new booking has just been made on RS Express Parking. Here are the details:
+        A new booking has just been made on {system_name}. Here are the details:
         </p>
-
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
         <li><strong>Booking ID:</strong> {booking.booking_id}</li>
@@ -151,27 +177,24 @@ def send_manager_new_booking_email(booking, pdf_content):
         <li><strong>Service:</strong> {booking.service.name}</li>
         <li><strong>Add-ons:</strong> {', '.join([a.name for a in booking.add_ons.all()])}</li>
         </ul>
-
         <h3 style="color: #444;">💳 Payment Details</h3>
         <ul>
         <li><strong>Total Paid:</strong> €{booking.discounted_price or booking.total_price}</li>
         <li><strong>Payment Method:</strong> Stripe</li>
         </ul>
-
         <p>
         Please check the admin panel for more details or to manage this booking.
         </p>
-
         <p>
         Regards,<br>
-        <strong>RS Express Parking System</strong>
+        <strong>{system_name}</strong>
         </p>
     </body>
     </html>
     """
 
     text_body = f"""
-A new booking has just been made on RS Express Parking.
+A new booking has just been made on {system_name}.
 
 -----------------------------
 🚗 Booking Summary
@@ -195,17 +218,15 @@ Payment Method: Stripe
 Please check the admin panel for more details or to manage this booking.
 
 Regards,
-RS Express Parking System
+{system_name}
 """
-    
-    settings = BookingSettings.objects.first()
-    manager_emails = settings.get_manager_email_list() if settings else ["rsexpressparking@gmail.com"]
 
     email = EmailMultiAlternatives(
         subject="New Booking Received – " + str(booking.service.name),
         body=text_body,
-        from_email='RS Express Parking <support@rsexpressparking.com>',
-        to=manager_emails, 
+        from_email=from_email,
+        to=manager_emails,
+        connection=connection
     )
     email.attach_alternative(html_body, "text/html")
     email.attach(f"Invoice-{booking.booking_id}.pdf", pdf_content, 'application/pdf')
@@ -302,6 +323,26 @@ class StripeWebhookView(APIView):
                 booking = payment.booking
                 user = booking.user
 
+                website = getattr(booking, 'website', 'rsexpressparking')
+                if website.lower() == "dublinairportparking":
+                    site_name = "Dublin Airport Parking"
+                    site_url = "https://dublinairportparkingservices.ie/"
+                    team_name = "The Dublin Airport Parking Team"
+                    from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
+                    connection = get_connection(
+                        host=config('EMAIL_HOST'),
+                        port=config('EMAIL_PORT', cast=int),
+                        username="support@dublinairportparkingservices.ie",
+                        password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+                        use_tls=config('EMAIL_USE_TLS', cast=bool)
+                    )
+                else:
+                    site_name = "RS Express Parking"
+                    site_url = "https://rsexpressparking.com/"
+                    team_name = "The RS Express Parking Team"
+                    from_email = "RS Express Parking <support@rsexpressparking.com>"
+                    connection = None  # Use default
+
                 # Deduct bonus points if used
                 bonus_points_used = float(intent['metadata'].get('bonus_points_used', 0))
                 if bonus_points_used > 0 and user:
@@ -350,14 +391,11 @@ class StripeWebhookView(APIView):
     <html>
     <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
         <h2 style="color: #0066cc;">Booking Confirmation – {booking.service.name}</h2>
-
         <p>Hi {booking.first_name},</p>
-
         <p>
-        Thank you for choosing <strong>RS Express Parking</strong> – {booking.service.name}.
+        Thank you for choosing <strong>{site_name}</strong> – {booking.service.name}.
         We're happy to confirm that your booking has been successfully completed and your payment has been received.
         </p>
-
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
         <li><strong>Booking ID:</strong> {booking.booking_id}</li>
@@ -365,18 +403,15 @@ class StripeWebhookView(APIView):
         <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
         <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
         </ul>
-
         <h3 style="color: #444;">💳 Payment Details</h3>
         <ul>
         <li><strong>Total Paid:</strong> €{booking.discounted_price}</li>
         <li><strong>Payment Method:</strong> Stripe</li>
         </ul>
-
         <h3 style="color: #444;">📄 Your Invoice</h3>
         <p>
         You can download your invoice from the attached PDF.
         </p>
-
         {(
         '''
         <h3 style="color: #444;">🅿️ Parking Details</h3>
@@ -412,23 +447,22 @@ class StripeWebhookView(APIView):
         </ul>
         '''
         )}
-
         <p>
         Thanks again, and we look forward to seeing you soon!
         </p>
-
         <p>
         Warm regards,<br>
-        <strong>The RS Express Parking Team</strong><br>
-        <a href="https://rsexpressparking.com/" style="color: #0066cc;">rsexpressparking.com</a> | +353 1 964 0011
+        <strong>{team_name}</strong><br>
+        <a href="{site_url}" style="color: #0066cc;">{site_url}</a> | +353 1 964 0011
         </p>
     </body>
     </html>
     """
+                        
                         text_body = f"""
     Hi {booking.first_name},
 
-    Thank you for choosing RS Express Parking – {booking.service.name}.
+    Thank you for choosing {site_name} – {booking.service.name}.
 
     We're happy to confirm that your booking has been successfully completed and your payment has been received.
 
@@ -451,25 +485,54 @@ class StripeWebhookView(APIView):
     -----------------------------
     You can download your invoice from the attached PDF.
 
+    {(
+    '''
+    -----------------------------
+    🅿️ Parking Details
+    -----------------------------
+    Customer Support: +353 (01) 221 0589
+    Address: Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29
+    Navigation: https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb
+
+    -----------------------------
+    🚐 Arrival Instructions
+    -----------------------------
+    Dublin Airport Park & Fly will greet you on site, assist with parking, and arrange a frequent minibus/coach to the airport.
+    Note: Please report any delay, damage, or issues directly to Dublin Airport Park & Fly.
+    IMPORTANT: Extra passengers may delay shuttle dispatch to/from the airport.
+
+    -----------------------------
+    📝 What To Do When You Arrive
+    -----------------------------
+    Call us just before arriving so our driver can assist and park your car.
+    Contact: +353 (01) 221 0589
+    (Pick Ups and Drop Offs only)
+    On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
+    '''
+    if "Park & Fly" in booking.service.name else
+    '''
     -----------------------------
     📞 Important Instructions
     -----------------------------
     - Please make sure to call the driver at +353 83 489 6505 at least 30 minutes before your arrival and departure to ensure a smooth handover.
     - For any other queries, feel free to reply to this email or contact us directly.
+    '''
+    )}
 
     Thanks again, and we look forward to seeing you soon!
 
     Warm regards,  
-    The RS Express Parking Team  
-    https://rsexpressparking.com/ | +353 1 964 0011
+    {team_name}  
+    {site_url} | +353 1 964 0011
     """
 
 
                         email = EmailMultiAlternatives(
                             subject="Booking Confirmation – " + str(booking.service.name),
                             body=text_body,
-                            from_email='RS Express Parking <support@rsexpressparking.com>',
-                            to=[booking.email],                        
+                            from_email=from_email,
+                            to=[booking.email],
+                            connection=connection
                         )
                         email.attach_alternative(html_body, "text/html")
                         email.attach(f"Invoice-{booking.booking_id}.pdf", pdf_content, 'application/pdf')
