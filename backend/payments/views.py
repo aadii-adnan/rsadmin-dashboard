@@ -89,9 +89,9 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
     service = get_object_or_404(Service, id=booking.service_id)
     add_ons = booking.add_ons.all()
 
-    duration = booking.return_time - booking.departure_time
-    no_of_days = duration.days + (1 if duration.seconds > 0 else 0)
-
+    from_date = booking.departure_time.date()
+    to_date = booking.return_time.date()
+    no_of_days = (to_date - from_date).days + 1
     total_days_price = no_of_days * service.per_day_price
 
     # Prepare logo base64 if available
@@ -683,8 +683,9 @@ class VerifyBookingAmountView(APIView):
             
             # Calculate the actual amount
             service = booking.service
-            duration = booking.return_time - booking.departure_time
-            no_of_days = duration.days + (1 if duration.seconds > 0 else 0)
+            from_date = booking.departure_time.date()
+            to_date = booking.return_time.date()
+            no_of_days = (to_date - from_date).days + 1
             
             total_days_price = no_of_days * service.per_day_price
             add_ons_price = sum(addon.price for addon in booking.add_ons.all())
