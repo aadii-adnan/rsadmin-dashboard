@@ -177,7 +177,7 @@ const Footer = () => {
                     <div className="elementor-element elementor-element-59554bc3 e-con-full e-flex e-con e-child" data-id="59554bc3" data-element_type="container">
                     <div className="elementor-element elementor-element-18139d4f elementor-widget__width-inherit elementor-widget elementor-widget-text-editor" data-id="18139d4f" data-element_type="widget" data-widget_type="text-editor.default">
                         <div className="elementor-widget-container">
-                            <p style={{color:"#fff"}}>Copyright ©2025 Rs Express Parking. Website by <strong><a style={{color: "white"}} href="https://devdexign.com/" target="_blank" rel="noopener">Dev Dexign</a></strong></p>
+                            <p style={{color:"#fff"}}>Copyright ©2025 Rs Express Parking. Website & Marketing by <strong><a style={{color: "white"}} href="https://devdexign.com/" target="_blank" rel="noopener">Dev Dexign</a></strong></p>
                         </div>
                     </div>
                     </div>

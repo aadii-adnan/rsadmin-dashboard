@@ -106,7 +106,7 @@ const BookingForm = () => {
 
     const fetchServiceDetails = async () => {
         try {
-          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/${slug}`); 
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/${slug}/`); 
           const data = await response.json();
           setServiceDetails(data);
           setPrice(Number(data.base_price));

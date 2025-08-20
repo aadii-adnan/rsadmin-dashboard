@@ -106,7 +106,7 @@ def send_completion_email_to_user(booking_id):
         <h3 style="color: #444;">💬 Feedback</h3>
         <p>
             We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:<br>
-            <a href="https://ie.trustpilot.com/evaluate/rsexpressparking.com" target="_blank" style="color:#0066cc;">Leave a Trustpilot Review</a>
+            <a href="https://ie.trustpilot.com/review/dublinairportparkingservices.ie" target="_blank" style="color:#0066cc;">Leave a Trustpilot Review</a>
         </p>
         <p>
         Warm regards,<br>
@@ -145,7 +145,7 @@ Thank you for choosing {site_name}. We appreciate your trust and hope to see you
 💬 Feedback
 -----------------------------
 We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:
-https://ie.trustpilot.com/evaluate/rsexpressparking.com
+https://ie.trustpilot.com/review/dublinairportparkingservices.ie
 
 Warm regards,  
 {team_name}  
