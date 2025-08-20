@@ -3,6 +3,11 @@ from django.utils.text import slugify
 from django.utils import timezone
 
 class Service(models.Model):
+    WEBSITE_CHOICES = [
+        ("both", "Both"),
+        ("rsexpressparking", "RS Express Parking"),
+        ("dublinairportparking", "Dublin Airport Parking"),
+    ]
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
@@ -13,6 +18,12 @@ class Service(models.Model):
     image = models.ImageField(upload_to='service_images/', blank=True, null=True)
     order = models.PositiveIntegerField(default=1, help_text="Lower numbers appear first in the list")
     enabled = models.BooleanField(default=True, help_text="Uncheck to disable this service")
+    website = models.CharField(
+        max_length=32,
+        choices=WEBSITE_CHOICES,
+        default="both",
+        help_text="Which website(s) this service should appear on"
+    )  # <-- NEW FIELD
 
     def save(self, *args, **kwargs):    
         if not self.slug:

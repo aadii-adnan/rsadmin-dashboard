@@ -293,11 +293,19 @@ class BookingAdmin(admin.ModelAdmin):
         return service_name
     service_display.short_description = 'Service & Add-ons'
 
+    def website_abbr(self, obj):
+        if obj.website == "rsexpressparking":
+            return "RS"
+        elif obj.website == "dublinairportparking":
+            return "DAPS"
+        return obj.website or "-"
+    website_abbr.short_description = "Website"
+
     def get_list_display(self, request):
         if request.user.is_manager:
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display','service', 'vehicle_display', 'terminal_display',  'colored_status', 'created_at_display', 'download_booking_form')
         return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
-                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form', 'website')
+                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form', 'website_abbr')
     
 
     def get_fieldsets(self, request, obj=None):
@@ -306,7 +314,7 @@ class BookingAdmin(admin.ModelAdmin):
                 'fields': (
                     ('first_name', 'last_name'),
                     ('email', 'contact_no'),
-                    ('total_passengers', 'website'),
+                    ('total_passengers'),
                 )
             }),
             ('Vehicle Details', {

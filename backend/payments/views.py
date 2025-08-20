@@ -23,13 +23,32 @@ import os
 from rest_framework.renderers import BaseRenderer
 from django.core.mail import EmailMultiAlternatives, get_connection
 from rest_framework.permissions import AllowAny
-from datetime import timezone as tz, timedelta
+from datetime import timezone as tz, timedelta, time
 from django.utils import timezone
 from decimal import Decimal
+import pytz
 
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
+def calculate_parking_days(departure_dt, return_dt):
+    """
+    Calculate parking days by calendar date in Dublin time, always counting both start and end date as full days.
+    """
+    # Use Europe/Dublin timezone
+    dublin_tz = pytz.timezone("Europe/Dublin")
+    # Convert to Dublin time if not already aware
+    if timezone.is_naive(departure_dt):
+        departure_dt = timezone.make_aware(departure_dt, timezone.utc)
+    if timezone.is_naive(return_dt):
+        return_dt = timezone.make_aware(return_dt, timezone.utc)
+    # Convert to Dublin time
+    departure_dt = departure_dt.astimezone(dublin_tz)
+    return_dt = return_dt.astimezone(dublin_tz)
+    from_date = departure_dt.date()
+    to_date = return_dt.date()
+    days = (to_date - from_date).days + 1
+    return days
 
 def link_callback(uri, rel):
     """
@@ -88,10 +107,8 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
 
     service = get_object_or_404(Service, id=booking.service_id)
     add_ons = booking.add_ons.all()
-
-    from_date = booking.departure_time.date()
-    to_date = booking.return_time.date()
-    no_of_days = (to_date - from_date).days + 1
+    
+    no_of_days = calculate_parking_days(booking.departure_time, booking.return_time)
     total_days_price = no_of_days * service.per_day_price
 
     # Prepare logo base64 if available
@@ -682,10 +699,8 @@ class VerifyBookingAmountView(APIView):
                     }, status=status.HTTP_400_BAD_REQUEST)
             
             # Calculate the actual amount
-            service = booking.service
-            from_date = booking.departure_time.date()
-            to_date = booking.return_time.date()
-            no_of_days = (to_date - from_date).days + 1
+            service = booking.service            
+            no_of_days = calculate_parking_days(booking.departure_time, booking.return_time)
             
             total_days_price = no_of_days * service.per_day_price
             add_ons_price = sum(addon.price for addon in booking.add_ons.all())
