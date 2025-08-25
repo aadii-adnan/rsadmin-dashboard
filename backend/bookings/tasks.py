@@ -65,6 +65,7 @@ def send_completion_email_to_user(booking_id):
         site_url = "https://dublinairportparkingservices.ie/"
         team_name = "The Dublin Airport Parking Team"
         from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
+        default_coupon = "DUBPARK15"
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
@@ -77,7 +78,11 @@ def send_completion_email_to_user(booking_id):
         site_url = "https://rsexpressparking.com/"
         team_name = "The RS Express Parking Team"
         from_email = "RS Express Parking <support@rsexpressparking.com>"
+        default_coupon = "RSPARK15"
         connection = None  # Use default
+
+    # Use default coupon if not set
+    coupon = booking.discount_coupon_awarded or default_coupon
 
     html_body = f"""
     <html>
@@ -97,7 +102,7 @@ def send_completion_email_to_user(booking_id):
         <h3 style="color: #444;">🎁 Your Coupon</h3>
         <p>
             As a thank you, here’s a coupon for <strong>15% off</strong> your next booking:<br>
-            <span style="font-size: 18px; font-weight: bold; color: #0066cc;">{booking.discount_coupon_awarded}</span>
+            <span style="font-size: 18px; font-weight: bold; color: #0066cc;">{coupon}</span>
         </p>
         <h3 style="color: #444;">🙏 Thank You!</h3>
         <p>
@@ -134,7 +139,7 @@ Vehicle: {booking.car_model} – {booking.car_registration_no}
 🎁 Your Coupon
 -----------------------------
 As a thank you, here’s a coupon for 15% off your next booking:
-{booking.discount_coupon_awarded}
+{coupon}
 
 -----------------------------
 🙏 Thank You!

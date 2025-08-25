@@ -427,7 +427,7 @@ class StripeWebhookView(APIView):
         </ul>
         <h3 style="color: #444;">📄 Your Invoice</h3>
         <p>
-        You can download your invoice from the attached PDF.
+        Your invoice is attached to this email as a PDF file. Please download it from the email attachment.
         </p>
         {(
         '''
@@ -500,7 +500,7 @@ class StripeWebhookView(APIView):
     -----------------------------
     📄 Your Invoice
     -----------------------------
-    You can download your invoice from the attached PDF.
+    Your invoice is attached to this email as a PDF file. Please download it from the email attachment.
 
     {(
     '''

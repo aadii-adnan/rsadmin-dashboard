@@ -20,6 +20,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.cell.cell import MergedCell
 from openpyxl.styles import Font, Alignment, PatternFill
 import pytz
+from django.db.models.functions import Lower
 
 
 class SingleDateFilter(FieldListFilter):
@@ -95,7 +96,14 @@ class RemoveSpaces(Func):
     arity = 3
 
     def __init__(self, expression):
-        super().__init__(expression, Value(' '), Value(''), output_field=CharField())            
+        super().__init__(expression, Value(' '), Value(''), output_field=CharField())  
+
+class RemoveChars(Func):
+    function = 'REPLACE'
+    arity = 3
+
+    def __init__(self, expression, char_to_remove):
+        super().__init__(expression, Value(char_to_remove), Value(''), output_field=CharField())          
 
 IRELAND_TZ = pytz.timezone('Europe/Dublin')
 @admin.register(Booking)
@@ -137,13 +145,24 @@ class BookingAdmin(admin.ModelAdmin):
     def get_search_results(self, request, queryset, search_term):
         # Remove spaces from the search term for car_registration_no search
         search_term_no_spaces = search_term.replace(' ', '')
+        search_term_no_dash = search_term.replace('-', '')
+
         qs, use_distinct = super().get_search_results(request, queryset, search_term)
 
+        # Car registration search (existing)
         if search_term_no_spaces:
             qs |= self.model.objects.annotate(
                 reg_no_no_spaces=RemoveSpaces('car_registration_no')
             ).filter(
                 reg_no_no_spaces__icontains=search_term_no_spaces
+            )
+
+        # Booking ID search ignoring dashes and case
+        if search_term_no_dash:
+            qs |= self.model.objects.annotate(
+                booking_id_normalized=Lower(RemoveChars('booking_id', '-'))
+            ).filter(
+                booking_id_normalized__icontains=search_term_no_dash.lower()
             )
 
         return qs, use_distinct
