@@ -256,6 +256,13 @@ def send_promotional_emails():
         if not email or email in emails_sent:
             continue
 
+        # Check for another booking with same email and status 'Started' or 'Confirmed'
+        if Booking.objects.filter(
+            email=email,
+            status__name__in=["Started", "Confirmed"]
+        ).exclude(id=booking.id).exists():
+            continue  # Skip sending email for this pending booking
+
         if website == "dublinairportparking":
             personalized_content = (
                 dublin_pending_content

@@ -102,23 +102,7 @@ const Footer = () => {
                     </div>
                     </div>
                     <div className="elementor-element elementor-element-77d88058 elementor-position-left elementor-mobile-position-left elementor-hidden-desktop elementor-hidden-tablet elementor-hidden-mobile elementor-view-default elementor-vertical-align-top elementor-widget elementor-widget-icon-box" data-id="77d88058" data-element_type="widget" data-widget_type="icon-box.default">
-                    <div className="elementor-widget-container">
-                        <div className="elementor-icon-box-wrapper">
-                            <div className="elementor-icon-box-icon">
-                                <a  className="elementor-icon" tabIndex="-1" aria-label="Address">
-                                <i aria-hidden="true" className="icon icon-map-marker1"></i>				</a>
-                            </div>
-                            <div className="elementor-icon-box-content">
-                                <h3 className="elementor-icon-box-title">
-                                <a >
-                                Address						</a>
-                                </h3>
-                                <p className="elementor-icon-box-description">
-                                45486 Schoen Isle, Spencertown <br/> South Dakota 68361					
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    
                     </div>
                     <div className="elementor-element elementor-element-6e66e81e elementor-position-left elementor-mobile-position-left elementor-view-default elementor-vertical-align-top elementor-widget elementor-widget-icon-box" data-id="6e66e81e" data-element_type="widget" data-widget_type="icon-box.default">
                     <div className="elementor-widget-container">
