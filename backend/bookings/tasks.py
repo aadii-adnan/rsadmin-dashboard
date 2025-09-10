@@ -1,7 +1,7 @@
 from celery import shared_task
 from django.core.mail import EmailMultiAlternatives, get_connection
 from .models import Booking
-from core.models import Status
+from core.models import Status, UnsubscribedEmail
 from django.utils import timezone
 from datetime import timedelta, datetime
 from decouple import config
@@ -179,6 +179,7 @@ def send_promotional_emails():
     Send a separate email to users with pending bookings.
     """
     from core.models import BookingSettings
+    unsubscribed_emails = set(UnsubscribedEmail.objects.values_list('email', flat=True))
     settings_obj = BookingSettings.objects.first()
     promo_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
     pending_content = settings_obj.pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at RS Express Parking!</p>"
@@ -201,7 +202,7 @@ def send_promotional_emails():
         email = booking.email
         first_name = booking.first_name or "Customer"
         website = getattr(booking, 'website', 'rsexpressparking').lower()
-        if not email or email in emails_sent:
+        if not email or email in emails_sent or email in unsubscribed_emails:
             continue
 
         if website == "dublinairportparking":
@@ -253,7 +254,7 @@ def send_promotional_emails():
         email = booking.email
         first_name = booking.first_name or "Customer"
         website = getattr(booking, 'website', 'rsexpressparking').lower()
-        if not email or email in emails_sent:
+        if not email or email in emails_sent or email in unsubscribed_emails:
             continue
 
         # Check for another booking with same email and status 'Started' or 'Confirmed'

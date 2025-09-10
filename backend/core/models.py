@@ -74,3 +74,14 @@ class OrderLimit(models.Model):
 
     def __str__(self):
         return f"{self.date} - {self.service.name}: {self.max_orders if self.max_orders is not None else 'Unlimited'}"
+
+
+class UnsubscribedEmail(models.Model):
+    email = models.EmailField(unique=True)
+    unsubscribed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'unsubscribed_email'
+
+    def __str__(self):
+        return self.email

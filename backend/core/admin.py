@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import BookingSettings, OrderLimit
+from .models import BookingSettings, OrderLimit, UnsubscribedEmail
 # Register your models here.
 
 @admin.register(BookingSettings)
@@ -47,4 +47,13 @@ class OrderLimitAdmin(admin.ModelAdmin):
         }
         js = ('admin/js/clickable_rows.js',)
 
-    
+@admin.register(UnsubscribedEmail)
+class UnsubscribedEmailAdmin(admin.ModelAdmin):
+    list_display = ('email', 'unsubscribed_at')
+    search_fields = ('email',)
+
+    class Media:
+        css = {
+            'all': ('admin/css/clickable_rows.css','admin/css/custom_admin.css',)
+        }
+        js = ('admin/js/clickable_rows.js',)
