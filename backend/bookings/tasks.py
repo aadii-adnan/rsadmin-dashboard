@@ -40,10 +40,11 @@ def process_bookings_for_started():
     now = timezone.now()
     started_status = Status.objects.get(name="Started", type='booking')
     confirmed_status = Status.objects.get(name="Confirmed", type='booking')
+    rescheduled_status = Status.objects.get(name="Rescheduled", type='booking')  # Add this line
 
     bookings = Booking.objects.filter(
         departure_time__lte=now, return_time__gt=now,
-        status=confirmed_status
+        status__in=[confirmed_status, rescheduled_status]  # Include both statuses
     )
 
     for booking in bookings:
@@ -59,13 +60,14 @@ def send_completion_email_to_user(booking_id):
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
     return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
 
-    # Set website name and URL based on booking.website
+    # Set website name, URL, and Trustpilot link based on booking.website
     if booking.website.lower() == "dublinairportparking":
         site_name = "Dublin Airport Parking"
         site_url = "https://dublinairportparkingservices.ie/"
         team_name = "The Dublin Airport Parking Team"
         from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
         default_coupon = "DUBPARK15"
+        trustpilot_url = "https://ie.trustpilot.com/review/dublinairportparkingservices.ie"
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
@@ -79,6 +81,7 @@ def send_completion_email_to_user(booking_id):
         team_name = "The RS Express Parking Team"
         from_email = "RS Express Parking <support@rsexpressparking.com>"
         default_coupon = "RSPARK15"
+        trustpilot_url = "https://ie.trustpilot.com/review/rsexpressparking.com"
         connection = None  # Use default
 
     # Use default coupon if not set
@@ -111,7 +114,7 @@ def send_completion_email_to_user(booking_id):
         <h3 style="color: #444;">💬 Feedback</h3>
         <p>
             We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:<br>
-            <a href="https://ie.trustpilot.com/review/dublinairportparkingservices.ie" target="_blank" style="color:#0066cc;">Leave a Trustpilot Review</a>
+            <a href="{trustpilot_url}" target="_blank" style="color:#0066cc;">Leave a Trustpilot Review</a>
         </p>
         <p>
         Warm regards,<br>
@@ -150,7 +153,7 @@ Thank you for choosing {site_name}. We appreciate your trust and hope to see you
 💬 Feedback
 -----------------------------
 We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:
-https://ie.trustpilot.com/review/dublinairportparkingservices.ie
+{trustpilot_url}
 
 Warm regards,  
 {team_name}  

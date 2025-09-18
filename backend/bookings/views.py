@@ -20,6 +20,7 @@ import pytz
 from celery import current_app
 from datetime import timedelta
 from decouple import config
+from payments.views import calculate_parking_days  # Make sure this import is at the top
 
 
 def send_reschedule_email(booking):
@@ -254,9 +255,31 @@ class BookingRescheduleView(APIView):
         if timezone.is_naive(end):
             end = ireland_tz.localize(end)
 
-        # --- UPDATE BOOKING ---
+        # --- UPDATE BOOKING DATES ---
         booking.departure_time = start
         booking.return_time = end
+
+       # --- RECALCULATE AMOUNT ---
+        days = calculate_parking_days(start, end)
+        if days < 1:
+            return Response({'error': 'Invalid date range.'}, status=400)
+        service = booking.service
+
+        # Calculate new total price
+        new_total_price = float(service.base_price) + float(service.per_day_price) * (days - 1)
+        if hasattr(booking, 'add_ons'):
+            new_total_price += sum([float(a.price) for a in booking.add_ons.all()])
+
+        # Calculate difference from previous total
+        prev_total_price = float(booking.total_price or 0)
+        prev_discounted_price = float(booking.discounted_price or prev_total_price)
+        difference = new_total_price - prev_total_price
+
+        # Update booking prices
+        booking.total_price = new_total_price
+        booking.discounted_price = max(0, prev_discounted_price + difference)
+
+        # --- UPDATE STATUS ---
         new_status = 'Rescheduled'
         status_obj = get_object_or_404(Status, name=new_status)
         booking.status = status_obj
@@ -265,7 +288,7 @@ class BookingRescheduleView(APIView):
         send_reschedule_email(booking)
 
         return Response({'message': 'Booking rescheduled successfully.'})
-    
+
 class UserBookingsView(APIView):
     permission_classes = [permissions.IsAuthenticated]  # Only admin/staff can access
 
