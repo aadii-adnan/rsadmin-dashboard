@@ -499,8 +499,6 @@ class BookingAdmin(admin.ModelAdmin):
             'PRODUCT CODE','Booking Ref', 'Customer/Contact', 'Entry Date & Time', 'Return Date & Time', 'Vehicle/Registration',
             'Out Flight Number', 'In Flight Number', 'Add Onns'
         ]
-        if not request.user.is_manager:
-            headers.extend(['Cost'])
 
         current_row = 1
 
@@ -535,10 +533,6 @@ class BookingAdmin(admin.ModelAdmin):
                     booking.return_flight_number,
                     ', '.join([addon.name for addon in booking.add_ons.all()]),
                 ]
-                if not request.user.is_manager:
-                    row_data.append(
-                        booking.total_price if (booking.discounted_price is None or booking.discounted_price <= 0 ) else booking.discounted_price,
-                    )
                 for col, value in enumerate(row_data, 1):
                     ws.cell(row=idx, column=col, value=value)
                     ws.cell(row=idx, column=col).alignment = Alignment(horizontal='left')
