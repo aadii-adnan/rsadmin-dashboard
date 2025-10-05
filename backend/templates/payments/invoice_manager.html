@@ -38,8 +38,9 @@
         <tr><td>Dates: {{ booking.departure_time|date:"F j, Y H:i" }} - {{ booking.return_time|date:"F j, Y H:i" }}</td></tr>
         <tr><td>Customer Name: {{ booking.first_name }} {{ booking.last_name }}</td></tr>
         <tr><td>Phone Number: {{ booking.contact_no }}</td></tr>
-        <tr><td>Vehicle Registration: {{ booking.car_registration_no }}</td></tr>
+        <tr><td>Vehicle Registration: {{ booking.car_registration_no }}</td></tr>        
         <tr><td>Vehicle: {{ booking.car_manufacturer }}</td></tr>
+        <tr><td>Vehicle Color: {{ booking.car_colour }}</td></tr>
         <tr><td>Departure Airport Terminal: {{ booking.departure_terminal }}</td></tr>
         <tr><td>Return Terminal: {{ booking.return_terminal }}</td></tr>
         <tr><td>Departure Flight Number: {{ booking.departure_flight_number }}</td></tr>
