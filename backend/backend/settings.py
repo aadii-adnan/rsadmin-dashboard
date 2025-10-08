@@ -30,7 +30,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', cast=bool)
 
 
-ALLOWED_HOSTS = ['77.37.54.56', 'localhost', '127.0.0.1', 'rsexpressparking.com', 'www.rsexpressparking.com', 'dublinairportparkingservices.ie', 'www.dublinairportparkingservices.ie']
+ALLOWED_HOSTS = ['77.37.54.56', 'localhost', '127.0.0.1', 'rsexpressparking.com', 'www.rsexpressparking.com', 'dublinairportxprsparking.ie', 'www.dublinairportxprsparking.ie']
 
 
 # Application definition
@@ -158,8 +158,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS  = [
     'https://www.rsexpressparking.com',
-    'https://dublinairportparkingservices.ie',
-    'https://www.dublinairportparkingservices.ie',
+    'https://dublinairportxprsparking.ie',
+    'https://www.dublinairportxprsparking.ie',
     'http://localhost:3000',
     'http://localhost:5173',
 ]
@@ -212,7 +212,7 @@ CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
     'https://www.rsexpressparking.com',
-    'https://www.dublinairportparkingservices.ie',
+    'https://www.dublinairportxprsparking.ie',
 ]
 
 # Celery Configuration

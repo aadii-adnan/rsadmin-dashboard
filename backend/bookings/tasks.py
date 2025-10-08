@@ -63,15 +63,15 @@ def send_completion_email_to_user(booking_id):
     # Set website name, URL, and Trustpilot link based on booking.website
     if booking.website.lower() == "dublinairportparking":
         site_name = "Dublin Airport Parking"
-        site_url = "https://dublinairportparkingservices.ie/"
+        site_url = "https://dublinairportxprsparking.ie/"
         team_name = "The Dublin Airport Parking Team"
-        from_email = "Dublin Airport Parking <support@dublinairportparkingservices.ie>"
+        from_email = "Dublin Airport Parking <support@dublinairportxprsparking.ie>"
         default_coupon = "DUBPARK15"
-        trustpilot_url = "https://ie.trustpilot.com/review/dublinairportparkingservices.ie"
+        trustpilot_url = "https://ie.trustpilot.com/review/dublinairportxprsparking.ie"
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
-            username="support@dublinairportparkingservices.ie",
+            username="support@dublinairportxprsparking.ie",
             password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
             use_tls=config('EMAIL_USE_TLS', cast=bool)
         )
@@ -214,7 +214,7 @@ def send_promotional_emails():
                 .replace("{{first_name}}", first_name)
                 .replace("{{current_year}}", str(current_year))
             )
-            custom_email = "hello@dublinairportparkingservices.ie"
+            custom_email = "hello@dublinairportxprsparking.ie"
             from_email = f"Dublin Airport Parking <{custom_email}>"
             subject = subject_promo
             connection = get_connection(
@@ -273,7 +273,7 @@ def send_promotional_emails():
                 .replace("{{first_name}}", first_name)
                 .replace("{{current_year}}", str(current_year))
             )
-            custom_email = "hello@dublinairportparkingservices.ie"
+            custom_email = "hello@dublinairportxprsparking.ie"
             from_email = f"Dublin Airport Parking <{custom_email}>"
             subject = subject_pending
             connection = get_connection(
