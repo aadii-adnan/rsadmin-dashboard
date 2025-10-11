@@ -189,6 +189,7 @@
                 <p class="section-title">Our Company Details</p>
                 <p>
                     <strong>Customer Support:</strong> +353 1 964 0011<br/><br/>
+                    <strong>Driver:</strong> +353 83 875 7805<br/><br/>
                     <strong>Email:</strong> support@dublinairportxprsparking.ie<br/><br/>
                     <strong>Website:</strong> dublinairportxprsparking.ie<br/><br/>
                 </p>
@@ -220,9 +221,15 @@
         </p>
     {% else %}
         <p class="section-title">Important Instructions</p>
-        <p>
-            Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#010659;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
-        </p>
+        {% if booking.website and booking.website|lower == "dublinairportparking" %}
+            <p>
+                Please make sure to <strong>call the driver at <a href="tel:+353838757805" style="color:#010659;">+353 83 875 7805</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+            </p>
+        {% else %}
+            <p>
+                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#010659;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+            </p>
+        {% endif %}
     {% endif %}
 
 
