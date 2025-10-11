@@ -29,10 +29,10 @@ def send_reschedule_email(booking):
 
     # Website-specific names, emails, and SMTP connection
     if booking.website.lower() == "dublinairportparking":
-        site_name = "Dublin Airport Parking"
+        site_name = "Dublin Airport Express Parking"
         site_url = "https://dublinairportxprsparking.ie/"
-        team_name = "The Dublin Airport Parking Team"
-        from_email = "Dublin Airport Parking <support@dublinairportxprsparking.ie>"
+        team_name = "The Dublin Airport Express Parking Team"
+        from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
@@ -322,10 +322,10 @@ class CancelBookingView(APIView):
         refund_amount = max(0, booking_amount - 15)
 
         if booking.website.lower() == "dublinairportparking":
-            site_name = "Dublin Airport Parking"
+            site_name = "Dublin Airport Express Parking"
             site_url = "https://dublinairportxprsparking.ie/"
-            team_name = "The Dublin Airport Parking Team"
-            from_email = "Dublin Airport Parking <support@dublinairportxprsparking.ie>"
+            team_name = "The Dublin Airport Express Parking Team"
+            from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
             connection = get_connection(
                 host=config('EMAIL_HOST'),
                 port=config('EMAIL_PORT', cast=int),

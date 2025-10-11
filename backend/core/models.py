@@ -55,7 +55,7 @@ class BookingSettings(models.Model):
     def get_manager_email_list(self, website=None):
         if website and website.lower() == "dublinairportparking":
             emails = self.dublin_manager_emails
-            default = ["dublinairportparkingservices@gmail.com"]
+            default = ["Dublinairportxpressparking@gmail.com"]
         else:
             emails = self.manager_emails
             default = ["rsexpressparking@gmail.com"]

@@ -161,8 +161,8 @@ def send_manager_new_booking_email(booking, pdf_content):
     manager_emails = settings.get_manager_email_list(website) if settings else ["rsexpressparking@gmail.com"]
 
     if website.lower() == "dublinairportparking":
-        from_email = "Dublin Airport Parking <support@dublinairportxprsparking.ie>"
-        system_name = "Dublin Airport Parking System"
+        from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
+        system_name = "Dublin Airport Express Parking System"
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
@@ -342,10 +342,10 @@ class StripeWebhookView(APIView):
 
                 website = getattr(booking, 'website', 'rsexpressparking')
                 if website.lower() == "dublinairportparking":
-                    site_name = "Dublin Airport Parking"
+                    site_name = "Dublin Airport Express Parking"
                     site_url = "https://dublinairportxprsparking.ie/"
-                    team_name = "The Dublin Airport Parking Team"
-                    from_email = "Dublin Airport Parking <support@dublinairportxprsparking.ie>"
+                    team_name = "The Dublin Airport Express Parking Team"
+                    from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
                     connection = get_connection(
                         host=config('EMAIL_HOST'),
                         port=config('EMAIL_PORT', cast=int),

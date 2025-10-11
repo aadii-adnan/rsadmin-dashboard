@@ -316,7 +316,7 @@ class BookingAdmin(admin.ModelAdmin):
         if obj.website == "rsexpressparking":
             return "RS"
         elif obj.website == "dublinairportparking":
-            return "DAPS"
+            return "DAEP"
         return obj.website or "-"
     website_abbr.short_description = "Website"
 

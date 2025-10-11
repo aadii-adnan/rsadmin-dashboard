@@ -51,7 +51,7 @@ Message:
             manager_emails = settings.get_manager_email_list(website) if settings else ["rsexpressparking@gmail.com"]
 
             if website.lower() == "dublinairportparking":
-                from_email = "Dublin Airport Parking <support@dublinairportxprsparking.ie>"
+                from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
                 connection = get_connection(
                     host=config('EMAIL_HOST'),
                     port=config('EMAIL_PORT', cast=int),

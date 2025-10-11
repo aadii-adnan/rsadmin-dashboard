@@ -62,10 +62,10 @@ def send_completion_email_to_user(booking_id):
 
     # Set website name, URL, and Trustpilot link based on booking.website
     if booking.website.lower() == "dublinairportparking":
-        site_name = "Dublin Airport Parking"
+        site_name = "Dublin Airport Express Parking"
         site_url = "https://dublinairportxprsparking.ie/"
-        team_name = "The Dublin Airport Parking Team"
-        from_email = "Dublin Airport Parking <support@dublinairportxprsparking.ie>"
+        team_name = "The Dublin Airport Express Parking Team"
+        from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
         default_coupon = "DUBPARK15"
         trustpilot_url = "https://ie.trustpilot.com/review/dublinairportxprsparking.ie"
         connection = get_connection(
@@ -186,8 +186,8 @@ def send_promotional_emails():
     settings_obj = BookingSettings.objects.first()
     promo_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
     pending_content = settings_obj.pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at RS Express Parking!</p>"
-    dublin_promo_content = settings_obj.dublin_promotional_email_content if settings_obj else "<p>Check out our latest offers at Dublin Airport Parking!</p>"
-    dublin_pending_content = settings_obj.dublin_pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at Dublin Airport Parking!</p>"
+    dublin_promo_content = settings_obj.dublin_promotional_email_content if settings_obj else "<p>Check out our latest offers at Dublin Airport Express Parking!</p>"
+    dublin_pending_content = settings_obj.dublin_pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at Dublin Airport Express Parking!</p>"
 
     # Get all bookings by status
     all_bookings = Booking.objects.all()
@@ -215,7 +215,7 @@ def send_promotional_emails():
                 .replace("{{current_year}}", str(current_year))
             )
             custom_email = "hello@dublinairportxprsparking.ie"
-            from_email = f"Dublin Airport Parking <{custom_email}>"
+            from_email = f"Dublin Airport Express Parking <{custom_email}>"
             subject = subject_promo
             connection = get_connection(
                 host=config('EMAIL_HOST'),
@@ -274,7 +274,7 @@ def send_promotional_emails():
                 .replace("{{current_year}}", str(current_year))
             )
             custom_email = "hello@dublinairportxprsparking.ie"
-            from_email = f"Dublin Airport Parking <{custom_email}>"
+            from_email = f"Dublin Airport Express Parking <{custom_email}>"
             subject = subject_pending
             connection = get_connection(
                 host=config('EMAIL_HOST'),
