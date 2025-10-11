@@ -131,7 +131,19 @@ export default function TermsAndConditions() {
             </section>
 
             <section className="mb-5">
-                <h4 style={{color:"#010659"}} className="mb-3"><strong>6. Contact Information</strong></h4>
+                <h4 style={{color:"#083E48"}} className="mb-3"><strong>6. Early or Late Arrival Policy</strong></h4>
+                <ol className="ps-3">
+                    <li>Customers arriving <strong>more than 6 hours earlier or later</strong> than their scheduled arrival time will incur a <strong>€20 parking charge</strong>, payable to <strong>Dublin Airport Express Parking</strong>.</li>
+                    <li>This fee is due at the time of <strong>vehicle drop-off</strong> and may be paid using <strong>cash or debit/credit card</strong>.</li>
+                    <li>For <strong>each full day of delay</strong> beyond the agreed return date, an additional <strong>€20 daily parking charge</strong> will apply.</li>
+                    <li>Arrivals made <strong>earlier than the booked time</strong> are subject to a <strong>one-time charge of €20</strong>.</li>
+                    <li>Kindly allow sufficient time for <strong>vehicle return arrangements</strong>, as timing may vary based on <strong>driver and staff availability</strong>.</li>
+                </ol>
+            </section>
+
+
+            <section className="mb-5">
+                <h4 style={{color:"#010659"}} className="mb-3"><strong>7. Contact Information</strong></h4>
                 <p>For inquiries, cancellations, or amendments:</p>
                 <p>
                 📧 <strong>Email:</strong>{' '}

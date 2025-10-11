@@ -7,6 +7,7 @@ class Service(models.Model):
         ("both", "Both"),
         ("rsexpressparking", "RS Express Parking"),
         ("dublinairportparking", "Dublin Airport Parking"),
+        ("none", "None"),
     ]
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
