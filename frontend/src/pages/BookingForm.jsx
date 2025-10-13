@@ -10,6 +10,7 @@ import Step3BookingForm from "../components/BookingForm/Step3BookingForm";
 import Step4BookingForm from "../components/BookingForm/Step4BookingForm";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from 'react-helmet-async';
+import { DateTime } from "luxon";
 
 const steps = [
   { id: "account", label: "Account" },
@@ -237,6 +238,28 @@ const BookingForm = () => {
       };
   }, [currentStep]);
 
+  let show72HourWarning = false;
+  let warningText = "Your booking is for within 72 hours of now. This means it cannot be changed or cancelled.";
+
+  if (
+    serviceDetails?.description?.toLowerCase().includes("72 hours") &&
+    bookingData?.bookingDates?.parkingFromDate &&
+    bookingData?.bookingDates?.parkingFromTime
+  ) {
+    // Get current Dublin time
+    const nowDublin = DateTime.now().setZone("Europe/Dublin");
+    // Get pickup date+time in Dublin time
+    const pickupDublin = DateTime.fromISO(
+      `${bookingData.bookingDates.parkingFromDate}T${bookingData.bookingDates.parkingFromTime}`,
+      { zone: "Europe/Dublin" }
+    );
+    console.log(pickupDublin.diff(nowDublin, "hours").hours);
+    // Check if within 72 hours
+    if (pickupDublin.diff(nowDublin, "hours").hours < 72) {
+      show72HourWarning = true;
+    }
+  }
+
 
     return (
     <>
@@ -272,6 +295,24 @@ const BookingForm = () => {
             <h2 id="heading" style={{   fontSize: "24px",   fontWeight: "bold",   color: "#010659",   marginBottom: "20px", }}>{serviceDetails?.name}</h2>
             <p style={{ color: "#555", marginBottom: "30px" }}>Fill all form fields to go to the next step</p>
 
+            {show72HourWarning && (
+              <div style={{
+                background: "#f8d7da",
+                color: "#721c24",
+                border: "1px solid #f5c6cb",
+                borderRadius: "6px",
+                padding: "16px",
+                marginBottom: "20px",
+                textAlign: "left",
+                fontWeight: 500,
+                fontSize: "16px",
+                display: "flex",
+                alignItems: "center"
+              }}>
+                <span style={{fontSize: "22px", marginRight: "10px"}}>⚠️</span>
+                <span>{warningText}</span>
+              </div>
+            )}
             <ul id="progressbar" className="d-flex flex-wrap justify-content-between list-unstyled mb-4 px-1">
               {steps.map((step, idx) => (
                 <li
