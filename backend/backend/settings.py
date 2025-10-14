@@ -206,9 +206,10 @@ PDF_LOGO_PATH = os.path.join(BASE_DIR, 'static', 'images', 'logo.jpg')
 DUBLIN_PDF_LOGO_PATH = os.path.join(BASE_DIR, 'static', 'images', 'dublin-logo.png')
 PDF_IMAGE_PATH = os.path.join(BASE_DIR, 'static', 'images', 'car.png')
 
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
     'https://www.rsexpressparking.com',

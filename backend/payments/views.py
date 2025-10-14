@@ -151,6 +151,195 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
 
 from django.core.mail import EmailMultiAlternatives
 
+def send_booking_confirmation_email(booking):
+    """
+    Sends a booking confirmation email with invoice PDF attached.
+    Sets booking.email_sent = True if successful.
+    """
+    from django.core.mail import EmailMultiAlternatives, get_connection
+
+    # Website-specific settings
+    website = getattr(booking, 'website', 'rsexpressparking')
+    if website.lower() == "dublinairportparking":
+        site_name = "Dublin Airport Express Parking"
+        site_url = "https://dublinairportxprsparking.ie/"
+        team_name = "The Dublin Airport Express Parking Team"
+        from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
+        connection = get_connection(
+            host=config('EMAIL_HOST'),
+            port=config('EMAIL_PORT', cast=int),
+            username="support@dublinairportxprsparking.ie",
+            password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
+            use_tls=config('EMAIL_USE_TLS', cast=bool)
+        )
+    else:
+        site_name = "RS Express Parking"
+        site_url = "https://rsexpressparking.com/"
+        team_name = "The RS Express Parking Team"
+        from_email = "RS Express Parking <support@rsexpressparking.com>"
+        connection = None  # Use default
+
+    # Generate invoice PDF
+    response, error = generate_invoice(booking)
+    if error:
+        raise Exception(f"Error generating invoice: {error}")
+    pdf_content = response.getvalue()
+
+    departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
+    return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
+
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+        <h2 style="color: #0066cc;">Booking Confirmation – {booking.service.name}</h2>
+        <p>Hi {booking.first_name},</p>
+        <p>
+        Thank you for choosing <strong>{site_name}</strong> – {booking.service.name}.
+        We're happy to confirm that your booking has been successfully completed and your payment has been received.
+        </p>
+        <h3 style="color: #444;">🚗 Booking Summary</h3>
+        <ul>
+        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
+        <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
+        <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
+        <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
+        </ul>
+        <h3 style="color: #444;">💳 Payment Details</h3>
+        <ul>
+        <li><strong>Total Paid:</strong> €{booking.discounted_price}</li>
+        <li><strong>Payment Method:</strong> Stripe</li>
+        </ul>
+        <h3 style="color: #444;">📄 Your Invoice</h3>
+        <p>
+        Your invoice is attached to this email as a PDF file. Please download it from the email attachment.
+        </p>
+        {(
+        '''
+        <h3 style="color: #444;">🅿️ Parking Details</h3>
+        <ul>
+            <li><strong>Customer Support:</strong> +353 (01) 221 0589</li>
+            <li><strong>Address:</strong> Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29</li>
+            <li><strong>Navigation:</strong> <a href="https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb" style="color: #010659;">View on Google Maps</a></li>
+        </ul>
+        <h3 style="color: #444;">🚐 Arrival Instructions</h3>
+        <p>
+            Dublin Airport Park & Fly will greet you on site, assist with parking, and arrange a frequent minibus/coach to the airport.<br>
+            <strong>Note:</strong> Please report any delay, damage, or issues directly to Dublin Airport Park & Fly.<br>
+            <strong>IMPORTANT:</strong> Extra passengers may delay shuttle dispatch to/from the airport.
+        </p>
+        <h3 style="color: #444;">📝 What To Do When You Arrive</h3>
+        <p>
+            Call us just before arriving so our driver can assist and park your car.<br>
+            <strong>Contact:</strong> +353 (01) 221 0589<br>
+            (Pick Ups and Drop Offs only)<br>
+            On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
+        </p>
+        '''
+        if "Park & Fly" in booking.service.name else
+        '''
+        <h3 style="color: #444;">📞 Important Instructions</h3>
+        <ul>
+            <li>
+                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+            </li>
+            <li>
+                For any other queries, feel free to reply to this email or contact us directly.
+            </li>
+        </ul>
+        '''
+        )}
+        <p>
+        Thanks again, and we look forward to seeing you soon!
+        </p>
+        <p>
+        Warm regards,<br>
+        <strong>{team_name}</strong><br>
+        <a href="{site_url}" style="color: #0066cc;">{site_url}</a> | +353 1 964 0011
+        </p>
+    </body>
+    </html>
+    """
+
+    text_body = f"""
+Hi {booking.first_name},
+
+Thank you for choosing {site_name} – {booking.service.name}.
+
+We're happy to confirm that your booking has been successfully completed and your payment has been received.
+
+-----------------------------
+🚗 Booking Summary
+-----------------------------
+Booking ID: {booking.booking_id}
+Drop-Off Date & Time: {departure_time}
+Pick-Up Date & Time: {return_time}
+Vehicle: {booking.car_model} – {booking.car_registration_no}
+
+-----------------------------
+💳 Payment Details
+-----------------------------
+Total Paid: €{booking.discounted_price}
+Payment Method: Stripe
+
+-----------------------------
+📄 Your Invoice
+-----------------------------
+Your invoice is attached to this email as a PDF file. Please download it from the email attachment.
+
+{(
+'''
+-----------------------------
+🅿️ Parking Details
+-----------------------------
+Customer Support: +353 (01) 221 0589
+Address: Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29
+Navigation: https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb
+
+-----------------------------
+🚐 Arrival Instructions
+-----------------------------
+Dublin Airport Park & Fly will greet you on site, assist with parking, and arrange a frequent minibus/coach to the airport.
+Note: Please report any delay, damage, or issues directly to Dublin Airport Park & Fly.
+IMPORTANT: Extra passengers may delay shuttle dispatch to/from the airport.
+
+-----------------------------
+📝 What To Do When You Arrive
+-----------------------------
+Call us just before arriving so our driver can assist and park your car.
+Contact: +353 (01) 221 0589
+(Pick Ups and Drop Offs only)
+On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
+'''
+if "Park & Fly" in booking.service.name else
+'''
+-----------------------------
+📞 Important Instructions
+-----------------------------
+- Please make sure to call the driver at +353 83 489 6505 at least 30 minutes before your arrival and departure to ensure a smooth handover.
+- For any other queries, feel free to reply to this email or contact us directly.
+'''
+)}
+
+Thanks again, and we look forward to seeing you soon!
+
+Warm regards,  
+{team_name}  
+{site_url} | +353 1 964 0011
+"""
+
+    email = EmailMultiAlternatives(
+        subject="Booking Confirmation – " + str(booking.service.name),
+        body=text_body,
+        from_email=from_email,
+        to=[booking.email],
+        connection=connection
+    )
+    email.attach_alternative(html_body, "text/html")
+    email.attach(f"Invoice-{booking.booking_id}.pdf", pdf_content, 'application/pdf')
+    email.send()
+    booking.email_sent = True
+    booking.save(update_fields=["email_sent"])
+
 def send_manager_new_booking_email(booking, pdf_content):
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
     return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')

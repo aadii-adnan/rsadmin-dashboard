@@ -21,7 +21,7 @@ from openpyxl.cell.cell import MergedCell
 from openpyxl.styles import Font, Alignment, PatternFill
 import pytz
 from django.db.models.functions import Lower
-
+from payments.views import send_booking_confirmation_email, send_manager_new_booking_email
 
 class SingleDateFilter(FieldListFilter):
     template = 'admin/single_date_filter.html'
@@ -612,6 +612,20 @@ class BookingAdmin(admin.ModelAdmin):
         return response    
 
     export_as_csv.short_description = "Export Selected Bookings as Excel"
+
+    def save_model(self, request, obj, form, change):
+        is_new = not change
+        super().save_model(request, obj, form, change)
+        if is_new and obj.status and obj.status.name.lower() == "confirmed" and not obj.email_sent:
+            try:
+                send_booking_confirmation_email(obj)
+                # Generate invoice PDF for manager email
+                response, error = generate_invoice(obj)
+                if not error:
+                    pdf_content = response.getvalue()
+                    send_manager_new_booking_email(obj, pdf_content)
+            except Exception as e:
+                self.message_user(request, f"Error sending confirmation/manager email: {e}", level='error')
 
 
     class Media:
