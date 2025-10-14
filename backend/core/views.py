@@ -59,12 +59,18 @@ class OrdersCountView(APIView):
         return Response({'date': booking_date, 'service': service_slug, 'count': count})
 
 def robots_txt(request):
-    content = """User-agent: *
+    host = request.get_host()
+    # Default to RS Express Parking
+    sitemap_url = "https://rsexpressparking.com/sitemap.xml"
+    # If the request is from Dublin Airport Parking, use its sitemap
+    if "dublinairport" in host:
+        sitemap_url = "https://dublinairportxprsparking.ie/sitemap.xml"
+    content = f"""User-agent: *
 Allow: /
 Disallow: /admin-dashboard/
 Disallow: /api/auth/
 Disallow: /api/payments/
 
-Sitemap: https://rsexpressparking.com/sitemap.xml
+Sitemap: {sitemap_url}
 """
     return HttpResponse(content, content_type='text/plain')
