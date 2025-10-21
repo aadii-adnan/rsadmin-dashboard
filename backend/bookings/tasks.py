@@ -182,7 +182,9 @@ def send_promotional_emails():
     Send a separate email to users with pending bookings.
     """
     from core.models import BookingSettings
-    unsubscribed_emails = set(UnsubscribedEmail.objects.values_list('email', flat=True))
+    unsubscribed_emails = set(
+        e.strip().lower() for e in UnsubscribedEmail.objects.values_list('email', flat=True) if e
+    )
     settings_obj = BookingSettings.objects.first()
     promo_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
     pending_content = settings_obj.pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at RS Express Parking!</p>"
@@ -203,9 +205,12 @@ def send_promotional_emails():
     # Send promotional emails
     for booking in promo_bookings:
         email = booking.email
+        if not email:
+            continue
+        email_norm = email.strip().lower()
         first_name = booking.first_name or "Customer"
         website = getattr(booking, 'website', 'rsexpressparking').lower()
-        if not email or email in emails_sent or email in unsubscribed_emails:
+        if email_norm in emails_sent or email_norm in unsubscribed_emails:
             continue
 
         if website == "dublinairportparking":
@@ -250,19 +255,22 @@ def send_promotional_emails():
         )
         msg.attach_alternative(personalized_content, "text/html")
         msg.send()
-        emails_sent.add(email)
+        emails_sent.add(email_norm)
 
     # Send pending booking emails
     for booking in pending_bookings:
         email = booking.email
+        if not email:
+            continue
+        email_norm = email.strip().lower()
         first_name = booking.first_name or "Customer"
         website = getattr(booking, 'website', 'rsexpressparking').lower()
-        if not email or email in emails_sent or email in unsubscribed_emails:
+        if email_norm in emails_sent or email_norm in unsubscribed_emails:
             continue
 
         # Check for another booking with same email and status 'Started' or 'Confirmed'
         if Booking.objects.filter(
-            email=email,
+            email__iexact=email,  # use case-insensitive DB check for safety
             status__name__in=["Started", "Confirmed"]
         ).exclude(id=booking.id).exists():
             continue  # Skip sending email for this pending booking
@@ -309,4 +317,4 @@ def send_promotional_emails():
         )
         msg.attach_alternative(personalized_content, "text/html")
         msg.send()
-        emails_sent.add(email)
+        emails_sent.add(email_norm)
