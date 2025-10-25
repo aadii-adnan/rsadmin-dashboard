@@ -64,7 +64,7 @@ def robots_txt(request):
     sitemap_url = "https://rsexpressparking.com/sitemap.xml"
     # If the request is from Dublin Airport Parking, use its sitemap
     if "dublinairport" in host:
-        sitemap_url = "https://dublinairportxprsparking.ie/sitemap.xml"
+        sitemap_url = "https://dublinairportexpressparking.ie/sitemap.xml"
     content = f"""User-agent: *
 Allow: /
 Disallow: /admin-dashboard/

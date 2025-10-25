@@ -51,11 +51,11 @@ Message:
             manager_emails = settings.get_manager_email_list(website) if settings else ["rsexpressparking@gmail.com"]
 
             if website.lower() == "dublinairportparking":
-                from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
+                from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
                 connection = get_connection(
                     host=config('EMAIL_HOST'),
                     port=config('EMAIL_PORT', cast=int),
-                    username="support@dublinairportxprsparking.ie",
+                    username="support@dublinairportexpressparking.ie",
                     password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
                     use_tls=config('EMAIL_USE_TLS', cast=bool)
                 )

@@ -30,13 +30,13 @@ def send_reschedule_email(booking):
     # Website-specific names, emails, and SMTP connection
     if booking.website.lower() == "dublinairportparking":
         site_name = "Dublin Airport Express Parking"
-        site_url = "https://dublinairportxprsparking.ie/"
+        site_url = "https://dublinairportexpressparking.ie/"
         team_name = "The Dublin Airport Express Parking Team"
-        from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
+        from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
-            username="support@dublinairportxprsparking.ie",
+            username="support@dublinairportexpressparking.ie",
             password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
             use_tls=config('EMAIL_USE_TLS', cast=bool)
         )
@@ -323,13 +323,13 @@ class CancelBookingView(APIView):
 
         if booking.website.lower() == "dublinairportparking":
             site_name = "Dublin Airport Express Parking"
-            site_url = "https://dublinairportxprsparking.ie/"
+            site_url = "https://dublinairportexpressparking.ie/"
             team_name = "The Dublin Airport Express Parking Team"
-            from_email = "Dublin Airport Express Parking <support@dublinairportxprsparking.ie>"
+            from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
             connection = get_connection(
                 host=config('EMAIL_HOST'),
                 port=config('EMAIL_PORT', cast=int),
-                username="support@dublinairportxprsparking.ie",
+                username="support@dublinairportexpressparking.ie",
                 password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
                 use_tls=config('EMAIL_USE_TLS', cast=bool)
             )
