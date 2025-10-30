@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import wifi from "../../assets/wifi.png";
 import masterCardLogo from "../../assets/master-card.png";
@@ -9,12 +9,34 @@ import CheckoutForm from "./CheckoutForm";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY); // Replace with your real Stripe public key
 
-const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, handleChange, nextButtonStyle, labelStyle, inputStyle,  bonusUsed}) => {
+const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, handleChange, nextButtonStyle, labelStyle, inputStyle,  bonusUsed, prevButtonStyle, goBack}) => {
+
+  const [isHover, setIsHover] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 600);
   }
   , []);
+
+  const backBtnBase = {
+    background: "#fff",
+    color: "#010659",
+    border: "1px solid #d1d5db",
+    padding: "10px 20px",
+    borderRadius: 8,
+    minWidth: 120,
+    fontWeight: 600,
+    boxShadow: isHover ? "0 8px 28px rgba(1,6,89,0.12)" : "0 4px 12px rgba(1,6,89,0.06)",
+    transition: "all 160ms ease",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    cursor: "pointer",
+  };
+
+  const backButtonStyleFinal = prevButtonStyle ? { ...backBtnBase, ...prevButtonStyle } : backBtnBase;
+
   return (
     <fieldset className="fieldset active">
       <div className="form-card">
@@ -62,6 +84,19 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
                     bonusUsed={bonusUsed}
                   />
                 </Elements>
+              </div>
+              <div className="mt-3 d-flex justify-content-between">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={goBack}
+                  style={backButtonStyleFinal}
+                  onMouseEnter={() => setIsHover(true)}
+                  onMouseLeave={() => setIsHover(false)}
+                >
+                  <span style={{fontSize:18, lineHeight:1}}>←</span>
+                  <span>Back</span>
+                </button>
               </div>
             </div>
           </div>

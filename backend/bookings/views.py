@@ -605,7 +605,15 @@ class BookingDetailView(APIView):
             return Response(
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )    
+            )   
+
+    def put(self, request, pk):
+        booking = get_object_or_404(Booking, pk=pk)
+        serializer = BookingSerializer(booking, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400) 
         
 class UpdatePaymentStatusView(APIView):
     permission_classes = [AllowAny]

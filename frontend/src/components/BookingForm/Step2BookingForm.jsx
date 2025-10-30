@@ -83,7 +83,7 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
             if(!validateInputs())                
                 return;
 
-            const statusId = statuses.find((status) => (status.name === formData.status_name) && status.type === "booking")?.id;
+            const statusId = statuses.find((status) => status.name === formData.status_name && status.type === "booking")?.id;
 
             if (!statusId) {
                 alert("Invalid status selected.");
@@ -93,13 +93,8 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
             if (!parkingFromDate || !carCollectionDate) {
                 throw new Error("Invalid booking dates");
             }
-            
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
-                method: "POST",                
-                headers: {
-                "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+
+            const bookingPayload = {
                 ...formData,
                 service: serviceDetails.id,
                 user: userDetails?.id,
@@ -111,9 +106,30 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                 total_price: totalPrice.toFixed(2),
                 status: statusId,
                 website: "rsexpressparking",
-                }),
-            });
-            const data = await response.json();
+                add_ons: selectedAddOns,
+            };
+
+            let response, data;
+            if (formData.booking_id) {
+              // Update existing booking
+              response = await fetch(
+                `${import.meta.env.VITE_API_BASE_URL}/bookings/${formData.booking_id}/`,
+                {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(bookingPayload),
+                }
+              );
+            } else {
+              // Create new booking
+              response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bookingPayload),
+              });
+            }
+            data = await response.json();
+
             if (response.ok) {
                 setFormData((prev) => ({
                     ...prev,
@@ -122,16 +138,16 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                 setBookingData((prev) => ({
                     ...prev,
                     bookingDetails: {
-                        ...prev.bookingDetails,
-                        booking_id: data.id,
-                        booking_unique_id : data?.booking_id,
-                        total_price : totalPrice,
+                      ...prev.bookingDetails,
+                      booking_id: data.id,
+                      booking_unique_id: data?.booking_id,
+                      total_price: totalPrice,
                     },
                     carFlightDetails: {
-                        ...prev.carFlightDetails,
-                        addOnsDetails: addOnsDetails,
-                    }
-                }));  
+                      ...prev.carFlightDetails,
+                      addOnsDetails: addOnsDetails,
+                    },
+                  }));
                 if (formData.booking_user_id) {
                   await updateBookingUserStatus(formData.booking_user_id);
                 }           
@@ -145,10 +161,12 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                 setError(data.message || "An error occurred.");
                 setIsPopupOpen(true);
             }
-        } catch (error) {
-            console.error("Error creating booking:", error);
-        }
-    };
+          } catch (error) {
+            console.error("Error creating/updating booking:", error);
+          } finally {
+            setLoading(false);
+          }
+        };
 
   return (
     <>

@@ -66,7 +66,7 @@ const BookingForm = () => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: name === "total_passengers" ? Number(value) : value,
         }));
     };
 
@@ -179,9 +179,7 @@ const BookingForm = () => {
                               booking_id: bookingDetails.booking_id
                           }));
 
-                          if (currentStep < 3 && localStorage.getItem("payment_status") !== "succeeded") {
-                              setCurrentStep(3);
-                          }else if (currentStep < 4 && localStorage.getItem("payment_status") === "succeeded") {
+                          if (currentStep < 4 && localStorage.getItem("payment_status") === "succeeded") {
                               setCurrentStep(4);
                           }
                       } else {
@@ -239,7 +237,7 @@ const BookingForm = () => {
   }, [currentStep]);
 
   let show72HourWarning = false;
-  let warningText = "Your booking is for within 72 hours of now. This means it cannot be changed or cancelled.";
+  let warningText = "Your booking is for within 72 hours of now. This means it cannot be cancelled.";
 
   if (
     serviceDetails?.description?.toLowerCase().includes("72 hours") &&
