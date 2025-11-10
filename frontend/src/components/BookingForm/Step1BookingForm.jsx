@@ -111,25 +111,33 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
         <div className="bookingform-row">
             <div className="bookingform-col">
                 <label style={labelStyle}>Departure Terminal: *</label>
-                <input className='custom-input'
-                type="number"
-                name="departure_terminal"
-                placeholder="Dep Terminal"
-                style={inputStyle}
-                value={formData?.departure_terminal}
-                onChange={handleChange}
-                />
+                <select
+                  className='custom-input'
+                  name="departure_terminal"
+                  style={inputStyle}
+                  value={formData?.departure_terminal ?? ''}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Terminal</option>
+                  <option value="1">Terminal 1</option>
+                  <option value="2">Terminal 2</option>
+                </select>
             </div>
             <div className="bookingform-col">
                 <label style={labelStyle}>Return Terminal: *</label>
-                <input className='custom-input'
-                type="number"
-                name="return_terminal"
-                placeholder="Ret Terminal"
-                style={inputStyle}
-                value={formData?.return_terminal}
-                onChange={handleChange}
-                />
+                <select
+                  className='custom-input'
+                  name="return_terminal"
+                  style={inputStyle}
+                  value={formData?.return_terminal ?? ''}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Terminal</option>
+                  <option value="1">Terminal 1</option>
+                  <option value="2">Terminal 2</option>
+                </select>
             </div>
         </div>
 

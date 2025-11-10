@@ -14,7 +14,7 @@ def process_bookings_for_completion():
     Mark as completed and send thank you email.
     """
     now = timezone.now()
-    threshold = now - timedelta(minutes=10)
+    threshold = now - timedelta(hours=3)
     completed_status = Status.objects.get(name="Completed", type='booking')
     started_status = Status.objects.get(name="Started", type='booking')
 
@@ -60,14 +60,16 @@ def send_completion_email_to_user(booking_id):
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
     return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
 
-    # Set website name, URL, and Trustpilot link based on booking.website
-    if booking.website.lower() == "dublinairportparking":
+    is_dublin = (booking.website.lower() == "dublinairportparking")
+
+    if is_dublin:
         site_name = "Dublin Airport Express Parking"
         site_url = "https://dublinairportexpressparking.ie/"
         team_name = "The Dublin Airport Express Parking Team"
         from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
         default_coupon = "DUBPARK15"
-        trustpilot_url = "https://ie.trustpilot.com/review/dublinairportexpressparking.ie"
+        trustpilot_url = None
+        google_review_url = None
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
@@ -82,10 +84,40 @@ def send_completion_email_to_user(booking_id):
         from_email = "RS Express Parking <support@rsexpressparking.com>"
         default_coupon = "RSPARK15"
         trustpilot_url = "https://ie.trustpilot.com/review/rsexpressparking.com"
+        google_review_url = "https://g.page/r/CZW2D3u4VHTOEAI/review"
         connection = None  # Use default
 
     # Use default coupon if not set
     coupon = booking.discount_coupon_awarded or default_coupon
+
+    if is_dublin:
+        feedback_html = f"""
+        <h3 style="color: #444;">💬 Feedback</h3>
+        <p>We would love to hear about your experience. Just reply to this email with your feedback or review.</p>
+        """
+        feedback_text = """
+-----------------------------
+💬 Feedback
+-----------------------------
+We would love to hear about your experience. Just reply to this email with your feedback or review.
+"""
+    else:
+        feedback_html = f"""
+        <h3 style="color: #444;">💬 Feedback</h3>
+        <p>
+            We would love to hear about your experience. If you have a moment, please consider leaving us a review:<br>
+            <a href="{trustpilot_url}" target="_blank" style="color:#0066cc;">Leave a Trustpilot Review</a><br>
+            <a href="{google_review_url}" target="_blank" style="color:#0066cc;">Leave a Google Maps Review</a>
+        </p>
+        """
+        feedback_text = f"""
+-----------------------------
+💬 Feedback
+-----------------------------
+We would love to hear about your experience. If you have a moment, please consider leaving us a review:
+Trustpilot: {trustpilot_url}
+Google Maps: {google_review_url}
+"""
 
     html_body = f"""
     <html>
@@ -111,11 +143,7 @@ def send_completion_email_to_user(booking_id):
         <p>
         Thank you for choosing <strong>{site_name}</strong>. We appreciate your trust and hope to see you again soon!
         </p>
-        <h3 style="color: #444;">💬 Feedback</h3>
-        <p>
-            We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:<br>
-            <a href="{trustpilot_url}" target="_blank" style="color:#0066cc;">Leave a Trustpilot Review</a>
-        </p>
+        {feedback_html}
         <p>
         Warm regards,<br>
         <strong>{team_name}</strong><br>
@@ -148,13 +176,7 @@ As a thank you, here’s a coupon for 15% off your next booking:
 🙏 Thank You!
 -----------------------------
 Thank you for choosing {site_name}. We appreciate your trust and hope to see you again soon!
-
------------------------------
-💬 Feedback
------------------------------
-We would love to hear about your experience. If you have a moment, please consider leaving us a review on Trustpilot:
-{trustpilot_url}
-
+{feedback_text}
 Warm regards,  
 {team_name}  
 {site_url} | +353 1 964 0011

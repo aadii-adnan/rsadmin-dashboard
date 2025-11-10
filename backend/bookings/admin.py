@@ -44,7 +44,6 @@ class SingleDateFilter(FieldListFilter):
         return [self.date_params['gte'], self.date_params['lt']]
 
     def queryset(self, request, queryset):
-        # Collect all date filters from all SingleDateFilters
         filters = []
         for field in ['departure_time', 'return_time', 'created_at']:
             gte = request.GET.get(f"{field}__gte")
@@ -65,7 +64,6 @@ class SingleDateFilter(FieldListFilter):
             if q:
                 filters.append(q)
         if filters:
-            # Combine all filters with OR
             query = filters[0]
             for f in filters[1:]:
                 query |= f
@@ -142,30 +140,41 @@ class BookingAdmin(admin.ModelAdmin):
 
     price_display.short_description = 'Total Price'
 
+
     def get_search_results(self, request, queryset, search_term):
-        # Remove spaces from the search term for car_registration_no search
+        # Normalize terms
         search_term_no_spaces = search_term.replace(' ', '')
         search_term_no_dash = search_term.replace('-', '')
 
-        qs, use_distinct = super().get_search_results(request, queryset, search_term)
+        # Run default admin search on the already-filtered queryset (includes date filters)
+        base_qs, use_distinct = super().get_search_results(request, queryset, search_term)
 
-        # Car registration search (existing)
+        # Build pk subqueries for custom searches (avoid queryset unions)
+        ors = [Q(pk__in=base_qs.values_list('pk', flat=True))]
+
         if search_term_no_spaces:
-            qs |= self.model.objects.annotate(
+            reg_ids = self.model.objects.annotate(
                 reg_no_no_spaces=RemoveSpaces('car_registration_no')
             ).filter(
                 reg_no_no_spaces__icontains=search_term_no_spaces
-            )
+            ).values_list('pk', flat=True)
+            ors.append(Q(pk__in=reg_ids))
 
-        # Booking ID search ignoring dashes and case
         if search_term_no_dash:
-            qs |= self.model.objects.annotate(
+            bid_ids = self.model.objects.annotate(
                 booking_id_normalized=Lower(RemoveChars('booking_id', '-'))
             ).filter(
                 booking_id_normalized__icontains=search_term_no_dash.lower()
-            )
+            ).values_list('pk', flat=True)
+            ors.append(Q(pk__in=bid_ids))
 
-        return qs, use_distinct
+        combined_q = Q()
+        for part in ors:
+            combined_q |= part
+
+        # Apply on the base filtered queryset (preserves date filters and others)
+        final_qs = queryset.filter(combined_q).distinct()
+        return final_qs, True
 
     def download_invoices_zip(self, request, queryset):
         zip_buffer = io.BytesIO()
