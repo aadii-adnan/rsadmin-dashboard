@@ -31,11 +31,17 @@ class UserLatestCouponView(APIView):
     def get(self, request):
 
         now = timezone.now()
-        latest_coupon = Coupon.objects.filter(
+        # Get active coupons whose start date has passed
+        candidates = Coupon.objects.filter(
             active=True,
-            valid_from__lte=now,
-            valid_to__gte=now
-        ).order_by('-valid_from').first()
+            valid_from__lte=now
+        ).order_by('-valid_from')
+
+        latest_coupon = None
+        for c in candidates:
+            if c.is_valid():
+                latest_coupon = c
+                break
 
         if not latest_coupon:
             return Response({'message': 'No active coupon available'}, status=404)
@@ -53,12 +59,14 @@ class CheckCouponValidityView(APIView):
         coupon = Coupon.objects.filter(
             code=code,
             active=True,
-            valid_from__lte=now,
-            valid_to__gte=now
+            valid_from__lte=now
         ).first()
 
-        if not coupon or coupon.times_used >= coupon.max_uses:
-            return Response({'error': 'Invalid, expired, or fully used coupon'}, status=404)
+        if not coupon or not coupon.is_valid():
+            return Response({'error': 'Invalid or expired coupon'}, status=404)
+
+        if coupon.times_used >= coupon.max_uses:
+            return Response({'error': 'Coupon has been fully used'}, status=404)
 
         serializer = CouponSerializer(coupon)
         return Response(serializer.data, status=200)

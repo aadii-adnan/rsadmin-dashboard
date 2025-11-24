@@ -21,6 +21,7 @@ from celery import current_app
 from datetime import timedelta
 from decouple import config
 from payments.views import calculate_parking_days  # Make sure this import is at the top
+from django.db.models import Q
 
 
 def send_reschedule_email(booking):
@@ -200,18 +201,16 @@ class BookingListCreate(APIView):
         # Check if a coupon is provided
         if coupon_id:
             now = timezone.now()
-            coupon = Coupon.objects.filter(
-                id=coupon_id,
-                active=True,
-                valid_from__lte=now,
-                valid_to__gte=now
-            ).first()
+            try:
+                coupon = Coupon.objects.get(id=coupon_id, active=True, valid_from__lte=now)
+            except Coupon.DoesNotExist:
+                return Response({'error': 'Invalid or expired coupon'}, status=400)
 
-            if not coupon:
+            if not coupon.is_valid():
                 return Response({'error': 'Invalid or expired coupon'}, status=400)
 
             if coupon.times_used >= coupon.max_uses:
-                return Response({'error': 'Coupon has been fully used'}, status=400)            
+                return Response({'error': 'Coupon has been fully used'}, status=400)         
         
         serializer = BookingSerializer(data=data)
         if serializer.is_valid():

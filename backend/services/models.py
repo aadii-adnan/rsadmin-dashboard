@@ -60,7 +60,8 @@ class Coupon(models.Model):
     discount_percent = models.PositiveIntegerField(help_text="Enter a value between 1 and 100")
     active = models.BooleanField(default=True)
     valid_from = models.DateTimeField()
-    valid_to = models.DateTimeField()
+    valid_to = models.DateTimeField(null=True, blank=True, help_text="Leave blank if lifetime")
+    lifetime = models.BooleanField(default=False, help_text="If checked, coupon never expires by date")
     max_uses = models.PositiveIntegerField(default=1, help_text="Maximum number of times this coupon can be used")
     times_used = models.PositiveIntegerField(default=0, help_text="Number of times this coupon has been used")
 
@@ -68,15 +69,18 @@ class Coupon(models.Model):
         db_table = 'coupon'
 
     def __str__(self):
-        return f"{self.code} - {self.discount_percent}%"
+        scope = "lifetime" if self.lifetime else f"until {self.valid_to.strftime('%Y-%m-%d')}" if self.valid_to else "dated"
+        return f"{self.code} - {self.discount_percent}% ({scope})"
 
     def is_valid(self):
-        """Check if the coupon is still valid based on usage and date."""
         now = timezone.now()
-        return (
-            self.active and
-            self.valid_from <= now <= self.valid_to and
-            self.times_used < self.max_uses
-        )
-
+        if not self.active:
+            return False
+        if self.times_used >= self.max_uses:
+            return False
+        if self.lifetime:
+            return True
+        if self.valid_to is None:
+            return self.valid_from <= now  # open-ended if no valid_to but not marked lifetime
+        return self.valid_from <= now <= self.valid_to
 

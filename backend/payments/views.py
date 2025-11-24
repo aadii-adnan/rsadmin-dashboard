@@ -462,7 +462,7 @@ class CreateStripePaymentIntent(APIView):
                 amount_to_charge = float(extra_amount)
             else:
                 discounted_total = booking.total_price
-                if booking.coupon and booking.coupon.active and booking.coupon.valid_from <= timezone.now() <= booking.coupon.valid_to:
+                if booking.coupon and booking.coupon.is_valid():
                     discount_amount = (booking.total_price * booking.coupon.discount_percent) / 100
                     discounted_total = booking.total_price - discount_amount
                     discounted_total = max(0, discounted_total - bonus_points_used)
@@ -564,13 +564,13 @@ class StripeWebhookView(APIView):
                 # Award a new coupon to the user
                 code = generate_coupon_code()
                 valid_from = timezone.now()
-                valid_to = valid_from + timedelta(days=30)
 
                 coupon = Coupon.objects.create(
                     code=code,
-                    discount_percent=15,  # You can customize this
+                    discount_percent=15,
                     valid_from=valid_from,
-                    valid_to=valid_to,
+                    valid_to=None,      # not needed for lifetime
+                    lifetime=True,
                     active=True
                 )
 
@@ -898,7 +898,7 @@ class VerifyBookingAmountView(APIView):
             # Apply discount if coupon exists
             if booking.coupon and booking.coupon.is_valid():
                 discount_amount = (total_price * booking.coupon.discount_percent) / 100
-                total_price = total_price - discount_amount
+                total_price -= discount_amount
 
             if booking.bonus_points_used:
                 total_price = total_price - booking.bonus_points_used

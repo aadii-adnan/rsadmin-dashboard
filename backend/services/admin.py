@@ -87,12 +87,12 @@ class CouponAdmin(admin.ModelAdmin):
     valid_from_display.admin_order_field = 'valid_from'
 
     def valid_to_display(self, obj):
-        return timezone.localtime(obj.valid_to).strftime('%d %b %Y %H:%M')
+        return timezone.localtime(obj.valid_to).strftime('%d %b %Y %H:%M') if not obj.lifetime else 'Lifetime'
     valid_to_display.short_description = 'Valid To'
     valid_to_display.admin_order_field = 'valid_to'
     list_display = ('id', 'code', 'discount_percent', 'active', 'valid_from_display', 
                    'valid_to_display', 'usage_count', 'is_currently_valid')
-    list_filter = ('active', 'valid_from', 'valid_to')
+    list_filter = ('active', 'valid_from', 'valid_to', 'lifetime')
     search_fields = ('code',)
     
     def usage_count(self, obj):
@@ -118,7 +118,7 @@ class CouponAdmin(admin.ModelAdmin):
         ('Validity Period', {
             'fields': (
                 ('valid_from', 'valid_to'),
-                ('valid_from_display', 'valid_to_display'),
+                ('valid_from_display', 'valid_to_display', 'lifetime'),
             )
         }),
         ('Usage Limits', {
