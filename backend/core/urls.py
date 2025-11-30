@@ -1,4 +1,4 @@
-from .views import StatusListView, BookingSettingsView, OrdersCountView, OrderLimitView
+from .views import StatusListView, BookingSettingsView, OrdersCountView, OrderLimitView, DiscountSignupView
 from django.urls import path
 
 urlpatterns = [
@@ -6,4 +6,5 @@ urlpatterns = [
     path('booking-settings/', BookingSettingsView.as_view(), name='booking-settings'),
     path('orders-count/', OrdersCountView.as_view(), name='orders-count'),
     path('order-limit/', OrderLimitView.as_view(), name='order-limit'),
+    path('discount-signup/', DiscountSignupView.as_view(), name='discount-signup'),
 ]

@@ -11,10 +11,11 @@ import Step4BookingForm from "../components/BookingForm/Step4BookingForm";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from 'react-helmet-async';
 import { DateTime } from "luxon";
+import { FaCheck } from "react-icons/fa";
 
 const steps = [
   { id: "account", label: "Account" },
-  { id: "car", label: "Provide Details" },
+  { id: "car", label: "Details" },
   { id: "addons", label: "Add Ons" },
   { id: "payment", label: "Payment" },
 //   { id: "confirm", label: "Success" },
@@ -73,8 +74,6 @@ const BookingForm = () => {
 
     const goNext = () => setCurrentStep((prev) => Math.min(prev + 1, steps.length));
     const goBack = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
-
-    const progressPercent = ((currentStep + 1) / steps.length) * 100;
 
     const labelStyle = { fontWeight: "bold", color: "#555" };
     const inputStyle = {
@@ -287,6 +286,24 @@ const BookingForm = () => {
       <h6 style={{fontWeight:400}} className="lead d-none d-sm-block">Enjoy stress-free airport parking with our secure, affordable meet & greet service. Quick drop-off and pickup at Dublin Airport.</h6>
     </div>
 
+    {/* --- NEW STEPPER PROGRESS BAR --- */}
+      <div className="stepper-wrapper">
+          {steps.map((step, idx) => {
+              const isCompleted = idx < currentStep;
+              const isActive = idx === currentStep;
+              
+              return (
+                  <div key={step.id} className={`stepper-item ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
+                      <div className="step-counter">
+                          {isCompleted ? <FaCheck size={14} /> : idx + 1}
+                      </div>
+                      <div className="step-name">{step.label}</div>
+                  </div>
+              )
+          })}
+      </div>
+      {/* ------------------------------- */}
+
     <div style={{ backgroundColor: "#fff", minHeight: "100vh"}} className="container-fluid" id="booking-form">
       <div className="row mx-0 justify-content-center">
         <div className="col-12 col-md-10 col-lg-8 col-xl-6 text-center px-3 px-md-4 py-4 w-sm-95" style={{ backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", marginTop: "30px"}}>
@@ -310,25 +327,7 @@ const BookingForm = () => {
                 <span style={{fontSize: "22px", marginRight: "10px"}}>⚠️</span>
                 <span>{warningText}</span>
               </div>
-            )}
-            <ul id="progressbar" className="d-flex flex-wrap justify-content-between list-unstyled mb-4 px-1">
-              {steps.map((step, idx) => (
-                <li
-                  key={step.id}
-                  className="flex-grow-1 text-center progressbar-item"
-                  style={{
-                    fontWeight: idx <= currentStep ? "bold" : "normal",
-                    color: idx <= currentStep ? "#2890cd" : "#ccc",
-
-                  }}>
-                  <strong>{step.label}</strong>
-                </li>
-              ))}
-            </ul>
-
-            <div className="progress" style={{   height: "10px",   backgroundColor: "#e0e0e0",   borderRadius: "5px",   overflow: "hidden",   marginBottom: "30px", }}>
-                <div className="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style={{   width: `${progressPercent}%`,   backgroundColor: "#2890cd", }}/>
-            </div>
+            )}                    
 
             <form id="msform">
                 {currentStep === 0 && <Step0BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} setFormData={setFormData} goNext={goNext} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo}/>}

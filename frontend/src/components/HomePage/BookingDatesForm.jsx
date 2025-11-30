@@ -8,6 +8,7 @@ import { DateTime } from "luxon";
 const BookingDatesForm = () => {
   const { setBookingData } = useBooking();
   const [coupon, setCoupon] = useState("");
+  const [agreeChecked, setAgreeChecked] = useState(true);
   const navigate = useNavigate();
  
   const [formData, setFormData] = useState({
@@ -186,7 +187,69 @@ const BookingDatesForm = () => {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div id="book" className="form-column" style={{ backgroundColor: "#f8f9fa", margin:"0 auto", flex: "1", minWidth: "300px", borderRadius: "10px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)", border: "1px solid #e0e0e0", zIndex:10}}>
+    <div id="book" className="form-column" style={{ 
+        backgroundColor: "#f8f9fa", 
+        margin:"0 auto", 
+        flex: "1", 
+        minWidth: "300px", 
+        borderRadius: "10px", 
+        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)", 
+        border: "1px solid #e0e0e0", 
+        zIndex: 10,
+        position: "relative"
+    }}>
+      
+      {/* --- MODERN 3D SANTA HAT --- */}
+      <div className="modern-santa-hat">
+        <svg viewBox="0 0 120 120" className="hat-svg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                {/* 1. Rich Red Gradient for depth */}
+                <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff5252" /> {/* Lighter Red */}
+                    <stop offset="100%" stopColor="#c62828" /> {/* Darker Red */}
+                </linearGradient>
+                
+                {/* 2. Soft White Gradient for Fur */}
+                <linearGradient id="snowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="100%" stopColor="#f1f2f6" />
+                </linearGradient>
+
+                {/* 3. Soft Shadow Filter */}
+                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+                    <feOffset dx="2" dy="3" result="offsetblur" />
+                    <feComponentTransfer>
+                        <feFuncA type="linear" slope="0.3" /> {/* 30% Opacity Shadow */}
+                    </feComponentTransfer>
+                    <feMerge>
+                        <feMergeNode />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+
+            {/* Group with Shadow Filter applied */}
+            <g filter="url(#softShadow)" className="hat-body-group">
+                {/* The Red Cone (Bent) */}
+                <path 
+                    d="M15,85 Q10,20 60,10 Q90,30 85,60" 
+                    fill="url(#redGradient)" 
+                    stroke="none"
+                />
+                
+                {/* The White Brim (Fluffy Cloud Shape) */}
+                <path 
+                    d="M10,80 C5,80 0,85 5,92 C10,98 20,98 25,92 C30,98 40,98 45,92 C50,98 60,98 65,92 C70,98 80,98 85,92 C90,85 85,80 80,80 Z" 
+                    fill="url(#snowGradient)"
+                />
+
+                {/* The Pom Pom (Ball) */}
+                <circle cx="85" cy="60" r="10" fill="url(#snowGradient)" />
+            </g>
+        </svg>
+      </div>
+      {/* ------------------------- */}
       <form onSubmit={handleSubmit}> <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Parking From Date */}
@@ -234,8 +297,39 @@ const BookingDatesForm = () => {
           <label htmlFor="couponCode" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Coupon Code:</label>
           <input type="text" id="couponCode" name="coupon" style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={(e) => setCoupon(e.target.value)} placeholder="Enter coupon code" value={coupon}/>
         </div>
+
+        <div style={{ margin: "15px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+          <input
+            type="checkbox"
+            id="agreeTerms"
+            checked={agreeChecked}
+            onChange={(e) => setAgreeChecked(e.target.checked)}
+          />
+          <label htmlFor="agreeTerms" style={{ color: "#333" }}>
+            By clicking <strong>Book Now</strong>, you agree to our terms & conditions.
+          </label>
+        </div>
         
-        <button type="submit" style={{   width: "100%",   padding: "12px",   backgroundColor: "#2890cd",   color: "#fff",   border: "none",   borderRadius: "10px",   fontSize: "16px",   fontWeight: "600",   cursor: "pointer",   transition: "background-color 0.3s ease", }} onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")} onMouseOut={(e) => (e.target.style.backgroundColor = "#2890cd")} onFocus={(e) =>   (e.target.style.boxShadow = "0 0 5px rgba(0, 123, 255, 0.5)") }>
+        <button
+          type="submit"
+          style={{
+            width: "100%",
+            padding: "12px",
+            backgroundColor: "#2890cd",
+            color: "#fff",
+            border: "none",
+            borderRadius: "10px",
+            fontSize: "16px",
+            fontWeight: "600",
+            cursor: !agreeChecked ? "not-allowed" : "pointer",
+            opacity: !agreeChecked ? 0.6 : 1,
+            transition: "background-color 0.3s ease",
+          }}
+          disabled={!agreeChecked} // disable when NOT checked
+          onMouseOver={(e) => agreeChecked && (e.target.style.backgroundColor = "#0056b3")}
+          onMouseOut={(e) => (e.target.style.backgroundColor = "#2890cd")}
+          onFocus={(e) => (e.target.style.boxShadow = "0 0 5px rgba(0, 123, 255, 0.5)")}
+        >
           Book Now
         </button>
       </form>

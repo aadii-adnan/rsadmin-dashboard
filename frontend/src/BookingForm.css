@@ -593,3 +593,125 @@ button.btn {
     padding: 0px 0px;
   }
 }
+
+/* --- NEW STEPPER STYLES --- */
+.stepper-wrapper {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  width: 60%;
+  padding: 0 10px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  margin-bottom: 0px;
+  margin-top: 80px;
+}
+
+.stepper-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+/* Connecting Line */
+.stepper-item::before {
+  content: "";
+  position: absolute;
+  top: 20px; /* Center of circle (40px / 2) */
+  left: -50%;
+  width: 100%;
+  height: 4px;
+  background-color: #DDE1E6; /* Default Grey Line */
+  z-index: 1; /* Lower z-index: Sits BEHIND the circle */
+  transform: translateY(-50%);
+}
+
+/* Remove line for the first item (nothing to connect to) */
+.stepper-item:first-child::before {
+  content: none;
+}
+
+/* Line Coloring Logic */
+/* If the item is completed, the line leading to it is blue */
+.stepper-item.completed::before {
+  background-color: #1F223E; 
+}
+/* If the item is active, the line leading to it is also blue (from the previous completed step) */
+.stepper-item.active::before {
+  background-color: #1F223E; 
+}
+
+/* Circle (Step Counter) Styling */
+.step-counter {
+  position: relative;
+  z-index: 5; /* Higher z-index: Sits ON TOP of the line */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #DDE1E6; /* SOLID Default Grey Background - Critical for hiding line */
+  margin-bottom: 10px;
+  color: #1F223E;
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  
+  /* Adds a small white ring around the circle to cleanly cut the line visually */
+  border: 4px solid #fff; 
+  box-sizing: content-box; /* Ensures size remains 40px inside the border */
+}
+
+/* Completed State (Dark Blue Circle, White Check) */
+.stepper-item.completed .step-counter {
+  background-color: #1F223E;
+  color: #fff;
+  border-color: #fff;
+}
+
+/* Active State (Gold Circle, White Text) */
+.stepper-item.active .step-counter {
+  background-color: #FDBE34; /* Gold/Yellow */
+  color: #fff;
+  transform: scale(1.1); /* Slight pop effect */
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(253, 190, 52, 0.2); /* Soft glow */
+}
+
+/* Label Styling */
+.step-name {
+  color: #888;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.stepper-item.completed .step-name,
+.stepper-item.active .step-name {
+  color: #1F223E;
+  font-weight: 700;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 576px) {
+    .step-name {
+        font-size: 11px;
+    }
+    .step-counter {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        border-width: 3px; /* Slightly smaller border on mobile */
+    }
+    .stepper-item::before {
+        top: 19px; /* Adjust for smaller circle + border center */
+    }
+    .stepper-wrapper {
+        width: 90%;
+    }
+}

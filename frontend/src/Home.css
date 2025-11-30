@@ -212,7 +212,7 @@ body .home-banner {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(1, 6, 89, 0.4);
+  background-color: rgba(1, 6, 89, 0.35);
   z-index: 1;
 }
 
@@ -449,7 +449,7 @@ body .home-banner {
 
 .collage-small {
   position: absolute;
-  bottom: 0;
+  bottom: 10px;
   right: 0;
   width: 50%;
   height: 200px;
@@ -860,4 +860,140 @@ body .home-banner {
   .faq-header { padding: 16px; }
   .question-text { font-size: 1rem; }
   .answer-content { padding: 0 16px 20px 16px; }
+}
+
+/* --- CHRISTMAS THEME ADDITIONS --- */
+
+/* 1. Santa Hat Styling */
+.santa-hat-wrapper {
+  position: absolute;
+  top: -35px; /* Adjust to sit on top edge */
+  left: -25px; /* Adjust to hang off left side */
+  width: 90px;
+  height: 90px;
+  z-index: 20;
+  pointer-events: none; /* Let clicks pass through to form */
+  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+  transform-origin: center top;
+  animation: hatSwing 3s ease-in-out infinite;
+}
+
+.santa-hat-svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes hatSwing {
+  0% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+  100% { transform: rotate(-5deg); }
+}
+
+/* Mobile Adjustments for Hat */
+@media (max-width: 576px) {
+  .santa-hat-wrapper {
+    width: 60px;
+    height: 60px;
+    top: -25px;
+    left: -15px;
+  }
+}
+
+/* 2. CSS Snowfall Effect (Lightweight) */
+.snow-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1; /* Behind text, in front of video */
+  pointer-events: none;
+}
+
+.snow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(4px 4px at 10% 10%, rgba(255,255,255,0.8) 50%, transparent),
+    radial-gradient(3px 3px at 20% 30%, rgba(255,255,255,0.7) 50%, transparent),
+    radial-gradient(5px 5px at 40% 70%, rgba(255,255,255,0.6) 50%, transparent),
+    radial-gradient(3px 3px at 60% 40%, rgba(255,255,255,0.8) 50%, transparent),
+    radial-gradient(4px 4px at 80% 10%, rgba(255,255,255,0.7) 50%, transparent),
+    radial-gradient(3px 3px at 90% 80%, rgba(255,255,255,0.6) 50%, transparent);
+  background-size: 500px 500px;
+  animation: snowFall 8s linear infinite;
+  opacity: 0.7;
+}
+
+.snow:nth-child(2) {
+  background-image: 
+    radial-gradient(3px 3px at 15% 15%, rgba(255,255,255,0.8) 50%, transparent),
+    radial-gradient(4px 4px at 35% 55%, rgba(255,255,255,0.7) 50%, transparent),
+    radial-gradient(2px 2px at 65% 25%, rgba(255,255,255,0.6) 50%, transparent),
+    radial-gradient(5px 5px at 85% 65%, rgba(255,255,255,0.8) 50%, transparent);
+  background-size: 400px 400px;
+  animation-duration: 12s;
+  animation-delay: -5s;
+}
+
+@keyframes snowFall {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(500px); }
+}
+/* --- MODERN SANTA HAT STYLES --- */
+
+.modern-santa-hat {
+  position: absolute;
+  top: -35px;     /* Perched on top */
+  left: -25px;    /* Hanging off the left corner */
+  width: 110px;   /* Nice and large visibility */
+  height: 110px;
+  z-index: 20;
+  pointer-events: none; /* Allows clicking input fields underneath */
+  
+  /* The "Float" Animation */
+  animation: floatHat 4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.hat-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  /* Rotate slightly to fit the corner angle naturally */
+  transform: rotate(-15deg); 
+}
+
+/* Gentle Floating Animation */
+@keyframes floatHat {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(2deg); /* Moves up and tilts slightly */
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+/* Mobile Adjustment: Make it smaller so it doesn't block screen */
+@media (max-width: 576px) {
+  .modern-santa-hat {
+    width: 80px;
+    height: 80px;
+    top: -25px;
+    left: -15px;
+  }
+}
+
+/* Optional: Add a festive border color to the active input for detail */
+#book input:focus, 
+#book select:focus {
+    border-color: #c62828 !important; /* Christmas Red focus border */
+    box-shadow: 0 0 5px rgba(198, 40, 40, 0.3) !important;
 }

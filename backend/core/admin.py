@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import BookingSettings, OrderLimit, UnsubscribedEmail
+from .models import BookingSettings, OrderLimit, UnsubscribedEmail, MarketingLead
 # Register your models here.
 
 @admin.register(BookingSettings)
@@ -57,3 +57,9 @@ class UnsubscribedEmailAdmin(admin.ModelAdmin):
             'all': ('admin/css/clickable_rows.css','admin/css/custom_admin.css',)
         }
         js = ('admin/js/clickable_rows.js',)
+
+@admin.register(MarketingLead)
+class MarketingLeadAdmin(admin.ModelAdmin):
+    list_display = ('email', 'discount_code', 'subscribed', 'created_at')
+    search_fields = ('email', 'discount_code')
+    list_filter = ('subscribed', 'created_at')

@@ -85,3 +85,15 @@ class UnsubscribedEmail(models.Model):
 
     def __str__(self):
         return self.email
+    
+class MarketingLead(models.Model):
+    email = models.EmailField(unique=True)
+    discount_code = models.CharField(max_length=30, blank=True)
+    subscribed = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'marketing_lead'
+
+    def __str__(self):
+        return f"{self.email} ({'subscribed' if self.subscribed else 'unsubscribed'})"

@@ -29,6 +29,8 @@ import { BiSupport } from "react-icons/bi";
 import logo from "../assets/logo.png";
 import parkingVideo from "../assets/vid.mp4"; 
 import videoPoster from "../assets/hero-cover.png"; 
+import parking from "../assets/parking.jpg";
+import DiscountPopup from '../components/Utility/DiscountPopup';
 
 const Home = () => {
 
@@ -227,6 +229,8 @@ const Home = () => {
 
     </Helmet>
 
+    <DiscountPopup />
+
     <div style={{backgroundColor: "#fff"}} data-elementor-type="wp-page" data-elementor-id="88" className="elementor elementor-88" data-elementor-post-type="page">
         <div className="home-wrapper">
         <div className="home-banner video-banner">
@@ -244,6 +248,13 @@ const Home = () => {
                 <source src={parkingVideo} type="video/mp4" />
                 {/* Optional: Add a .webm source here for even better speed on Chrome */}
             </video>
+            {/* --- ADD THIS SNOW DIV --- */}
+            <div className="snow-container">
+                <div className="snow"></div>
+                <div className="snow"></div>
+                <div className="snow"></div>
+            </div>
+            {/* ------------------------- */}
 
             <div className="video-overlay"></div>
 
@@ -339,7 +350,7 @@ const Home = () => {
                         <div className="col-lg-6 mb-4 mb-lg-0">
                             <div className="image-collage">
                                 <img src={secureParking} alt="Secure Parking" className="collage-main" />
-                                <img src={bannerImg2} alt="CCTV" className="collage-small" />
+                                <img src={parking} alt="CCTV" className="collage-small" />
                                 <div className="collage-badge">
                                     <FaShieldAlt /> 24/7 Secure
                                 </div>

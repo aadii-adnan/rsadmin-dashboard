@@ -1,11 +1,12 @@
-from .models import Status,  BookingSettings, OrderLimit
+from .models import Status,  BookingSettings, OrderLimit, MarketingLead
 from bookings.models import Booking
-from .serializers import StatusSerializer, BookingSettingsSerializer, OrderLimitSerializer
+from .serializers import StatusSerializer, BookingSettingsSerializer, OrderLimitSerializer, MarketingLeadSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import HttpResponse
 from datetime import datetime, time
 from django.utils import timezone
+from rest_framework import status
 
 class StatusListView(APIView):
     def get(self, request):
@@ -57,6 +58,17 @@ class OrdersCountView(APIView):
             status__name__in=["Pending", "Payment Failed", "Cancelled"]
         ).count()
         return Response({'date': booking_date, 'service': service_slug, 'count': count})
+    
+class DiscountSignupView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=400)
+        lead, created = MarketingLead.objects.get_or_create(email=email.lower().strip())
+        lead.discount_code = "RSPARK15"
+        lead.subscribed = True
+        lead.save()
+        return Response({'email': lead.email, 'discount_code': lead.discount_code}, status=201)
 
 def robots_txt(request):
     host = request.get_host()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Status, BookingSettings, OrderLimit
+from .models import Status, BookingSettings, OrderLimit, MarketingLead
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,3 +18,8 @@ class OrderLimitSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderLimit
         fields = ['date', 'service', 'max_orders']
+
+class MarketingLeadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarketingLead
+        fields = ['id', 'email', 'discount_code', 'subscribed', 'created_at']
