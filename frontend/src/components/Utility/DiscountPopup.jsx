@@ -46,7 +46,7 @@ const DiscountPopup = () => {
         {!submitted && (
           <>
             <p style={styles.text}>
-              Sign up now to receive a 15% discount and be the first to receive exclusive offers and future discounts.
+              Sign up now to receive a <strong>15% discount</strong> and be the first to receive exclusive offers and future discounts.
             </p>
             <form onSubmit={submit} style={styles.form}>
               <input
