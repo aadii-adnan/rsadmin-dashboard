@@ -11,31 +11,47 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>RS Express Parking</title>
 
     <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/images/icon.webp" type="image/webp" />
+    
+    <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://js.stripe.com">
     <link rel="preconnect" href="https://cdn.shapo.io">
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-
-    <!-- Helmet will dynamically insert other SEO tags here -->
+    <link rel="dns-prefetch" href="https://js.stripe.com">
+    <link rel="dns-prefetch" href="https://code.tidio.co">
+    
+    <!-- Font loading optimized -->
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WS75DKBQ"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-     
+    
     <div id="root"></div>
 
-    <!-- Vite or React app entry -->
     <script type="module" src="/src/main.jsx"></script>
-    <script src="//code.tidio.co/kxnbkl9gy47kmif3wdmd59ed2elnfxto.js" async></script>
-    <script type="module" src="https://unpkg.com/@dotlottie/player-component/dist/dotlottie-player.js"></script>
-    <link rel="preload" as="fetch" href="/assets/discount.lottie" crossorigin>
+    
+    <!-- Load third-party scripts with delay -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          // Tidio
+          var tidio = document.createElement('script');
+          tidio.src = '//code.tidio.co/kxnbkl9gy47kmif3wdmd59ed2elnfxto.js';
+          tidio.async = true;
+          document.body.appendChild(tidio);
+          
+          // Dotlottie (only if needed)
+          var dotlottie = document.createElement('script');
+          dotlottie.type = 'module';
+          dotlottie.src = 'https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs';
+          document.body.appendChild(dotlottie);
+        }, 2000);
+      });
+    </script>
   </body>
 </html>

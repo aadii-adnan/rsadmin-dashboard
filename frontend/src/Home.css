@@ -997,3 +997,19 @@ body .home-banner {
     border-color: #c62828 !important; /* Christmas Red focus border */
     box-shadow: 0 0 5px rgba(198, 40, 40, 0.3) !important;
 }
+
+/* Add to your main CSS file */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}

@@ -19,7 +19,7 @@ import logo from "../assets/logo.webp";
 import parkingVideo from "../assets/vid2.mp4"; 
 import videoPoster from "../assets/hero-cover.webp"; 
 import parking from "../assets/parking2.webp";
-import DiscountPopup from '../components/Utility/DiscountPopup';
+const DiscountPopup = React.lazy(() => import('../components/Utility/DiscountPopup'));
 
 const Home = () => {
 
@@ -27,6 +27,33 @@ const Home = () => {
     const [faqs, setFaqs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+    useEffect(() => {
+        // Remove Stripe preload - load on demand
+        const loadStripe = () => {
+            if (!document.getElementById('stripe-js')) {
+                const script = document.createElement("script");
+                script.id = 'stripe-js';
+                script.src = "https://js.stripe.com/basil/stripe.js";
+                script.async = true;
+                document.body.appendChild(script);
+            }
+        };
+
+        // Load Stripe only when user scrolls or after 3s
+        const handleScroll = () => {
+            loadStripe();
+            window.removeEventListener('scroll', handleScroll);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        const timer = setTimeout(loadStripe, 3000);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(timer);
+        };
+    }, []);
+
     useEffect(() => {
         if(localStorage.getItem("access_token")){
         setBookingData((prev) => ({
@@ -48,15 +75,6 @@ const Home = () => {
         }
         localStorage.removeItem("payment_status");
     }, []);
-
-    useEffect(() => {
-        setTimeout(() => {
-            const script = document.createElement("script");
-            script.src = "https://js.stripe.com/basil/stripe.js";
-            document.body.appendChild(script);
-        }, 2000);
-    }, []);
-
 
     useEffect(() => {
     const fetchFAQs = async () => {
@@ -227,7 +245,9 @@ const Home = () => {
 
     </Helmet>
 
-    <DiscountPopup />
+    <React.Suspense fallback={null}>
+        <DiscountPopup />
+    </React.Suspense>
 
     <div style={{backgroundColor: "#fff"}} data-elementor-type="wp-page" data-elementor-id="88" className="elementor elementor-88" data-elementor-post-type="page">
         <div className="home-wrapper">
@@ -239,12 +259,12 @@ const Home = () => {
                 loop 
                 muted 
                 playsInline 
-                preload="metadata" 
+                preload="none"
                 className="banner-video"
                 width="1920"
                 height="1080"
                 poster={videoPoster}
-                >
+            >
                 <source src={parkingVideo} type="video/mp4" />
             </video>
             {/* --- ADD THIS SNOW DIV --- */}
@@ -348,8 +368,25 @@ const Home = () => {
                     <div className="row align-items-center">
                         <div className="col-lg-6 mb-4 mb-lg-0">
                             <div className="image-collage">
-                                <img src={secureParking} loading="lazy" width="464" height="348" alt="Secure Parking" />
-                                <img src={parking} alt="CCTV" className="collage-small" />
+                                <img 
+                                        src={secureParking} 
+                                        loading="lazy" 
+                                        width="464" 
+                                        height="348" 
+                                        alt="Secure Parking"
+                                        srcSet={`${secureParking} 464w, ${secureParking} 800w`}
+                                        sizes="(max-width: 768px) 100vw, 464px"
+                                    />
+                                    <img 
+                                        src={parking} 
+                                        alt="CCTV" 
+                                        className="collage-small"
+                                        loading="lazy"
+                                        width="273"
+                                        height="164"
+                                        srcSet={`${parking} 273w, ${parking} 600w`}
+                                        sizes="(max-width: 768px) 100vw, 273px"
+                                    />
                                 <div className="collage-badge">
                                     <FaShieldAlt /> 24/7 Secure
                                 </div>
@@ -478,7 +515,9 @@ const Home = () => {
                 </div>
             </section>       
 
-<FAQSection faqs={faqs} loading={loading}/>
+            <React.Suspense fallback={<div style={{minHeight: '400px'}} />}>
+                <FAQSection faqs={faqs} loading={loading}/>
+            </React.Suspense>
 
 
 

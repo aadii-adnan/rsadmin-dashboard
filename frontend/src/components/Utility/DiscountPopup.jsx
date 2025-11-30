@@ -9,11 +9,16 @@ const DiscountPopup = () => {
   useEffect(() => {
     const already = localStorage.getItem('discount_popup_done');
     if (!already) {
-      setTimeout(() => setOpen(true), 5000); // slight delay
+      // Show after user interaction or 3s
+      const timer = setTimeout(() => setOpen(true), 3000);
+      return () => clearTimeout(timer);
     }
   }, []);
 
-  const close = () => setOpen(false);
+  const close = () => {
+    setOpen(false);
+    localStorage.setItem('discount_popup_done', '1');
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -28,7 +33,6 @@ const DiscountPopup = () => {
       if (res.ok) {
         setCode(data.discount_code);
         setSubmitted(true);
-        localStorage.setItem('discount_popup_done', '1');
       }
     } catch (err) {
       console.error(err);
@@ -38,15 +42,20 @@ const DiscountPopup = () => {
   if (!open) return null;
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div style={styles.overlay} onClick={close}>
+      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button onClick={close} style={styles.closeBtn} aria-label="Close">×</button>
-        <dotlottie-wc src="https://lottie.host/79ad9d6f-52b9-406e-af07-0eabf78ac611/9oa5oWtCo9.lottie" style={{width: "300px", height: "300px"}} autoplay loop></dotlottie-wc>
+        
+        {/* Replace dotlottie with simple emoji or CSS animation */}
+        <div style={styles.emojiWrapper}>
+          <div style={styles.emoji}>🚗💨</div>
+        </div>
+
         <h2 style={styles.title}>Unlock a Special Discount!</h2>
         {!submitted && (
           <>
             <p style={styles.text}>
-              Sign up now to receive a <strong>15% discount</strong> and be the first to receive exclusive offers and future discounts.
+              Sign up now to receive a <strong>15% discount</strong> and be the first to receive exclusive offers.
             </p>
             <form onSubmit={submit} style={styles.form}>
               <input
@@ -79,25 +88,29 @@ const styles = {
   overlay: {
     position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
     background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center',
-    justifyContent: 'center', zIndex: 9999
+    justifyContent: 'center', zIndex: 9999, animation: 'fadeIn 0.3s'
   },
   modal: {
-    width: '100%', maxWidth: 400, background: '#fff', borderRadius: 18,
+    width: '100%', maxWidth: 420, background: '#fff', borderRadius: 18,
     padding: '42px 38px 32px', position: 'relative', fontFamily: 'Urbanist, sans-serif',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.15)', textAlign: 'center'
+    boxShadow: '0 20px 40px rgba(0,0,0,0.15)', textAlign: 'center',
+    animation: 'slideUp 0.3s'
   },
   closeBtn: {
     position: 'absolute', top: 12, right: 16, background: 'none', border: 'none',
-    fontSize: 26, cursor: 'pointer', lineHeight: 1, color: '#222'
+    fontSize: 28, cursor: 'pointer', lineHeight: 1, color: '#666'
+  },
+  emojiWrapper: {
+    marginBottom: 15
   },
   emoji: {
-    fontSize: 58, marginBottom: 10
+    fontSize: 64, animation: 'bounce 2s infinite'
   },
   title: {
     fontSize: 26, margin: '0 0 14px', fontWeight: 700, color: '#0d102f'
   },
   text: {
-    fontSize: 14, color: '#4a4f67', lineHeight: 1.5, margin: '0 0 20px'
+    fontSize: 14, color: '#4a4f67', lineHeight: 1.6, margin: '0 0 20px'
   },
   form: {
     display: 'flex', flexDirection: 'column', gap: 14
@@ -109,7 +122,7 @@ const styles = {
   button: {
     background: '#14163d', color: '#fff', padding: '14px 16px',
     borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 600,
-    cursor: 'pointer'
+    cursor: 'pointer', transition: 'transform 0.2s'
   },
   privacy: {
     marginTop: 14, fontSize: 11, color: '#6b6f82'
