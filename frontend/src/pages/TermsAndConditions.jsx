@@ -22,7 +22,7 @@ export default function TermsAndConditions() {
     <meta name="twitter:image" content="https://rsexpressparking.com/images/og-parking.jpg"/>
 
     </Helmet>
-    <div style={{backgroundColor:"#F5F4EE"}}>
+    <div style={{backgroundColor:"#fff"}}>
         <div className="container py-5">
         <div style={{lineHeight: "1.8rem"}} className="row justify-content-center">
             <div className="col-lg-10">
@@ -38,10 +38,10 @@ export default function TermsAndConditions() {
                 Our services are provided with the understanding that you fully accept our terms, including <strong>cancellation policies and liabilities</strong>. While we offer <strong>budget-friendly and premium services</strong>, our terms help us maintain competitive prices.
                 </p>
                 <ul className="list-group list-group-flush mb-3">
-                <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item">By using our website, you <strong>fully accept these terms</strong>.</li>
-                <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item">If you have <strong>any questions</strong> about our services, please contact us <strong>before booking</strong>.</li>
-                <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item">RS EXPRESS PARKING LTD reserves the right to <strong>update these Terms</strong>, but the version that applies to your booking is the one in place at the time of confirmation.</li>
-                <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item">If you need assistance, contact us at <strong><a href="mailto:support@rsexpressparking.com">support@rsexpressparking.com</a></strong> or call us between <strong>08:00–00:00 (excluding bank holidays)</strong>.</li>
+                <li style={{backgroundColor:"#fff"}} className="list-group-item">By using our website, you <strong>fully accept these terms</strong>.</li>
+                <li style={{backgroundColor:"#fff"}} className="list-group-item">If you have <strong>any questions</strong> about our services, please contact us <strong>before booking</strong>.</li>
+                <li style={{backgroundColor:"#fff"}} className="list-group-item">RS EXPRESS PARKING LTD reserves the right to <strong>update these Terms</strong>, but the version that applies to your booking is the one in place at the time of confirmation.</li>
+                <li style={{backgroundColor:"#fff"}} className="list-group-item">If you need assistance, contact us at <strong><a href="mailto:support@rsexpressparking.com">support@rsexpressparking.com</a></strong> or call us between <strong>08:00–00:00 (excluding bank holidays)</strong>.</li>
                 </ul>
             </section>
 

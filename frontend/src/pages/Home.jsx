@@ -17,15 +17,25 @@ import "swiper/css/autoplay";
 import { Autoplay, EffectFade } from "swiper/modules";
 import { ClipLoader } from "react-spinners";
 import FAQSection from "../components/HomePage/FAQSection";
-import { FaCarSide } from "react-icons/fa"; // Example icon
-import logo from "../assets/logo.png";
+import { 
+    FaCarSide, FaCheckCircle, FaShieldAlt, FaPlaneDeparture, 
+    FaUserTie, FaSuitcase, FaChild, FaVideo, FaKey, 
+    FaClock, FaPhoneAlt, FaEnvelope, FaStar 
+} from "react-icons/fa";
+import { SiTrustpilot } from "react-icons/si"; 
+import { FaStarHalfAlt, FaQuoteRight } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { BiSupport } from "react-icons/bi";
+import logo from "../assets/logo.png";
+import parkingVideo from "../assets/vid.mp4"; 
+import videoPoster from "../assets/hero-cover.png"; 
 
 const Home = () => {
 
     const { setBookingData } = useBooking();
     const [faqs, setFaqs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [openFaqIndex, setOpenFaqIndex] = useState(null);
     useEffect(() => {
         if(localStorage.getItem("access_token")){
         setBookingData((prev) => ({
@@ -73,50 +83,40 @@ const Home = () => {
     };
     fetchFAQs();
     }, []);
-    
-    if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: "80vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "linear-gradient(135deg, #e4e9f3 0%, #f0f4f8 100%)",
-          animation: "fadeIn 1s"
-        }}
-      >
-        <img
-          src={logo}
-          alt="Logo"
-          style={{
-            width: 80,
-            marginBottom: 24,
-            filter: "drop-shadow(0 2px 8px rgba(68,126,155,0.10))"
-          }}
-        />
-        <ClipLoader color="#447e9b" size={60} />
-        <div style={{ marginTop: 24, color: "#447e9b", fontWeight: 600, fontSize: "1.2rem", letterSpacing: 1 }}>
-          Loading your experience...
-        </div>
-        <FaCarSide size={32} color="#fd7e14" style={{ marginTop: 16, animation: "bounce 1.2s infinite" }} />
-        <style>
-          {`
-            @keyframes bounce {
-              0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-10px); }
-            }
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-          `}
-        </style>
-      </div>
-    );
-  }
 
+    // --- Content Data ---
+    const processSteps = [
+        { icon: <FaClock />, title: "Book Online", desc: "Choose your dates using the form above and secure your Dublin Airport parking in seconds." },
+        { icon: <FaUserTie />, title: "Meet the Driver", desc: "Arrive at the terminal, where our insured driver meets you for a smooth meet and greet handover." },
+        { icon: <FaShieldAlt />, title: "Secure Parking", desc: "Your car is taken to our monitored facility offering affordable Dublin Airport parking with full CCTV." },
+        { icon: <FaCarSide />, title: "Pick Up", desc: "When you return, your car is brought back to the terminal so you can head home without delays." },
+    ];
+
+    const reasons = [
+        { title: "No walking needed", desc: "Go straight to the terminal for a simple start to your trip.", icon: <FaPlaneDeparture/> },
+        { title: "Fast terminal handover", desc: "Meet the driver at Departures for quick valet parking.", icon: <FaKey/> },
+        { title: "Perfect for families", desc: "No stress with kids, strollers or luggage.", icon: <FaChild/> },
+        { title: "Ideal for business trips", desc: "Save time with direct meet and greet drop-off.", icon: <FaUserTie/> },
+        { title: "Secure monitored facility", desc: "Your car stays protected with CCTV and controlled access.", icon: <FaVideo/> },
+        { title: "Optional car wash service", desc: "Get your car cleaned while you travel.", icon: <FaCarSide/> },
+    ];
+
+    const audience = [
+        { title: "Families", desc: "A smooth option for parents who want quick terminal access without long walks or shuttle delays.", icon: <FaChild/> },
+        { title: "Business Travellers", desc: "Reliable valet parking at Dublin Airport that helps you save time and stay on schedule.", icon: <FaUserTie/> },
+        { title: "Travellers with Heavy Luggage", desc: "Ideal for anyone who wants direct terminal handover without carrying bags across large parking areas.", icon: <FaSuitcase/> }
+    ];
+
+    if (loading) {
+        return (
+            <div className="loading-screen">
+                <img src={logo} alt="RS Express Parking" className="loading-logo" />
+                <ClipLoader color="#447e9b" size={60} />
+                <div className="loading-text">Loading your experience...</div>
+            </div>
+        );
+    }
+    
   return (
     <>
     <Helmet>
@@ -227,227 +227,246 @@ const Home = () => {
 
     </Helmet>
 
-    <div style={{backgroundColor: "#F5F4EE"}} data-elementor-type="wp-page" data-elementor-id="88" className="elementor elementor-88" data-elementor-post-type="page">
-        <div className="home-banner">
-            <Swiper
-                modules={[Autoplay, EffectFade]}
-                effect="fade"
-                autoplay={{ delay: 5000, disableOnInteraction: false }}
-                loop={true}
-                className="swiper-container"
+    <div style={{backgroundColor: "#fff"}} data-elementor-type="wp-page" data-elementor-id="88" className="elementor elementor-88" data-elementor-post-type="page">
+        <div className="home-wrapper">
+        <div className="home-banner video-banner">
+            
+            {/* PERFORMANCE OPTIMIZED VIDEO TAG */}
+            <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                preload="none" /* Wait until page loads to fetch video */
+                poster={videoPoster} /* Shows this image instantly while video loads */
+                className="banner-video"
             >
-                <SwiperSlide>
-                <div
-                    className="banner-slide"
-                    style={{
-                    backgroundImage: `url(${bannerImg1})`,
-                    }}
-                >
-                    <div className="overlay"></div>
-                </div>
-                </SwiperSlide>
-                <SwiperSlide>
-                <div
-                    className="banner-slide"
-                    style={{
-                    backgroundImage: `url(${bannerImg2})`,
-                    }}
-                >
-                    <div className="overlay"></div>
-                </div>
-                </SwiperSlide>
-                <SwiperSlide>
-                <div
-                    className="banner-slide"
-                    style={{
-                    backgroundImage: `url(${bannerImg3})`,
-                    }}
-                >
-                    <div className="overlay"></div>
-                </div>
-                </SwiperSlide>
-                <SwiperSlide>
-                <div
-                    className="banner-slide"
-                    style={{
-                    backgroundImage: `url(${bannerImg4})`,
-                    }}
-                >
-                    <div className="overlay"></div>
-                </div>
-                </SwiperSlide>
-            </Swiper>
+                <source src={parkingVideo} type="video/mp4" />
+                {/* Optional: Add a .webm source here for even better speed on Chrome */}
+            </video>
+
+            <div className="video-overlay"></div>
+
             <div className="banner-content">
-                <h6 style={{letterSpacing:"5px", textTransform:"uppercase", fontWeight:400, fontSize:"14px"}}>Secure, Affordable &amp; Stress-Free</h6>
+                 {/* Your text content here */}
+                 <h6 style={{letterSpacing:"5px", textTransform:"uppercase", fontWeight:400, fontSize:"14px"}}>Secure, Affordable &amp; Stress-Free</h6>
                 <h1 className="banner-heading">Meet & Greet Dublin Airport Parking</h1>
                 <h3 className="banner-subheading">
                 Book secure Meet & Greet parking at Dublin Airport. 
                 <br />
-                24/7 CCTV-monitored, fully patrolled, with quick terminal handovers and easy booking.
+                24/7 CCTV-monitored, fully patrolled, with quick terminal handovers.
                 </h3>
             </div>
+        </div>
         </div>
     <BookingDatesForm />
 
         
         
-        <div className="info-section">
-            <p className="info-title">Start Your Trip the Smart Way – Park with Confidence</p>
-            <h2 className="info-heading">Effortless Airport Parking – Secure, Fast & Reliable</h2>
-            <p className="info-description">
-                Say goodbye to airport parking worries. Our Meet & Greet service allows you to drive straight to your terminal, where our team will collect your car and park it safely in our secure, 24/7 monitored facility — so you can travel stress-free.
-            </p>
-            <p className="info-important">
-                Important information:<br />
-                If you experience delays or damage, please report the issue directly to RS Express Parking's customer support at <a style={{color:"#010659"}} href="tel:+35319640011">+353 1 964 0011</a>.
-            </p>
-            <h3 className="info-subheading"><strong>What To Do When You Arrive</strong></h3>
-            <p><strong>Drop Off Procedure:</strong></p>
-            <p>
-                Call the driver directly at <a style={{color:"#010659"}} href="tel:+353834896505">+353 83 489 6505</a> around 25–30 minutes before reaching the terminal. This ensures we dispatch a driver to meet you promptly.<br/>
-                <strong>Note:</strong> Please do not call the support number for arrival. Only contact the driver for drop-off and collection.
-            </p>
-            <p><strong>Terminal 1:</strong></p>
-            <p>
-                Call 25–30 minutes before arrival.<br />
-                Follow signs for T1 departure — our driver will meet you there.
-            </p>
-            <p><strong>Terminal 2:</strong></p>
-            <p>
-                Call 25–30 minutes before arrival.<br />
-                Follow signs for T2 departures.<br />
-                Our driver will meet you at the designated set-down area.
-            </p>
-            <h3 className="info-subheading"><strong>What To Do When You Come Back</strong></h3>
-            <p><strong>Return Procedure:</strong></p>
-            <p>
-                While collecting your luggage, call the driver at <a style={{color:"#010659"}} href="tel:+353834896505">+353 83 489 6505</a> around 20–25 minutes before leaving the terminal to notify them of your return.<br />
-                Head to the collection zone as directed.<br />
-                Our driver will meet you with your car at the ‘Arrival Pickup Area’, ready for you to drive straight home.
-            </p>
-            <p>
-                No shuttle required — Meet & Greet service is provided directly at the terminal
-            </p>
-            <p>Cancellable up to 72 hours before drop-off</p>
-            <p>
-                Reserve now for a smooth, professional, and fully secure airport parking experience
-            </p>
-            <div className="info-button-wrapper">
-                <a className="info-button" href="#book">Start Your Booking Now</a>
-            </div>
-        </div>
-        <div className="features-section container custom-gap">
-            <div className="row">
-                <div className="col-12 feature-item">
-                <img
-                    src={customerSupport}
-                    alt="24/7 Customer Support"
-                    className="feature-image"
-                />
-                <h3 className="feature-title">24/7 Customer Support</h3>
-                <hr className="feature-divider" />
-                <p className="feature-description">
-                    Need help anytime? Our dedicated support team is available round-the-clock to assist you — from booking to pickup — making your journey completely worry-free.
-                </p>
+        {/* 2. PROCESS SECTION (Modern Timeline) */}
+            <section className="section-padding bg-white info-sect">
+                <div className="container">
+                    <div className="section-header text-center mb-5">
+                        <span className="badge-pill">Simple Process</span>
+                        <h2 className="section-title">How Our Meet & Greet Works</h2>
+                    </div>
+                    
+                    <div className="process-timeline">
+                        {processSteps.map((step, index) => (
+                            <div key={index} className="process-step">
+                                <div className="step-icon-wrapper">
+                                    <div className="step-icon">
+                                        {step.icon}
+                                    </div>
+                                    <div className="step-number">{index + 1}</div>
+                                </div>
+                                <h3 className="step-title">{step.title}</h3>
+                                <p className="step-desc">{step.desc}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="col-12 feature-item">
-                <img
-                    src={terminal}
-                    alt="Terminal Meet & Greet"
-                    className="feature-image"
-                />
-                <h3 className="feature-title">Terminal Meet & Greet</h3>
-                <hr className="feature-divider" />
-                <p className="feature-description">
-                    No need to search for parking. Just drive straight to the terminal, where our staff will greet you, assist with luggage, and handle the rest — quick, simple, and efficient.
-                </p>
-                </div>
-                <div className="col-12 feature-item">
-                <img
-                    src={secureParking}
-                    alt="Secure Parking Facility"
-                    className="feature-image"
-                />
-                <h3 className="feature-title">Secure Parking Facility</h3>
-                <hr className="feature-divider" />
-                <p className="feature-description">
-                    Rest easy knowing your car is parked in a CCTV-monitored facility with 24/7 on-site security patrols. Your vehicle’s safety is our priority while you’re away.
-                </p>
-                </div>
-            </div>
-        </div>
-       <div className="container py-5">
-            <div className="row align-items-stretch">
-                {/* Left Image Section */}
-                <div className="col-12 col-md-6 d-flex align-items-center">
-                <img
-                    src={addOns}
-                    alt="Car Wash"
-                    className="img-fluid rounded w-100 h-100"
-                    style={{ objectFit: "cover" }}
-                />
-                </div>
-                {/* Right Content Section */}
-                <div className="col-12 col-md-6 d-flex flex-column justify-content-center px-4 right-content">
-                <h2 className="text-dark-blue mb-4">Optional Add-Ons – Valet & Car Wash</h2>
-                <p className="text-muted">
-                    Make your return even better with our expert car wash and valet options. Choose from a range of services to keep your vehicle spotless while you’re away.
-                </p>
-                <ul className="list-unstyled">
-                    <li>
-                    <strong>Hand Wash &amp; Wax</strong>
-                    <br />
-                    Exterior wash, wheel cleaning, and tyre polish. (Jeep/MPV +€5)
-                    </li>
-                    <li className="mt-3">                    
-                    <strong>Interior &amp; Exterior Valet</strong>
-                    <br />
-                    Full exterior wash with interior vacuuming. (Jeep/MPV +€10)
-                    </li>
-                    <li className="mt-3">                    
-                    <strong>Full Valet</strong>
-                    <br />
-                    Interior deep clean, waxing, and polishing. (Jeep/MPV +€10)
-                    </li>                    
-                    <li className="mt-3">
-                    <strong>Premium Valet</strong>
-                    <br />
-                    Shampooing, waxing, and full interior detailing. (Jeep/MPV +€20)
-                    </li>                    
-                    <li className="mt-3">
-                    <strong>Ultimate Valet</strong>
-                    <br />
-                    Complete valet with professional paint buffing for showroom finish. (Jeep/MPV +€50)
-                    </li>
-                </ul>
-                <p className="text-muted mt-1">
-                    You can select any add-on service while booking your parking. It’s quick, easy, and optional.
-                </p>
-                <a href="#book" className="btn btn-primary btn-lg mt-3">
-                    Start Your Booking Now
-                </a>
-                </div>
-            </div>
-        </div>
+            </section>
 
-        <div className="testimonials-main">
-            <div className="testimonials-section">  
-                <div className="testimonials-header" style={{display:"flex", flexDirection:"column"}}>
-                    <div style={{display:"flex", justifyContent:"end", marginBottom:"20px"}}>
-                        <a href="https://g.page/r/CZW2D3u4VHTOEAI/review" target="_blank" rel="noopener noreferrer" style= {{background:"#010659",color:"#fff",borderRadius:24,padding:"12px 36px 12px 24px",fontWeight:500,fontSize:18,textDecoration:"none",boxShadow:"0 2px 8px rgba(1,6,89,0.08)", display:"flex", alignItems:"center", justifyContent:"center"}}>
-                                <FcGoogle size={28} style={{marginRight:10,background:"#fff",borderRadius:"50%"}}/>
-                            Leave a Review
+            {/* 3. WHY CHOOSE US (Grid Layout - Dark Blue/Gold Theme) */}
+            <section className="section-padding bg-primary-dark">
+                <div className="container">
+                    <div className="row justify-content-center text-center mb-5">
+                        <div className="col-lg-8">
+                            <h2 className="section-title text-white">Why Choose RS Express?</h2>
+                            <p className="section-subtitle text-light-grey">
+                                We provide a quicker, easier way to manage Dublin Airport parking without long walks or shuttle delays.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="reasons-grid">
+                        {reasons.map((reason, idx) => (
+                            <div key={idx} className="feature-card">
+                                <div className="feature-icon">{reason.icon}</div>
+                                <div className="feature-content">
+                                    <h4>{reason.title}</h4>
+                                    <p>{reason.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* 4. WHO IS THIS FOR (Modern Cards) */}
+            <section className="section-padding bg-light-blue">
+                <div className="container">
+                    <div className="section-header text-center mb-5">
+                        <h2 className="section-title">Perfect for All Travellers</h2>
+                    </div>
+                    <div className="audience-grid">
+                        {audience.map((item, index) => (
+                            <div key={index} className="audience-card hover-lift">
+                                <div className="audience-icon-circle">{item.icon}</div>
+                                <h3>{item.title}</h3>
+                                <p>{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* 5. SECURE FACILITY (Split Layout) */}
+            <section className="section-padding bg-white">
+                <div className="container">
+                    <div className="row align-items-center">
+                        <div className="col-lg-6 mb-4 mb-lg-0">
+                            <div className="image-collage">
+                                <img src={secureParking} alt="Secure Parking" className="collage-main" />
+                                <img src={bannerImg2} alt="CCTV" className="collage-small" />
+                                <div className="collage-badge">
+                                    <FaShieldAlt /> 24/7 Secure
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-lg-6 ps-lg-5">
+                            <span className="badge-pill mb-3">Safety First</span>
+                            <h2 className="section-title mb-4">Your Car Stays in Safe Hands</h2>
+                            <p className="text-muted mb-4">
+                                Your vehicle is parked in a gated, well-lit facility monitored around the clock. 
+                                RS Express Parking uses insured and trained drivers who handle every car carefully.
+                            </p>
+                            
+                            <div className="facility-features">
+                                <div className="f-item">
+                                    <FaCheckCircle className="text-green" /> <span>Gated & Well-lit facility</span>
+                                </div>
+                                <div className="f-item">
+                                    <FaCheckCircle className="text-green" /> <span>24/7 CCTV Monitoring</span>
+                                </div>
+                                <div className="f-item">
+                                    <FaCheckCircle className="text-green" /> <span>Fully Insured Drivers</span>
+                                </div>
+                                <div className="f-item">
+                                    <FaCheckCircle className="text-green" /> <span>Optional Car Wash</span>
+                                </div>
+                            </div>
+
+                            <a href="#book" className="btn-modern mt-4">Book Now</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 6. TESTIMONIALS (Modern Redesign) */}
+            <section className="section-padding bg-light-grey">
+                <div className="container">
+                    
+                    {/* Header & Badges */}
+                    <div className="section-header text-center mb-5">
+                        <h2 className="section-title">What Our Customers Say</h2>
+                        <p className="section-subtitle">Trusted by thousands of travellers</p>
+                        
+                        {/* Trust Badges Row */}
+                        <div className="review-badges-row mt-4">
+                            <div className="review-badge google-badge">
+                                <FcGoogle size={28} />
+                                <div className="badge-text">
+                                    <span className="source-name">Google</span>
+                                    <span className="source-rating">Reviews <FaStar className="star-mini"/></span>
+                                </div>
+                            </div>
+                            <div className="review-badge trustpilot-badge">
+                                <SiTrustpilot size={28} color="#00b67a" />
+                                <div className="badge-text">
+                                    <span className="source-name">Trustpilot</span>
+                                    <span className="source-rating">Excellent <FaStar className="star-mini"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Review Cards Grid */}
+                    <div className="reviews-grid">
+                        {/* Review 1 */}
+                        <div className="review-card">
+                            <div className="card-top">
+                                
+                                <div className="reviewer-info">
+                                    <h4>Sharon Maginnis</h4>
+                                    <span className="reviewer-type">Family Traveller</span>
+                                </div>
+                                <div className="source-icon"><FcGoogle /></div>
+                            </div>
+                            <p className="review-text">
+                                "Brilliant service....so handy with no waiting on buses and ending up going round all the zones. Drop off and pick up at the terminal door!."
+                            </p>
+                            <div className="review-stars">
+                                <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
+                            </div>
+                        </div>
+
+                        {/* Review 2 */}
+                        <div className="review-card">
+                            <div className="card-top">
+                                
+                                <div className="reviewer-info">
+                                    <h4>Karen McArdle</h4>
+                                    <span className="reviewer-type">Family Traveller</span>
+                                </div>
+                                <div className="source-icon"><SiTrustpilot color="#00b67a"/></div>
+                            </div>
+                            <p className="review-text">
+                                "Terrific experience with these guys.. very efficient and easy to deal with, will 100% be using them again next year for our family holiday.. 100% recommend"
+                            </p>
+                            <div className="review-stars">
+                                <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
+                            </div>
+                        </div>
+
+                        {/* Review 3 */}
+                        <div className="review-card">
+                            <div className="card-top">                                
+                                <div className="reviewer-info">
+                                    <h4>Sinead FitzGeraldy</h4>
+                                    <span className="reviewer-type">Frequent Flyer</span>
+                                </div>
+                                <div className="source-icon"><FcGoogle /></div>
+                            </div>
+                            <p className="review-text">
+                                "Handy valet parking service. 2nd time using these guys and it makes for airport parking very easy.thx"
+                            </p>
+                            <div className="review-stars">
+                                <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer CTA */}
+                    <div className="text-center mt-5">
+                         <a href="https://www.google.com/maps/place/RS+Express+Parking/@53.3883167,-6.2480426,17z/data=!4m8!3m7!1s0x48677374e94d3ad3:0xce7454b87b0fb695!8m2!3d53.3883135!4d-6.2454677!9m1!1b1!16s%2Fg%2F11x2wfyvqj?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="btn-modern dark-btn">
+                            View All Reviews
                         </a>
-                    </div>       
+                    </div>
 
-                    <p className="testimonials-subtitle">Testimonial</p>                                                            
-                    <h2 className="testimonials-title" style={{ marginBottom : 0 }}>What Our Customers Say</h2>                                            
                 </div>
-                <div className="testimonials-container">
-                    <div id="shapo-widget-fda43f215da1b6f977dd"></div>
-                </div>
-            </div>
-        </div>
+            </section>       
 
 <FAQSection faqs={faqs} loading={loading}/>
 

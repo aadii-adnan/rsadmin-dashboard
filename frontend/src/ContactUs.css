@@ -2393,7 +2393,7 @@ body.rtl .e-con {
     --e-global-color-secondary: #273E8F;
     --e-global-color-text: #676767;
     --e-global-color-accent: #2890CD;
-    --e-global-color-08673a6: #F5F4EE;
+    --e-global-color-08673a6: #fff;
     --e-global-color-85fa94e: #DCE2E5;
     --e-global-color-6451a9d: #ECECEA;
     --e-global-color-3656500: #FFFFFF;
@@ -2484,7 +2484,7 @@ body.rtl .e-con {
     --e-global-typography-a06246a-text-decoration: none;
     --e-global-typography-a06246a-line-height: 1.8em;
     --e-global-typography-a06246a-letter-spacing: 0px;
-    background-color: #f5f4ee;
+    background-color: #fff;
     color: var(--e-global-color-text);
     font-family: var( --e-global-typography-text-font-family ),Sans-serif;
     font-size: var( --e-global-typography-text-font-size );

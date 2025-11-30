@@ -91,7 +91,7 @@ const Login = () => {
   };
 
   return (
-    <div className="container-fluid min-vh-100 d-flex align-items-stretch justify-content-center p-0" style={{background: "linear-gradient(120deg, #f5f4ee 0%, #e3eafc 100%)"}}>
+    <div className="container-fluid min-vh-100 d-flex align-items-stretch justify-content-center p-0" style={{background: "linear-gradient(120deg, #fff 0%, #e3eafc 100%)"}}>
       <div className="row flex-grow-1 w-100 m-0">
         {/* Left Banner */}
         <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center p-0" style={{background: "#010659"}}>

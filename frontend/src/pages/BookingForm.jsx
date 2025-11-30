@@ -287,7 +287,7 @@ const BookingForm = () => {
       <h6 style={{fontWeight:400}} className="lead d-none d-sm-block">Enjoy stress-free airport parking with our secure, affordable meet & greet service. Quick drop-off and pickup at Dublin Airport.</h6>
     </div>
 
-    <div style={{ backgroundColor: "#f5f4ee", minHeight: "100vh"}} className="container-fluid" id="booking-form">
+    <div style={{ backgroundColor: "#fff", minHeight: "100vh"}} className="container-fluid" id="booking-form">
       <div className="row mx-0 justify-content-center">
         <div className="col-12 col-md-10 col-lg-8 col-xl-6 text-center px-3 px-md-4 py-4 w-sm-95" style={{ backgroundColor: "#fff", borderRadius: "15px", boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", marginTop: "30px"}}>
             <h2 id="heading" style={{   fontSize: "24px",   fontWeight: "bold",   color: "#010659",   marginBottom: "20px", }}>{serviceDetails?.name}</h2>

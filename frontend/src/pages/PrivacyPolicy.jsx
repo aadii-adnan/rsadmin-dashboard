@@ -23,7 +23,7 @@ const PrivacyPolicy = () => {
         <meta name="twitter:image" content="https://rsexpressparking.com/images/og-parking.jpg"/>
 
     </Helmet>
-    <div style={{backgroundColor:"#F5F4EE"}}>
+    <div style={{backgroundColor:"#fff"}}>
         <div className="container py-5 privacy-policy">
         <h1 style={{textAlign:"center", color:"#010659"}} className="mb-4">RS Express Parking Privacy Policy</h1>
 
@@ -39,10 +39,10 @@ const PrivacyPolicy = () => {
             <h2 style={{color:"#010659"}} className="h4">2. Information We Collect</h2>
             <p>We may collect the following details:</p>
             <ul className="list-group list-group-flush">
-            <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item"><strong>Personal Information</strong>: Name, contact details, and email address.</li>
-            <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item"><strong>Booking Details</strong>: Vehicle information and payment-related data.</li>
-            <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item"><strong>Communication Records</strong>: Emails, phone calls, or messages exchanged with our support team.</li>
-            <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item"><strong>Website Analytics</strong>: IP address, browser type, and usage behavior.</li>
+            <li style={{backgroundColor:"#fff"}} className="list-group-item"><strong>Personal Information</strong>: Name, contact details, and email address.</li>
+            <li style={{backgroundColor:"#fff"}} className="list-group-item"><strong>Booking Details</strong>: Vehicle information and payment-related data.</li>
+            <li style={{backgroundColor:"#fff"}} className="list-group-item"><strong>Communication Records</strong>: Emails, phone calls, or messages exchanged with our support team.</li>
+            <li style={{backgroundColor:"#fff"}} className="list-group-item"><strong>Website Analytics</strong>: IP address, browser type, and usage behavior.</li>
             </ul>
         </section>
 
@@ -61,9 +61,9 @@ const PrivacyPolicy = () => {
         <section className="mb-5">
             <h2 style={{color:"#010659"}} className="h4">4. Information Sharing & Disclosure</h2>
             <ul className="list-group list-group-flush">
-            <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item"><strong>Third-Party Providers</strong>: To facilitate transactions and services.</li>
-            <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item"><strong>Legal Compliance</strong>: To meet legal and regulatory requirements.</li>
-            <li style={{backgroundColor:"#F5F4EE"}} className="list-group-item"><strong>Data Protection</strong>: We do <strong>not</strong> sell, rent, or trade your data.</li>
+            <li style={{backgroundColor:"#fff"}} className="list-group-item"><strong>Third-Party Providers</strong>: To facilitate transactions and services.</li>
+            <li style={{backgroundColor:"#fff"}} className="list-group-item"><strong>Legal Compliance</strong>: To meet legal and regulatory requirements.</li>
+            <li style={{backgroundColor:"#fff"}} className="list-group-item"><strong>Data Protection</strong>: We do <strong>not</strong> sell, rent, or trade your data.</li>
             </ul>
         </section>
 

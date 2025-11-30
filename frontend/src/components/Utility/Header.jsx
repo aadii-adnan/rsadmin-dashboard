@@ -58,7 +58,7 @@ const Header = () => {
         data-elementor-post-type="elementor_library"
         >
         
-        <div style={{ backgroundColor: "#F5F4EE", justifyContent: "space-between" }}
+        <div style={{ backgroundColor: "#fff", justifyContent: "space-between" }}
             className="elementor-element elementor-element-71809993 e-con-full e-flex e-con e-parent e-lazyloaded"
             data-id="71809993"
             data-element_type="container"
@@ -124,7 +124,7 @@ const Header = () => {
                                       fontWeight: 600,
                                       borderRadius: "8px",
                                       transition: "background 0.2s, color 0.2s",
-                                      background: isLegalInfoDropdownOpen ? "#f5f4ee" : "transparent",
+                                      background: isLegalInfoDropdownOpen ? "#fff" : "transparent",
                                       fontSize: "14px",
                                       textTransform: "uppercase",
                                       height: "100%",
@@ -224,7 +224,7 @@ const Header = () => {
                     fontWeight: 600,
                     borderRadius: "8px",
                     transition: "background 0.2s, color 0.2s",
-                    background: isMeDropdownOpen ? "#f5f4ee" : "transparent",
+                    background: isMeDropdownOpen ? "#fff" : "transparent",
                     fontSize: "14px",
                     textTransform: "uppercase",
                     height: "100%",
@@ -249,7 +249,7 @@ const Header = () => {
                   style={{
                     display: isMeDropdownOpen ? "block" : "none",
                     minWidth: 180,
-                    background: "rgb(245, 244, 238)",
+                    background: "#fff",
                     borderRadius: 8,
                     boxShadow: "0 4px 18px rgba(40,144,205,0.10)",
                     padding: "8px 0",

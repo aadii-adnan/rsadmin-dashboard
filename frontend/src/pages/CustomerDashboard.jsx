@@ -326,7 +326,7 @@ const CustomerDashboard = () => {
         </h6>
       </div>
       {/* Dashboard Card */}
-      <div className="container-fluid" style={{ backgroundColor: "#f5f4ee", minHeight: "100vh", padding: "40px 0" }}>
+      <div className="container-fluid" style={{ backgroundColor: "#fff", minHeight: "100vh", padding: "40px 0" }}>
         <div
             className="col-12 col-lg-11 col-xl-10 mx-auto"
             style={{
@@ -631,7 +631,7 @@ const CustomerDashboard = () => {
       }
       .status-pill {
         box-shadow: 0 2px 12px rgba(40,144,205,0.08);
-        border: 2px solid #f5f4ee;
+        border: 2px solid #fff;
         transition: box-shadow 0.2s, border 0.2s;
       }
       .status-pill:hover {

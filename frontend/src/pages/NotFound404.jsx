@@ -35,7 +35,7 @@ const styles = {
   bg: {
     minHeight: '100vh',
     width: '100vw',
-    background: 'linear-gradient(120deg, #f5f4ee 0%, #e3eafc 100%)',
+    background: 'linear-gradient(120deg, #fff 0%, #e3eafc 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
