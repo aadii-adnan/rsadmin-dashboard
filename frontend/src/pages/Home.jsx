@@ -1,35 +1,24 @@
 import React, {useEffect, useState} from 'react'
 import BookingDatesForm from '../components/HomePage/BookingDatesForm'
 import { useBooking } from "../context/BookingContext";
-import bannerImg1 from "../assets/banner-img1.webp"
-import bannerImg2 from "../assets/banner-img2.webp"
-import bannerImg3 from "../assets/banner-img3.webp"
-import bannerImg4 from "../assets/banner-img4.webp"
-import customerSupport from "../assets/customer-support.webp"
-import terminal from "../assets/terminal.webp"
 import secureParking from "../assets/secure-parking.webp"
-import addOns from "../assets/add-ons.webp"
 import { Helmet } from 'react-helmet-async';
-import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/autoplay";
-import { Autoplay, EffectFade } from "swiper/modules";
 import { ClipLoader } from "react-spinners";
-import FAQSection from "../components/HomePage/FAQSection";
+const FAQSection = React.lazy(() => import('../components/HomePage/FAQSection'));
 import { 
     FaCarSide, FaCheckCircle, FaShieldAlt, FaPlaneDeparture, 
     FaUserTie, FaSuitcase, FaChild, FaVideo, FaKey, 
     FaClock, FaPhoneAlt, FaEnvelope, FaStar 
 } from "react-icons/fa";
 import { SiTrustpilot } from "react-icons/si"; 
-import { FaStarHalfAlt, FaQuoteRight } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { BiSupport } from "react-icons/bi";
-import logo from "../assets/logo.png";
-import parkingVideo from "../assets/vid.mp4"; 
-import videoPoster from "../assets/hero-cover.png"; 
-import parking from "../assets/parking.jpg";
+import logo from "../assets/logo.webp";
+import parkingVideo from "../assets/vid2.mp4"; 
+import videoPoster from "../assets/hero-cover.webp"; 
+import parking from "../assetsparking2.webp";
 import DiscountPopup from '../components/Utility/DiscountPopup';
 
 const Home = () => {
@@ -59,6 +48,15 @@ const Home = () => {
         }
         localStorage.removeItem("payment_status");
     }, []);
+
+    useEffect(() => {
+        setTimeout(() => {
+            const script = document.createElement("script");
+            script.src = "https://js.stripe.com/basil/stripe.js";
+            document.body.appendChild(script);
+        }, 2000);
+    }, []);
+
 
     useEffect(() => {
     const fetchFAQs = async () => {
@@ -241,12 +239,13 @@ const Home = () => {
                 loop 
                 muted 
                 playsInline 
-                preload="none" /* Wait until page loads to fetch video */
-                poster={videoPoster} /* Shows this image instantly while video loads */
+                preload="metadata" 
                 className="banner-video"
-            >
+                width="1920"
+                height="1080"
+                poster={videoPoster}
+                >
                 <source src={parkingVideo} type="video/mp4" />
-                {/* Optional: Add a .webm source here for even better speed on Chrome */}
             </video>
             {/* --- ADD THIS SNOW DIV --- */}
             <div className="snow-container">
@@ -349,7 +348,7 @@ const Home = () => {
                     <div className="row align-items-center">
                         <div className="col-lg-6 mb-4 mb-lg-0">
                             <div className="image-collage">
-                                <img src={secureParking} alt="Secure Parking" className="collage-main" />
+                                <img src={secureParking} loading="lazy" width="464" height="348" alt="Secure Parking" />
                                 <img src={parking} alt="CCTV" className="collage-small" />
                                 <div className="collage-badge">
                                     <FaShieldAlt /> 24/7 Secure

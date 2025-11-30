@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBooking } from '../../context/BookingContext';
 import flexible from '../../assets/service.jpg';
-import standard from "../../assets/parking.jpg"
+import standard from "../../assetsparking2.webp"
 import "../../BookingForm.css";
 import { useNavigate } from 'react-router-dom';
 

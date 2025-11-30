@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import { useBooking } from "../../context/BookingContext";
 import logo from "../../assets/logo-white.webp";
-import simpleLogo from "../../assets/logo.png";
+import simpleLogo from "../../assets/logo.webp";
 import { FaUserCircle } from "react-icons/fa";
 
 const Header = () => {

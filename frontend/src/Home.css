@@ -172,7 +172,7 @@ body .home-banner {
   width: 100%;
   height: 400px;
   background-color: #010659;
-  background-image: url('../assets/hero-cover.png');
+  background-image: url('../assets/hero-cover.webp');
   background-size: cover;
   background-position: center;
   overflow: hidden;
@@ -357,7 +357,7 @@ body .home-banner {
 /* --- 3. WHY CHOOSE US (Grid) --- */
 .reasons-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 25px;
 }
 
