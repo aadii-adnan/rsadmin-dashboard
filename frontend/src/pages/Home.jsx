@@ -18,7 +18,7 @@ import { FcGoogle } from "react-icons/fc";
 import logo from "../assets/logo.webp";
 import parkingVideo from "../assets/vid2.mp4"; 
 import videoPoster from "../assets/hero-cover.webp"; 
-import parking from "../assetsparking2.webp";
+import parking from "../assets/parking2.webp";
 import DiscountPopup from '../components/Utility/DiscountPopup';
 
 const Home = () => {
