@@ -278,14 +278,17 @@ const Home = () => {
             <div className="video-overlay"></div>
 
             <div className="banner-content">
-                 {/* Your text content here */}
-                 <h6 style={{letterSpacing:"5px", textTransform:"uppercase", fontWeight:400, fontSize:"14px"}}>Secure, Affordable &amp; Stress-Free</h6>
-                <h1 className="banner-heading">Meet & Greet Dublin Airport Parking</h1>
-                <h3 className="banner-subheading">
-                Book secure Meet & Greet parking at Dublin Airport. 
-                <br />
-                24/7 CCTV-monitored, fully patrolled, with quick terminal handovers.
-                </h3>
+                 {/* Your text content here */}                 
+                <h1 className="banner-heading">Meet & Greet Parking at Dublin Airport</h1>
+                <h2 className="banner-subheading">
+                Fast and affordable Dublin Airport parking with simple meet and greet drop-off at the terminal.
+                </h2>
+                <div className="trust-badges">
+                    <div className="badge-item"><FaShieldAlt /> Secure Parking</div>
+                    <div className="badge-item"><FaCheckCircle /> Insured Drivers</div>
+                    <div className="badge-item"><FaVideo /> 24/7 CCTV</div>
+                    <div className="badge-item"><FaStar /> No Hidden Fees</div>
+              </div>
             </div>
         </div>
         </div>
