@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const DiscountPopup = () => {
   const [open, setOpen] = useState(false);
@@ -10,7 +11,7 @@ const DiscountPopup = () => {
     const already = localStorage.getItem('discount_popup_done');
     if (!already) {
       // Show after user interaction or 3s
-      const timer = setTimeout(() => setOpen(true), 15000);
+      const timer = setTimeout(() => setOpen(true), 12000);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -48,7 +49,11 @@ const DiscountPopup = () => {
         
         {/* Replace dotlottie with simple emoji or CSS animation */}
         <div style={styles.emojiWrapper}>
-          <div style={styles.emoji}>🚗💨</div>
+          <DotLottieReact
+            src="https://lottie.host/a59f8a35-bdbf-4546-bade-f425c9e59a3f/cdFqIHDpDZ.lottie"
+            loop
+            autoplay
+          />
         </div>
 
         <h2 style={styles.title}>Unlock a Special Discount!</h2>
