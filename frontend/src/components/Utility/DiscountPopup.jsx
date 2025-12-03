@@ -10,7 +10,7 @@ const DiscountPopup = () => {
     const already = localStorage.getItem('discount_popup_done');
     if (!already) {
       // Show after user interaction or 3s
-      const timer = setTimeout(() => setOpen(true), 3000);
+      const timer = setTimeout(() => setOpen(true), 15000);
       return () => clearTimeout(timer);
     }
   }, []);

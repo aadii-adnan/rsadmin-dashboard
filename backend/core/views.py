@@ -7,6 +7,9 @@ from django.http import HttpResponse
 from datetime import datetime, time
 from django.utils import timezone
 from rest_framework import status
+import secrets
+import string
+from services.models import Coupon
 
 class StatusListView(APIView):
     def get(self, request):
@@ -64,11 +67,38 @@ class DiscountSignupView(APIView):
         email = request.data.get('email')
         if not email:
             return Response({'error': 'Email is required'}, status=400)
-        lead, created = MarketingLead.objects.get_or_create(email=email.lower().strip())
-        lead.discount_code = "RSPARK15"
+
+        # Create or get lead
+        lead, _ = MarketingLead.objects.get_or_create(email=email.lower().strip())
+
+        # Generate a unique coupon code, e.g., RSP15-XXXXXX
+        def gen_code():
+            suffix = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            return f"RSP15-{suffix}"
+
+        code = gen_code()
+        # Ensure uniqueness
+        while Coupon.objects.filter(code=code).exists():
+            code = gen_code()
+
+        # Create lifetime 15% coupon starting now
+        now = timezone.now()
+        coupon = Coupon.objects.create(
+            code=code,
+            discount_percent=15,
+            active=True,
+            valid_from=now,
+            valid_to=None,
+            lifetime=True,
+            max_uses=1,
+            times_used=0,
+        )
+
+        lead.discount_code = coupon.code
         lead.subscribed = True
         lead.save()
-        return Response({'email': lead.email, 'discount_code': lead.discount_code}, status=201)
+
+        return Response({'email': lead.email, 'discount_code': coupon.code}, status=201)
 
 def robots_txt(request):
     host = request.get_host()

@@ -1,7 +1,6 @@
 :root {
   --primary-dark: #010659;
-  --primary-light: #273E8F;
-  --accent-gold: #F4B400;
+  --primary-light: rgb(40, 144, 205);
   --text-dark: #1A1A1A;
   --text-grey: #666666;
   --bg-light: #F8F9FA;
@@ -339,7 +338,7 @@ body .home-banner {
   position: absolute;
   top: -5px;
   right: -5px;
-  background: var(--accent-gold);
+  background: rgb(40, 144, 205);
   color: var(--primary-dark);
   width: 25px;
   height: 25px;
@@ -379,7 +378,7 @@ body .home-banner {
 
 .feature-icon {
   font-size: 2rem;
-  color: var(--accent-gold);
+  color: rgb(40, 144, 205);
   flex-shrink: 0;
 }
 
@@ -439,6 +438,10 @@ body .home-banner {
   height: 400px;
 }
 
+.image-collage img {
+  border-radius: 20px;
+}
+
 .collage-main {
   width: 85%;
   height: 350px;
@@ -463,7 +466,7 @@ body .home-banner {
   position: absolute;
   top: 30px;
   right: 10%;
-  background: var(--accent-gold);
+  background: rgb(40, 144, 205);
   color: var(--primary-dark);
   padding: 10px 20px;
   border-radius: 30px;
@@ -655,8 +658,11 @@ body .home-banner {
   overflow: hidden;
 }
 
-.faq-card.active .question-text {
-  color: #273E8F;
+.faq-header:hover, .faq-header:focus {
+  background-color: var(--primary-dark);
+}
+.faq-header:hover .question-text, .faq-header:focus .question-text {
+  color: #fff;
 }
 
 .toggle-icon {
@@ -674,7 +680,7 @@ body .home-banner {
 }
 
 .faq-card.active .toggle-icon {
-  background-color: #F4B400;
+  background-color: rgb(40, 144, 205);
   color: #fff;
   transform: rotate(180deg);
 }
@@ -733,7 +739,7 @@ body .home-banner {
   color: #273E8F;
   font-weight: 700;
   text-decoration: none;
-  border-bottom: 2px solid #F4B400;
+  border-bottom: 2px solid rgb(40, 144, 205);
   padding-bottom: 2px;
   transition: all 0.2s;
 }
@@ -949,7 +955,7 @@ body .home-banner {
 .modern-santa-hat {
   position: absolute;
   top: -35px;     /* Perched on top */
-  left: -25px;    /* Hanging off the left corner */
+  right: -25px;    /* Hanging off the left corner */
   width: 110px;   /* Nice and large visibility */
   height: 110px;
   z-index: 20;
@@ -978,16 +984,6 @@ body .home-banner {
   }
   100% {
     transform: translateY(0px) rotate(0deg);
-  }
-}
-
-/* Mobile Adjustment: Make it smaller so it doesn't block screen */
-@media (max-width: 576px) {
-  .modern-santa-hat {
-    width: 80px;
-    height: 80px;
-    top: -25px;
-    left: -15px;
   }
 }
 
@@ -1040,5 +1036,144 @@ body .home-banner {
 @media (max-width: 576px) {
   .banner-content .banner-heading { font-size: 28px; }
   .banner-content .banner-subheading { font-size: 15px; }
-  .trust-badges .badge-item { font-size: 13px; padding: 8px 10px; }
+  .trust-badges { display: none; }
 }
+
+.review-badge.active {
+  box-shadow: 0 0 0 2px #14163d inset;
+}
+.reviews-grid .review-card .review-stars svg {
+  margin-right: 2px;
+}
+
+/* Review filter buttons themed */
+.review-filter-row .btn-modern {
+  background: var(--primary-dark);
+  color: var(--white);
+  border: 2px solid var(--primary-dark);
+}
+.review-filter-row .btn-modern.dark-btn {
+  background: transparent;
+  color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+.review-filter-row .btn-modern:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+}
+
+/* Source badges */
+.review-badge {
+  background: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border: 2px solid #eee;
+  transition: all 0.2s ease;
+  color: var(--primary-dark);
+}
+.review-badge.google-badge {
+  border-color: rgba(244, 180, 0, 0.35); /* accent gold tint */
+}
+.review-badge.trustpilot-badge {
+  border-color: rgba(0, 182, 122, 0.35); /* trustpilot green tint */
+}
+.review-badge:hover {
+  transform: translateY(-2px);
+}
+
+/* Active states */
+.review-badge.active.google-badge {
+  border-color: rgb(40, 144, 205);
+  box-shadow: 0 0 0 2px rgb(40, 144, 205) inset;
+}
+.review-badge.active.trustpilot-badge {
+  border-color: #00b67a;
+  box-shadow: 0 0 0 2px #00b67a inset;
+}
+
+/* Text colors inside buttons */
+.review-badge span {
+  color: var(--text-dark);
+}
+
+/* Grid responsiveness stays the same */
+.reviews-grid .review-card .review-stars svg {
+  margin-right: 2px;
+}
+
+/* Ensure form is positioning context */
+#book { position: relative; }
+
+/* Top-right placement */
+.modern-santa-hat {
+  position: absolute;
+  right: 40px;
+  width: 110px;
+  height: 110px;
+  z-index: 20;
+  pointer-events: none;         /* don’t block form inputs */
+  animation: floatHat 4s ease-in-out infinite;
+}
+
+/* Size the lottie player */
+.modern-santa-hat .dotlottie-anim {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
+/* Optional: subtle float animation */
+@keyframes floatHat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(2deg); }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+  .modern-santa-hat {
+    display: none;
+  }
+}
+
+/* Top-right placement */
+.modern-santa {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 400px;
+  height: 200px;
+  z-index: 20000;
+  pointer-events: none;         /* don’t block form inputs */
+  animation: floatSanta 4s ease-in-out infinite;
+}
+
+/* Size the lottie player */
+.modern-santa .dotlottie-anim {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
+/* Optional: subtle float animation */
+@keyframes floatSanta {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(2deg); }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .modern-santa {
+    width: 300px;
+    left: -50px;
+  }
+}
+@media (max-width: 576px) {
+  .modern-santa {
+    top: -6vh;
+  }
+}
+

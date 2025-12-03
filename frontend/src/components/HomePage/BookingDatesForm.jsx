@@ -3,7 +3,7 @@ import { useBooking } from "../../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
 import { DateTime } from "luxon";
-
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const BookingDatesForm = () => {
   const { setBookingData } = useBooking();
@@ -201,53 +201,19 @@ const BookingDatesForm = () => {
       
       {/* --- MODERN 3D SANTA HAT --- */}
       <div className="modern-santa-hat">
-        <svg viewBox="0 0 120 120" className="hat-svg" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                {/* 1. Rich Red Gradient for depth */}
-                <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#ff5252" /> {/* Lighter Red */}
-                    <stop offset="100%" stopColor="#c62828" /> {/* Darker Red */}
-                </linearGradient>
-                
-                {/* 2. Soft White Gradient for Fur */}
-                <linearGradient id="snowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="100%" stopColor="#f1f2f6" />
-                </linearGradient>
-
-                {/* 3. Soft Shadow Filter */}
-                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-                    <feOffset dx="2" dy="3" result="offsetblur" />
-                    <feComponentTransfer>
-                        <feFuncA type="linear" slope="0.3" /> {/* 30% Opacity Shadow */}
-                    </feComponentTransfer>
-                    <feMerge>
-                        <feMergeNode />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-
-            {/* Group with Shadow Filter applied */}
-            <g filter="url(#softShadow)" className="hat-body-group">
-                {/* The Red Cone (Bent) */}
-                <path 
-                    d="M15,85 Q10,20 60,10 Q90,30 85,60" 
-                    fill="url(#redGradient)" 
-                    stroke="none"
-                />
-                
-                {/* The White Brim (Fluffy Cloud Shape) */}
-                <path 
-                    d="M10,80 C5,80 0,85 5,92 C10,98 20,98 25,92 C30,98 40,98 45,92 C50,98 60,98 65,92 C70,98 80,98 85,92 C90,85 85,80 80,80 Z" 
-                    fill="url(#snowGradient)"
-                />
-
-                {/* The Pom Pom (Ball) */}
-                <circle cx="85" cy="60" r="10" fill="url(#snowGradient)" />
-            </g>
-        </svg>
+        <DotLottieReact
+          src="https://lottie.host/26b307ff-80f8-4cc0-aeb8-eecba6fc3bc0/nhAl85z6Nf.lottie"
+          loop
+          autoplay
+          className="dotlottie-anim"
+        />
+      </div>
+      <div className="modern-santa">
+        <DotLottieReact
+      src="https://lottie.host/7eff47af-537e-446f-a06c-80ab320b3cbd/tjQTs5TNqY.lottie"
+      loop
+      autoplay
+    />
       </div>
       {/* ------------------------- */}
       <form onSubmit={handleSubmit}> <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>

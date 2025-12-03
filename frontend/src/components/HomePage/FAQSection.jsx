@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FAQItem from './FAQItem';
 import { BiSupport } from "react-icons/bi";
+import { Link } from 'react-router-dom';
 
 const FAQSection = ({ faqs, loading }) => {
   const [openIndex, setOpenIndex] = useState(null);
@@ -49,7 +50,7 @@ const FAQSection = ({ faqs, loading }) => {
           </div>
           <h4>Still have questions?</h4>
           <p>Can’t find the answer you’re looking for? Please contact our friendly support team.</p>
-          <a href="mailto:support@rsexpressparking.com" className="contact-link">Contact Support</a>
+          <Link to="/contact-us" className="contact-link">Contact Support</Link>
         </div>
 
       </div>

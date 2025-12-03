@@ -19,6 +19,7 @@ import logo from "../assets/logo.webp";
 import parkingVideo from "../assets/vid2.mp4"; 
 import videoPoster from "../assets/hero-cover.webp"; 
 import parking from "../assets/parking2.webp";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 const DiscountPopup = React.lazy(() => import('../components/Utility/DiscountPopup'));
 
 const Home = () => {
@@ -26,7 +27,8 @@ const Home = () => {
     const { setBookingData } = useBooking();
     const [faqs, setFaqs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [openFaqIndex, setOpenFaqIndex] = useState(null);
+    const [reviewFilter, setReviewFilter] = useState('all');
+    const [showAll, setShowAll] = useState(false);
 
     useEffect(() => {
         // Remove Stripe preload - load on demand
@@ -124,6 +126,45 @@ const Home = () => {
         { title: "Business Travellers", desc: "Reliable valet parking at Dublin Airport that helps you save time and stay on schedule.", icon: <FaUserTie/> },
         { title: "Travellers with Heavy Luggage", desc: "Ideal for anyone who wants direct terminal handover without carrying bags across large parking areas.", icon: <FaSuitcase/> }
     ];
+
+    const allReviews = [
+      // Google (6)
+      { id: 1, source: 'google', name: 'Sharon Maginnis', type: 'Family Traveller', text: 'Brilliant service....so handy with no waiting on buses and ending up going round all the zones. Drop off and pick up at the terminal door!.', stars: 5 },
+      { id: 2, source: 'google', name: 'Sinead FitzGeraldy', type: 'Frequent Flyer', text: 'Handy valet parking service. 2nd time using these guys and it makes for airport parking very easy.thx', stars: 5 },
+      { id: 3, source: 'google', name: 'Chelsea Greenwood', type: 'Business Traveller', text: 'Amazing service from RS Express Parking! Collected my car late at night, and it was returned quickly and efficiently. Friendly team, great communication, and competitive prices. Highly recommend for Dublin Airport parking!', stars: 5 },
+      { id: 4, source: 'google', name: 'Michael Handy', type: 'Holiday Traveller', text: 'I have used these guys a few times now and the service is great. Everytime is no issue and always there on time. It makes the start to you journey much easier. Also when returning they are always on time and have everything in order. Highly recommend.', stars: 5 },
+      { id: 5, source: 'google', name: 'Francis Larkin', type: 'Family Traveller', text: 'Excellent service. Just call 30 minutes before you.arrive at the airport and the driver meets you at departures and takes your car away and the same service on your return. No time wasted trying to find parking spaces, bus shuttles etc.', stars: 5 },
+      { id: 6, source: 'google', name: 'Gerry Cosgrave', type: 'Frequent Flyer', text: 'RS Express Parking is the best thing to happen at Dublin Airport in a long time.', stars: 5 },
+      // Trustpilot (6)
+      { id: 7, source: 'trustpilot', name: 'Karen McArdle', type: 'Family Traveller', text: 'Terrific experience with these guys.. very efficient and easy to deal with, will 100% be using them again next year for our family holiday.. 100% recommend', stars: 5 },
+      { id: 8, source: 'trustpilot', name: 'Sinead White', type: 'Holiday Traveller', text: 'Great service. Good communication & car collected & dropped at terminal al for us. Also a great valet done on car. Highly recommended', stars: 5 },
+      { id: 9, source: 'trustpilot', name: 'Nicole Maher', type: 'Frequent Flyer', text: 'I can\'t recommend this company enough, friendly staff and amazing service, we will definitely use for our next trip!', stars: 5 },
+      { id: 10, source: 'trustpilot', name: 'Lee', type: 'Business Traveller', text: 'We have used RS Express Parking many times and always found them very reliable and trustworthy.', stars: 5 },
+      { id: 11, source: 'trustpilot', name: 'John.', type: 'Holiday Traveller', text: 'Good instructions & communication. Easy to deal with. Great service!', stars: 5 },
+      { id: 12, source: 'trustpilot', name: 'Ian Parsons', type: 'Frequent Flyer', text: 'Terrific experience with these guys.. very efficient and easy to deal with, will 100% be using them again next year for our family holiday.. 100% recommend.', stars: 5 },
+    ];
+
+    // Filter by source
+    const baseFiltered = reviewFilter === 'all'
+      ? allReviews
+      : allReviews.filter(r => r.source === reviewFilter);
+
+    // Apply showAll rules:
+    // - all: show 6 by default, 12 when showAll
+    // - google/trustpilot: show 3 by default, 6 when showAll
+    let visibleReviews = [];
+    if (reviewFilter === 'all') {
+      const google = allReviews.filter(r => r.source === 'google');
+      const trustpilot = allReviews.filter(r => r.source === 'trustpilot');
+      if (showAll) {
+        visibleReviews = [...google, ...trustpilot]; // 12
+      } else {
+        visibleReviews = [...google.slice(0, 3), ...trustpilot.slice(0, 3)]; // 6 (3+3)
+      }
+    } else {
+      const filtered = allReviews.filter(r => r.source === reviewFilter);
+      visibleReviews = showAll ? filtered.slice(0, 6) : filtered.slice(0, 3);
+    }
 
     if (loading) {
         return (
@@ -427,96 +468,70 @@ const Home = () => {
             {/* 6. TESTIMONIALS (Modern Redesign) */}
             <section className="section-padding bg-light-grey">
                 <div className="container">
-                    
-                    {/* Header & Badges */}
-                    <div className="section-header text-center mb-5">
-                        <h2 className="section-title">What Our Customers Say</h2>
-                        <p className="section-subtitle">Trusted by thousands of travellers</p>
-                        
-                        {/* Trust Badges Row */}
-                        <div className="review-badges-row mt-4">
-                            <div className="review-badge google-badge">
-                                <FcGoogle size={28} />
-                                <div className="badge-text">
-                                    <span className="source-name">Google</span>
-                                    <span className="source-rating">Reviews <FaStar className="star-mini"/></span>
-                                </div>
-                            </div>
-                            <div className="review-badge trustpilot-badge">
-                                <SiTrustpilot size={28} color="#00b67a" />
-                                <div className="badge-text">
-                                    <span className="source-name">Trustpilot</span>
-                                    <span className="source-rating">Excellent <FaStar className="star-mini"/></span>
-                                </div>
-                            </div>
-                        </div>
+                <div className="section-header text-center mb-4">
+                    <h2 className="section-title">What Our Customers Say</h2>
+                    <p className="section-subtitle">Trusted by thousands of travellers</p>
+
+                    {/* Filter buttons */}
+                    <div className="review-filter-row mt-3" style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                        <button
+                            className={`btn-modern ${reviewFilter === 'all' ? '' : 'dark-btn'}`}
+                            onClick={() => { setReviewFilter('all'); setShowAll(false); }}
+                        >
+                            All
+                        </button>
+                        <button
+                            className={`review-badge google-badge ${reviewFilter === 'google' ? 'active' : ''}`}
+                            onClick={() => { setReviewFilter('google'); setShowAll(false); }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' }}
+                        >
+                            <FcGoogle size={20} />
+                            <span>Google</span>
+                        </button>
+                        <button
+                            className={`review-badge trustpilot-badge ${reviewFilter === 'trustpilot' ? 'active' : ''}`}
+                            onClick={() => { setReviewFilter('trustpilot'); setShowAll(false); }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' }}
+                        >
+                            <SiTrustpilot size={20} color="#00b67a" />
+                            <span>Trustpilot</span>
+                        </button>
                     </div>
-
-                    {/* Review Cards Grid */}
-                    <div className="reviews-grid">
-                        {/* Review 1 */}
-                        <div className="review-card">
-                            <div className="card-top">
-                                
-                                <div className="reviewer-info">
-                                    <h4>Sharon Maginnis</h4>
-                                    <span className="reviewer-type">Family Traveller</span>
-                                </div>
-                                <div className="source-icon"><FcGoogle /></div>
-                            </div>
-                            <p className="review-text">
-                                "Brilliant service....so handy with no waiting on buses and ending up going round all the zones. Drop off and pick up at the terminal door!."
-                            </p>
-                            <div className="review-stars">
-                                <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
-                            </div>
-                        </div>
-
-                        {/* Review 2 */}
-                        <div className="review-card">
-                            <div className="card-top">
-                                
-                                <div className="reviewer-info">
-                                    <h4>Karen McArdle</h4>
-                                    <span className="reviewer-type">Family Traveller</span>
-                                </div>
-                                <div className="source-icon"><SiTrustpilot color="#00b67a"/></div>
-                            </div>
-                            <p className="review-text">
-                                "Terrific experience with these guys.. very efficient and easy to deal with, will 100% be using them again next year for our family holiday.. 100% recommend"
-                            </p>
-                            <div className="review-stars">
-                                <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
-                            </div>
-                        </div>
-
-                        {/* Review 3 */}
-                        <div className="review-card">
-                            <div className="card-top">                                
-                                <div className="reviewer-info">
-                                    <h4>Sinead FitzGeraldy</h4>
-                                    <span className="reviewer-type">Frequent Flyer</span>
-                                </div>
-                                <div className="source-icon"><FcGoogle /></div>
-                            </div>
-                            <p className="review-text">
-                                "Handy valet parking service. 2nd time using these guys and it makes for airport parking very easy.thx"
-                            </p>
-                            <div className="review-stars">
-                                <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Footer CTA */}
-                    <div className="text-center mt-5">
-                         <a href="https://www.google.com/maps/place/RS+Express+Parking/@53.3883167,-6.2480426,17z/data=!4m8!3m7!1s0x48677374e94d3ad3:0xce7454b87b0fb695!8m2!3d53.3883135!4d-6.2454677!9m1!1b1!16s%2Fg%2F11x2wfyvqj?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="btn-modern dark-btn">
-                            View All Reviews
-                        </a>
-                    </div>
-
                 </div>
-            </section>       
+
+                {/* Reviews Grid (6 total, filtered to 3 by source) */}
+                <div className="reviews-grid">
+                {visibleReviews.map(r => (
+                    <div key={r.id} className="review-card">
+                    <div className="card-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <div className="reviewer-info">
+                        <h4 style={{ margin: 0 }}>{r.name}</h4>
+                        <span className="reviewer-type" style={{ fontSize: 13, color: '#666' }}>{r.type}</span>
+                        </div>
+                        <div className="source-icon">
+                        {r.source === 'google' ? <FcGoogle /> : <SiTrustpilot color="#00b67a" />}
+                        </div>
+                    </div>
+                    <p className="review-text" style={{ fontSize: 14, color: '#333' }}>{r.text}</p>
+                    <div className="review-stars" style={{ color: '#f5a623' }}>
+                        {Array.from({ length: r.stars }).map((_, i) => <FaStar key={i} />)}
+                    </div>
+                    </div>
+                ))}
+                </div>
+
+                {/* Footer CTA */}
+                <div className="text-center mt-5">
+                    <button
+                        type="button"
+                        className="btn-modern dark-btn"
+                        onClick={() => setShowAll(s => !s)}
+                    >
+                        {showAll ? 'Show Fewer Reviews' : 'View All Reviews'}
+                    </button>
+                </div>
+                </div>
+            </section>     
 
             <React.Suspense fallback={<div style={{minHeight: '400px'}} />}>
                 <FAQSection faqs={faqs} loading={loading}/>
