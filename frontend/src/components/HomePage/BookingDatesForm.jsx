@@ -9,6 +9,7 @@ const BookingDatesForm = () => {
   const { setBookingData } = useBooking();
   const [coupon, setCoupon] = useState("");
   const [agreeChecked, setAgreeChecked] = useState(true);
+  const [timeFormat, setTimeFormat] = useState("24");
   const navigate = useNavigate();
  
   const [formData, setFormData] = useState({
@@ -26,12 +27,28 @@ const BookingDatesForm = () => {
     const times = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 10) {
-        const formattedHour = hour.toString().padStart(2, '0');
-        const formattedMinute = minute.toString().padStart(2, '0');
+        const formattedHour = hour.toString().padStart(2, "0");
+        const formattedMinute = minute.toString().padStart(2, "0");
         times.push(`${formattedHour}:${formattedMinute}`);
       }
     }
     return times;
+  };
+
+  const formatTimeLabel = (time24) => {
+    if (timeFormat === "24") return time24;
+
+    const [hourStr, minute] = time24.split(":");
+    let hour = parseInt(hourStr, 10);
+    const period = hour >= 12 ? "PM" : "AM";
+
+    if (hour === 0) {
+      hour = 12;
+    } else if (hour > 12) {
+      hour -= 12;
+    }
+
+    return `${hour}:${minute} ${period}`;
   };
   
 
@@ -216,7 +233,42 @@ const BookingDatesForm = () => {
     />
       </div>
       {/* ------------------------- */}
-      <form onSubmit={handleSubmit}> <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
+      <form onSubmit={handleSubmit}> 
+        <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
+        <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            alignItems: "center",
+            marginBottom: "10px",
+            fontSize: "13px",
+            color: "#333",
+          }}
+        >
+        <span>Time format:</span>
+        <label>
+          <input
+            type="radio"
+            name="timeFormat"
+            value="24"
+            checked={timeFormat === "24"}
+            onChange={() => setTimeFormat("24")}
+            style={{ marginRight: "4px" }}
+          />
+          24-hour
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="timeFormat"
+            value="12"
+            checked={timeFormat === "12"}
+            onChange={() => setTimeFormat("12")}
+            style={{ marginRight: "4px", marginLeft: "8px" }}
+          />
+          12-hour (AM/PM)
+        </label>
+      </div>
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Parking From Date */}
           <div className="form-date">
@@ -227,11 +279,26 @@ const BookingDatesForm = () => {
           {/* Parking From Time */}
           <div className="form-time">
             <label htmlFor="parkingFromTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Drop-off Time</label>
-            <select id="parkingFromTime" name="parkingFromTime" value={formData.parkingFromTime} onChange={handleChange} required style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px",   backgroundColor: "#fff",   cursor: "pointer" }}>
+            <select
+              id="parkingFromTime"
+              name="parkingFromTime"
+              value={formData.parkingFromTime}
+              onChange={handleChange}
+              required
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#fff",
+                cursor: "pointer",
+              }}
+            >
               <option value="">Select time</option>
               {generate24HourTimeOptions().map((time) => (
                 <option key={time} value={time}>
-                  {time}
+                  {formatTimeLabel(time)}
                 </option>
               ))}
             </select>
@@ -248,11 +315,26 @@ const BookingDatesForm = () => {
           {/* Car Collection Time */}
           <div className="form-time">
             <label htmlFor="carCollectionTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Pickup Time</label>
-            <select id="carCollectionTime" name="carCollectionTime" value={formData.carCollectionTime} onChange={handleChange} required style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px",   backgroundColor: "#fff",   cursor: "pointer" }}>
+            <select
+              id="carCollectionTime"
+              name="carCollectionTime"
+              value={formData.carCollectionTime}
+              onChange={handleChange}
+              required
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#fff",
+                cursor: "pointer",
+              }}
+            >
               <option value="">Select time</option>
               {generate24HourTimeOptions().map((time) => (
                 <option key={time} value={time}>
-                  {time}
+                  {formatTimeLabel(time)}
                 </option>
               ))}
             </select>
