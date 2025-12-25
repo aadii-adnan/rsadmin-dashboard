@@ -233,42 +233,47 @@ const BookingDatesForm = () => {
     />
       </div>
       {/* ------------------------- */}
+      {/* Mobile-only time format dropdown */}
+      <div className="time-format-mobile">
+        <span>Time</span>
+        <select
+          value={timeFormat}
+          onChange={(e) => setTimeFormat(e.target.value)}
+        >
+          <option value="24">24h</option>
+          <option value="12">12h</option>
+        </select>
+      </div>
+
       <form onSubmit={handleSubmit}> 
         <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
-        <div style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            alignItems: "center",
-            marginBottom: "10px",
-            fontSize: "13px",
-            color: "#333",
-          }}
-        >
-        <span>Time format:</span>
-        <label>
-          <input
-            type="radio"
-            name="timeFormat"
-            value="24"
-            checked={timeFormat === "24"}
-            onChange={() => setTimeFormat("24")}
-            style={{ marginRight: "4px" }}
-          />
-          24-hour
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="timeFormat"
-            value="12"
-            checked={timeFormat === "12"}
-            onChange={() => setTimeFormat("12")}
-            style={{ marginRight: "4px", marginLeft: "8px" }}
-          />
-          12-hour (AM/PM)
-        </label>
-      </div>
+        
+        {/* Desktop-only radio buttons */}
+        <div className="time-format-desktop">
+          <span>Time format:</span>
+          <label>
+            <input
+              type="radio"
+              name="timeFormat"
+              value="24"
+              checked={timeFormat === "24"}
+              onChange={() => setTimeFormat("24")}
+              style={{ marginRight: "4px" }}
+            />
+            24-hour
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="timeFormat"
+              value="12"
+              checked={timeFormat === "12"}
+              onChange={() => setTimeFormat("12")}
+              style={{ marginRight: "4px", marginLeft: "8px" }}
+            />
+            12-hour (AM/PM)
+          </label>
+        </div>
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Parking From Date */}
           <div className="form-date">
