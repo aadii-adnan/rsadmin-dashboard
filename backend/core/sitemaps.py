@@ -14,6 +14,7 @@ class StaticReactSitemap(Sitemap):
             "contact-us",
             "terms-conditions",
             "privacy-policy",
+            "login",
         ]
 
     def location(self, item):
