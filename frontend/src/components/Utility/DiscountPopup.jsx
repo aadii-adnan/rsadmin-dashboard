@@ -50,9 +50,10 @@ const DiscountPopup = () => {
         {/* Replace dotlottie with simple emoji or CSS animation */}
         <div style={styles.emojiWrapper}>
           <DotLottieReact
-            src="https://lottie.host/a59f8a35-bdbf-4546-bade-f425c9e59a3f/cdFqIHDpDZ.lottie"
+            src="/animations/popup.lottie"
             loop
             autoplay
+            style={{ width: 300, height: 180, margin: '0 auto' }}
           />
         </div>
 

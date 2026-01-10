@@ -3,7 +3,6 @@ import { useBooking } from "../../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
 import { DateTime } from "luxon";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const BookingDatesForm = () => {
   const { setBookingData } = useBooking();
@@ -216,23 +215,7 @@ const BookingDatesForm = () => {
         position: "relative"
     }}>
       
-      {/* --- MODERN 3D SANTA HAT --- */}
-      <div className="modern-santa-hat">
-        <DotLottieReact
-          src="https://lottie.host/26b307ff-80f8-4cc0-aeb8-eecba6fc3bc0/nhAl85z6Nf.lottie"
-          loop
-          autoplay
-          className="dotlottie-anim"
-        />
-      </div>
-      <div className="modern-santa">
-        <DotLottieReact
-      src="https://lottie.host/7eff47af-537e-446f-a06c-80ab320b3cbd/tjQTs5TNqY.lottie"
-      loop
-      autoplay
-    />
-      </div>
-      {/* ------------------------- */}
+      
       {/* Mobile-only time format dropdown */}
       <div className="time-format-mobile">
         <span>Time</span>

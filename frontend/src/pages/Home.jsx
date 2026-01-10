@@ -19,7 +19,6 @@ import logo from "../assets/logo.webp";
 import parkingVideo from "../assets/vid2.mp4"; 
 import videoPoster from "../assets/hero-cover.webp"; 
 import parking from "../assets/parking2.webp";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 const DiscountPopup = React.lazy(() => import('../components/Utility/DiscountPopup'));
 
 const Home = () => {
