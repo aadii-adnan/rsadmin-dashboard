@@ -22,6 +22,12 @@ from openpyxl.styles import Font, Alignment, PatternFill
 import pytz
 from django.db.models.functions import Lower
 from payments.views import send_booking_confirmation_email, send_manager_new_booking_email
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 class SingleDateFilter(FieldListFilter):
     template = 'admin/single_date_filter.html'
@@ -453,7 +459,7 @@ class BookingAdmin(admin.ModelAdmin):
     download_booking_form.allow_tags = True
 
 
-    actions = ['export_as_csv', 'download_invoices_zip', 'download_booking_forms_zip']
+    actions = ['export_as_csv', 'export_as_pdf', 'download_invoices_zip', 'download_booking_forms_zip']
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -621,6 +627,253 @@ class BookingAdmin(admin.ModelAdmin):
         return response    
 
     export_as_csv.short_description = "Export Selected Bookings as Excel"
+
+    def get_dynamic_pdf_filename(self, departure_start, departure_end, return_start, return_end, created_start, created_end):
+        """Generate dynamic filename for PDF export (same logic as Excel but with .pdf extension)"""
+        def format_range(label, start, end):
+            if start and end and start != end:
+                start_str = datetime.strptime(start, '%Y-%m-%d').strftime('%d_%b')
+                end_str = datetime.strptime(end, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_{start_str}-{end_str}"
+            elif start and end and start == end:
+                start_str = datetime.strptime(start, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_{start_str}"
+            elif start:
+                start_str = datetime.strptime(start, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_from_{start_str}"
+            elif end:
+                end_str = datetime.strptime(end, '%Y-%m-%d').strftime('%d_%b')
+                return f"{label}_until_{end_str}"
+            return ""
+
+        parts = []
+        dep = format_range("Departures", departure_start, departure_end)
+        arr = format_range("Arrivals", return_start, return_end)
+        cre = format_range("Created", created_start, created_end)
+        for part in (dep, arr, cre):
+            if part:
+                parts.append(part)
+
+        for date in (departure_start, departure_end, return_start, return_end, created_start, created_end):
+            if date:
+                year = datetime.strptime(date, '%Y-%m-%d').strftime('%Y')
+                break
+        else:
+            year = datetime.now().strftime('%Y')
+
+        if parts:
+            return f"{'_&_'.join(parts)}_{year}.pdf"
+        else:
+            return "Selected_Bookings.pdf"
+
+    def export_as_pdf(self, request, queryset):
+        """
+        Export bookings as PDF organized by active date filters
+        """
+        # Get active filters (start and end for each)
+        departure_start = request.GET.get('departure_time__gte')
+        departure_end = request.GET.get('departure_time__lt')
+        return_start = request.GET.get('return_time__gte')
+        return_end = request.GET.get('return_time__lt')
+        created_start = request.GET.get('created_at__gte')
+        created_end = request.GET.get('created_at__lt')
+
+        def format_date_display(start, end):
+            if start and end:
+                return f"{datetime.strptime(start, '%Y-%m-%d').strftime('%d %b')} - {datetime.strptime(end, '%Y-%m-%d').strftime('%d %b')}"
+            elif start:
+                return f"from {datetime.strptime(start, '%Y-%m-%d').strftime('%d %b')}"
+            elif end:
+                return f"until {datetime.strptime(end, '%Y-%m-%d').strftime('%d %b')}"
+            return ""
+
+        def prepare_booking_row(booking, cell_style):
+            return [
+                Paragraph(booking.service.name if booking.service else '', cell_style),
+                Paragraph(booking.booking_id or '', cell_style),
+                Paragraph(f'{booking.first_name} {booking.last_name} {booking.contact_no}', cell_style),
+                Paragraph(timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M'), cell_style),
+                Paragraph(timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M'), cell_style),
+                Paragraph(f'{booking.car_manufacturer} {booking.car_model} {booking.car_colour} {booking.car_registration_no}', cell_style),
+                Paragraph(booking.departure_flight_number or '', cell_style),
+                Paragraph(booking.return_flight_number or '', cell_style),
+                Paragraph(', '.join([addon.name for addon in booking.add_ons.all()]), cell_style),
+            ]
+
+        # Create PDF buffer
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=10*mm,
+            rightMargin=10*mm,
+            topMargin=10*mm,
+            bottomMargin=10*mm
+        )
+
+        # Styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'TitleStyle',
+            parent=styles['Heading1'],
+            fontSize=14,
+            textColor=colors.white,
+            alignment=TA_CENTER,
+            spaceAfter=0,
+            spaceBefore=0,
+        )
+        header_style = ParagraphStyle(
+            'HeaderStyle',
+            parent=styles['Normal'],
+            fontSize=7,
+            fontName='Helvetica-Bold',
+            alignment=TA_CENTER,
+        )
+        cell_style = ParagraphStyle(
+            'CellStyle',
+            parent=styles['Normal'],
+            fontSize=7,
+            fontName='Helvetica',
+            alignment=TA_LEFT,
+            leading=8,
+        )
+
+        elements = []
+        headers = ['PRODUCT CODE', 'Booking Ref', 'Customer/Contact', 'Entry Date & Time', 
+                   'Return Date & Time', 'Vehicle/Registration', 'Out Flight Number', 
+                   'In Flight Number', 'Add Onns']
+        header_row = [Paragraph(h, header_style) for h in headers]
+
+        # Column widths (total ~277mm for A4 landscape with margins)
+        col_widths = [38*mm, 28*mm, 42*mm, 30*mm, 30*mm, 50*mm, 20*mm, 20*mm, 19*mm]
+
+        # Build sections
+        if departure_start or departure_end:
+            departure_qs = self.filter_by_range(queryset, 'departure_time', departure_start, departure_end).order_by('departure_time')
+            if departure_qs.exists():
+                # Section title
+                title_table = Table([[Paragraph(f"Departures {format_date_display(departure_start, departure_end)}", title_style)]], colWidths=[sum(col_widths)])
+                title_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, -1), colors.black), ('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('TOPPADDING', (0, 0), (-1, -1), 6), ('BOTTOMPADDING', (0, 0), (-1, -1), 6)]))
+                elements.append(title_table)
+                
+                # Data table
+                data = [header_row] + [prepare_booking_row(b, cell_style) for b in departure_qs]
+                table = Table(data, colWidths=col_widths, repeatRows=1)
+                table.setStyle(TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 2),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 3),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+                ]))
+                # Alternate row colors
+                for i in range(1, len(data)):
+                    if i % 2 == 0:
+                        table.setStyle(TableStyle([('BACKGROUND', (0, i), (-1, i), colors.Color(0.97, 0.97, 0.97))]))
+                elements.append(table)
+                elements.append(Spacer(1, 12))
+
+        if return_start or return_end:
+            return_qs = self.filter_by_range(queryset, 'return_time', return_start, return_end).order_by('return_time')
+            if return_qs.exists():
+                title_table = Table([[Paragraph(f"Returns {format_date_display(return_start, return_end)}", title_style)]], colWidths=[sum(col_widths)])
+                title_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, -1), colors.black), ('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('TOPPADDING', (0, 0), (-1, -1), 6), ('BOTTOMPADDING', (0, 0), (-1, -1), 6)]))
+                elements.append(title_table)
+                
+                data = [header_row] + [prepare_booking_row(b, cell_style) for b in return_qs]
+                table = Table(data, colWidths=col_widths, repeatRows=1)
+                table.setStyle(TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 2),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 3),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+                ]))
+                for i in range(1, len(data)):
+                    if i % 2 == 0:
+                        table.setStyle(TableStyle([('BACKGROUND', (0, i), (-1, i), colors.Color(0.97, 0.97, 0.97))]))
+                elements.append(table)
+                elements.append(Spacer(1, 12))
+
+        if created_start or created_end:
+            created_qs = self.filter_by_range(queryset, 'created_at', created_start, created_end).order_by('created_at')
+            if created_qs.exists():
+                title_table = Table([[Paragraph(f"Created {format_date_display(created_start, created_end)}", title_style)]], colWidths=[sum(col_widths)])
+                title_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, -1), colors.black), ('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('TOPPADDING', (0, 0), (-1, -1), 6), ('BOTTOMPADDING', (0, 0), (-1, -1), 6)]))
+                elements.append(title_table)
+                
+                data = [header_row] + [prepare_booking_row(b, cell_style) for b in created_qs]
+                table = Table(data, colWidths=col_widths, repeatRows=1)
+                table.setStyle(TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 2),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 3),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+                ]))
+                for i in range(1, len(data)):
+                    if i % 2 == 0:
+                        table.setStyle(TableStyle([('BACKGROUND', (0, i), (-1, i), colors.Color(0.97, 0.97, 0.97))]))
+                elements.append(table)
+                elements.append(Spacer(1, 12))
+
+        if not (departure_start or departure_end or return_start or return_end or created_start or created_end):
+            if queryset.exists():
+                title_table = Table([[Paragraph("All Selected", title_style)]], colWidths=[sum(col_widths)])
+                title_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, -1), colors.black), ('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('TOPPADDING', (0, 0), (-1, -1), 6), ('BOTTOMPADDING', (0, 0), (-1, -1), 6)]))
+                elements.append(title_table)
+                
+                data = [header_row] + [prepare_booking_row(b, cell_style) for b in queryset.order_by('created_at')]
+                table = Table(data, colWidths=col_widths, repeatRows=1)
+                table.setStyle(TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 2),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 3),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+                ]))
+                for i in range(1, len(data)):
+                    if i % 2 == 0:
+                        table.setStyle(TableStyle([('BACKGROUND', (0, i), (-1, i), colors.Color(0.97, 0.97, 0.97))]))
+                elements.append(table)
+
+        # Build PDF
+        doc.build(elements)
+        
+        # Generate filename
+        filename = self.get_dynamic_pdf_filename(departure_start, departure_end, return_start, return_end, created_start, created_end)
+
+        # Create response
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    export_as_pdf.short_description = "Export Selected Bookings as PDF"
 
     def save_model(self, request, obj, form, change):
         is_new = not change

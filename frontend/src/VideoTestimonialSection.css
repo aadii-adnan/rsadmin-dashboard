@@ -1,0 +1,319 @@
+/* Video Testimonial Section Styles - Glassmorphism Design */
+
+.video-testimonial-section {
+    background-color: var(--primary-dark);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle animated background elements */
+.video-testimonial-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 20% 80%, rgba(40, 144, 205, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(40, 144, 205, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.video-testimonial-section .section-header {
+    margin-bottom: 60px;
+    position: relative;
+    z-index: 1;
+}
+
+.video-testimonial-section .badge-pill {
+    background: rgba(40, 144, 205, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.video-testimonial-section .section-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 15px;
+    letter-spacing: -0.5px;
+    font-family: 'Urbanist', sans-serif;
+}
+
+.video-testimonial-section .section-subtitle {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+    font-family: 'Urbanist', sans-serif;
+}
+
+/* Responsive Grid - 2 columns on desktop, 1 on mobile */
+.video-testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .video-testimonials-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .video-testimonial-section .section-title {
+        font-size: 2rem;
+    }
+    
+    .video-testimonial-section .section-header {
+        margin-bottom: 40px;
+    }
+}
+
+/* Glassmorphism Video Card */
+.video-testimonial-card {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    
+    /* Glassmorphism effect */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-md),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    /* Smooth hover transition */
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.video-testimonial-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(40, 144, 205, 0.3),
+                var(--shadow-md),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Facade (Thumbnail + Play Button) */
+.video-facade {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.video-facade:focus {
+    outline: none;
+}
+
+.video-facade:focus-visible {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 4px;
+    border-radius: var(--radius);
+}
+
+.video-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                filter 0.4s ease;
+}
+
+.video-facade:hover .video-thumbnail {
+    transform: scale(1.08);
+    filter: brightness(0.85);
+}
+
+/* Glassmorphism Overlay */
+.play-button-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+        180deg,
+        rgba(1, 6, 89, 0.1) 0%,
+        rgba(1, 6, 89, 0.4) 100%
+    );
+    transition: background 0.4s ease;
+}
+
+.video-facade:hover .play-button-overlay {
+    background: linear-gradient(
+        180deg,
+        rgba(1, 6, 89, 0.2) 0%,
+        rgba(1, 6, 89, 0.5) 100%
+    );
+}
+
+/* Glassmorphism Play Button with Pulse Animation */
+.play-button {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    
+    /* Glassmorphism button using primary-light */
+    background: var(--primary-light);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(40, 144, 205, 0.4);
+    
+    transition: var(--transition);
+}
+
+/* Pulse Ring Animation */
+.play-button::before,
+.play-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid rgba(40, 144, 205, 0.6);
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.play-button::after {
+    animation-delay: 0.8s;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 0;
+    }
+}
+
+.video-facade:hover .play-button {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 12px 40px rgba(1, 6, 89, 0.5);
+}
+
+.video-facade:hover .play-button::before,
+.video-facade:hover .play-button::after {
+    border-color: rgba(1, 6, 89, 0.6);
+}
+
+.play-icon {
+    color: var(--white);
+    font-size: 26px;
+    margin-left: 4px; /* Visual centering for play icon */
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Video Player Container */
+.video-player-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+}
+
+.video-player {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Glassmorphism Loading Overlay */
+.video-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(1, 6, 89, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10;
+}
+
+.video-loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(40, 144, 205, 0.2);
+    border-top-color: var(--primary-light);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 576px) {
+    .video-testimonial-card {
+        border-radius: var(--radius);
+    }
+    
+    .play-button {
+        width: 65px;
+        height: 65px;
+    }
+    
+    .play-icon {
+        font-size: 22px;
+        margin-left: 3px;
+    }
+    
+    .video-testimonial-section .section-header {
+        margin-bottom: 30px;
+    }
+    
+    .video-testimonial-section .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .video-testimonial-section .section-subtitle {
+        font-size: 1rem;
+    }
+    
+    .video-testimonial-section .badge-pill {
+        font-size: 0.75rem;
+        padding: 6px 16px;
+    }
+}

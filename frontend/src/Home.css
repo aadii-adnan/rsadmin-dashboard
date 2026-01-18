@@ -194,6 +194,11 @@ body .home-banner {
   opacity: 0.8;
 }
 
+/* Static poster image before video loads - same styling as video */
+.banner-poster-img {
+  object-fit: cover;
+}
+
 .banner-content {
   position: absolute;
   top: 25%;

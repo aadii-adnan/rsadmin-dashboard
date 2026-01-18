@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0.8cm 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 8px;
+            margin: 0;
+            padding: 0;
+        }
+        .section {
+            margin-bottom: 12px;
+        }
+        .section-title {
+            background-color: #000000;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            text-align: center;
+            margin: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th {
+            background-color: #ffffff;
+            border: none;
+            border-bottom: 1px solid #000;
+            padding: 2px 3px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 8px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        td {
+            border: none;
+            border-bottom: 1px solid #ddd;
+            padding: 2px 3px;
+            text-align: left;
+            font-size: 8px;
+            vertical-align: middle;
+            line-height: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .no-data {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    {% for section in sections %}
+    <div class="section">
+        <div class="section-title">{{ section.title }}</div>
+        
+        {% if section.bookings %}
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 14%;">PRODUCT CODE</th>
+                    <th style="width: 10%;">Booking Ref</th>
+                    <th style="width: 16%;">Customer/Contact</th>
+                    <th style="width: 11%;">Entry Date &amp; Time</th>
+                    <th style="width: 11%;">Return Date &amp; Time</th>
+                    <th style="width: 18%;">Vehicle/Registration</th>
+                    <th style="width: 7%;">Out Flight Number</th>
+                    <th style="width: 7%;">In Flight Number</th>
+                    <th style="width: 6%;">Add Onns</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in section.bookings %}
+                <tr>
+                    <td>{{ booking.service_name }}</td>
+                    <td>{{ booking.booking_id }}</td>
+                    <td>{{ booking.customer_info }}</td>
+                    <td>{{ booking.departure_time }}</td>
+                    <td>{{ booking.return_time }}</td>
+                    <td>{{ booking.vehicle_info }}</td>
+                    <td>{{ booking.departure_flight }}</td>
+                    <td>{{ booking.return_flight }}</td>
+                    <td style="text-align: left; overflow: hidden;">{{ booking.add_ons }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">No bookings found for this section.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</body>
+</html>

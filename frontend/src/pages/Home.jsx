@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useState, useCallback} from 'react'
 import BookingDatesForm from '../components/HomePage/BookingDatesForm'
 import { useBooking } from "../context/BookingContext";
 import secureParking from "../assets/secure-parking.webp"
@@ -6,8 +6,8 @@ import { Helmet } from 'react-helmet-async';
 import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/autoplay";
-import { ClipLoader } from "react-spinners";
 const FAQSection = React.lazy(() => import('../components/HomePage/FAQSection'));
+const VideoTestimonialSection = React.lazy(() => import('../components/HomePage/VideoTestimonialSection'));
 import { 
     FaCarSide, FaCheckCircle, FaShieldAlt, FaPlaneDeparture, 
     FaUserTie, FaSuitcase, FaChild, FaVideo, FaKey, 
@@ -25,12 +25,32 @@ const Home = () => {
 
     const { setBookingData } = useBooking();
     const [faqs, setFaqs] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [faqsLoading, setFaqsLoading] = useState(true);
     const [reviewFilter, setReviewFilter] = useState('all');
     const [showAll, setShowAll] = useState(false);
+    
+    // Video loading optimization - don't load video until after initial paint
+    const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
+    // Defer video loading until after initial mount to prevent blocking LCP
     useEffect(() => {
-        // Remove Stripe preload - load on demand
+        // Use requestIdleCallback if available, otherwise setTimeout
+        const loadVideo = () => setShouldLoadVideo(true);
+        
+        if ('requestIdleCallback' in window) {
+            const idleId = requestIdleCallback(loadVideo, { timeout: 2000 });
+            return () => cancelIdleCallback(idleId);
+        } else {
+            const timer = setTimeout(loadVideo, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+    // Defer non-critical scripts loading
+    useEffect(() => {
+        let stripeTimer;
+        let shapoTimer;
+        
         const loadStripe = () => {
             if (!document.getElementById('stripe-js')) {
                 const script = document.createElement("script");
@@ -41,17 +61,40 @@ const Home = () => {
             }
         };
 
-        // Load Stripe only when user scrolls or after 3s
-        const handleScroll = () => {
-            loadStripe();
-            window.removeEventListener('scroll', handleScroll);
+        const loadShapo = () => {
+            if (!document.getElementById("shapo-embed-js")) {
+                const script = document.createElement("script");
+                script.id = "shapo-embed-js";
+                script.type = "text/javascript";
+                script.src = "https://cdn.shapo.io/js/embed.js";
+                script.defer = true;
+                document.body.appendChild(script);
+            }
         };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        const timer = setTimeout(loadStripe, 3000);
+
+        // Load scripts only after user interaction or after 5s (well after LCP)
+        const handleInteraction = () => {
+            loadStripe();
+            loadShapo();
+            window.removeEventListener('scroll', handleInteraction);
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('touchstart', handleInteraction);
+        };
+        
+        window.addEventListener('scroll', handleInteraction, { passive: true, once: true });
+        window.addEventListener('click', handleInteraction, { passive: true, once: true });
+        window.addEventListener('touchstart', handleInteraction, { passive: true, once: true });
+        
+        // Fallback: load after 5 seconds if no interaction
+        stripeTimer = setTimeout(loadStripe, 5000);
+        shapoTimer = setTimeout(loadShapo, 5000);
 
         return () => {
-            window.removeEventListener('scroll', handleScroll);
-            clearTimeout(timer);
+            window.removeEventListener('scroll', handleInteraction);
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('touchstart', handleInteraction);
+            clearTimeout(stripeTimer);
+            clearTimeout(shapoTimer);
         };
     }, []);
 
@@ -77,30 +120,21 @@ const Home = () => {
         localStorage.removeItem("payment_status");
     }, []);
 
+    // Fetch FAQs in background - does NOT block UI render
     useEffect(() => {
-    const fetchFAQs = async () => {
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            setFaqs(data);
-
-            if (!document.getElementById("shapo-embed-js")) {
-                const script = document.createElement("script");
-                script.id = "shapo-embed-js";
-                script.type = "text/javascript";
-                script.src = "https://cdn.shapo.io/js/embed.js";
-                script.defer = true;
-                document.body.appendChild(script);
+        const fetchFAQs = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                setFaqs(data);
+            } catch (error) {
+                console.error('Error fetching FAQs:', error);
+            } finally {
+                setFaqsLoading(false);
             }
-        
-        } catch (error) {
-            console.error('Error fetching FAQs:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-    fetchFAQs();
+        };
+        fetchFAQs();
     }, []);
 
     // --- Content Data ---
@@ -165,15 +199,8 @@ const Home = () => {
       visibleReviews = showAll ? filtered.slice(0, 6) : filtered.slice(0, 3);
     }
 
-    if (loading) {
-        return (
-            <div className="loading-screen">
-                <img src={logo} alt="RS Express Parking" className="loading-logo" />
-                <ClipLoader color="#447e9b" size={60} />
-                <div className="loading-text">Loading your experience...</div>
-            </div>
-        );
-    }
+    // REMOVED: Blocking loading screen that destroyed FCP
+    // The page now renders immediately, FAQs load in background
     
   return (
     <>
@@ -293,27 +320,40 @@ const Home = () => {
         <div className="home-wrapper">
         <div className="home-banner video-banner">
             
-            {/* PERFORMANCE OPTIMIZED VIDEO TAG */}
-            <video 
-                autoPlay 
-                loop 
-                muted 
-                playsInline 
-                preload="none"
-                className="banner-video"
-                width="1920"
-                height="1080"
-                poster={videoPoster}
-            >
-                <source src={parkingVideo} type="video/mp4" />
-            </video>
-            {/* --- ADD THIS SNOW DIV --- */}
+            {/* LCP OPTIMIZED: Hero poster image loads immediately with high priority */}
+            {/* Video only loads after initial paint to avoid blocking critical resources */}
+            {shouldLoadVideo ? (
+                <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    preload="auto"
+                    className="banner-video"
+                    width="1920"
+                    height="1080"
+                    poster={videoPoster}
+                >
+                    <source src={parkingVideo} type="video/mp4" />
+                </video>
+            ) : (
+                /* Show poster as static image until video is ready - this is the LCP element */
+                <img 
+                    src={videoPoster}
+                    alt="Dublin Airport Meet and Greet Parking"
+                    className="banner-video banner-poster-img"
+                    width="1920"
+                    height="1080"
+                    fetchpriority="high"
+                    decoding="sync"
+                />
+            )}
+            {/* --- SNOW EFFECT --- */}
             <div className="snow-container">
                 <div className="snow"></div>
                 <div className="snow"></div>
                 <div className="snow"></div>
             </div>
-            {/* ------------------------- */}
 
             <div className="video-overlay"></div>
 
@@ -413,7 +453,8 @@ const Home = () => {
                             <div className="image-collage">
                                 <img 
                                         src={secureParking} 
-                                        loading="lazy" 
+                                        loading="lazy"
+                                        decoding="async"
                                         width="464" 
                                         height="348" 
                                         alt="Secure Parking"
@@ -425,6 +466,7 @@ const Home = () => {
                                         alt="CCTV" 
                                         className="collage-small"
                                         loading="lazy"
+                                        decoding="async"
                                         width="273"
                                         height="164"
                                         srcSet={`${parking} 273w, ${parking} 600w`}
@@ -532,8 +574,30 @@ const Home = () => {
                 </div>
             </section>     
 
+            {/* VIDEO TESTIMONIALS SECTION */}
+            <React.Suspense fallback={<div style={{minHeight: '300px'}} />}>
+                <VideoTestimonialSection 
+                    testimonials={[
+                        {
+                            id: 1,
+                            videoUrl: '/videos/revieww_1.mp4',
+                            thumbnailUrl: '/videos/thumb1.webp',
+                            title: 'Customer Video Review 1',
+                        },
+                        {
+                            id: 2,
+                            videoUrl: '/videos/revieww_2.mp4',
+                            thumbnailUrl: '/videos/thumb2.webp',
+                            title: 'Customer Video Review 2',
+                        },
+                    ]}
+                    sectionTitle="Video Testimonials"
+                    sectionSubtitle="Hear directly from our happy customers"
+                />
+            </React.Suspense>
+
             <React.Suspense fallback={<div style={{minHeight: '400px'}} />}>
-                <FAQSection faqs={faqs} loading={loading}/>
+                <FAQSection faqs={faqs} loading={faqsLoading}/>
             </React.Suspense>
 
 
