@@ -43,6 +43,10 @@ class BookingSettings(models.Model):
         blank=True,
         help_text="Content for promotional emails sent to Dublin Airport Parking users with pending bookings"
     )
+    social_media_email_content = models.TextField(
+        blank=True,
+        help_text="Content for monthly social media follow emails (RS Express only)"
+    )
 
     class Meta:
         db_table = 'booking_settings'

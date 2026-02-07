@@ -580,13 +580,13 @@ const Home = () => {
                     testimonials={[
                         {
                             id: 1,
-                            videoUrl: '/videos/revieww_1.mp4',
+                            videoUrl: '/videos/review_1.webm',
                             thumbnailUrl: '/videos/thumb1.webp',
                             title: 'Customer Video Review 1',
                         },
                         {
                             id: 2,
-                            videoUrl: '/videos/revieww_2.mp4',
+                            videoUrl: '/videos/review_2.webm',
                             thumbnailUrl: '/videos/thumb2.webp',
                             title: 'Customer Video Review 2',
                         },

@@ -340,3 +340,90 @@ def send_promotional_emails():
         msg.attach_alternative(personalized_content, "text/html")
         msg.send()
         emails_sent.add(email_norm)
+
+
+@shared_task
+def send_social_media_follow_emails():
+    """
+    Monthly task: Send social media follow emails to RS Express users.
+    Collects emails from RS bookings and marketing leads.
+    Ignores Dublin bookings and unsubscribed emails.
+    """
+    from core.models import BookingSettings, MarketingLead
+    
+    unsubscribed_emails = set(
+        e.strip().lower() for e in UnsubscribedEmail.objects.values_list('email', flat=True) if e
+    )
+    
+    settings_obj = BookingSettings.objects.first()
+    social_media_content = (
+        settings_obj.social_media_email_content 
+        if settings_obj and settings_obj.social_media_email_content 
+        else "<p>Follow us on social media to stay updated with RS Express Parking!</p>"
+    )
+    
+    current_year = datetime.now().year
+    emails_sent = set()
+    
+    # Collect emails from RS bookings (exclude Dublin)
+    rs_bookings = Booking.objects.exclude(
+        website__iexact="dublinairportparking"
+    ).values_list('email', 'first_name').distinct()
+    
+    # Collect emails from marketing leads (subscribed only)
+    marketing_leads = MarketingLead.objects.filter(
+        subscribed=True
+    ).values_list('email', flat=True)
+    
+    # Build a combined list: {email: first_name}
+    email_map = {}
+    
+    # Add booking emails
+    for email, first_name in rs_bookings:
+        if email:
+            email_norm = email.strip().lower()
+            if email_norm not in email_map:
+                email_map[email_norm] = first_name or "Customer"
+    
+    # Add marketing lead emails (use "Customer" as name since leads don't have names)
+    for email in marketing_leads:
+        if email:
+            email_norm = email.strip().lower()
+            if email_norm not in email_map:
+                email_map[email_norm] = "Customer"
+    
+    subject = "Stay Connected with RS Express Parking!"
+    custom_email = "hello@rsexpressparking.com"
+    from_email = f"RS Express Parking <{custom_email}>"
+    
+    connection = get_connection(
+        host=config('EMAIL_HOST'),
+        port=config('EMAIL_PORT', cast=int),
+        username=custom_email,
+        password=config('EMAIL_HOST_PASSWORD'),
+        use_tls=config('EMAIL_USE_TLS', cast=bool)
+    )
+    
+    for email_norm, first_name in email_map.items():
+        # Skip unsubscribed or already sent
+        if email_norm in unsubscribed_emails or email_norm in emails_sent:
+            continue
+        
+        personalized_content = (
+            social_media_content
+            .replace("{{first_name}}", first_name)
+            .replace("{{current_year}}", str(current_year))
+        )
+        
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body="This email requires an HTML-compatible email client.",
+            from_email=from_email,
+            to=[email_norm],
+            connection=connection
+        )
+        msg.attach_alternative(personalized_content, "text/html")
+        msg.send()
+        emails_sent.add(email_norm)
+    
+    return f"Social media follow emails sent to {len(emails_sent)} recipients"
