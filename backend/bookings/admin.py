@@ -98,7 +98,7 @@ class ServiceFilter(FieldListFilter):
         # Get services based on user role
         if getattr(self.request.user, 'is_supplier', False):
             # Suppliers only see RS Express or Both services
-            services = Service.objects.exclude(website__iexact='dublinairportparking').order_by('name')
+            services = Service.objects.exclude(website__in=['dublinairportparking', 'none']).order_by('name')
         else:
             # Other users see all services
             services = Service.objects.order_by('name')
