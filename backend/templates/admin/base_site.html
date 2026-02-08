@@ -40,7 +40,7 @@
 </style>
 <div id="branding">
     <img src="{% static 'images/logo.webp' %}" alt="Site Logo">
-    {% if request.user.is_authenticated and request.user.is_superuser and not request.user.is_manager %}
+    {% if request.user.is_authenticated and request.user.is_superuser and not request.user.is_manager and not request.user.is_supplier %}
         <a id="finance-dashboard-btn" href="{% url 'finance-jwt-login' %}">
             Finance Dashboard
         </a>

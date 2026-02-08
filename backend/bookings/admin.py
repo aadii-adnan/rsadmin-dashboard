@@ -73,6 +73,49 @@ class SupplierFilter(FieldListFilter):
         return queryset
 
 
+class ServiceFilter(FieldListFilter):
+    """Custom filter for services. Suppliers only see RS/Both services, not Dublin-only."""
+    title = 'Service'
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        self.lookup_val = request.GET.get(field_path)
+        self.request = request
+        super().__init__(field, request, params, model, model_admin, field_path)
+
+    def expected_parameters(self):
+        return [self.field_path]
+
+    def choices(self, changelist):
+        from services.models import Service
+        
+        # "All" choice - no filter
+        yield {
+            'selected': self.lookup_val is None,
+            'query_string': changelist.get_query_string(remove=[self.field_path]),
+            'display': 'All'
+        }
+
+        # Get services based on user role
+        if getattr(self.request.user, 'is_supplier', False):
+            # Suppliers only see RS Express or Both services
+            services = Service.objects.exclude(website__iexact='dublinairportparking').order_by('name')
+        else:
+            # Other users see all services
+            services = Service.objects.order_by('name')
+
+        for service in services:
+            yield {
+                'selected': self.lookup_val == str(service.id),
+                'query_string': changelist.get_query_string({self.field_path: service.id}, []),
+                'display': service.name
+            }
+
+    def queryset(self, request, queryset):
+        if self.lookup_val:
+            return queryset.filter(service_id=self.lookup_val)
+        return queryset
+
+
 class SingleDateFilter(FieldListFilter):
     template = 'admin/single_date_filter.html'
 
@@ -457,7 +500,7 @@ class BookingAdmin(admin.ModelAdmin):
             ('return_time', SingleDateFilter),
             ('created_at', SingleDateFilter),
             'status',
-            'service',
+            ('service', ServiceFilter),
             'website',
             ('supplier', SupplierFilter),
         ]
@@ -468,7 +511,7 @@ class BookingAdmin(admin.ModelAdmin):
                 ('return_time', SingleDateFilter),
                 ('created_at', SingleDateFilter),
                 'status',
-                'service'
+                ('service', ServiceFilter),
             ]
         return base_filters
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id', 'id')
