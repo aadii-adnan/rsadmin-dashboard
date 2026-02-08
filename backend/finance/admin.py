@@ -22,17 +22,41 @@ class CustomMediaMixin:
 
     def has_module_permission(self, request):
         user = request.user
-        if user.is_authenticated and getattr(user, "is_supplier", False):
+        if user.is_authenticated and (getattr(user, "is_supplier", False) or getattr(user, "is_manager", False)):
             return False
         return super().has_module_permission(request)
 
-class CustomPeriodicTaskAdmin(PeriodicTaskAdmin, CustomMediaMixin):
+    def has_add_permission(self, request):
+        user = request.user
+        if user.is_authenticated and (getattr(user, "is_supplier", False) or getattr(user, "is_manager", False)):
+            return False
+        return super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        user = request.user
+        if user.is_authenticated and (getattr(user, "is_supplier", False) or getattr(user, "is_manager", False)):
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        user = request.user
+        if user.is_authenticated and (getattr(user, "is_supplier", False) or getattr(user, "is_manager", False)):
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def has_view_permission(self, request, obj=None):
+        user = request.user
+        if user.is_authenticated and (getattr(user, "is_supplier", False) or getattr(user, "is_manager", False)):
+            return False
+        return super().has_view_permission(request, obj)
+
+class CustomPeriodicTaskAdmin(CustomMediaMixin, PeriodicTaskAdmin):
     list_display = ('id',) + PeriodicTaskAdmin.list_display
 
-class CustomCrontabScheduleAdmin(CrontabScheduleAdmin, CustomMediaMixin):
+class CustomCrontabScheduleAdmin(CustomMediaMixin, CrontabScheduleAdmin):
     list_display = ('id',) + CrontabScheduleAdmin.list_display
 
-class CustomIntervalScheduleAdmin(IntervalScheduleAdmin, CustomMediaMixin):
+class CustomIntervalScheduleAdmin(CustomMediaMixin, IntervalScheduleAdmin):
     list_display = ('id',) + IntervalScheduleAdmin.list_display
 
 admin.site.unregister(PeriodicTask)
