@@ -12,6 +12,7 @@ def process_bookings_for_completion():
     Periodic task: Find bookings where return_time + 15min has passed,
     status is not 'Completed', and completion_email_sent is False.
     Mark as completed and send thank you email.
+    Exclude supplier bookings - no emails sent for vendor bookings.
     """
     now = timezone.now()
     threshold = now - timedelta(hours=3)
@@ -19,10 +20,12 @@ def process_bookings_for_completion():
     started_status = Status.objects.get(name="Started", type='booking')
 
     # Only process bookings that are not completed and haven't had the email sent
+    # Exclude supplier bookings
     bookings = Booking.objects.filter(
         return_time__lte=threshold,
         completion_email_sent=False,
-        status=started_status
+        status=started_status,
+        supplier__isnull=True  # Exclude supplier bookings
     )
 
     for booking in bookings:
@@ -54,6 +57,11 @@ def process_bookings_for_started():
 @shared_task
 def send_completion_email_to_user(booking_id):
     booking = Booking.objects.get(id=booking_id)
+    
+    # Skip email for supplier bookings
+    if booking.supplier is not None:
+        return "Skipped: supplier booking - no email sent"
+    
     if booking.completion_email_sent:
         return "Email already sent"
 
@@ -213,8 +221,8 @@ def send_promotional_emails():
     dublin_promo_content = settings_obj.dublin_promotional_email_content if settings_obj else "<p>Check out our latest offers at Dublin Airport Express Parking!</p>"
     dublin_pending_content = settings_obj.dublin_pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at Dublin Airport Express Parking!</p>"
 
-    # Get all bookings by status
-    all_bookings = Booking.objects.all()
+    # Get all bookings by status (exclude supplier bookings)
+    all_bookings = Booking.objects.filter(supplier__isnull=True)
     promo_bookings = all_bookings.exclude(status__name__in=["Confirmed", "Started", "Pending"])
     pending_bookings = all_bookings.filter(status__name="Pending")
 
@@ -365,8 +373,10 @@ def send_social_media_follow_emails():
     current_year = datetime.now().year
     emails_sent = set()
     
-    # Collect emails from RS bookings (exclude Dublin)
-    rs_bookings = Booking.objects.exclude(
+    # Collect emails from RS bookings (exclude Dublin and supplier bookings)
+    rs_bookings = Booking.objects.filter(
+        supplier__isnull=True  # Exclude supplier bookings
+    ).exclude(
         website__iexact="dublinairportparking"
     ).values_list('email', 'first_name').distinct()
     

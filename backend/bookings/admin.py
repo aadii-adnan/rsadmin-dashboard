@@ -29,6 +29,50 @@ from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
+class SupplierFilter(FieldListFilter):
+    """Custom filter for suppliers showing 'All Suppliers' and individual supplier options."""
+    title = 'Supplier'
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        self.lookup_val = request.GET.get(field_path)
+        super().__init__(field, request, params, model, model_admin, field_path)
+
+    def expected_parameters(self):
+        return [self.field_path]
+
+    def choices(self, changelist):
+        from users.models import Supplier
+        
+        # "All" choice - no filter
+        yield {
+            'selected': self.lookup_val is None,
+            'query_string': changelist.get_query_string(remove=[self.field_path]),
+            'display': 'All'
+        }
+
+        # "All Suppliers" choice - only bookings with a supplier
+        yield {
+            'selected': self.lookup_val == 'all_suppliers',
+            'query_string': changelist.get_query_string({self.field_path: 'all_suppliers'}, []),
+            'display': 'All Suppliers (Any)'
+        }
+
+        # Individual supplier choices
+        for supplier in Supplier.objects.filter(is_active=True).order_by('name'):
+            yield {
+                'selected': self.lookup_val == str(supplier.id),
+                'query_string': changelist.get_query_string({self.field_path: supplier.id}, []),
+                'display': f'{supplier.name} ({supplier.booking_id_prefix})'
+            }
+
+    def queryset(self, request, queryset):
+        if self.lookup_val == 'all_suppliers':
+            return queryset.filter(supplier__isnull=False)
+        elif self.lookup_val:
+            return queryset.filter(supplier_id=self.lookup_val)
+        return queryset
+
+
 class SingleDateFilter(FieldListFilter):
     template = 'admin/single_date_filter.html'
 
@@ -415,7 +459,7 @@ class BookingAdmin(admin.ModelAdmin):
             'status',
             'service',
             'website',
-            'supplier',
+            ('supplier', SupplierFilter),
         ]
         # Remove 'website' filter for managers and suppliers
         if getattr(request.user, "is_manager", False) or getattr(request.user, "is_supplier", False):
