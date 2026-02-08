@@ -20,6 +20,12 @@ class CustomMediaMixin:
         }
         js = ('admin/js/clickable_rows.js',)
 
+    def has_module_permission(self, request):
+        user = request.user
+        if user.is_authenticated and getattr(user, "is_supplier", False):
+            return False
+        return super().has_module_permission(request)
+
 class CustomPeriodicTaskAdmin(PeriodicTaskAdmin, CustomMediaMixin):
     list_display = ('id',) + PeriodicTaskAdmin.list_display
 

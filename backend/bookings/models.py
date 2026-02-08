@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import CustomUser
+from users.models import CustomUser, Supplier
 from services.models import Service, AddOn, Coupon
 from core.models import Status
 import uuid
@@ -54,10 +54,18 @@ class Booking(models.Model):
         default="rsexpressparking",
         help_text="Source website for this booking"
     )
+    supplier = models.ForeignKey(
+        Supplier, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='bookings',
+        help_text="If set, this booking was created by a vendor/supplier"
+    )
 
     def save(self, *args, **kwargs):
         if not self.booking_id:
-            prefix = "DA" if self.website.lower() == "dublinairportparking" else "RS"
+            if self.supplier:
+                prefix = self.supplier.booking_id_prefix
+            else:
+                prefix = "DA" if self.website.lower() == "dublinairportparking" else "RS"
             self.booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
             while Booking.objects.filter(booking_id=self.booking_id).exists():
                 self.booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AdminFinancialOverview, AddExpenseView, UpdateExpenseView, DeleteExpenseView, BookingsSummaryView, OrdersCountByServiceAndAddOnView, MonthlyEarningsTrendView, BookingsOverTimeView, ExpenseBreakdownView, ProfitMarginOverTimeView
+from .views import AdminFinancialOverview, AddExpenseView, UpdateExpenseView, DeleteExpenseView, BookingsSummaryView, OrdersCountByServiceAndAddOnView, MonthlyEarningsTrendView, BookingsOverTimeView, ExpenseBreakdownView, ProfitMarginOverTimeView, SupplierFinanceDetailView
 
 urlpatterns = [
     path('overview/', AdminFinancialOverview.as_view(), name='finance-overview'),
@@ -12,4 +12,5 @@ urlpatterns = [
     path('charts/bookings-over-time/', BookingsOverTimeView.as_view(), name='bookings-over-time'),
     path('charts/expense-breakdown/', ExpenseBreakdownView.as_view(), name='expense-breakdown'),
     path('charts/profit-margin/', ProfitMarginOverTimeView.as_view(), name='profit-margin'),
+    path('supplier/<int:supplier_id>/', SupplierFinanceDetailView.as_view(), name='supplier-finance-detail'),
 ]

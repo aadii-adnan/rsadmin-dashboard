@@ -58,3 +58,15 @@ export const getProfitMargin = async () => {
   if (!res.ok) throw new Error("Failed to fetch profit margin");
   return res.json();
 };
+
+export async function getSupplierFinanceDetail(supplierId, month, endMonth, year, all, website) {
+  let url = `${import.meta.env.VITE_API_BASE_URL}/finance/supplier/${supplierId}/?`;
+  if (all) url += "all=true&";
+  if (year) url += `year=${year}&`;
+  if (month) url += `month=${month}&`;
+  if (endMonth) url += `end_month=${endMonth}&`;
+  if (website && website !== "all") url += `website=${website}&`;
+  const res = await customFetch(url, { useFinanceJwt: true });
+  if (!res.ok) throw new Error("Failed to fetch supplier finance detail");
+  return res.json();
+}

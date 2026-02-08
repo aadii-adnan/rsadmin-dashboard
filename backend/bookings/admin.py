@@ -123,6 +123,10 @@ class BookingAdmin(admin.ModelAdmin):
         created_start = request.GET.get('created_at__gte')
         created_end = request.GET.get('created_at__lt')
 
+        # Suppliers only see their own bookings
+        if getattr(request.user, 'is_supplier', False):
+            qs = qs.filter(supplier=request.user.supplier_profile)
+
         # Hide "pending" and "payment failed" for managers
         if request.user.is_manager:
             qs = qs.exclude(status__name__iexact="pending").exclude(status__name__iexact="payment failed")
@@ -328,6 +332,8 @@ class BookingAdmin(admin.ModelAdmin):
     service_display.short_description = 'Service & Add-ons'
 
     def website_abbr(self, obj):
+        if getattr(obj, 'supplier_id', None) is not None:
+            return obj.supplier.booking_id_prefix.upper() if obj.supplier and obj.supplier.booking_id_prefix else "-"
         if obj.website == "rsexpressparking":
             return "RS"
         elif obj.website == "dublinairportparking":
@@ -336,6 +342,9 @@ class BookingAdmin(admin.ModelAdmin):
     website_abbr.short_description = "Website"
 
     def get_list_display(self, request):
+        if getattr(request.user, 'is_supplier', False):
+            return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
+                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
         if request.user.is_manager:
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display','service', 'vehicle_display', 'terminal_display',  'colored_status', 'created_at_display', 'download_booking_form')
         return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
@@ -405,10 +414,11 @@ class BookingAdmin(admin.ModelAdmin):
             ('created_at', SingleDateFilter),
             'status',
             'service',
-            'website'
+            'website',
+            'supplier',
         ]
-        # Remove 'website' filter for managers
-        if getattr(request.user, "is_manager", False):
+        # Remove 'website' filter for managers and suppliers
+        if getattr(request.user, "is_manager", False) or getattr(request.user, "is_supplier", False):
             return [
                 ('departure_time', SingleDateFilter),
                 ('return_time', SingleDateFilter),
@@ -420,9 +430,12 @@ class BookingAdmin(admin.ModelAdmin):
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id', 'id')
 
     def get_readonly_fields(self, request, obj=None):
+        base = ('modified_at_field', 'download_invoice', 'download_booking_form')
         if obj:  # If editing existing object
-            return ('modified_at_field', 'download_invoice', 'download_booking_form', 'created_at_field')
-        return ('modified_at_field', 'download_invoice', 'download_booking_form')
+            base = base + ('created_at_field',)
+        if getattr(request.user, 'is_supplier', False):
+            base = base + ('supplier',)
+        return base
     
     list_per_page = 20 
     show_full_result_count = True  # Shows total number of items
@@ -876,9 +889,12 @@ class BookingAdmin(admin.ModelAdmin):
     export_as_pdf.short_description = "Export Selected Bookings as PDF"
 
     def save_model(self, request, obj, form, change):
+        # Auto-set supplier for supplier users
+        if getattr(request.user, 'is_supplier', False) and hasattr(request.user, 'supplier_profile'):
+            obj.supplier = request.user.supplier_profile
         is_new = not change
         super().save_model(request, obj, form, change)
-        if is_new and obj.status and obj.status.name.lower() == "confirmed" and not obj.email_sent:
+        if is_new and obj.status and obj.status.name.lower() == "confirmed" and not obj.email_sent and obj.supplier is None:
             try:
                 send_booking_confirmation_email(obj)
                 # Generate invoice PDF for manager email
@@ -921,10 +937,12 @@ class BookingUserAdmin(admin.ModelAdmin):
     
     def has_module_permission(self, request):
         """
-        Restrict access for managers.
+        Restrict access for managers and suppliers.
         """
         user = request.user
         if user.is_authenticated and getattr(user, "is_manager", False):
+            return False
+        if user.is_authenticated and getattr(user, "is_supplier", False):
             return False
         return super().has_module_permission(request)
 

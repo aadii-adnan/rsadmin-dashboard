@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { getBookingsSummary, getOrdersCount, getFinancialOverview, addExpense, getMonthlyEarnings, getBookingsOverTime } from "../components/FinanceDashboard/APIHelper";
+import { getBookingsSummary, getOrdersCount, getFinancialOverview, addExpense, getMonthlyEarnings, getBookingsOverTime, getSupplierFinanceDetail } from "../components/FinanceDashboard/APIHelper";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import '../FinanceDashboard.css';
 import customFetch from "../auth/fetch";
@@ -49,6 +49,9 @@ function FinancialDashboard() {
   const [bookingsOverTime, setBookingsOverTime] = useState([]);
   const [allTime, setAllTime] = useState(false);
   const [websiteFilter, setWebsiteFilter] = useState("all");
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [supplierDetail, setSupplierDetail] = useState(null);
+  const [supplierDetailLoading, setSupplierDetailLoading] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('finance_jwt')) {
@@ -151,6 +154,27 @@ function FinancialDashboard() {
       ...prev,
       [name]: type === "checkbox" ? checked : value
     }));
+  };
+
+  const handleViewSupplierDetail = async (supplierId) => {
+    setShowSupplierModal(true);
+    setSupplierDetailLoading(true);
+    setSupplierDetail(null);
+    try {
+      const data = await getSupplierFinanceDetail(
+        supplierId,
+        startMonth || undefined,
+        endMonth || undefined,
+        year || undefined,
+        allTime || undefined,
+        websiteFilter || undefined
+      );
+      setSupplierDetail(data);
+    } catch (e) {
+      console.error("Failed to load supplier detail", e);
+    } finally {
+      setSupplierDetailLoading(false);
+    }
   };
 
   // Expense submit handler (add or update)
@@ -538,7 +562,7 @@ function FinancialDashboard() {
                 <div>
                   <ul style={{ listStyle: "none", paddingLeft: 0 }}>
                     {serviceColorLegend.map((item, idx) => (
-                      <li key={idx} style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+                      <li key={idx} style={{ display: "flex", alignItems: "center", marginBottom: 0, fontSize: 14 }}>
                         <span style={{
                           display: "inline-block",
                           width: 16,
@@ -615,6 +639,130 @@ function FinancialDashboard() {
           </Col>
         </Row>
  
+
+        {/* Supplier/Vendor Earnings Section */}
+        {overview?.supplier_summary?.suppliers?.length > 0 && (
+          <Row>
+            <Col md={12}>
+              <Card className="mb-4">
+                <Card.Body>
+                  <Card.Title>Supplier / Vendor Earnings</Card.Title>
+                  <div style={{ overflowX: "auto" }}>
+                    <table className="table table-sm table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Supplier Name</th>
+                          <th>Prefix</th>
+                          <th>Total Bookings</th>
+                          <th>Total Revenue (€)</th>
+                          <th>Supplier Share (€)</th>
+                          <th>Our Share (€)</th>
+                          <th>Commission %</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {overview.supplier_summary.suppliers.map((s) => (
+                          <tr key={s.supplier_id}>
+                            <td>{s.supplier_name}</td>
+                            <td>{s.prefix}</td>
+                            <td>{s.total_bookings}</td>
+                            <td>€{s.total_revenue.toLocaleString()}</td>
+                            <td style={{ color: "#dc3545" }}>€{s.supplier_share.toLocaleString()}</td>
+                            <td style={{ color: "#28a745" }}>€{s.our_share.toLocaleString()}</td>
+                            <td>{s.commission_percentage}%</td>
+                            <td>
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                onClick={() => handleViewSupplierDetail(s.supplier_id)}
+                              >
+                                View Details
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                        <tr style={{ fontWeight: "bold", background: "#f8f9fa" }}>
+                          <td colSpan={3}>Totals</td>
+                          <td>€{overview.supplier_summary.totals.total_supplier_revenue.toLocaleString()}</td>
+                          <td style={{ color: "#dc3545" }}>€{overview.supplier_summary.totals.total_given_to_suppliers.toLocaleString()}</td>
+                          <td style={{ color: "#28a745" }}>€{overview.supplier_summary.totals.total_kept_from_suppliers.toLocaleString()}</td>
+                          <td colSpan={2}></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
+
+        {/* Supplier Detail Modal */}
+        <Modal show={showSupplierModal} onHide={() => setShowSupplierModal(false)} size="lg">
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {supplierDetail ? `${supplierDetail.supplier_name} (${supplierDetail.prefix}) — Bookings` : "Supplier Details"}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {supplierDetailLoading && <div className="text-center py-4">Loading...</div>}
+            {!supplierDetailLoading && supplierDetail && (
+              <>
+                <Row className="mb-3">
+                  <Col md={3}>
+                    <strong>Total Bookings:</strong> {supplierDetail.total_bookings}
+                  </Col>
+                  <Col md={3}>
+                    <strong>Revenue:</strong> €{supplierDetail.total_revenue.toLocaleString()}
+                  </Col>
+                  <Col md={3}>
+                    <strong>Supplier Share:</strong>{" "}
+                    <span style={{ color: "#dc3545" }}>€{supplierDetail.supplier_share.toLocaleString()}</span>
+                  </Col>
+                  <Col md={3}>
+                    <strong>Our Share:</strong>{" "}
+                    <span style={{ color: "#28a745" }}>€{supplierDetail.our_share.toLocaleString()}</span>
+                  </Col>
+                </Row>
+                <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                  <table className="table table-sm table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Departure</th>
+                        <th>Return</th>
+                        <th>Price (€)</th>
+                        <th>Earning (€)</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {supplierDetail.bookings.map((b, idx) => (
+                        <tr key={idx}>
+                          <td>{b.booking_id}</td>
+                          <td>{b.customer_name}</td>
+                          <td>{new Date(b.departure_time).toLocaleString()}</td>
+                          <td>{new Date(b.return_time).toLocaleString()}</td>
+                          <td>€{b.price.toLocaleString()}</td>
+                          <td>€{b.earning.toLocaleString()}</td>
+                          <td>{b.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+            {!supplierDetailLoading && !supplierDetail && (
+              <div className="text-center text-muted py-4">No data available.</div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowSupplierModal(false)}>Close</Button>
+          </Modal.Footer>
+        </Modal>
 
         {/* Expense Modal */}
 
