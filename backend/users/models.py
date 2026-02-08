@@ -13,9 +13,10 @@ class CustomUser(AbstractUser):
 
 class Supplier(models.Model):
     name = models.CharField(max_length=200, help_text="Vendor business name")
-    contact_person = models.CharField(max_length=200)
-    email = models.EmailField()
+    contact_person = models.CharField(max_length=200, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
+    website = models.CharField(max_length=255, blank=True, null=True, help_text="Vendor website URL")
     booking_id_prefix = models.CharField(
         max_length=10, unique=True,
         help_text="Prefix used for booking IDs of this vendor's bookings (e.g., 'VN')"

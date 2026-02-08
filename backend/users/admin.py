@@ -120,7 +120,7 @@ class SupplierAdminForm(forms.ModelForm):
 
     class Meta:
         model = Supplier
-        fields = ('name', 'contact_person', 'email', 'phone',
+        fields = ('name', 'contact_person', 'email', 'phone', 'website',
                   'booking_id_prefix', 'commission_percentage', 'is_active')
 
 
@@ -132,7 +132,7 @@ class SupplierEditForm(forms.ModelForm):
 
     class Meta:
         model = Supplier
-        fields = ('name', 'contact_person', 'email', 'phone',
+        fields = ('name', 'contact_person', 'email', 'phone', 'website',
                   'booking_id_prefix', 'commission_percentage', 'is_active')
 
     def __init__(self, *args, **kwargs):
@@ -166,7 +166,7 @@ class SupplierAdmin(admin.ModelAdmin):
         if obj:  # Editing
             return [
                 ('Vendor Information', {
-                    'fields': ('name', 'contact_person', 'email', 'phone',
+                    'fields': ('name', 'contact_person', 'email', 'phone', 'website',
                                'booking_id_prefix', 'commission_percentage', 'is_active')
                 }),
                 ('Login Account', {
@@ -176,7 +176,7 @@ class SupplierAdmin(admin.ModelAdmin):
         else:  # Adding
             return [
                 ('Vendor Information', {
-                    'fields': ('name', 'contact_person', 'email', 'phone',
+                    'fields': ('name', 'contact_person', 'email', 'phone', 'website',
                                'booking_id_prefix', 'commission_percentage', 'is_active')
                 }),
                 ('Login Credentials', {
