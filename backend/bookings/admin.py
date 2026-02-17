@@ -566,7 +566,18 @@ class BookingAdmin(admin.ModelAdmin):
         if request.user.is_manager:
             # Remove the download_invoices_zip action for managers
             actions.pop('download_invoices_zip', None)
+        if getattr(request.user, 'is_supplier', False):
+            # Remove delete action for suppliers
+            actions.pop('delete_selected', None)
         return actions
+
+    def has_delete_permission(self, request, obj=None):
+        """
+        Prevent suppliers from deleting bookings.
+        """
+        if getattr(request.user, 'is_supplier', False):
+            return False
+        return super().has_delete_permission(request, obj)
     
     def get_dynamic_filename(self, departure_start, departure_end, return_start, return_end, created_start, created_end):
         def format_range(label, start, end):
