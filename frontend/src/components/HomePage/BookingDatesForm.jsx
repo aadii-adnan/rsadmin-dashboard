@@ -111,7 +111,7 @@ const BookingDatesForm = () => {
             setPopupMessage("Invalid coupon code.");
             break;
           case 400:
-            setPopupMessage(data.message || "Invalid coupon.");
+            setPopupMessage(data.error || data.message || "Invalid coupon.");
             break;
           default:
             setPopupMessage("Failed to validate coupon.");
@@ -125,6 +125,7 @@ const BookingDatesForm = () => {
       return {
         couponId: data.id,
         discount: data.discount_percent,
+        minimumOrderValue: data.minimum_order_value || 0,
       };
   
     } catch (error) {
@@ -177,6 +178,7 @@ const BookingDatesForm = () => {
     const paymentDetails = {
       couponId: couponData?.couponId || null,
       discount: couponData?.discount || 0,
+      minimumOrderValue: couponData?.minimumOrderValue || 0,
       noOfDays: noOfDays,
       coupon: coupon,
     };

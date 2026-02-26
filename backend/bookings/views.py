@@ -210,7 +210,19 @@ class BookingListCreate(APIView):
                 return Response({'error': 'Invalid or expired coupon'}, status=400)
 
             if coupon.times_used >= coupon.max_uses:
-                return Response({'error': 'Coupon has been fully used'}, status=400)         
+                return Response({'error': 'Coupon has been fully used'}, status=400)
+
+            # Check minimum order value
+            total_price = data.get('total_price')
+            if total_price is not None and coupon.minimum_order_value > 0:
+                try:
+                    total = float(total_price)
+                except (ValueError, TypeError):
+                    total = 0
+                if total < float(coupon.minimum_order_value):
+                    return Response({
+                        'error': f'This coupon requires a minimum order of \u20ac{coupon.minimum_order_value:g}. Your current total is \u20ac{total:.2f}.'
+                    }, status=400)
         
         serializer = BookingSerializer(data=data)
         if serializer.is_valid():

@@ -14,4 +14,4 @@ class AddOnSerializer(serializers.ModelSerializer):
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coupon
-        fields = ['id', 'code', 'discount_percent', 'valid_from', 'valid_to', 'active']
+        fields = ['id', 'code', 'discount_percent', 'valid_from', 'valid_to', 'active', 'minimum_order_value']

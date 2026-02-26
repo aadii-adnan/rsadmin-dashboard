@@ -64,6 +64,10 @@ class Coupon(models.Model):
     lifetime = models.BooleanField(default=False, help_text="If checked, coupon never expires by date")
     max_uses = models.PositiveIntegerField(default=1, help_text="Maximum number of times this coupon can be used")
     times_used = models.PositiveIntegerField(default=0, help_text="Number of times this coupon has been used")
+    minimum_order_value = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0,
+        help_text="Minimum order total required to use this coupon. Set to 0 for no minimum."
+    )
 
     class Meta:
         db_table = 'coupon'

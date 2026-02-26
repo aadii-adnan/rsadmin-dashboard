@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useBooking } from "../../context/BookingContext";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../auth/AuthContext"; // or wherever you get user info
+import PopupDialog from '../Utility/PopupDialog';
 
 const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPrice, setCouponId, discountedPrice, setDiscountedPrice, addOnsDetails, bonusUsed, setBonusUsed, currentStep }) => {
     const { bookingData, setBookingData } = useBooking();
@@ -11,6 +12,11 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
     const [isCouponApplied, setIsCouponApplied] = useState(false); 
     const [coupon, setCoupon] = useState(""); 
     const [finalPrice, setFinalPrice] = useState(totalPrice);
+    
+    // Popup state
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [popupMessage, setPopupMessage] = useState("");
+    const [popupTitle, setPopupTitle] = useState("Alert");
 
   const calculateDiscountedPrice = async () => {
     try {
@@ -20,15 +26,39 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
 
       // Apply coupon if any
       if (bookingData?.paymentDetails?.discount > 0) {
-        const discountPercentage = bookingData?.paymentDetails?.discount;
-        const savedAmount = (totalPrice * discountPercentage) / 100;
-        setCouponId(bookingData?.paymentDetails?.couponId);
-        setCoupon(bookingData?.paymentDetails?.coupon);
-        setDiscount(discountPercentage);
-        setAmountSaved(savedAmount);
-        tempPrice = totalPrice - savedAmount;
-        setDiscountedPrice(tempPrice);
-        setIsCouponApplied(true);
+        // Check minimum order value before applying coupon (skip if totalPrice not yet calculated)
+        const minOrderValue = parseFloat(bookingData?.paymentDetails?.minimumOrderValue || 0);
+        if (minOrderValue > 0 && totalPrice > 0 && totalPrice < minOrderValue) {
+          // Total is below minimum — do not apply coupon
+          setCouponId(null);
+          setCoupon("");
+          setDiscount(0);
+          setAmountSaved(0);
+          setIsCouponApplied(false);
+          setDiscountedPrice(totalPrice);
+          setBookingData(prev => ({
+            ...prev,
+            paymentDetails: {
+              ...prev.paymentDetails,
+              couponId: null,
+              discount: 0,
+              coupon: ""
+            }
+          }));
+          setPopupTitle("Minimum Order Required");
+          setPopupMessage(`Coupon requires a minimum order of \u20ac${minOrderValue.toFixed(2)}. Your current total is \u20ac${totalPrice.toFixed(2)}.`);
+          setIsPopupOpen(true);
+        } else {
+          const discountPercentage = bookingData?.paymentDetails?.discount;
+          const savedAmount = (totalPrice * discountPercentage) / 100;
+          setCouponId(bookingData?.paymentDetails?.couponId);
+          setCoupon(bookingData?.paymentDetails?.coupon);
+          setDiscount(discountPercentage);
+          setAmountSaved(savedAmount);
+          tempPrice = totalPrice - savedAmount;
+          setDiscountedPrice(tempPrice);
+          setIsCouponApplied(true);
+        }
       }
 
       // Deduct bonus points if user is logged in and has any
@@ -45,7 +75,9 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
 
       setFinalPrice(tempPrice);
     } catch (error) {
-      alert("An error occurred while calculating the amounts.");
+      setPopupTitle("Error");
+      setPopupMessage("An error occurred while calculating the amounts.");
+      setIsPopupOpen(true);
     }
   };
 
@@ -71,11 +103,16 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
       try {
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/coupons/validate/`, {
           method: "POST",
-          body: JSON.stringify({ code: coupon.trim() }),
+          body: JSON.stringify({ code: coupon.trim(), total_price: totalPrice }),
           headers: { "Content-Type": "application/json" }
         });
         const data = await response.json();
-        if (!response.ok) { alert(data.message || "Invalid coupon."); return; }
+        if (!response.ok) { 
+          setPopupTitle("Invalid Coupon");
+          setPopupMessage(data.error || data.message || "Invalid coupon."); 
+          setIsPopupOpen(true);
+          return; 
+        }
         setCouponId(data.id); setDiscount(data.discount_percent); setAmountSaved((totalPrice * data.discount_percent) / 100); setDiscountedPrice(totalPrice - (totalPrice * data.discount_percent / 100)); setIsCouponApplied(true);
         setBookingData(prev => ({
           ...prev,
@@ -86,7 +123,11 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
             coupon: coupon
           }
         }));
-      } catch { alert("An error occurred while validating the coupon."); }
+      } catch { 
+        setPopupTitle("Error");
+        setPopupMessage("An error occurred while validating the coupon.");
+        setIsPopupOpen(true);
+      }
     }
   };
 
@@ -262,6 +303,12 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
           </div>
         </div>
       </div>
+      <PopupDialog
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        title={popupTitle}
+        message={popupMessage}
+      />
     </div>
   );
 };

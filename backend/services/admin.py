@@ -128,6 +128,7 @@ class CouponAdmin(admin.ModelAdmin):
         ('Usage Limits', {
             'fields': (
                 ('max_uses', 'times_used'),
+                'minimum_order_value',
             )
         }),
     )

@@ -52,6 +52,7 @@ class CheckCouponValidityView(APIView):
 
     def post(self, request):
         code = request.data.get('code')
+        total_price = request.data.get('total_price')
         if not code:
             return Response({'error': 'Coupon code is required'}, status=400)
 
@@ -67,6 +68,17 @@ class CheckCouponValidityView(APIView):
 
         if coupon.times_used >= coupon.max_uses:
             return Response({'error': 'Coupon has been fully used'}, status=404)
+
+        # Check minimum order value if total_price is provided
+        if total_price is not None and coupon.minimum_order_value > 0:
+            try:
+                total = float(total_price)
+            except (ValueError, TypeError):
+                return Response({'error': 'Invalid total price'}, status=400)
+            if total < float(coupon.minimum_order_value):
+                return Response({
+                    'error': f'This coupon requires a minimum order of \u20ac{coupon.minimum_order_value:g}. Your current total is \u20ac{total:.2f}.'
+                }, status=400)
 
         serializer = CouponSerializer(coupon)
         return Response(serializer.data, status=200)
