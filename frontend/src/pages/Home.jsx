@@ -124,7 +124,7 @@ const Home = () => {
     useEffect(() => {
         const fetchFAQs = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/`);
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/?website=rsexpressparking`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 setFaqs(data);

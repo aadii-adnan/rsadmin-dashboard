@@ -3,9 +3,9 @@ from .models import FAQ, FAQCategory
 
 @admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
-    list_display = ('id', 'question', 'category')
+    list_display = ('id', 'question', 'category', 'is_dynamic', 'dynamic_type')
     search_fields = ('question', 'answer')
-    list_filter = ('category',)
+    list_filter = ('category', 'is_dynamic')
 
     def has_module_permission(self, request):
         """
