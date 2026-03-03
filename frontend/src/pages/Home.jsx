@@ -348,12 +348,7 @@ const Home = () => {
                     decoding="sync"
                 />
             )}
-            {/* --- SNOW EFFECT --- */}
-            <div className="snow-container">
-                <div className="snow"></div>
-                <div className="snow"></div>
-                <div className="snow"></div>
-            </div>
+            
 
             <div className="video-overlay"></div>
 
