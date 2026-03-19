@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     'django_celery_beat',
     'finance',
+    'blogs',
 ]
 
 REST_FRAMEWORK = {
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'blogs.middleware.SEORedirectMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

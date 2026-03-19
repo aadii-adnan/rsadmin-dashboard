@@ -18,6 +18,10 @@ import ThankYouPage from "./pages/ThankYouPage";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import Login from "./pages/Login";
 import FinanceDashboard from "./pages/FinanceDashboard";
+import BlogList from "./pages/BlogList";
+import BlogDetail from "./pages/BlogDetail";
+import BlogDashboard from "./components/FinanceDashboard/BlogAdmin/BlogDashboard";
+import BlogPostForm from "./components/FinanceDashboard/BlogAdmin/BlogPostForm";
 import { useLocation } from "react-router-dom";
 
 function Logout() {
@@ -42,6 +46,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
         <Route path="/book/:slug" element={<BookingForm />} />
+        <Route path="/blog" element={<BlogList />} />
+        <Route path="/blog/:slug" element={<BlogDetail />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/terms-conditions" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -57,6 +63,10 @@ function App() {
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/finance-dashboard" element={<FinanceDashboard />} />
+        <Route path="/finance-dashboard/blogs" element={<BlogDashboard />} />
+        <Route path="/finance-dashboard/blogs/create" element={<BlogPostForm />} />
+        <Route path="/finance-dashboard/blogs/edit/:id" element={<BlogPostForm />} />
+        <Route path="/finance-dashboard/blog/create" element={<BlogPostForm />} />
         <Route path="*" element={<NotFound404/>} />
       </Routes>
       {!hideHeaderFooter && <Footer />}

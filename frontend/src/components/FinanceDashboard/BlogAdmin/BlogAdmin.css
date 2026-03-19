@@ -1,0 +1,71 @@
+/* Dashboard Wrapper */
+.admin-dashboard-wrapper {
+  background-color: var(--bg-light, #F8F9FA);
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+/* Admin Cards */
+.admin-card {
+  background: var(--white, #ffffff);
+  border: none;
+  border-radius: var(--radius, 12px);
+  box-shadow: var(--shadow-sm, 0 4px 6px rgba(0,0,0,0.04));
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.admin-card-title {
+  color: var(--primary-dark, #010659);
+  font-weight: 700;
+  font-family: 'Urbanist', sans-serif;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--bg-blue-light, #EEF2F6);
+  padding-bottom: 0.75rem;
+}
+/* Premium Tables */
+.admin-table {
+  color: var(--text-dark);
+}
+.admin-table thead th {
+  background-color: var(--bg-blue-light, #EEF2F6);
+  color: var(--primary-dark, #010659);
+  font-weight: 600;
+  border: none;
+  padding: 1rem;
+}
+.admin-table tbody td {
+  vertical-align: middle;
+  padding: 1rem;
+  border-bottom: 1px solid #eaeaea;
+}
+/* Custom Tabs */
+.admin-tabs .nav-tabs {
+  border-bottom: 2px solid #eaeaea;
+}
+.admin-tabs .nav-link {
+  color: var(--text-grey);
+  font-weight: 600;
+  border: none;
+  padding: 10px 20px;
+}
+.admin-tabs .nav-link.active {
+  color: var(--primary-dark);
+  background: transparent;
+  border-bottom: 3px solid var(--primary-dark);
+}
+/* Status Badges */
+.status-badge-publish {
+  background-color: rgba(0, 200, 81, 0.1);
+  color: var(--success, #00C851);
+  padding: 5px 12px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.status-badge-draft {
+  background-color: #f0f0f0;
+  color: #666;
+  padding: 5px 12px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}

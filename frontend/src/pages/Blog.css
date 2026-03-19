@@ -1,0 +1,201 @@
+/* ═══════════════════════════════════════════════════
+   Blog Module – Brand UI Styles
+   ═══════════════════════════════════════════════════ */
+
+/* ── Hero Banner ── */
+.blog-hero-banner {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+  background-image: url('https://blog.rsexpressparking.com/wp-content/uploads/2025/01/hb-dennis-airport2.webp');
+  background-size: cover;
+  background-position: center;
+  background-position: 0px -70px;
+  background-size: cover;
+}
+
+.blog-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(1, 6, 89, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: var(--white, #ffffff);
+  padding: 0 20px;
+}
+
+.blog-hero-title {
+  font-weight: 700;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  font-family: 'Urbanist', sans-serif;
+}
+
+.blog-hero-subtitle {
+  font-size: 1.1rem;
+  max-width: 700px;
+  line-height: 1.7;
+  opacity: 0.9;
+  color: white;
+}
+
+/* ── Page Background Wrapper ── */
+.blog-page-wrapper {
+  background-color: #F9F9F8;
+  min-height: 100vh;
+  padding-bottom: 5rem;
+}
+
+/* ── Flat Transparent Blog Cards ── */
+.blog-card-flat {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.blog-card-flat:hover {
+  transform: translateY(-4px);
+}
+
+.blog-card-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 0 !important;
+  margin-bottom: 1.2rem;
+}
+
+.blog-card-title {
+  color: var(--primary-dark, #010659);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  font-family: 'Urbanist', sans-serif;
+}
+
+.blog-card-date {
+  color: var(--primary-dark, #010659);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.8rem;
+}
+
+.blog-card-excerpt {
+  color: var(--text-grey, #666666);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ── Blog Detail Split Header ── */
+.blog-detail-container {
+  background-color: #ffffff;
+}
+
+.blog-detail-header-split {
+  background-color: var(--bg-blue-light, #EEF2F6);
+}
+
+.blog-detail-text-side {
+  padding: 5rem 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.blog-detail-image-side img {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  object-fit: cover;
+}
+
+/* ── Typography & Badges ── */
+.badge-pill {
+  display: inline-block;
+  background: rgba(1, 6, 89, 0.1);
+  color: var(--primary-dark, #010659);
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  width: fit-content;
+}
+
+/* ── Promo Sidebar ── */
+.promo-sidebar {
+  border: 1px solid rgba(40, 144, 205, 0.2);
+  border-radius: var(--radius, 12px);
+  padding: 24px;
+  background: #f8fbff;
+  text-align: center;
+}
+
+/* ── Pagination ── */
+.blog-pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 3.5rem;
+  font-size: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.blog-pagination-link {
+  background: transparent;
+  color: #337ab7;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: color 0.15s ease;
+  font-weight: 400;
+}
+
+.blog-pagination-link:hover:not(:disabled) {
+  color: #23527c;
+  text-decoration: underline;
+}
+
+.blog-pagination-link.active {
+  color: var(--primary-dark, #010659);
+  font-weight: 600;
+  cursor: default;
+}
+
+.blog-pagination-link:disabled {
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ── Responsive ── */
+@media (max-width: 767.98px) {
+  .blog-hero-banner {
+    min-height: 300px;
+  }
+
+  .blog-hero-title {
+    font-size: 2rem;
+  }
+
+  .blog-hero-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .blog-detail-text-side {
+    padding: 3rem 6%;
+  }
+}

@@ -3,8 +3,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from core.views import robots_txt 
-from core.sitemaps import StaticReactSitemap, BookingSlugSitemap, BlogSitemap
+from core.sitemaps import StaticReactSitemap, BookingSlugSitemap, BlogSitemap as CoreBlogSitemap
 from django.contrib.sitemaps.views import sitemap
+from blogs.sitemaps import BlogSitemap, BlogCategorySitemap
 from payments.views import StripeWebhookView
 from django.views.decorators.cache import cache_page
 from django.contrib.sitemaps.views import sitemap as sitemap_view
@@ -16,7 +17,7 @@ from django.http import HttpResponse
 
 # Blog sitemap (RS Express Parking only)
 blog_sitemaps = {
-    "blog": BlogSitemap,
+    "blog": CoreBlogSitemap,
 }
 
 def dynamic_sitemap(request):
@@ -57,6 +58,7 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),
     path('api/services/', include('services.urls')),
     path('api/bookings/', include('bookings.urls')),
+    path('api/blogs/', include('blogs.urls')),
     path('api/faqs/', include('faq.urls')),
     path('api/contact/', include('contact.urls')),
     path('api/payments/', include('payments.urls')),
@@ -64,8 +66,17 @@ urlpatterns = [
     path('api/core/', include('core.urls')),
     path("robots.txt", robots_txt, name="robots_txt"),
     
-    # Main sitemap with static URLs
-    path("sitemap.xml", cache_page(86400)(dynamic_sitemap), name="sitemap"),
+    path(
+        "sitemap.xml",
+        sitemap,
+        {
+            "sitemaps": {
+                "blogs": BlogSitemap,
+                "categories": BlogCategorySitemap,
+            }
+        },
+        name="django.contrib.sitemaps.views.sitemap",
+    ),
     
     # Blog sitemap (separate file)
     path("blogs.xml", cache_page(86400)(sitemap_view), {"sitemaps": blog_sitemaps}, name="sitemap_blogs"),
