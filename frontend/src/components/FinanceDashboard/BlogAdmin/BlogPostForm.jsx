@@ -12,6 +12,7 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import customFetch from "../../../auth/fetch";
+import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
@@ -45,6 +46,7 @@ function toDatetimeLocalValue(isoValue) {
 }
 
 function BlogPostForm() {
+  useBlogJwtFromUrl();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
@@ -80,96 +82,98 @@ function BlogPostForm() {
 
   const titleMode = useMemo(() => (isEditMode ? "Edit Blog Post" : "Create Blog Post"), [isEditMode]);
 
+  const fetchPostData = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const baseRequests = [
+        customFetch(`${BLOG_API_BASE}/categories/`, { useFinanceJwt: true }),
+        customFetch(`${BLOG_API_BASE}/tags/`, { useFinanceJwt: true }),
+      ];
+
+      if (isEditMode) {
+        baseRequests.push(
+          customFetch(`${BLOG_API_BASE}/posts/${id}/`, { useFinanceJwt: true }),
+          customFetch(`${BLOG_API_BASE}/faqs/`, { useFinanceJwt: true })
+        );
+      }
+
+      const responses = await Promise.all(baseRequests);
+
+      const categoriesRes = responses[0];
+      const tagsRes = responses[1];
+
+      if (!categoriesRes?.ok || !tagsRes?.ok) {
+        throw new Error("Failed to load categories or tags.");
+      }
+
+      const categoriesData = await categoriesRes.json();
+      const tagsData = await tagsRes.json();
+
+      setCategories(toListPayload(categoriesData));
+      setTags(toListPayload(tagsData));
+
+      if (isEditMode) {
+        const postRes = responses[2];
+        const faqRes = responses[3];
+
+        if (!postRes?.ok || !faqRes?.ok) {
+          throw new Error("Failed to load post details.");
+        }
+
+        const post = await postRes.json();
+        const faqData = await faqRes.json();
+        const allFaqs = toListPayload(faqData);
+        const linkedFaqs = allFaqs.filter((faq) => String(faq.post) === String(id));
+
+        const normalizedStatus =
+          post.status === "publish" && post.published_date && new Date(post.published_date) > new Date()
+            ? "schedule"
+            : post.status || "draft";
+
+        setFormData({
+          title: post.title || "",
+          meta_title: post.meta_title || "",
+          meta_description: post.meta_description || "",
+          slug: post.slug || "",
+          canonical_url: post.canonical_url || "",
+          category: post.category || "",
+          tags: Array.isArray(post.tags) ? post.tags : [],
+          status: normalizedStatus,
+          published_date: toDatetimeLocalValue(post.published_date),
+          content: post.content || "",
+          featured_image: null,
+        });
+
+        setExistingFeaturedImage(post.featured_image || "");
+        setFaqs(
+          linkedFaqs.map((faq) => ({
+            id: faq.id,
+            question: faq.question || "",
+            answer: faq.answer || "",
+            is_active: faq.is_active ?? true,
+            order: faq.order ?? 0,
+          }))
+        );
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load blog form data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    // 1. Check Auth first
     if (!localStorage.getItem("finance_jwt")) {
       navigate("/unauthorized", { replace: true });
-      return;
+      return; // Stop execution immediately
     }
 
-    const loadData = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const baseRequests = [
-          customFetch(`${BLOG_API_BASE}/categories/`, { useFinanceJwt: true }),
-          customFetch(`${BLOG_API_BASE}/tags/`, { useFinanceJwt: true }),
-        ];
-
-        if (isEditMode) {
-          baseRequests.push(
-            customFetch(`${BLOG_API_BASE}/posts/${id}/`, { useFinanceJwt: true }),
-            customFetch(`${BLOG_API_BASE}/faqs/`, { useFinanceJwt: true })
-          );
-        }
-
-        const responses = await Promise.all(baseRequests);
-
-        const categoriesRes = responses[0];
-        const tagsRes = responses[1];
-
-        if (!categoriesRes?.ok || !tagsRes?.ok) {
-          throw new Error("Failed to load categories or tags.");
-        }
-
-        const categoriesData = await categoriesRes.json();
-        const tagsData = await tagsRes.json();
-
-        setCategories(toListPayload(categoriesData));
-        setTags(toListPayload(tagsData));
-
-        if (isEditMode) {
-          const postRes = responses[2];
-          const faqRes = responses[3];
-
-          if (!postRes?.ok || !faqRes?.ok) {
-            throw new Error("Failed to load post details.");
-          }
-
-          const post = await postRes.json();
-          const faqData = await faqRes.json();
-          const allFaqs = toListPayload(faqData);
-          const linkedFaqs = allFaqs.filter((faq) => String(faq.post) === String(id));
-
-          const normalizedStatus =
-            post.status === "publish" && post.published_date && new Date(post.published_date) > new Date()
-              ? "schedule"
-              : post.status || "draft";
-
-          setFormData({
-            title: post.title || "",
-            meta_title: post.meta_title || "",
-            meta_description: post.meta_description || "",
-            slug: post.slug || "",
-            canonical_url: post.canonical_url || "",
-            category: post.category || "",
-            tags: Array.isArray(post.tags) ? post.tags : [],
-            status: normalizedStatus,
-            published_date: toDatetimeLocalValue(post.published_date),
-            content: post.content || "",
-            featured_image: null,
-          });
-
-          setExistingFeaturedImage(post.featured_image || "");
-          setFaqs(
-            linkedFaqs.map((faq) => ({
-              id: faq.id,
-              question: faq.question || "",
-              answer: faq.answer || "",
-              is_active: faq.is_active ?? true,
-              order: faq.order ?? 0,
-            }))
-          );
-        }
-      } catch (err) {
-        setError(err.message || "Failed to load blog form data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [id, isEditMode, navigate]);
+    // 2. If Auth passes, fetch the data
+    fetchPostData();
+  }, [navigate, id, isEditMode]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -248,11 +252,11 @@ function BlogPostForm() {
       setSuccessMessage(isEditMode ? "Post updated successfully." : "Post created successfully.");
 
       if (!isEditMode && savedPost?.id) {
-        navigate(`/finance-dashboard/blogs/edit/${savedPost.id}`);
+        navigate(`/blog-admin/edit/${savedPost.id}`);
         return;
       }
 
-      navigate("/finance-dashboard/blogs");
+      navigate("/blog-admin");
     } catch (err) {
       setError(err.message || "Failed to save post.");
     } finally {
@@ -360,7 +364,7 @@ function BlogPostForm() {
     <Container fluid className="admin-dashboard-wrapper py-4">
       {/* Header Area */}
       <div className="d-flex align-items-center gap-3 mb-4">
-        <Link to="/finance-dashboard/blogs" className="text-muted text-decoration-none fw-semibold border rounded px-3 py-2 bg-white">
+        <Link to="/blog-admin" className="text-muted text-decoration-none fw-semibold border rounded px-3 py-2 bg-white">
           &larr; Back to Dashboard
         </Link>
         <h2 style={{ color: 'var(--primary-dark)' }} className="fw-bold m-0">{titleMode}</h2>

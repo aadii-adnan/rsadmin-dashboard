@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import Home from "./pages/Home";
 import Services from "./pages/Services";
@@ -36,7 +36,9 @@ function Logout() {
 
 function App() {
   const location = useLocation();
-  const hideHeaderFooter = location.pathname.startsWith("/finance-dashboard");
+  const hideHeaderFooter =
+    location.pathname.startsWith("/finance-dashboard") ||
+    location.pathname.startsWith("/blog-admin");
   
   return (
     <>
@@ -63,10 +65,13 @@ function App() {
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/finance-dashboard" element={<FinanceDashboard />} />
-        <Route path="/finance-dashboard/blogs" element={<BlogDashboard />} />
-        <Route path="/finance-dashboard/blogs/create" element={<BlogPostForm />} />
-        <Route path="/finance-dashboard/blogs/edit/:id" element={<BlogPostForm />} />
-        <Route path="/finance-dashboard/blog/create" element={<BlogPostForm />} />
+        <Route path="/blog-admin" element={<BlogDashboard />} />
+        <Route path="/blog-admin/create" element={<BlogPostForm />} />
+        <Route path="/blog-admin/edit/:id" element={<BlogPostForm />} />
+        <Route path="/finance-dashboard/blogs" element={<Navigate to="/blog-admin" replace />} />
+        <Route path="/finance-dashboard/blogs/create" element={<Navigate to="/blog-admin/create" replace />} />
+        <Route path="/finance-dashboard/blogs/edit/:id" element={<Navigate to="/blog-admin" replace />} />
+        <Route path="/finance-dashboard/blog/create" element={<Navigate to="/blog-admin/create" replace />} />
         <Route path="*" element={<NotFound404/>} />
       </Routes>
       {!hideHeaderFooter && <Footer />}

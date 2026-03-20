@@ -1,6 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 
 from core.permissions import IsManagerOrAdmin
 
@@ -15,6 +19,22 @@ from .serializers import (
     RedirectRuleSerializer,
     TagSerializer,
 )
+
+
+@login_required
+def blogs_jwt_login(request):
+    user = request.user
+    # Use the exact same permission check as the finance dashboard
+    if not (user.is_superuser and not getattr(user, "is_manager", False)):
+        return HttpResponseRedirect("/admin/login/?next=/admin/")
+
+    refresh = RefreshToken.for_user(user)
+    access = str(refresh.access_token)
+    refresh_token = str(refresh)
+
+    # Redirect to the new React Blog Admin with tokens in the URL
+    redirect_url = f"/blog-admin/?access={access}&refresh={refresh_token}"
+    return HttpResponseRedirect(redirect_url)
 
 
 class PublicBlogListView(ListAPIView):

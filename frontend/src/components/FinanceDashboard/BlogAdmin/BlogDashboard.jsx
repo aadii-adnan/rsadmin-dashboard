@@ -5,6 +5,7 @@ import {
   Col,
   Container,
   Form,
+  Modal,
   Row,
   Spinner,
   Tab,
@@ -13,6 +14,7 @@ import {
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import customFetch from "../../../auth/fetch";
+import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
@@ -27,7 +29,17 @@ function toListPayload(data) {
   return [];
 }
 
+function slugify(value = "") {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
+
 function BlogDashboard() {
+  useBlogJwtFromUrl();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("posts");
@@ -41,6 +53,22 @@ function BlogDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editingTagId, setEditingTagId] = useState(null);
+
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    slug: "",
+    description: "",
+  });
+
+  const [tagForm, setTagForm] = useState({
+    name: "",
+    slug: "",
+  });
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -74,13 +102,15 @@ function BlogDashboard() {
   };
 
   useEffect(() => {
+    // 1. Check Auth first
     if (!localStorage.getItem("finance_jwt")) {
       navigate("/unauthorized", { replace: true });
-      return;
+      return; // Stop execution immediately
     }
 
+    // 2. If Auth passes, fetch the data
     fetchAllData();
-  }, [navigate]);
+  }, [navigate]); // navigate is the only external dependency needed here
 
   const categoryById = useMemo(() => {
     const map = {};
@@ -122,6 +152,149 @@ function BlogDashboard() {
     }
   };
 
+  const resetCategoryForm = () => {
+    setCategoryForm({ name: "", slug: "", description: "" });
+    setEditingCategoryId(null);
+  };
+
+  const resetTagForm = () => {
+    setTagForm({ name: "", slug: "" });
+    setEditingTagId(null);
+  };
+
+  const closeCategoryModal = () => {
+    setShowCategoryModal(false);
+    resetCategoryForm();
+  };
+
+  const closeTagModal = () => {
+    setShowTagModal(false);
+    resetTagForm();
+  };
+
+  const openCreateCategoryModal = () => {
+    resetCategoryForm();
+    setShowCategoryModal(true);
+  };
+
+  const openEditCategoryModal = (category) => {
+    setEditingCategoryId(category.id);
+    setCategoryForm({
+      name: category.name || "",
+      slug: category.slug || "",
+      description: category.description || "",
+    });
+    setShowCategoryModal(true);
+  };
+
+  const openCreateTagModal = () => {
+    resetTagForm();
+    setShowTagModal(true);
+  };
+
+  const openEditTagModal = (tag) => {
+    setEditingTagId(tag.id);
+    setTagForm({
+      name: tag.name || "",
+      slug: tag.slug || "",
+    });
+    setShowTagModal(true);
+  };
+
+  const handleCategorySubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      const endpoint = editingCategoryId
+        ? `${BLOG_API_BASE}/categories/${editingCategoryId}/`
+        : `${BLOG_API_BASE}/categories/`;
+      const method = editingCategoryId ? "PUT" : "POST";
+
+      const response = await customFetch(endpoint, {
+        method,
+        body: categoryForm,
+        useFinanceJwt: true,
+      });
+
+      if (!response?.ok) {
+        throw new Error("Failed to save category.");
+      }
+
+      closeCategoryModal();
+      fetchAllData();
+    } catch (err) {
+      setError(err.message || "Failed to save category.");
+    }
+  };
+
+  const handleTagSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      const endpoint = editingTagId
+        ? `${BLOG_API_BASE}/tags/${editingTagId}/`
+        : `${BLOG_API_BASE}/tags/`;
+      const method = editingTagId ? "PUT" : "POST";
+
+      const response = await customFetch(endpoint, {
+        method,
+        body: tagForm,
+        useFinanceJwt: true,
+      });
+
+      if (!response?.ok) {
+        throw new Error("Failed to save tag.");
+      }
+
+      closeTagModal();
+      fetchAllData();
+    } catch (err) {
+      setError(err.message || "Failed to save tag.");
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm("Are you sure?")) {
+      return;
+    }
+
+    try {
+      const response = await customFetch(`${BLOG_API_BASE}/categories/${id}/`, {
+        method: "DELETE",
+        useFinanceJwt: true,
+      });
+
+      if (!response?.ok) {
+        throw new Error("Failed to delete category.");
+      }
+
+      fetchAllData();
+    } catch (err) {
+      setError(err.message || "Failed to delete category.");
+    }
+  };
+
+  const handleDeleteTag = async (id) => {
+    if (!window.confirm("Are you sure?")) {
+      return;
+    }
+
+    try {
+      const response = await customFetch(`${BLOG_API_BASE}/tags/${id}/`, {
+        method: "DELETE",
+        useFinanceJwt: true,
+      });
+
+      if (!response?.ok) {
+        throw new Error("Failed to delete tag.");
+      }
+
+      fetchAllData();
+    } catch (err) {
+      setError(err.message || "Failed to delete tag.");
+    }
+  };
+
   const formatDateTime = (value) => {
     if (!value) {
       return "-";
@@ -140,7 +313,7 @@ function BlogDashboard() {
       {/* Header Area */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 style={{ color: 'var(--primary-dark)' }} className="fw-bold m-0">Blog Management</h2>
-        <Link to="create" className="btn-modern"> + Add New Post </Link>
+        <Link to="/blog-admin/create" className="btn-modern"> + Add New Post </Link>
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
@@ -228,7 +401,7 @@ function BlogDashboard() {
                             <Button
                               size="sm"
                               variant="outline-primary"
-                              onClick={() => navigate(`/finance-dashboard/blogs/edit/${post.id}`)}
+                              onClick={() => navigate(`/blog-admin/edit/${post.id}`)}
                             >
                               Edit
                             </Button>
@@ -253,18 +426,173 @@ function BlogDashboard() {
             )}
           </Tab>
           <Tab eventKey="categories" title="Categories">
-            <div className="py-4 text-center text-muted">
-              {/* Note: In a real project you might add a full Categories table here. Based on requirement, keeping this minimal or as it was. */}
-              Manage categories by editing posts, or implement standalone category manager here.
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="m-0 fw-semibold">Manage Categories</h6>
+              <Button size="sm" onClick={openCreateCategoryModal}>Add Category</Button>
             </div>
+            <Table responsive hover className="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Slug</th>
+                  <th>Description</th>
+                  <th style={{ width: "170px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.length ? (
+                  categories.map((category) => (
+                    <tr key={category.id}>
+                      <td>{category.name || "-"}</td>
+                      <td>{category.slug || "-"}</td>
+                      <td>{category.description || "-"}</td>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <Button size="sm" variant="outline-primary" onClick={() => openEditCategoryModal(category)}>
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="outline-danger" onClick={() => handleDeleteCategory(category.id)}>
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center py-4">No categories found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
           </Tab>
           <Tab eventKey="tags" title="Tags">
-             <div className="py-4 text-center text-muted">
-              Manage tags by editing posts, or implement standalone tags manager here.
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="m-0 fw-semibold">Manage Tags</h6>
+              <Button size="sm" onClick={openCreateTagModal}>Add Tag</Button>
             </div>
+            <Table responsive hover className="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Slug</th>
+                  <th style={{ width: "170px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tags.length ? (
+                  tags.map((tag) => (
+                    <tr key={tag.id}>
+                      <td>{tag.name || "-"}</td>
+                      <td>{tag.slug || "-"}</td>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <Button size="sm" variant="outline-primary" onClick={() => openEditTagModal(tag)}>
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="outline-danger" onClick={() => handleDeleteTag(tag.id)}>
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" className="text-center py-4">No tags found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
           </Tab>
         </Tabs>
       </div>
+
+      <Modal show={showCategoryModal} onHide={closeCategoryModal} centered>
+        <Form onSubmit={handleCategorySubmit}>
+          <Modal.Header closeButton>
+            <Modal.Title>{editingCategoryId ? "Edit Category" : "Add Category"}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Name</Form.Label>
+              <Form.Control
+                required
+                value={categoryForm.name}
+                onChange={(event) => {
+                  const name = event.target.value;
+                  setCategoryForm((prev) => ({
+                    ...prev,
+                    name,
+                    slug: slugify(name),
+                  }));
+                }}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Slug</Form.Label>
+              <Form.Control
+                required
+                value={categoryForm.slug}
+                onChange={(event) => setCategoryForm((prev) => ({ ...prev, slug: event.target.value }))}
+              />
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={categoryForm.description}
+                onChange={(event) => setCategoryForm((prev) => ({ ...prev, description: event.target.value }))}
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="outline-secondary" onClick={closeCategoryModal}>Cancel</Button>
+            <Button type="submit">{editingCategoryId ? "Update" : "Create"}</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      <Modal show={showTagModal} onHide={closeTagModal} centered>
+        <Form onSubmit={handleTagSubmit}>
+          <Modal.Header closeButton>
+            <Modal.Title>{editingTagId ? "Edit Tag" : "Add Tag"}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Name</Form.Label>
+              <Form.Control
+                required
+                value={tagForm.name}
+                onChange={(event) => {
+                  const name = event.target.value;
+                  setTagForm((prev) => ({
+                    ...prev,
+                    name,
+                    slug: slugify(name),
+                  }));
+                }}
+              />
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Slug</Form.Label>
+              <Form.Control
+                required
+                value={tagForm.slug}
+                onChange={(event) => setTagForm((prev) => ({ ...prev, slug: event.target.value }))}
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="outline-secondary" onClick={closeTagModal}>Cancel</Button>
+            <Button type="submit">{editingTagId ? "Update" : "Create"}</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
     </Container>
   );
 }

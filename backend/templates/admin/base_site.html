@@ -37,12 +37,31 @@
         background: #20435c;
         color: #fff;
     }
+    #blogs-dashboard-btn {
+        background: #193747;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1rem;
+        box-shadow: 0 2px 8px rgba(68,126,155,0.08);
+        transition: background 0.2s;
+        display: inline-block;
+    }
+    #blogs-dashboard-btn:hover {
+        background: #20435c;
+        color: #fff;
+    }
 </style>
 <div id="branding">
     <img src="{% static 'images/logo.webp' %}" alt="Site Logo">
     {% if request.user.is_authenticated and request.user.is_superuser and not request.user.is_manager and not request.user.is_supplier %}
         <a id="finance-dashboard-btn" href="{% url 'finance-jwt-login' %}">
             Finance Dashboard
+        </a>
+        <a id="blogs-dashboard-btn" href="{% url 'blogs-jwt-login' %}" style="margin-left: 15px;">
+            Blogs Dashboard
         </a>
     {% endif %}
 </div>

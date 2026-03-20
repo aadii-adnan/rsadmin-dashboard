@@ -12,6 +12,7 @@ from django.contrib.sitemaps.views import sitemap as sitemap_view
 from django.contrib.sitemaps import views as sitemap_views
 from django.urls import reverse_lazy
 from finance.views import finance_jwt_login
+from blogs.views import blogs_jwt_login
 from django.contrib.auth import views as auth_views
 from django.http import HttpResponse
 
@@ -82,6 +83,7 @@ urlpatterns = [
     path("blogs.xml", cache_page(86400)(sitemap_view), {"sitemaps": blog_sitemaps}, name="sitemap_blogs"),
     
     path("api/finance/jwt-login/", finance_jwt_login, name="finance-jwt-login"),
+    path("api/blogs/jwt-login/", blogs_jwt_login, name="blogs-jwt-login"),
     path('admin/admin-forgot-password/', auth_views.PasswordResetView.as_view(), name='admin_password_reset'),
     path('admin/admin-forgot-password/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('admin/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
