@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Accordion,
   Alert,
   Col,
   Container,
@@ -9,6 +8,7 @@ import {
 } from "react-bootstrap";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
+import FAQSection from "../components/HomePage/FAQSection";
 import "./Blog.css"; // Ensure styling is applied
 
 const BLOG_PUBLIC_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/public`;
@@ -18,6 +18,7 @@ const LOGO_URL = `${SITE_URL}/assets/logo.png`;
 function BlogDetail() {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
+  const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -35,13 +36,26 @@ function BlogDetail() {
         }
 
         const data = await response.json();
+        
+        // Fetch related posts
+        const relatedRes = await fetch(`${BLOG_PUBLIC_BASE}/posts/`);
+        let relatedData = [];
+        if (relatedRes.ok) {
+          const resJson = await relatedRes.json();
+          // Assume response follows DRF pagination (results array) or returns array directly
+          const postsArray = Array.isArray(resJson.results) ? resJson.results : Array.isArray(resJson) ? resJson : [];
+          relatedData = postsArray.filter(p => p.slug !== slug).slice(0, 3);
+        }
+
         if (mounted) {
           setPost(data);
+          setRelatedPosts(relatedData);
         }
       } catch (err) {
         if (mounted) {
           setError(err.message || "Failed to load blog post.");
           setPost(null);
+          setRelatedPosts([]);
         }
       } finally {
         if (mounted) {
@@ -310,20 +324,6 @@ function BlogDetail() {
                   text-decoration: underline;
                 }
               `}</style>
-
-              {activeFaqs.length ? (
-                <section className="mt-5 pt-4 border-top">
-                  <h3 className="mb-4">Frequently Asked Questions</h3>
-                  <Accordion alwaysOpen>
-                    {activeFaqs.map((faq, index) => (
-                      <Accordion.Item eventKey={String(index)} key={faq.id || `${faq.question}-${index}`}>
-                        <Accordion.Header className="fw-semibold">{faq.question}</Accordion.Header>
-                        <Accordion.Body className="text-muted" style={{ lineHeight: '1.7' }}>{faq.answer}</Accordion.Body>
-                      </Accordion.Item>
-                    ))}
-                  </Accordion>
-                </section>
-              ) : null}
             </article>
           </Col>
 
@@ -339,6 +339,40 @@ function BlogDetail() {
           </Col>
         </Row>
       </Container>
+
+      {/* Blog FAQs using global FAQSection */}
+      {activeFaqs.length > 0 && (
+        <FAQSection faqs={activeFaqs} loading={false} isBlog={true} />
+      )}
+
+      {/* Related Blogs Section */}
+      {relatedPosts.length > 0 && (
+        <section className="related-blogs-wrapper py-5">
+          <Container>
+            <h3 style={{ color: "var(--primary-dark)", fontWeight: "700" }}>More Travel Tips & Insights</h3>
+            <Row className="g-4 mt-3">
+              {relatedPosts.map((rPost) => (
+                <Col key={rPost.id || rPost.slug} lg={4} md={6}>
+                  <Link to={`/blog/${rPost.slug}`} className="text-decoration-none">
+                    <div className="related-blog-card">
+                      {rPost.featured_image ? (
+                        <img src={rPost.featured_image} alt={rPost.title} className="related-blog-img" />
+                      ) : (
+                        <div className="related-blog-img" style={{ backgroundColor: 'var(--primary-dark)' }} />
+                      )}
+                      <h4 className="related-blog-title">{rPost.title}</h4>
+                      <p className="related-blog-excerpt">
+                        {rPost.excerpt || stripHtmlAndTruncate(rPost.content, 140)}
+                      </p>
+                      <span className="related-blog-link">Learn more</span>
+                    </div>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          </Container>
+        </section>
+      )}
     </div>
   );
 }

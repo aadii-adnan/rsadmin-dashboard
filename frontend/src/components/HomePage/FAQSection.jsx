@@ -3,7 +3,7 @@ import FAQItem from './FAQItem';
 import { BiSupport } from "react-icons/bi";
 import { Link } from 'react-router-dom';
 
-const FAQSection = ({ faqs, loading }) => {
+const FAQSection = ({ faqs, loading, isBlog = false }) => {
   const [openIndex, setOpenIndex] = useState(null);
 
   const toggleFAQ = (index) => {
@@ -18,7 +18,7 @@ const FAQSection = ({ faqs, loading }) => {
         <div className="section-header text-center mb-5">
           <span className="badge-pill">Help Center</span>
           <h2 className="section-title">Frequently Asked Questions</h2>
-          <p className="section-subtitle">Everything you need to know about parking with RS Express</p>
+          {!isBlog && <p className="section-subtitle">Everything you need to know about parking with RS Express</p>}
         </div>
 
         {/* FAQ List */}
@@ -44,14 +44,16 @@ const FAQSection = ({ faqs, loading }) => {
         </div>
 
         {/* Contact Support CTA */}
-        <div className="faq-support-card mt-5 text-center">
-          <div className="icon-box mb-3">
-             <BiSupport size={30} color="#fff"/>
+        {!isBlog && (
+          <div className="faq-support-card mt-5 text-center">
+            <div className="icon-box mb-3">
+               <BiSupport size={30} color="#fff"/>
+            </div>
+            <h4>Still have questions?</h4>
+            <p>Can’t find the answer you’re looking for? Please contact our friendly support team.</p>
+            <Link to="/contact-us" className="contact-link">Contact Support</Link>
           </div>
-          <h4>Still have questions?</h4>
-          <p>Can’t find the answer you’re looking for? Please contact our friendly support team.</p>
-          <Link to="/contact-us" className="contact-link">Contact Support</Link>
-        </div>
+        )}
 
       </div>
     </div>

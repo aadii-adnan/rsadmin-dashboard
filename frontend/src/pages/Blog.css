@@ -199,3 +199,81 @@
     padding: 3rem 6%;
   }
 }
+
+/* Modern FAQ Accordion */
+.modern-faq-accordion .accordion-item {
+  border: none;
+  border-bottom: 1px solid #eaeaea;
+  border-radius: 0;
+  background: transparent;
+}
+.modern-faq-accordion .accordion-button {
+  background: transparent;
+  color: var(--primary-dark, #010659);
+  font-weight: 700;
+  font-family: 'Urbanist', sans-serif;
+  box-shadow: none !important;
+  padding: 1.5rem 0.5rem;
+  transition: all 0.3s ease;
+}
+.modern-faq-accordion .accordion-button:not(.collapsed) {
+  color: var(--primary-light, rgb(40, 144, 205));
+  background: transparent;
+}
+.modern-faq-accordion .accordion-button:hover {
+  color: white;
+  background-color: var(--primary-dark, #010659);
+}
+.modern-faq-accordion .accordion-button:focus {
+  color: white;
+  background-color: var(--primary-dark, #010659);
+}
+.modern-faq-accordion .accordion-body {
+  color: var(--text-grey, #666666);
+  line-height: 1.7;
+  padding: 0 0.5rem 1.5rem 0.5rem;
+  background: transparent;
+}
+
+/* Related Blogs Section (From Attached Image) */
+.related-blogs-wrapper {
+  border-top: 1px solid #eaeaea;
+}
+.related-blog-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+.related-blog-img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 0 !important; /* Sharp corners */
+  margin-bottom: 1.2rem;
+}
+.related-blog-title {
+  color: var(--primary-dark, #010659);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+  font-family: 'Urbanist', sans-serif;
+}
+.related-blog-excerpt {
+  color: var(--text-grey, #666666);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+.related-blog-link {
+  color: var(--primary-dark, #010659);
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-family: 'Urbanist', sans-serif;
+}
+.related-blog-link:hover {
+  color: var(--primary-light, rgb(40, 144, 205));
+  text-decoration: underline;
+}
