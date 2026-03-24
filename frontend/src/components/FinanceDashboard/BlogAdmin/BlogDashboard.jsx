@@ -1,16 +1,12 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Button,
   Col,
-  Container,
   Form,
   Modal,
   Row,
   Spinner,
-  Tab,
   Table,
-  Tabs,
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import customFetch from "../../../auth/fetch";
@@ -309,17 +305,17 @@ function BlogDashboard() {
   };
 
   return (
-    <Container fluid className="admin-dashboard-wrapper py-4">
+    <div className="admin-dashboard-wrapper">
       {/* Header Area */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 style={{ color: 'var(--primary-dark)' }} className="fw-bold m-0">Blog Management</h2>
-        <Link to="/blog-admin/create" className="btn-modern"> + Add New Post </Link>
+        <h2 className="admin-page-title m-0">Blog Management</h2>
+        <Link to="/blog-admin/create" className="btn-admin-outline"> + Add New Post </Link>
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
 
       {/* Filters Area */}
-      <div className="admin-card">
+      <div className="filter-card">
         <Row className="g-3">
           <Col md={5}>
             <Form.Control
@@ -351,28 +347,46 @@ function BlogDashboard() {
             </Form.Select>
           </Col>
           <Col md={1} className="d-grid">
-            <Button variant="outline-secondary" onClick={fetchAllData}>
+            <button className="btn-admin-outline w-100 justify-content-center" onClick={fetchAllData}>
               Refresh
-            </Button>
+            </button>
           </Col>
         </Row>
       </div>
 
       {/* Table Area */}
-      <div className="admin-card admin-tabs">
-        <Tabs
-          id="blog-dashboard-tabs"
-          activeKey={activeTab}
-          onSelect={(k) => setActiveTab(k)}
-          className="mb-3"
-        >
-          <Tab eventKey="posts" title="Posts">
-            {loading ? (
+      <div className="table-card">
+                <div className="modern-tabs px-4 pt-4">
+          <button
+            type="button"
+            className={activeTab === "posts" ? "active" : ""}
+            onClick={() => setActiveTab("posts")}
+          >
+            Posts
+          </button>
+          <button
+            type="button"
+            className={activeTab === "categories" ? "active" : ""}
+            onClick={() => setActiveTab("categories")}
+          >
+            Categories
+          </button>
+          <button
+            type="button"
+            className={activeTab === "tags" ? "active" : ""}
+            onClick={() => setActiveTab("tags")}
+          >
+            Tags
+          </button>
+        </div>
+        <div className="px-4 pb-4">
+          {activeTab === "posts" && (
+            <>{loading ? (
               <div className="text-center py-5">
                 <Spinner animation="border" />
               </div>
             ) : (
-              <Table responsive hover className="admin-table mt-3">
+              <Table responsive hover className="modern-table mt-3">
                 <thead>
                   <tr>
                     <th>Title</th>
@@ -387,31 +401,31 @@ function BlogDashboard() {
                   {filteredPosts.length ? (
                     filteredPosts.map((post) => (
                       <tr key={post.id}>
-                        <td className="fw-semibold">{post.title || "-"}</td>
+                        <td className="fw-semibold"><span className="table-title-link">{post.title || "-"}</span></td>
                         <td>{categoryById[post.category] || "-"}</td>
                         <td>
                           <span className={post.status === 'publish' ? 'status-badge-publish' : 'status-badge-draft'}>
                             {post.status === 'publish' ? 'Published' : 'Draft'}
                           </span>
                         </td>
-                        <td>{post.author || "-"}</td>
+                        <td>{post.author_name || post.author || "-"}</td>
                         <td>{formatDateTime(post.published_date)}</td>
                         <td>
-                          <div className="d-flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline-primary"
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="btn-admin-outline btn-admin-sm"
                               onClick={() => navigate(`/blog-admin/edit/${post.id}`)}
                             >
                               Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline-danger"
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-admin-outline btn-admin-sm"
                               onClick={() => handleDeletePost(post.id)}
                             >
                               Delete
-                            </Button>
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -424,13 +438,14 @@ function BlogDashboard() {
                 </tbody>
               </Table>
             )}
-          </Tab>
-          <Tab eventKey="categories" title="Categories">
-            <div className="d-flex justify-content-between align-items-center mb-3">
+          </>
+          )}
+          {activeTab === "categories" && (
+            <><div className="d-flex justify-content-between align-items-center mb-3">
               <h6 className="m-0 fw-semibold">Manage Categories</h6>
-              <Button size="sm" onClick={openCreateCategoryModal}>Add Category</Button>
+              <button type="button" className="btn-admin-outline btn-admin-sm" onClick={openCreateCategoryModal}>Add Category</button>
             </div>
-            <Table responsive hover className="admin-table">
+            <Table responsive hover className="modern-table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -447,13 +462,21 @@ function BlogDashboard() {
                       <td>{category.slug || "-"}</td>
                       <td>{category.description || "-"}</td>
                       <td>
-                        <div className="d-flex gap-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => openEditCategoryModal(category)}>
+                        <div className="table-actions">
+                          <button
+                            type="button"
+                            className="btn-admin-outline btn-admin-sm"
+                            onClick={() => openEditCategoryModal(category)}
+                          >
                             Edit
-                          </Button>
-                          <Button size="sm" variant="outline-danger" onClick={() => handleDeleteCategory(category.id)}>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-admin-outline btn-admin-sm"
+                            onClick={() => handleDeleteCategory(category.id)}
+                          >
                             Delete
-                          </Button>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -465,13 +488,14 @@ function BlogDashboard() {
                 )}
               </tbody>
             </Table>
-          </Tab>
-          <Tab eventKey="tags" title="Tags">
-            <div className="d-flex justify-content-between align-items-center mb-3">
+          </>
+          )}
+          {activeTab === "tags" && (
+            <><div className="d-flex justify-content-between align-items-center mb-3">
               <h6 className="m-0 fw-semibold">Manage Tags</h6>
-              <Button size="sm" onClick={openCreateTagModal}>Add Tag</Button>
+              <button type="button" className="btn-admin-outline btn-admin-sm" onClick={openCreateTagModal}>Add Tag</button>
             </div>
-            <Table responsive hover className="admin-table">
+            <Table responsive hover className="modern-table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -486,13 +510,21 @@ function BlogDashboard() {
                       <td>{tag.name || "-"}</td>
                       <td>{tag.slug || "-"}</td>
                       <td>
-                        <div className="d-flex gap-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => openEditTagModal(tag)}>
+                        <div className="table-actions">
+                          <button
+                            type="button"
+                            className="btn-admin-outline btn-admin-sm"
+                            onClick={() => openEditTagModal(tag)}
+                          >
                             Edit
-                          </Button>
-                          <Button size="sm" variant="outline-danger" onClick={() => handleDeleteTag(tag.id)}>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-admin-outline btn-admin-sm"
+                            onClick={() => handleDeleteTag(tag.id)}
+                          >
                             Delete
-                          </Button>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -504,8 +536,9 @@ function BlogDashboard() {
                 )}
               </tbody>
             </Table>
-          </Tab>
-        </Tabs>
+          </>
+          )}
+        </div>
       </div>
 
       <Modal show={showCategoryModal} onHide={closeCategoryModal} centered>
@@ -550,8 +583,8 @@ function BlogDashboard() {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="outline-secondary" onClick={closeCategoryModal}>Cancel</Button>
-            <Button type="submit">{editingCategoryId ? "Update" : "Create"}</Button>
+            <button type="button" className="btn-admin-outline" onClick={closeCategoryModal}>Cancel</button>
+            <button type="submit" className="btn-admin-outline">{editingCategoryId ? "Update" : "Create"}</button>
           </Modal.Footer>
         </Form>
       </Modal>
@@ -588,13 +621,14 @@ function BlogDashboard() {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="outline-secondary" onClick={closeTagModal}>Cancel</Button>
-            <Button type="submit">{editingTagId ? "Update" : "Create"}</Button>
+            <button type="button" className="btn-admin-outline" onClick={closeTagModal}>Cancel</button>
+            <button type="submit" className="btn-admin-outline">{editingTagId ? "Update" : "Create"}</button>
           </Modal.Footer>
         </Form>
       </Modal>
-    </Container>
+    </div>
   );
 }
 
 export default BlogDashboard;
+

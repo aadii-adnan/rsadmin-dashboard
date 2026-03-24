@@ -1460,7 +1460,6 @@ button,select {
     -moz-user-select: none;
     user-select: none;
     background-color: transparent;
-    border: 1px solid #c36;
     padding: .5rem 1rem;
     font-size: 1rem;
     border-radius: 3px;
@@ -1473,7 +1472,6 @@ button,select {
 
 [type=button]:focus,[type=button]:hover,[type=submit]:focus,[type=submit]:hover,button:focus,button:hover {
     color: #fff;
-    background-color: #c36;
     text-decoration: none
 }
 

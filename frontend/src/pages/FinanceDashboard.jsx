@@ -226,26 +226,6 @@ function FinancialDashboard() {
 
   return (
     <div className="finance-dashboard-bg">
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
-        <a
-          href="/admin-dashboard/"
-          style={{
-            background: "#447e9b",
-            color: "#fff",
-            padding: "10px 22px",
-            borderRadius: "6px",
-            textDecoration: "none",
-            fontWeight: "bold",
-            fontSize: "1rem",
-            boxShadow: "0 2px 8px rgba(68,126,155,0.08)",
-            transition: "background 0.2s"
-          }}
-          onMouseOver={e => (e.currentTarget.style.background = "#20435c")}
-          onMouseOut={e => (e.currentTarget.style.background = "#447e9b")}
-        >
-          Go to Admin Dashboard
-        </a>
-      </div>
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
         <Form.Select
           style={{ width: 220, maxWidth: "100%" }}

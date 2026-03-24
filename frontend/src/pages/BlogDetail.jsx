@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Col,
@@ -86,6 +86,40 @@ function BlogDetail() {
       </Container>
     );
   }
+
+  /* ── Dynamic Link Parsing ── */
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (!post || !contentRef.current) return;
+
+    const anchors = contentRef.current.querySelectorAll("a");
+    const currentHost = window.location.hostname;
+
+    anchors.forEach((anchor) => {
+      try {
+        const href = anchor.getAttribute("href") || "";
+        // Relative paths or same-host links are internal
+        const isRelative = href.startsWith("/") || href.startsWith("#") || href.startsWith(".");
+        let isInternal = isRelative;
+
+        if (!isRelative && href.startsWith("http")) {
+          const linkUrl = new URL(href);
+          isInternal = linkUrl.hostname === currentHost;
+        }
+
+        if (isInternal) {
+          anchor.setAttribute("target", "_blank");
+          anchor.setAttribute("rel", "noopener noreferrer");
+        } else {
+          anchor.setAttribute("rel", "nofollow noopener noreferrer");
+        }
+      } catch {
+        // Malformed URL — treat as external for safety
+        anchor.setAttribute("rel", "nofollow noopener noreferrer");
+      }
+    });
+  }, [post]);
 
   if (!post) {
     return (
@@ -272,6 +306,7 @@ function BlogDetail() {
           <Col lg={8} className="mx-auto pe-lg-5 mb-5 mb-lg-0">
             <article>
               <section
+                ref={contentRef}
                 className="blog-content"
                 dangerouslySetInnerHTML={{ __html: post.content || "" }}
               />

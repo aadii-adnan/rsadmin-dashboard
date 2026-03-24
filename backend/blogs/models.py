@@ -27,6 +27,7 @@ class BlogPost(models.Model):
     content = models.TextField()
     featured_image = models.ImageField(upload_to='blog/images/', blank=True, null=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    reading_time = models.IntegerField(default=5)
 
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     tags = models.ManyToManyField(Tag, blank=True)

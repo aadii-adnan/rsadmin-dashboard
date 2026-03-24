@@ -11,7 +11,8 @@
     #branding {
         display: flex;
         align-items: center;
-        gap: 24px;
+        gap: 16px;
+        flex-wrap: wrap;
     }
     #branding img {
         height: 50px;
@@ -20,24 +21,7 @@
         border-radius: 5px;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
     }
-    #finance-dashboard-btn {
-        background: #193747;
-        color: #fff;
-        padding: 10px 20px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-weight: bold;
-        font-size: 1rem;
-        box-shadow: 0 2px 8px rgba(68,126,155,0.08);
-        transition: background 0.2s;
-        margin-left: 16px;
-        display: inline-block;
-    }
-    #finance-dashboard-btn:hover {
-        background: #20435c;
-        color: #fff;
-    }
-    #blogs-dashboard-btn {
+    #finance-dashboard-btn, #blogs-dashboard-btn {
         background: #193747;
         color: #fff;
         padding: 10px 20px;
@@ -48,21 +32,49 @@
         box-shadow: 0 2px 8px rgba(68,126,155,0.08);
         transition: background 0.2s;
         display: inline-block;
+        text-align: center;
+        box-sizing: border-box;
     }
-    #blogs-dashboard-btn:hover {
+    #finance-dashboard-btn:hover, #blogs-dashboard-btn:hover {
         background: #20435c;
         color: #fff;
+    }
+    .dashboard-links {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        #branding {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 5px;
+        }
+        .dashboard-links {
+            flex-direction: column;
+            width: 100%;
+            gap: 10px;
+        }
+        #finance-dashboard-btn, #blogs-dashboard-btn {
+            width: 100%;
+            display: block;
+        }
     }
 </style>
 <div id="branding">
     <img src="{% static 'images/logo.webp' %}" alt="Site Logo">
     {% if request.user.is_authenticated and request.user.is_superuser and not request.user.is_manager and not request.user.is_supplier %}
-        <a id="finance-dashboard-btn" href="{% url 'finance-jwt-login' %}">
-            Finance Dashboard
-        </a>
-        <a id="blogs-dashboard-btn" href="{% url 'blogs-jwt-login' %}" style="margin-left: 15px;">
-            Blogs Dashboard
-        </a>
+        <div class="dashboard-links">
+            <a id="finance-dashboard-btn" href="{% url 'finance-jwt-login' %}">
+                Finance Dashboard
+            </a>
+            <a id="blogs-dashboard-btn" href="{% url 'blogs-jwt-login' %}">
+                Blogs Dashboard
+            </a>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

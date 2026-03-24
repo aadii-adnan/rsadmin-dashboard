@@ -1,0 +1,38 @@
+.admin-navbar {
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 15px 0;
+  border-bottom: 2px solid var(--primary-dark, #010659);
+}
+.admin-navbar-brand {
+  color: var(--primary-dark, #010659) !important;
+  font-weight: 800;
+  font-family: 'Urbanist', sans-serif;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-nav-link {
+  color: var(--text-grey, #666666) !important;
+  font-weight: 600;
+  font-family: 'Urbanist', sans-serif;
+  margin: 0 10px;
+  transition: all 0.3s ease;
+}
+.admin-nav-link:hover, .admin-nav-link.active {
+  color: var(--primary-light, rgb(40, 144, 205)) !important;
+}
+#django-admin-btn {
+  background-color: var(--primary-dark, #010659);
+  color: #ffffff !important;
+  border-radius: 50px;
+  padding: 8px 20px !important;
+  font-weight: 600;
+  margin-left: 15px;
+  transition: background-color 0.3s ease;
+}
+#django-admin-btn:hover {
+  background-color: var(--primary-light, rgb(40, 144, 205));
+  color: #ffffff !important;
+}

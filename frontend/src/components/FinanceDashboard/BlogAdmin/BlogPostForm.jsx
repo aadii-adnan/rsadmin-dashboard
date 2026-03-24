@@ -1,7 +1,6 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Button,
   Col,
   Container,
   Form,
@@ -45,6 +44,16 @@ function toDatetimeLocalValue(isoValue) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+function slugify(value = "") {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
 function BlogPostForm() {
   useBlogJwtFromUrl();
   const { id } = useParams();
@@ -70,10 +79,13 @@ function BlogPostForm() {
     category: "",
     tags: [],
     status: "draft",
+    reading_time: "",
     published_date: "",
     content: "",
     featured_image: null,
   });
+
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
   const [existingFeaturedImage, setExistingFeaturedImage] = useState("");
 
@@ -127,10 +139,7 @@ function BlogPostForm() {
         const allFaqs = toListPayload(faqData);
         const linkedFaqs = allFaqs.filter((faq) => String(faq.post) === String(id));
 
-        const normalizedStatus =
-          post.status === "publish" && post.published_date && new Date(post.published_date) > new Date()
-            ? "schedule"
-            : post.status || "draft";
+        const normalizedStatus = post.status || "draft";
 
         setFormData({
           title: post.title || "",
@@ -141,6 +150,10 @@ function BlogPostForm() {
           category: post.category || "",
           tags: Array.isArray(post.tags) ? post.tags : [],
           status: normalizedStatus,
+          reading_time:
+            post.reading_time !== null && post.reading_time !== undefined
+              ? String(post.reading_time)
+              : "",
           published_date: toDatetimeLocalValue(post.published_date),
           content: post.content || "",
           featured_image: null,
@@ -175,8 +188,34 @@ function BlogPostForm() {
     fetchPostData();
   }, [navigate, id, isEditMode]);
 
+  useEffect(() => {
+    if (isEditMode) {
+      return;
+    }
+
+    setFormData((prev) => {
+      const generatedSlug = slugify(prev.title || "");
+
+      // Respect manual slug edits, but keep auto behavior when slug is untouched or empty.
+      if (isSlugManuallyEdited && prev.slug) {
+        return prev;
+      }
+
+      if (prev.slug === generatedSlug) {
+        return prev;
+      }
+
+      return { ...prev, slug: generatedSlug };
+    });
+  }, [formData.title, isEditMode, isSlugManuallyEdited]);
+
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+
+    if (name === "slug") {
+      setIsSlugManuallyEdited(true);
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -200,8 +239,8 @@ function BlogPostForm() {
     payload.append("canonical_url", formData.canonical_url || "");
     payload.append("content", formData.content || "");
 
-    const apiStatus = formData.status === "schedule" ? "publish" : formData.status;
-    payload.append("status", apiStatus || "draft");
+    payload.append("status", formData.status || "draft");
+    payload.append("reading_time", formData.reading_time ? String(formData.reading_time) : "");
 
     if (formData.published_date) {
       payload.append("published_date", new Date(formData.published_date).toISOString());
@@ -364,7 +403,7 @@ function BlogPostForm() {
     <Container fluid className="admin-dashboard-wrapper py-4">
       {/* Header Area */}
       <div className="d-flex align-items-center gap-3 mb-4">
-        <Link to="/blog-admin" className="text-muted text-decoration-none fw-semibold border rounded px-3 py-2 bg-white">
+        <Link to="/blog-admin" className="btn-admin-outline">
           &larr; Back to Dashboard
         </Link>
         <h2 style={{ color: 'var(--primary-dark)' }} className="fw-bold m-0">{titleMode}</h2>
@@ -416,12 +455,15 @@ function BlogPostForm() {
                     onEditorChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
                     init={{
                       plugins: [
-                        'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount'
+                        'code', 'image', 'imagetools', 'link', 'lists', 'help', 'wordcount'
                       ],
                       height: 480,
                       menubar: true,
                       toolbar:
-                        "undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | removeformat | code | image",
+                        "code | image link | undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | removeformat",
+                      image_title: true,
+                      automatic_uploads: true,
+                      image_advtab: true,
                     }}
                   />
                 </Form.Group>
@@ -470,9 +512,9 @@ function BlogPostForm() {
                 <div className="admin-card mt-4">
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="admin-card-title border-0 mb-0 pb-0">Manage FAQs</h5>
-                    <Button variant="outline-primary" size="sm" onClick={addFaq}>
+                    <button type="button" className="btn-admin-outline btn-admin-sm" onClick={addFaq}>
                       + Add FAQ
-                    </Button>
+                    </button>
                   </div>
 
                   {faqs.length ? (
@@ -521,9 +563,9 @@ function BlogPostForm() {
                               />
                             </td>
                             <td>
-                              <Button variant="outline-danger" size="sm" onClick={() => removeFaq(index)}>
+                              <button type="button" className="btn-admin-outline btn-admin-sm" onClick={() => removeFaq(index)}>
                                 Remove
-                              </Button>
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -534,9 +576,9 @@ function BlogPostForm() {
                   )}
 
                   <div className="d-flex justify-content-end mt-3 border-top pt-3">
-                    <Button variant="secondary" onClick={handleSaveFaqs} disabled={savingFaqs}>
+                    <button type="button" className="btn-admin-outline" onClick={handleSaveFaqs} disabled={savingFaqs}>
                       {savingFaqs ? "Saving FAQs..." : "Save FAQs"}
-                    </Button>
+                    </button>
                   </div>
                 </div>
               ) : null}
@@ -555,7 +597,6 @@ function BlogPostForm() {
                   >
                     <option value="draft">Draft</option>
                     <option value="publish">Publish</option>
-                    <option value="schedule">Schedule</option>
                   </Form.Select>
                 </Form.Group>
                 <Form.Group className="mb-3">
@@ -567,10 +608,21 @@ function BlogPostForm() {
                     onChange={handleInputChange}
                   />
                 </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Reading Time (minutes)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    min="0"
+                    name="reading_time"
+                    value={formData.reading_time}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 5"
+                  />
+                </Form.Group>
                 
-                <Button type="submit" className="btn-modern w-100 mt-3" disabled={saving}>
+                <button type="submit" className="btn-admin-outline w-100 mt-3 justify-content-center" disabled={saving}>
                   {saving ? "Saving..." : "Save Post"}
-                </Button>
+                </button>
               </div>
 
               <div className="admin-card mt-4">
@@ -614,7 +666,7 @@ function BlogPostForm() {
                   {existingFeaturedImage && !formData.featured_image ? (
                     <div className="mt-3 text-center">
                       <Form.Text className="text-muted d-block mb-2">Current Image:</Form.Text>
-                      <img src={existingFeaturedImage} alt="Featured" style={{ maxWidth: "100%", borderRadius: "8px", border: "1px solid #eaeaea" }} />
+                      <img src={existingFeaturedImage} alt="Featured" className="featured-image-preview" />
                     </div>
                   ) : null}
                 </Form.Group>

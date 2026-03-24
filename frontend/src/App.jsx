@@ -22,6 +22,7 @@ import BlogList from "./pages/BlogList";
 import BlogDetail from "./pages/BlogDetail";
 import BlogDashboard from "./components/FinanceDashboard/BlogAdmin/BlogDashboard";
 import BlogPostForm from "./components/FinanceDashboard/BlogAdmin/BlogPostForm";
+import AdminLayout from "./components/AdminLayout/AdminLayout";
 import { useLocation } from "react-router-dom";
 
 function Logout() {
@@ -45,6 +46,7 @@ function App() {
       <CookieBanner />
       {!hideHeaderFooter && <Header />}   
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
         <Route path="/book/:slug" element={<BookingForm />} />
@@ -64,10 +66,16 @@ function App() {
         <Route path="/dublin-airport-parking-offer" element={<Home />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/finance-dashboard" element={<FinanceDashboard />} />
-        <Route path="/blog-admin" element={<BlogDashboard />} />
-        <Route path="/blog-admin/create" element={<BlogPostForm />} />
-        <Route path="/blog-admin/edit/:id" element={<BlogPostForm />} />
+
+        {/* Admin Routes — wrapped in AdminLayout for persistent AdminNavbar */}
+        <Route element={<AdminLayout />}>
+          <Route path="/finance-dashboard" element={<FinanceDashboard />} />
+          <Route path="/blog-admin" element={<BlogDashboard />} />
+          <Route path="/blog-admin/create" element={<BlogPostForm />} />
+          <Route path="/blog-admin/edit/:id" element={<BlogPostForm />} />
+        </Route>
+
+        {/* Legacy redirects */}
         <Route path="/finance-dashboard/blogs" element={<Navigate to="/blog-admin" replace />} />
         <Route path="/finance-dashboard/blogs/create" element={<Navigate to="/blog-admin/create" replace />} />
         <Route path="/finance-dashboard/blogs/edit/:id" element={<Navigate to="/blog-admin" replace />} />

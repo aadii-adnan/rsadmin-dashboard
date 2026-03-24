@@ -91,7 +91,37 @@ class AdminBlogPostSerializer(serializers.ModelSerializer):
         many=True,
         required=False,
     )
+    author_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_author_name(self, obj):
+        if obj.author:
+            return obj.author.get_full_name() or getattr(obj.author, "username", str(obj.author))
+        return "Unknown"
 
     class Meta:
         model = BlogPost
-        fields = "__all__"
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "content",
+            "featured_image",
+            "author",
+            "author_name",
+            "reading_time",
+            "category",
+            "tags",
+            "status",
+            "published_date",
+            "created_at",
+            "updated_date",
+            "meta_title",
+            "meta_description",
+            "canonical_url",
+            "open_graph_image",
+            "robots_index",
+            "robots_follow",
+            "robots_noarchive",
+            "robots_nosnippet",
+            "max_snippet",
+        ]

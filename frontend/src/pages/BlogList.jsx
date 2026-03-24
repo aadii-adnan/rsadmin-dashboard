@@ -174,6 +174,29 @@ function BlogList() {
 
   const isLoading = loadingPosts || loadingCategories;
 
+  /* ── Map backend API pagination URLs to frontend canonical URLs ── */
+  const paginationNext = useMemo(() => {
+    if (!nextPageUrl) return null;
+    try {
+      const apiUrl = new URL(nextPageUrl);
+      const pageParam = apiUrl.searchParams.get("page");
+      return pageParam ? `${SITE_URL}/blog?page=${pageParam}` : `${SITE_URL}/blog`;
+    } catch {
+      return null;
+    }
+  }, [nextPageUrl]);
+
+  const paginationPrev = useMemo(() => {
+    if (!prevPageUrl) return null;
+    try {
+      const apiUrl = new URL(prevPageUrl);
+      const pageParam = apiUrl.searchParams.get("page");
+      return pageParam ? `${SITE_URL}/blog?page=${pageParam}` : `${SITE_URL}/blog`;
+    } catch {
+      return null;
+    }
+  }, [prevPageUrl]);
+
   /* ── JSON-LD Structured Data ── */
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -208,8 +231,8 @@ function BlogList() {
           content="Discover expert travel tips, Dublin airport parking guides, and parking insights from RS Express Parking. Stay informed for a stress-free journey."
         />
         <link rel="canonical" href={`${SITE_URL}/blog`} />
-        {nextPageUrl && <link rel="next" href={nextPageUrl} />}
-        {prevPageUrl && <link rel="prev" href={prevPageUrl} />}
+        {paginationNext && <link rel="next" href={paginationNext} />}
+        {paginationPrev && <link rel="prev" href={paginationPrev} />}
         <script type="application/ld+json">
           {JSON.stringify(organizationSchema)}
         </script>
