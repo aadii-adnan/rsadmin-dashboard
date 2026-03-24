@@ -367,7 +367,7 @@ function BlogDetail() {
             <div className="promo-sidebar sticky-top" style={{ top: '2rem' }}>
               <h4>Need Reliable Airport Parking?</h4>
               <p>Secure your spot today with RS Express Parking and enjoy a hassle-free travel experience.</p>
-              <Link to="/booking" className="btn-modern mt-3 w-100">
+              <Link to="/" className="btn-modern mt-3 w-100">
                 BOOK YOUR PARKING NOW
               </Link>
             </div>
