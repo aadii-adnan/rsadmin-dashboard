@@ -3,7 +3,7 @@ from django.conf import settings
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     description = models.TextField(blank=True)
 
     def __str__(self):
@@ -11,7 +11,7 @@ class Category(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -23,7 +23,7 @@ class BlogPost(models.Model):
     )
 
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     content = models.TextField()
     featured_image = models.ImageField(upload_to='blog/images/', blank=True, null=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
