@@ -15,6 +15,7 @@ import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
+const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY || "";
 
 function toListPayload(data) {
   if (Array.isArray(data)) {
@@ -450,7 +451,7 @@ function BlogPostForm() {
                 <Form.Group>
                   <Form.Label className="fw-semibold">Content</Form.Label>
                   <Editor
-                    apiKey='2enlcvv4op73db4udbofaimle7u3a70z5xwwifzfcwxop5ye'
+                    apiKey={TINYMCE_API_KEY}
                     value={formData.content}
                     onEditorChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
                     init={{
