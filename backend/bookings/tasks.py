@@ -12,7 +12,7 @@ def process_bookings_for_completion():
     Periodic task: Find bookings where return_time + 15min has passed,
     status is not 'Completed', and completion_email_sent is False.
     Mark as completed and send thank you email.
-    Exclude supplier bookings - no emails sent for vendor bookings.
+    Supplier bookings will be marked as Completed but no emails will be sent to them.
     """
     now = timezone.now()
     threshold = now - timedelta(hours=3)
@@ -20,12 +20,10 @@ def process_bookings_for_completion():
     started_status = Status.objects.get(name="Started", type='booking')
 
     # Only process bookings that are not completed and haven't had the email sent
-    # Exclude supplier bookings
     bookings = Booking.objects.filter(
         return_time__lte=threshold,
         completion_email_sent=False,
-        status=started_status,
-        supplier__isnull=True  # Exclude supplier bookings
+        status=started_status
     )
 
     for booking in bookings:
