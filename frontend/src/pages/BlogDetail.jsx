@@ -71,22 +71,6 @@ function BlogDetail() {
     };
   }, [slug]);
 
-  if (loading) {
-    return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" role="status" />
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container className="py-5">
-        <Alert variant="danger">{error}</Alert>
-      </Container>
-    );
-  }
-
   /* ── Dynamic Link Parsing ── */
   const contentRef = useRef(null);
 
@@ -120,6 +104,22 @@ function BlogDetail() {
       }
     });
   }, [post]);
+
+  if (loading) {
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" role="status" />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="py-5">
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
 
   if (!post) {
     return (
