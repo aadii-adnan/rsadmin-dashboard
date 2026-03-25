@@ -308,7 +308,7 @@ function BlogDashboard() {
   return (
     <div className="admin-dashboard-wrapper">
       {/* Header Area */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 px-2">
         <h2 className="admin-page-title m-0">Blog Management</h2>
         <Link to="/blog-admin/create" className="btn-admin-outline"> + Add New Post </Link>
       </div>
@@ -395,7 +395,7 @@ function BlogDashboard() {
                     <th>Status</th>
                     <th>Author</th>
                     <th>Published At</th>
-                    <th style={{ width: "170px" }}>Actions</th>
+                    <th style={{ width: "260px" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -426,6 +426,14 @@ function BlogDashboard() {
                               onClick={() => handleDeletePost(post.id)}
                             >
                               Delete
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-admin-outline btn-admin-sm"
+                              disabled={post.status !== "publish" || !post.slug}
+                              onClick={() => window.open(`/blog/${post.slug}`, "_blank", "noopener,noreferrer")}
+                            >
+                              View
                             </button>
                           </div>
                         </td>

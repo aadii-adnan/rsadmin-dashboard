@@ -2,7 +2,7 @@
 .admin-dashboard-wrapper {
   background-color: var(--bg-blue-light, #EEF2F6); /* Matches finance/brand soft background */
   min-height: 100vh;
-  padding: 3.25rem 5.5%; /* More breathing room from viewport edges */
+  padding: 3.25rem 2%; /* More breathing room from viewport edges */
   font-family: 'Urbanist', sans-serif;
 }
 .admin-page-title {
@@ -53,6 +53,14 @@
   color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(1, 6, 89, 0.2);
+}
+
+.btn-admin-outline:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 .btn-admin-primary:active,
