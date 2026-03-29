@@ -2,6 +2,18 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../../pages/Blog.css";
 
+export function BlogCardSkeleton() {
+  return (
+    <div className="blog-card-flat">
+      <div className="shimmer-wrapper shimmer-block shimmer-img" />
+      <div className="shimmer-wrapper shimmer-block shimmer-title" />
+      <div className="shimmer-wrapper shimmer-block shimmer-text short" style={{ marginBottom: "1rem" }} />
+      <div className="shimmer-wrapper shimmer-block shimmer-text" />
+      <div className="shimmer-wrapper shimmer-block shimmer-text" style={{ width: "80%" }} />
+    </div>
+  );
+}
+
 function BlogCard({ title, slug, featured_image, excerpt, published_date }) {
   const publishedLabel = published_date
     ? new Date(published_date).toLocaleDateString(undefined, {

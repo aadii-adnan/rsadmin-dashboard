@@ -277,3 +277,60 @@
   color: var(--primary-light, rgb(40, 144, 205));
   text-decoration: underline;
 }
+
+/* ── Shimmer & Skeleton Loaders ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-wrapper {
+  animation: shimmer 1.6s infinite linear;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+}
+
+.shimmer-block {
+  border-radius: 4px;
+  display: block;
+}
+
+.shimmer-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+  margin-bottom: 1.2rem;
+}
+
+.shimmer-img-cover {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border-radius: 0;
+}
+
+.shimmer-title {
+  height: 28px;
+  width: 85%;
+  margin-bottom: 0.75rem;
+}
+
+.shimmer-text {
+  height: 16px;
+  width: 100%;
+  margin-bottom: 0.6rem;
+}
+
+.shimmer-text.short {
+  width: 40%;
+}
+
+.shimmer-pill {
+  width: 90px;
+  height: 32px;
+  border-radius: 50px;
+}

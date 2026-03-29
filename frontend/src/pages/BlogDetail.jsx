@@ -9,11 +9,82 @@ import {
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
 import FAQSection from "../components/HomePage/FAQSection";
+import { BlogCardSkeleton } from "../components/Blog/BlogCard";
 import "./Blog.css"; // Ensure styling is applied
 
 const BLOG_PUBLIC_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/public`;
 const SITE_URL = "https://rsexpressparking.com";
 const LOGO_URL = `${SITE_URL}/assets/logo.png`;
+
+function BlogDetailSkeleton() {
+  return (
+    <div className="blog-detail-container">
+      {/* Split Header */}
+      <div className="container-fluid p-0">
+        <Row className="g-0 blog-detail-header-split">
+          <Col lg={6}>
+            <div className="blog-detail-text-side">
+              <div className="shimmer-wrapper shimmer-block shimmer-pill badge-pill" style={{ marginBottom: "1rem" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ height: "36px", width: "90%", marginBottom: "1.5rem" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ height: "36px", width: "60%", marginBottom: "2rem" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-text" />
+              <div className="shimmer-wrapper shimmer-block shimmer-text" />
+              <div className="shimmer-wrapper shimmer-block shimmer-text short" style={{ marginBottom: "1.5rem" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-text" style={{ width: "30%" }} />
+            </div>
+          </Col>
+          <Col lg={6}>
+            <div className="blog-detail-image-side" style={{ height: "100%" }}>
+              <div className="shimmer-wrapper shimmer-block shimmer-img-cover" />
+            </div>
+          </Col>
+        </Row>
+      </div>
+
+      {/* Body Section */}
+      <Container className="my-5">
+        <Row>
+          <Col lg={8}>
+            <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ width: "40%", marginBottom: "2rem" }} />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="shimmer-wrapper shimmer-block shimmer-text" style={{ marginBottom: "0.8rem" }} />
+            ))}
+            <br />
+            <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ width: "30%", marginTop: "2rem", marginBottom: "1rem" }} />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="shimmer-wrapper shimmer-block shimmer-text" style={{ marginBottom: "0.8rem" }} />
+            ))}
+            <div className="shimmer-wrapper shimmer-block shimmer-text short" />
+          </Col>
+          
+          {/* Promo Sidebar Skeleton */}
+          <Col lg={4}>
+            <div className="promo-sidebar sticky-top" style={{ top: "2rem" }}>
+              <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ marginBottom: "1rem", margin: "0 auto 1rem", width: "80%" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-text" style={{ margin: "0 auto 0.5rem", width: "90%" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-text short" style={{ margin: "0 auto 1.5rem", width: "60%" }} />
+              <div className="shimmer-wrapper shimmer-block" style={{ height: "45px", width: "100%", borderRadius: "8px" }} />
+            </div>
+          </Col>
+        </Row>
+      </Container>
+
+      {/* Related Blogs Section Skeleton */}
+      <section className="related-blogs-wrapper py-5">
+        <Container>
+          <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ width: "30%", marginBottom: "2rem" }} />
+          <Row className="g-4 mt-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Col key={`skel-r-${i}`} lg={4} md={6}>
+                <BlogCardSkeleton />
+              </Col>
+            ))}
+          </Row>
+        </Container>
+      </section>
+    </div>
+  );
+}
 
 function BlogDetail() {
   const { slug } = useParams();
@@ -112,11 +183,7 @@ function BlogDetail() {
   }, [post]);
 
   if (loading) {
-    return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" role="status" />
-      </Container>
-    );
+    return <BlogDetailSkeleton />;
   }
 
   if (error) {

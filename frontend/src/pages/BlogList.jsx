@@ -10,7 +10,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { Helmet } from "react-helmet-async";
-import BlogCard from "../components/Blog/BlogCard";
+import BlogCard, { BlogCardSkeleton } from "../components/Blog/BlogCard";
 import "./Blog.css"; // Import the strict Brand UI styles
 
 const BLOG_PUBLIC_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/public`;
@@ -256,9 +256,13 @@ function BlogList() {
           {error ? <Alert variant="danger">{error}</Alert> : null}
 
           {isLoading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" role="status" />
-            </div>
+            <Row className="g-5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Col key={i} lg={4} md={6} sm={12}>
+                  <BlogCardSkeleton />
+                </Col>
+              ))}
+            </Row>
           ) : (
             <>
               <Row className="g-5">

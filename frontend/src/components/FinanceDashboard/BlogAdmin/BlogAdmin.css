@@ -327,3 +327,46 @@
     padding: 1.35rem;
   }
 }
+
+/* ── Shimmer & Skeleton Loaders ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-wrapper {
+  animation: shimmer 1.6s infinite linear;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e9ebf0 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+}
+
+.shimmer-block {
+  border-radius: 4px;
+  display: block;
+}
+
+.shimmer-title {
+  height: 24px;
+  width: 75%;
+  margin-bottom: 0.5rem;
+}
+
+.shimmer-text {
+  height: 16px;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.shimmer-text.short {
+  width: 40%;
+}
+
+.shimmer-pill {
+  width: 80px;
+  height: 28px;
+  border-radius: 50px;
+}

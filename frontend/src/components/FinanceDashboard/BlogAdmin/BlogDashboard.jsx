@@ -16,6 +16,25 @@ import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
 
+function TableSkeletonRow() {
+  return (
+    <tr>
+      <td><div className="shimmer-wrapper shimmer-block shimmer-title" style={{ width: "80%", marginBottom: 0 }} /></td>
+      <td><div className="shimmer-wrapper shimmer-block shimmer-text short" style={{ marginBottom: 0 }} /></td>
+      <td><div className="shimmer-wrapper shimmer-block shimmer-pill" style={{ marginBottom: 0 }} /></td>
+      <td><div className="shimmer-wrapper shimmer-block shimmer-text short" style={{ marginBottom: 0 }} /></td>
+      <td><div className="shimmer-wrapper shimmer-block shimmer-text" style={{ width: "60%", marginBottom: 0 }} /></td>
+      <td>
+        <div className="table-actions">
+          <div className="shimmer-wrapper shimmer-block shimmer-pill" style={{ width: "60px", marginBottom: 0 }} />
+          <div className="shimmer-wrapper shimmer-block shimmer-pill" style={{ width: "60px", marginBottom: 0 }} />
+          <div className="shimmer-wrapper shimmer-block shimmer-pill" style={{ width: "60px", marginBottom: 0 }} />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function toListPayload(data) {
   if (Array.isArray(data)) {
     return data;
@@ -35,6 +54,18 @@ function slugify(value = "") {
     .substring(0, 255);
 }
 
+function formatDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString();
+}
 
 function BlogDashboard() {
   useBlogJwtFromUrl();
@@ -392,19 +423,6 @@ function BlogDashboard() {
     }
   };
 
-  const formatDateTime = (value) => {
-    if (!value) {
-      return "-";
-    }
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
-
-    return date.toLocaleString();
-  };
-
   return (
     <div className="admin-dashboard-wrapper">
       {/* Header Area */}
@@ -500,28 +518,25 @@ function BlogDashboard() {
         </div>
         <div className="px-4 pb-4">
           {activeTab === "posts" && (
-            <>{loading ? (
-              <div className="text-center py-5">
-                <Spinner animation="border" />
-              </div>
-            ) : (
-              <Table responsive hover className="modern-table mt-3">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Status</th>
-                    <th>Author</th>
-                    <th>Published At</th>
-                    <th style={{ width: "260px" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableRows}
-                </tbody>
-              </Table>
-            )}
-          </>
+            <Table responsive hover className="modern-table mt-3">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Author</th>
+                  <th>Published At</th>
+                  <th style={{ width: "260px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  Array.from({ length: 6 }).map((_, i) => <TableSkeletonRow key={`skel-row-${i}`} />)
+                ) : (
+                  tableRows
+                )}
+              </tbody>
+            </Table>
           )}
           {activeTab === "categories" && (
             <><div className="d-flex justify-content-between align-items-center mb-3">
