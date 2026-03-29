@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Col,
@@ -77,6 +77,7 @@ function BlogPostForm() {
     meta_title: "",
     meta_description: "",
     slug: "",
+    excerpt: "",
     canonical_url: "",
     category: "",
     tags: [],
@@ -148,6 +149,7 @@ function BlogPostForm() {
           meta_title: post.meta_title || "",
           meta_description: post.meta_description || "",
           slug: post.slug || "",
+          excerpt: post.excerpt || "",
           canonical_url: post.canonical_url || "",
           category: post.category || "",
           tags: Array.isArray(post.tags) ? post.tags : [],
@@ -238,6 +240,7 @@ function BlogPostForm() {
     payload.append("meta_title", formData.meta_title || "");
     payload.append("meta_description", formData.meta_description || "");
     payload.append("slug", formData.slug);
+    payload.append("excerpt", formData.excerpt || "");
     payload.append("canonical_url", formData.canonical_url || "");
     payload.append("content", formData.content || "");
 
@@ -449,6 +452,18 @@ function BlogPostForm() {
                     </Form.Group>
                   </Col>
                 </Row>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Excerpt (Short Summary)</Form.Label>
+                  <Form.Control 
+                    as="textarea" 
+                    rows={3} 
+                    name="excerpt"
+                    value={formData.excerpt} 
+                    onChange={handleInputChange} 
+                    placeholder="Write a brief summary for the blog cards..." 
+                    className="filter-input"
+                  />
+                </Form.Group>
                 <Form.Group>
                   <Form.Label className="fw-semibold">Content</Form.Label>
                   <Editor
@@ -491,7 +506,7 @@ function BlogPostForm() {
                         name="canonical_url"
                         value={formData.canonical_url}
                         onChange={handleInputChange}
-                        placeholder="https://example.com/blog/my-post"
+                        placeholder="https://example.com/my-post"
                       />
                     </Form.Group>
                   </Col>

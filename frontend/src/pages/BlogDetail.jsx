@@ -175,7 +175,7 @@ function BlogDetail() {
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": post.canonical_url || `${SITE_URL}/blog/${slug}`,
+      "@id": post.canonical_url || `${SITE_URL}/${slug}`,
     },
   };
 
@@ -208,7 +208,7 @@ function BlogDetail() {
               "@type": "ListItem",
               position: 4,
               name: post.title,
-              item: post.canonical_url || `${SITE_URL}/blog/${slug}`,
+              item: post.canonical_url || `${SITE_URL}/${slug}`,
             },
           ]
         : [
@@ -216,7 +216,7 @@ function BlogDetail() {
               "@type": "ListItem",
               position: 3,
               name: post.title,
-              item: post.canonical_url || `${SITE_URL}/blog/${slug}`,
+              item: post.canonical_url || `${SITE_URL}/${slug}`,
             },
           ]),
     ],
@@ -242,8 +242,8 @@ function BlogDetail() {
   /* ── SEO helper values ── */
   const seoTitle = post.meta_title || post.title;
   const seoDescription =
-    post.meta_description || stripHtmlAndTruncate(post.content, 160);
-  const canonicalUrl = post.canonical_url || `${SITE_URL}/blog/${slug}`;
+    post.meta_description || post.excerpt || stripHtmlAndTruncate(post.content, 160);
+  const canonicalUrl = post.canonical_url || `${SITE_URL}/${slug}`;
   const ogImage = post.open_graph_image || post.featured_image || "";
 
   return (
@@ -388,7 +388,7 @@ function BlogDetail() {
             <Row className="g-4 mt-3">
               {relatedPosts.map((rPost) => (
                 <Col key={rPost.id || rPost.slug} lg={4} md={6}>
-                  <Link to={`/blog/${rPost.slug}`} className="text-decoration-none">
+                  <Link to={`/${rPost.slug}`} className="text-decoration-none">
                     <div className="related-blog-card">
                       {rPost.featured_image ? (
                         <img src={rPost.featured_image} alt={rPost.title} className="related-blog-img" />

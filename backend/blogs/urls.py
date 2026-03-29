@@ -6,6 +6,7 @@ from .views import (
     BlogFAQViewSet,
     BlogPostViewSet,
     CategoryViewSet,
+    ImportWordPressView,
     PublicBlogDetailView,
     PublicBlogListView,
     PublicCategoryListView,
@@ -27,5 +28,7 @@ urlpatterns = [
     path("public/categories/", PublicCategoryListView.as_view(), name="public-category-list"),
     path("public/tags/", PublicTagListView.as_view(), name="public-tag-list"),
     path("public/redirects/", ActiveRedirectsView.as_view(), name="public-active-redirects"),
+    path("admin/import-wordpress/", ImportWordPressView.as_view(), name="import-wordpress"),
     path("admin/", include(router.urls)),
 ]
+

@@ -25,6 +25,7 @@ class BlogPost(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     content = models.TextField()
+    excerpt = models.TextField(blank=True, null=True)
     featured_image = models.ImageField(upload_to='blog/images/', blank=True, null=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     reading_time = models.IntegerField(default=5)

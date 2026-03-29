@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Col,
@@ -9,6 +9,7 @@ import {
   Table,
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
+import { FaUpload } from "react-icons/fa";
 import customFetch from "../../../auth/fetch";
 import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
@@ -45,7 +46,9 @@ function BlogDashboard() {
   const [tags, setTags] = useState([]);
 
   const [loading, setLoading] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -292,6 +295,46 @@ function BlogDashboard() {
     }
   };
 
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await customFetch(`${BLOG_API_BASE}/import-wordpress/`, {
+        method: "POST",
+        body: formData,
+        useFinanceJwt: true,
+      });
+
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response?.ok) {
+        throw new Error(data?.message || data?.detail || "WordPress import failed.");
+      }
+
+      alert(data?.message || "WordPress import completed successfully.");
+    } catch (err) {
+      alert(err.message || "WordPress import failed.");
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = null;
+      }
+      fetchAllData();
+    }
+  };
+
   const formatDateTime = (value) => {
     if (!value) {
       return "-";
@@ -310,7 +353,25 @@ function BlogDashboard() {
       {/* Header Area */}
       <div className="d-flex justify-content-between align-items-center mb-4 px-2">
         <h2 className="admin-page-title m-0">Blog Management</h2>
-        <Link to="/blog-admin/create" className="btn-admin-outline"> + Add New Post </Link>
+        <div className="header-actions">
+          <input
+            type="file"
+            accept=".xml"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+          <button
+            type="button"
+            className="btn-admin-outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+          >
+            <FaUpload />
+            {isImporting ? "Importing... Please wait" : "Import Wordpress"}
+          </button>
+          <Link to="/blog-admin/create" className="btn-admin-outline"> + Add New Post </Link>
+        </div>
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
@@ -431,7 +492,7 @@ function BlogDashboard() {
                               type="button"
                               className="btn-admin-outline btn-admin-sm"
                               disabled={post.status !== "publish" || !post.slug}
-                              onClick={() => window.open(`/blog/${post.slug}`, "_blank", "noopener,noreferrer")}
+                              onClick={() => window.open(`/${post.slug}`, "_blank", "noopener,noreferrer")}
                             >
                               View
                             </button>

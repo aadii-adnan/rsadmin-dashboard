@@ -51,7 +51,6 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/book/:slug" element={<BookingForm />} />
         <Route path="/blog" element={<BlogList />} />
-        <Route path="/blog/:slug" element={<BlogDetail />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/terms-conditions" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -66,6 +65,7 @@ function App() {
         <Route path="/dublin-airport-parking-offer" element={<Home />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/:slug" element={<BlogDetail />} />
 
         {/* Admin Routes — wrapped in AdminLayout for persistent AdminNavbar */}
         <Route element={<AdminLayout />}>

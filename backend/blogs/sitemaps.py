@@ -14,7 +14,7 @@ class BlogSitemap(Sitemap):
         return obj.updated_date
 
     def location(self, obj):
-        return f"/blog/{obj.slug}"
+        return f"/{obj.slug}"
 
 
 class BlogCategorySitemap(Sitemap):

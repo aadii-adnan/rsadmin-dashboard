@@ -12,7 +12,7 @@ function BlogCard({ title, slug, featured_image, excerpt, published_date }) {
     : "-";
 
   return (
-    <Link to={`/blog/${slug}`} className="text-decoration-none">
+    <Link to={`/${slug}`} className="text-decoration-none">
       <div className="blog-card-flat">
         <img
           src={featured_image || "https://via.placeholder.com/800x500"}
@@ -21,7 +21,7 @@ function BlogCard({ title, slug, featured_image, excerpt, published_date }) {
         />
         <h4 className="blog-card-title">{title}</h4>
         <span className="blog-card-date">{publishedLabel}</span>
-        <p className="blog-card-excerpt">{excerpt}</p>
+        <p className="blog-card-excerpt">{excerpt || 'Read more about this topic...'}</p>
       </div>
     </Link>
   );
