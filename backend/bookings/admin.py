@@ -116,6 +116,49 @@ class ServiceFilter(FieldListFilter):
         return queryset
 
 
+class WebsiteFilter(FieldListFilter):
+    """Custom filter for website that excludes supplier bookings when filtered."""
+    title = 'Website'
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        self.lookup_val = request.GET.get(field_path)
+        self.request = request
+        self.model = model
+        super().__init__(field, request, params, model, model_admin, field_path)
+
+    def expected_parameters(self):
+        return [self.field_path]
+
+    def choices(self, changelist):
+        # "All" choice - no filter
+        yield {
+            'selected': self.lookup_val is None,
+            'query_string': changelist.get_query_string(remove=[self.field_path]),
+            'display': 'All'
+        }
+
+        websites = (
+            self.model.objects
+            .exclude(website__isnull=True)
+            .exclude(website__exact='')
+            .values_list('website', flat=True)
+            .distinct()
+            .order_by('website')
+        )
+
+        for website in websites:
+            yield {
+                'selected': self.lookup_val == website,
+                'query_string': changelist.get_query_string({self.field_path: website}, []),
+                'display': website
+            }
+
+    def queryset(self, request, queryset):
+        if self.lookup_val:
+            return queryset.filter(website=self.lookup_val, supplier__isnull=True)
+        return queryset
+
+
 class SingleDateFilter(FieldListFilter):
     template = 'admin/single_date_filter.html'
 
@@ -501,7 +544,7 @@ class BookingAdmin(admin.ModelAdmin):
             ('created_at', SingleDateFilter),
             'status',
             ('service', ServiceFilter),
-            'website',
+            ('website', WebsiteFilter),
             ('supplier', SupplierFilter),
         ]
         # Remove 'website' filter for managers and suppliers

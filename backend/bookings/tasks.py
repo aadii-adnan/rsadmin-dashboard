@@ -9,8 +9,7 @@ from decouple import config
 @shared_task
 def process_bookings_for_completion():
     """
-    Periodic task: Find bookings where return_time + 15min has passed,
-    status is not 'Completed', and completion_email_sent is False.
+    Periodic task: Find Started bookings where return_time threshold has passed.
     Mark as completed and send thank you email.
     Supplier bookings will be marked as Completed but no emails will be sent to them.
     """
@@ -19,17 +18,18 @@ def process_bookings_for_completion():
     completed_status = Status.objects.get(name="Completed", type='booking')
     started_status = Status.objects.get(name="Started", type='booking')
 
-    # Only process bookings that are not completed and haven't had the email sent
+    # Process Started bookings regardless of completion_email_sent.
+    # This allows admins to reset a booking to Started to trigger a resend.
     bookings = Booking.objects.filter(
         return_time__lte=threshold,
-        completion_email_sent=False,
         status=started_status
     )
 
     for booking in bookings:
         booking.status = completed_status
         booking.save()
-        send_completion_email_to_user(booking.id)
+        # If completion_email_sent is already True, force a resend.
+        send_completion_email_to_user(booking.id, force_resend=booking.completion_email_sent)
 
 @shared_task
 def process_bookings_for_started():
@@ -53,14 +53,14 @@ def process_bookings_for_started():
         booking.save()
 
 @shared_task
-def send_completion_email_to_user(booking_id):
+def send_completion_email_to_user(booking_id, force_resend=False):
     booking = Booking.objects.get(id=booking_id)
     
     # Skip email for supplier bookings
     if booking.supplier is not None:
         return "Skipped: supplier booking - no email sent"
     
-    if booking.completion_email_sent:
+    if booking.completion_email_sent and not force_resend:
         return "Email already sent"
 
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
