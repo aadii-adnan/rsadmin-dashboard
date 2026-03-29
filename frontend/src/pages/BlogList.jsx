@@ -34,7 +34,16 @@ function BlogList() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+  const PAGE_SIZE = 9;
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timerId);
+  }, [searchTerm]);
 
   const [count, setCount] = useState(0);
   const [nextPageUrl, setNextPageUrl] = useState(null);
@@ -91,8 +100,8 @@ function BlogList() {
         if (selectedCategory) {
           params.set("category", selectedCategory);
         }
-        if (searchTerm) {
-          params.set("search", searchTerm);
+        if (debouncedSearchTerm) {
+          params.set("search", debouncedSearchTerm);
         }
 
         const response = await fetch(`${BLOG_PUBLIC_BASE}/posts/?${params.toString()}`);
@@ -128,21 +137,14 @@ function BlogList() {
     return () => {
       mounted = false;
     };
-  }, [page, selectedCategory, searchTerm]);
-
-  const pageSize = useMemo(() => {
-    if (!posts.length) {
-      return 9;
-    }
-    return posts.length;
-  }, [posts]);
+  }, [page, selectedCategory, debouncedSearchTerm]);
 
   const totalPages = useMemo(() => {
     if (!count) {
       return 1;
     }
-    return Math.max(1, Math.ceil(count / pageSize));
-  }, [count, pageSize]);
+    return Math.max(1, Math.ceil(count / PAGE_SIZE));
+  }, [count]);
 
   const visiblePages = useMemo(() => {
     const pages = [];

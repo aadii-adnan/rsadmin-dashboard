@@ -103,6 +103,12 @@ function BlogDetail() {
         anchor.setAttribute("rel", "nofollow noopener noreferrer");
       }
     });
+
+    const images = contentRef.current.querySelectorAll("img");
+    images.forEach(img => {
+      img.setAttribute("loading", "lazy");
+      img.setAttribute("decoding", "async");
+    });
   }, [post]);
 
   if (loading) {
@@ -391,7 +397,13 @@ function BlogDetail() {
                   <Link to={`/${rPost.slug}`} className="text-decoration-none">
                     <div className="related-blog-card">
                       {rPost.featured_image ? (
-                        <img src={rPost.featured_image} alt={rPost.title} className="related-blog-img" />
+                        <img 
+                          src={rPost.featured_image} 
+                          alt={rPost.title} 
+                          className="related-blog-img" 
+                          loading="lazy" 
+                          decoding="async" 
+                        />
                       ) : (
                         <div className="related-blog-img" style={{ backgroundColor: 'var(--primary-dark)' }} />
                       )}

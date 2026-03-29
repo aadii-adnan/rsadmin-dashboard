@@ -51,7 +51,15 @@ function BlogDashboard() {
   const fileInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timerId);
+  }, [searchTerm]);
   const [categoryFilter, setCategoryFilter] = useState("all");
 
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -122,14 +130,63 @@ function BlogDashboard() {
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      const titleMatch = post.title?.toLowerCase().includes(searchTerm.toLowerCase());
+      const titleMatch = post.title?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       const statusMatch = statusFilter === "all" ? true : post.status === statusFilter;
       const categoryMatch =
         categoryFilter === "all" ? true : String(post.category) === String(categoryFilter);
 
       return titleMatch && statusMatch && categoryMatch;
     });
-  }, [posts, searchTerm, statusFilter, categoryFilter]);
+  }, [posts, debouncedSearchTerm, statusFilter, categoryFilter]);
+
+  const tableRows = useMemo(() => {
+    if (!filteredPosts.length) {
+      return (
+        <tr>
+          <td colSpan="6" className="text-center py-4">No posts found.</td>
+        </tr>
+      );
+    }
+    return filteredPosts.map((post) => (
+      <tr key={post.id}>
+        <td className="fw-semibold"><span className="table-title-link">{post.title || "-"}</span></td>
+        <td>{categoryById[post.category] || "-"}</td>
+        <td>
+          <span className={post.status === 'publish' ? 'status-badge-publish' : 'status-badge-draft'}>
+            {post.status === 'publish' ? 'Published' : 'Draft'}
+          </span>
+        </td>
+        <td>{post.author_name || post.author || "-"}</td>
+        <td>{formatDateTime(post.published_date)}</td>
+        <td>
+          <div className="table-actions">
+            <button
+              type="button"
+              className="btn-admin-outline btn-admin-sm"
+              onClick={() => navigate(`/blog-admin/edit/${post.id}`)}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="btn-admin-outline btn-admin-sm"
+              onClick={() => handleDeletePost(post.id)}
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              className="btn-admin-outline btn-admin-sm"
+              disabled={post.status !== "publish" || !post.slug}
+              onClick={() => window.open(`/${post.slug}`, "_blank", "noopener,noreferrer")}
+            >
+              View
+            </button>
+          </div>
+        </td>
+      </tr>
+    ));
+  }, [filteredPosts, categoryById]);
 
   const handleDeletePost = async (id) => {
     if (!window.confirm("Delete this post permanently?")) {
@@ -460,51 +517,7 @@ function BlogDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPosts.length ? (
-                    filteredPosts.map((post) => (
-                      <tr key={post.id}>
-                        <td className="fw-semibold"><span className="table-title-link">{post.title || "-"}</span></td>
-                        <td>{categoryById[post.category] || "-"}</td>
-                        <td>
-                          <span className={post.status === 'publish' ? 'status-badge-publish' : 'status-badge-draft'}>
-                            {post.status === 'publish' ? 'Published' : 'Draft'}
-                          </span>
-                        </td>
-                        <td>{post.author_name || post.author || "-"}</td>
-                        <td>{formatDateTime(post.published_date)}</td>
-                        <td>
-                          <div className="table-actions">
-                            <button
-                              type="button"
-                              className="btn-admin-outline btn-admin-sm"
-                              onClick={() => navigate(`/blog-admin/edit/${post.id}`)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-admin-outline btn-admin-sm"
-                              onClick={() => handleDeletePost(post.id)}
-                            >
-                              Delete
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-admin-outline btn-admin-sm"
-                              disabled={post.status !== "publish" || !post.slug}
-                              onClick={() => window.open(`/${post.slug}`, "_blank", "noopener,noreferrer")}
-                            >
-                              View
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="text-center py-4">No posts found.</td>
-                    </tr>
-                  )}
+                  {tableRows}
                 </tbody>
               </Table>
             )}

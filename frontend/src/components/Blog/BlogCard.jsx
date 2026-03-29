@@ -18,6 +18,8 @@ function BlogCard({ title, slug, featured_image, excerpt, published_date }) {
           src={featured_image || "https://via.placeholder.com/800x500"}
           className="blog-card-img"
           alt={title}
+          loading="lazy"
+          decoding="async"
         />
         <h4 className="blog-card-title">{title}</h4>
         <span className="blog-card-date">{publishedLabel}</span>
