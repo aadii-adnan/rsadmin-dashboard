@@ -357,7 +357,7 @@ function BlogDetail() {
               <h1 style={{ color: "var(--primary-dark)" }}>{post.title}</h1>
               <p className="lead">{post.excerpt || stripHtmlAndTruncate(post.content, 140)}</p>
               <div style={{ color: "var(--primary-light)" }}>
-                {publishedLabel} | By {post.author_name || "Team"}
+                {publishedLabel}
               </div>
             </div>
           </Col>
