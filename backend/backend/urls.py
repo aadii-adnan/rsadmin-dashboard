@@ -4,55 +4,48 @@ from django.conf import settings
 from django.conf.urls.static import static
 from core.views import robots_txt 
 from core.sitemaps import StaticReactSitemap, BookingSlugSitemap, BlogSitemap as CoreBlogSitemap
-from django.contrib.sitemaps.views import sitemap
-from blogs.sitemaps import BlogSitemap, BlogCategorySitemap
+from django.contrib.sitemaps.views import sitemap, index
+from blogs.sitemaps import BlogSitemap, StaticSitemap
 from payments.views import StripeWebhookView
 from django.views.decorators.cache import cache_page
-from django.contrib.sitemaps.views import sitemap as sitemap_view
-from django.contrib.sitemaps import views as sitemap_views
 from django.urls import reverse_lazy
 from finance.views import finance_jwt_login
 from blogs.views import blogs_jwt_login
 from django.contrib.auth import views as auth_views
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 
 # Blog sitemap (RS Express Parking only)
 blog_sitemaps = {
     "blog": CoreBlogSitemap,
 }
 
-def dynamic_sitemap(request):
-    """Serve sitemap with static URLs + sitemap index reference to blog sitemap for RS Express Parking"""
+def custom_sitemap_index(request, sitemaps, **kwargs):
     host = request.get_host()
-    protocol = 'https'
+    active_sitemaps = sitemaps.copy()
     
-    # Get static sitemap items
-    static_sitemap = StaticReactSitemap()
+    # Exclude blogs for non-RS Express domains
+    if "dublinairport" in host:
+        active_sitemaps.pop('blogs', None)
+        
+    return index(request, sitemaps=active_sitemaps, **kwargs)
+
+def custom_sitemap_section(request, sitemaps, section, **kwargs):
+    host = request.get_host()
+    active_sitemaps = sitemaps.copy()
     
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
-    xml += 'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
-    
-    # Add static URLs
-    for item in static_sitemap.items():
-        loc = static_sitemap.location(item)
-        xml += f'  <url>\n'
-        xml += f'    <loc>{protocol}://{host}{loc}</loc>\n'
-        xml += f'    <changefreq>{static_sitemap.changefreq}</changefreq>\n'
-        xml += f'    <priority>{static_sitemap.priority}</priority>\n'
-        xml += f'  </url>\n'
-    
-    # Add blog sitemap as a URL entry for RS Express Parking only
-    if "dublinairport" not in host:
-        xml += f'  <url>\n'
-        xml += f'    <loc>{protocol}://{host}/blogs.xml</loc>\n'
-        xml += f'    <changefreq>weekly</changefreq>\n'
-        xml += f'    <priority>0.8</priority>\n'
-        xml += f'  </url>\n'
-    
-    xml += '</urlset>'
-    
-    return HttpResponse(xml, content_type='application/xml')
+    # Exclude blogs for non-RS Express domains
+    if "dublinairport" in host:
+        active_sitemaps.pop('blogs', None)
+        
+    if section not in active_sitemaps:
+        raise Http404("No sitemap available for section: %s" % section)
+        
+    return sitemap(request, sitemaps=active_sitemaps, section=section, **kwargs)
+
+sitemaps = {
+    'static': StaticSitemap,
+    'blogs': BlogSitemap,
+}
 
 urlpatterns = [
     path('admin-dashboard/', admin.site.urls),
@@ -67,20 +60,11 @@ urlpatterns = [
     path('api/core/', include('core.urls')),
     path("robots.txt", robots_txt, name="robots_txt"),
     
-    path(
-        "sitemap.xml",
-        sitemap,
-        {
-            "sitemaps": {
-                "blogs": BlogSitemap,
-                "categories": BlogCategorySitemap,
-            }
-        },
-        name="django.contrib.sitemaps.views.sitemap",
-    ),
+    path('sitemap.xml', custom_sitemap_index, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.index'),
+    path('sitemap-<section>.xml', custom_sitemap_section, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     
-    # Blog sitemap (separate file)
-    path("blogs.xml", cache_page(86400)(sitemap_view), {"sitemaps": blog_sitemaps}, name="sitemap_blogs"),
+    # Blog sitemap (separate file for RS Express)
+    path("blogs.xml", cache_page(86400)(sitemap), {"sitemaps": blog_sitemaps}, name="sitemap_blogs"),
     
     path("api/finance/jwt-login/", finance_jwt_login, name="finance-jwt-login"),
     path("api/blogs/jwt-login/", blogs_jwt_login, name="blogs-jwt-login"),

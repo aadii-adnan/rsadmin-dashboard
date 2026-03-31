@@ -564,3 +564,27 @@ class ImportWordPressView(APIView):
         node = element.find(tag)
         return node.text.strip() if node is not None and node.text else ""
 
+class HTMLSitemapDataView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        static_pages = [
+            {'title': 'Home', 'path': '/'},
+            {'title': 'Services', 'path': '/services'},
+            {'title': 'Contact Us', 'path': '/contact-us'},
+            {'title': 'Terms & Conditions', 'path': '/terms-conditions'},
+            {'title': 'Privacy Policy', 'path': '/privacy-policy'},
+            {'title': 'Login / Signup', 'path': '/login'},
+            {'title': 'My Bookings', 'path': '/customer-dashboard'},
+            {'title': 'Blog', 'path': '/blog'},
+        ]
+        
+        categories = Category.objects.all()
+        blogs = BlogPost.objects.filter(status="publish").order_by('-published_date')
+        
+        return Response({
+            'static_pages': static_pages,
+            'categories': [{'title': c.name, 'path': f"/blog?category={c.slug}"} for c in categories],
+            'blogs': [{'title': b.title, 'path': f"/{b.slug}"} for b in blogs],
+        })
+

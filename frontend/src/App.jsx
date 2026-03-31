@@ -23,6 +23,7 @@ import BlogDetail from "./pages/BlogDetail";
 import BlogDashboard from "./components/FinanceDashboard/BlogAdmin/BlogDashboard";
 import BlogPostForm from "./components/FinanceDashboard/BlogAdmin/BlogPostForm";
 import AdminLayout from "./components/AdminLayout/AdminLayout";
+import SitemapPage from "./pages/SitemapPage";
 import { useLocation } from "react-router-dom";
 
 function Logout() {
@@ -65,6 +66,8 @@ function App() {
         <Route path="/dublin-airport-parking-offer" element={<Home />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/sitemap.html" element={<SitemapPage />} />
+        <Route path="/sitemap" element={<SitemapPage />} />
         <Route path="/:slug" element={<BlogDetail />} />
 
         {/* Admin Routes — wrapped in AdminLayout for persistent AdminNavbar */}

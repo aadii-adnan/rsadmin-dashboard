@@ -8,21 +8,31 @@ class BlogSitemap(Sitemap):
     priority = 0.8
 
     def items(self):
-        return BlogPost.objects.filter(status="publish")
+        return ['blog'] + list(BlogPost.objects.filter(status="publish"))
 
     def lastmod(self, obj):
+        if obj == 'blog':
+            return None
         return obj.updated_date
 
     def location(self, obj):
+        if obj == 'blog':
+            return '/blog'
         return f"/{obj.slug}"
 
-
-class BlogCategorySitemap(Sitemap):
-    changefreq = "monthly"
-    priority = 0.5
+class StaticSitemap(Sitemap):
+    priority = 1.0
+    changefreq = 'weekly'
 
     def items(self):
-        return Category.objects.all()
+        return [
+            '',
+            'services',
+            'contact-us',
+            'terms-conditions',
+            'privacy-policy',
+            'login',
+        ]
 
-    def location(self, obj):
-        return f"/blog?category={obj.slug}"
+    def location(self, item):
+        return f"/{item}"

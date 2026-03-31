@@ -68,6 +68,11 @@ const Footer = () => {
                                 <span className="elementor-icon-list-text">Login/Signup</span>
                                 </Link>
                             </li>
+                            <li className="elementor-icon-list-item">
+                                <Link className='footer-link' to={"/sitemap.html"}>
+                                <span className="elementor-icon-list-text">Sitemap</span>
+                                </Link>
+                            </li>
                         </ul>
                     </div>
                     </div>

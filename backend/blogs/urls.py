@@ -13,6 +13,7 @@ from .views import (
     PublicTagListView,
     RedirectRuleViewSet,
     TagViewSet,
+    HTMLSitemapDataView,
 )
 
 router = DefaultRouter()
@@ -27,6 +28,7 @@ urlpatterns = [
     path("public/posts/<slug:slug>/", PublicBlogDetailView.as_view(), name="public-blog-detail"),
     path("public/categories/", PublicCategoryListView.as_view(), name="public-category-list"),
     path("public/tags/", PublicTagListView.as_view(), name="public-tag-list"),
+    path("public/html-sitemap-data/", HTMLSitemapDataView.as_view(), name="html-sitemap-data"),
     path("public/redirects/", ActiveRedirectsView.as_view(), name="public-active-redirects"),
     path("admin/import-wordpress/", ImportWordPressView.as_view(), name="import-wordpress"),
     path("admin/", include(router.urls)),
