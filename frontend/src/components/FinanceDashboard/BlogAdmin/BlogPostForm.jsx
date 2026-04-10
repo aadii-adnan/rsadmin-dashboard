@@ -79,6 +79,11 @@ function BlogPostForm() {
     slug: "",
     excerpt: "",
     canonical_url: "",
+    robots_index: true,
+    robots_follow: true,
+    robots_noarchive: false,
+    robots_nosnippet: false,
+    max_snippet: -1,
     category: "",
     tags: [],
     status: "draft",
@@ -151,6 +156,11 @@ function BlogPostForm() {
           slug: post.slug || "",
           excerpt: post.excerpt || "",
           canonical_url: post.canonical_url || "",
+          robots_index: post.robots_index ?? true,
+          robots_follow: post.robots_follow ?? true,
+          robots_noarchive: post.robots_noarchive ?? false,
+          robots_nosnippet: post.robots_nosnippet ?? false,
+          max_snippet: post.max_snippet ?? -1,
           category: post.category || "",
           tags: Array.isArray(post.tags) ? post.tags : [],
           status: normalizedStatus,
@@ -213,14 +223,15 @@ function BlogPostForm() {
     });
   }, [formData.title, isEditMode, isSlugManuallyEdited]);
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    const nextValue = type === "checkbox" ? checked : value;
 
     if (name === "slug") {
       setIsSlugManuallyEdited(true);
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
   };
 
   const handleTagSelection = (event) => {
@@ -243,6 +254,11 @@ function BlogPostForm() {
     payload.append("excerpt", formData.excerpt || "");
     payload.append("canonical_url", formData.canonical_url || "");
     payload.append("content", formData.content || "");
+    payload.append("robots_index", formData.robots_index ? "true" : "false");
+    payload.append("robots_follow", formData.robots_follow ? "true" : "false");
+    payload.append("robots_noarchive", formData.robots_noarchive ? "true" : "false");
+    payload.append("robots_nosnippet", formData.robots_nosnippet ? "true" : "false");
+    payload.append("max_snippet", String(formData.max_snippet));
 
     payload.append("status", formData.status || "draft");
     payload.append("reading_time", formData.reading_time ? String(formData.reading_time) : "");
@@ -435,7 +451,7 @@ function BlogPostForm() {
                       <Form.Control
                         name="title"
                         value={formData.title}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                         required
                       />
                     </Form.Group>
@@ -446,7 +462,7 @@ function BlogPostForm() {
                       <Form.Control
                         name="slug"
                         value={formData.slug}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                         required
                       />
                     </Form.Group>
@@ -459,7 +475,7 @@ function BlogPostForm() {
                     rows={3} 
                     name="excerpt"
                     value={formData.excerpt} 
-                    onChange={handleInputChange} 
+                    onChange={handleChange} 
                     placeholder="Write a brief summary for the blog cards..." 
                     className="filter-input"
                   />
@@ -495,7 +511,7 @@ function BlogPostForm() {
                       <Form.Control
                         name="meta_title"
                         value={formData.meta_title}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                       />
                     </Form.Group>
                   </Col>
@@ -505,7 +521,7 @@ function BlogPostForm() {
                       <Form.Control
                         name="canonical_url"
                         value={formData.canonical_url}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                         placeholder="https://example.com/my-post"
                       />
                     </Form.Group>
@@ -518,11 +534,30 @@ function BlogPostForm() {
                         rows={2}
                         name="meta_description"
                         value={formData.meta_description}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                       />
                     </Form.Group>
                   </Col>
                 </Row>
+                <div className="mt-4">
+                  <h6 className="mb-3">Search Engine Directives</h6>
+                  <Form.Check
+                    type="switch"
+                    id="robots_index"
+                    name="robots_index"
+                    label="Allow Search Engines to Index this post (robots_index)"
+                    checked={Boolean(formData.robots_index)}
+                    onChange={handleChange}
+                  />
+                  <Form.Check
+                    type="switch"
+                    id="robots_follow"
+                    name="robots_follow"
+                    label="Allow Search Engines to Follow links (robots_follow)"
+                    checked={Boolean(formData.robots_follow)}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
 
               {isEditMode ? (
@@ -610,7 +645,7 @@ function BlogPostForm() {
                   <Form.Select
                     name="status"
                     value={formData.status}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
                   >
                     <option value="draft">Draft</option>
                     <option value="publish">Publish</option>
@@ -622,7 +657,7 @@ function BlogPostForm() {
                     type="datetime-local"
                     name="published_date"
                     value={formData.published_date}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
                   />
                 </Form.Group>
                 <Form.Group className="mb-3">
@@ -632,7 +667,7 @@ function BlogPostForm() {
                     min="0"
                     name="reading_time"
                     value={formData.reading_time}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
                     placeholder="e.g. 5"
                   />
                 </Form.Group>
@@ -649,7 +684,7 @@ function BlogPostForm() {
                   <Form.Select
                     name="category"
                     value={formData.category}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
                   >
                     <option value="">Select category</option>
                     {categories.map((category) => (
