@@ -186,6 +186,16 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
+PASSWORD_RESET_TIMEOUT = config('PASSWORD_RESET_TIMEOUT', default=3600, cast=int)
+FRONTEND_RS_RESET_PASSWORD_URL = config(
+    'FRONTEND_RS_RESET_PASSWORD_URL',
+    default='https://www.rsexpressparking.com/reset-password',
+)
+FRONTEND_DUBLIN_RESET_PASSWORD_URL = config(
+    'FRONTEND_DUBLIN_RESET_PASSWORD_URL',
+    default='https://www.dublinairportexpressparking.ie/reset-password',
+)
+
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",

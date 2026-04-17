@@ -17,6 +17,8 @@ import NotFound404 from "./pages/NotFound404";
 import ThankYouPage from "./pages/ThankYouPage";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import FinanceDashboard from "./pages/FinanceDashboard";
 import BlogList from "./pages/BlogList";
 import BlogDetail from "./pages/BlogDetail";
@@ -66,6 +68,8 @@ function App() {
         <Route path="/dublin-airport-parking-offer" element={<Home />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/sitemap.html" element={<SitemapPage />} />
         <Route path="/sitemap" element={<SitemapPage />} />
         <Route path="/:slug" element={<BlogDetail />} />

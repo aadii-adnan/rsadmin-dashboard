@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useBooking } from "../../context/BookingContext";
 import PopupDialog from "../Utility/PopupDialog";
@@ -297,6 +298,13 @@ useEffect(() => {
                     {showPassword ? "🔒" : "👁️‍🗨️"}
                   </button>
               </div>
+            {login && (
+              <div style={{ textAlign: "right", marginBottom: "8px" }}>
+                <Link to="/forgot-password" style={styles.forgotLink}>
+                  Forgot password?
+                </Link>
+              </div>
+            )}
 
             {/* Login Option */}
             {!login && (
@@ -390,6 +398,12 @@ const styles = {
     display: "flex",
     alignItems: "center",
     marginBottom: "8px",
+  },
+  forgotLink: {
+    color: "#2890cd",
+    fontWeight: 600,
+    textDecoration: "underline",
+    fontSize: "14px",
   },
 };
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import PopupDialog from "../components/Utility/PopupDialog";
 import parkingImg from "../assets/parking.webp";
@@ -261,6 +261,13 @@ const Login = () => {
                   {showPassword ? "🔒" : "👁️‍🗨️"}
                 </button>
               </div>
+              {isLogin && (
+                <div style={{ textAlign: "right", marginTop: "-2px", marginBottom: "8px" }}>
+                  <Link to="/forgot-password" style={styles.forgotLink}>
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
               <button
                 type="submit"
                 style={styles.button}
@@ -375,6 +382,12 @@ const styles = {
     cursor: "pointer",
     textDecoration: "underline",
     marginLeft: "4px",
+  },
+  forgotLink: {
+    color: "#2890cd",
+    fontWeight: 600,
+    textDecoration: "underline",
+    fontSize: "14px",
   },
 };
 
