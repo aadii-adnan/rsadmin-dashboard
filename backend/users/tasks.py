@@ -65,6 +65,7 @@ def send_password_reset_email_task(user_id, uid, token, website="rsexpressparkin
 
     context = {
         "first_name": user.first_name or user.username or "Customer",
+        "username": user.username,
         "site_name": site_name,
         "support_email": support_email,
         "reset_link": reset_link,
