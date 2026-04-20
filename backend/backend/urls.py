@@ -13,6 +13,9 @@ from finance.views import finance_jwt_login
 from blogs.views import blogs_jwt_login
 from django.contrib.auth import views as auth_views
 from django.http import HttpResponse, Http404
+from django.urls import re_path
+from django.views.decorators.cache import cache_control
+from django.views.static import serve as static_serve
 
 # Blog sitemap (RS Express Parking only)
 blog_sitemaps = {
@@ -76,4 +79,10 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # In development, serve media with explicit cache headers.
+    # In production, media must be served by the web server/CDN with long-lived caching.
+    cached_media_serve = cache_control(public=True, max_age=60 * 60 * 24)(static_serve)
+    urlpatterns += [
+        re_path(r"^media/(?P<path>.*)$", cached_media_serve, {"document_root": settings.MEDIA_ROOT}),
+    ]

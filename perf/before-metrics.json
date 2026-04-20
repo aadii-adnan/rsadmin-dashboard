@@ -1,0 +1,28 @@
+﻿[
+    {
+        "page":  "/blog",
+        "ttfb_ms":  6,
+        "fcp_ms":  52288.4,
+        "lcp_ms":  95196.2,
+        "inp_ms":  199,
+        "inp_note":  "Lighthouse lab proxy (maxPotentialFID)",
+        "cls":  0.0656,
+        "total_transferred_bytes":  22564382,
+        "request_count":  174,
+        "largest_image_bytes":  747670,
+        "largest_image_url":  "http://localhost:8000/media/blog/images/Parking-During-Severe-Irish-Weather-Risk-vs-Preparation_b920pN3.png"
+    },
+    {
+        "page":  "/car-safety-dublin-airport-parking",
+        "ttfb_ms":  5,
+        "fcp_ms":  49369.7,
+        "lcp_ms":  94193.6,
+        "inp_ms":  242,
+        "inp_note":  "Lighthouse lab proxy (maxPotentialFID)",
+        "cls":  0,
+        "total_transferred_bytes":  18189066,
+        "request_count":  171,
+        "largest_image_bytes":  754698,
+        "largest_image_url":  "http://localhost:8000/media/blog/images/How-to-Protect-Your-Car-When-Parking-Near-Dublin-Airport_rL9kdz7.png"
+    }
+]

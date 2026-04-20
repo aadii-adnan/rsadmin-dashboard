@@ -70,6 +70,10 @@
   margin-bottom: 1.2rem;
 }
 
+.blog-card-img-fallback {
+  background: var(--primary-dark, #010659);
+}
+
 .blog-card-title {
   color: var(--primary-dark, #010659);
   font-weight: 700;
@@ -109,11 +113,83 @@
   justify-content: center;
 }
 
+.blog-detail-title {
+  color: var(--primary-dark, #010659);
+}
+
+.blog-detail-date {
+  color: var(--primary-light, rgb(40, 144, 205));
+}
+
 .blog-detail-image-side img {
   width: 100%;
   height: 100%;
   min-height: 400px;
   object-fit: cover;
+}
+
+.blog-detail-image-side-full {
+  height: 100%;
+}
+
+.blog-detail-image-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: var(--primary-dark, #010659);
+}
+
+.blog-content img,
+.blog-content video,
+.blog-content iframe {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+.blog-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  display: block;
+  overflow-x: auto;
+}
+
+.blog-content table td,
+.blog-content table th {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+}
+
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4,
+.blog-content h5,
+.blog-content h6 {
+  color: var(--primary-dark, #010659);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  font-family: 'Urbanist', sans-serif;
+}
+
+.blog-content p,
+.blog-content li {
+  line-height: 1.8;
+  color: #495057;
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+}
+
+.blog-content a {
+  color: var(--primary-light, rgb(40, 144, 205));
+  text-decoration: none;
+}
+
+.blog-content a:hover {
+  text-decoration: underline;
 }
 
 /* ── Typography & Badges ── */
@@ -138,6 +214,10 @@
   padding: 24px;
   background: #f8fbff;
   text-align: center;
+}
+
+.blog-promo-sticky {
+  top: 2rem;
 }
 
 /* ── Pagination ── */
@@ -278,6 +358,15 @@
   text-decoration: underline;
 }
 
+.related-blogs-title {
+  color: var(--primary-dark, #010659);
+  font-weight: 700;
+}
+
+.related-blog-img-fallback {
+  background: var(--primary-dark, #010659);
+}
+
 /* ── Shimmer & Skeleton Loaders ── */
 @keyframes shimmer {
   0% {
@@ -333,4 +422,63 @@
   width: 90px;
   height: 32px;
   border-radius: 50px;
+}
+
+.shimmer-btn {
+  height: 45px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.shimmer-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.shimmer-h-36 {
+  height: 36px;
+}
+
+.shimmer-w-90 {
+  width: 90%;
+}
+
+.shimmer-w-80 {
+  width: 80%;
+}
+
+.shimmer-w-60 {
+  width: 60%;
+}
+
+.shimmer-w-40 {
+  width: 40%;
+}
+
+.shimmer-w-30 {
+  width: 30%;
+}
+
+.shimmer-mb-sm {
+  margin-bottom: 0.5rem;
+}
+
+.shimmer-mb-md {
+  margin-bottom: 0.8rem;
+}
+
+.shimmer-mb-lg {
+  margin-bottom: 1rem;
+}
+
+.shimmer-mb-xl {
+  margin-bottom: 1.5rem;
+}
+
+.shimmer-mb-2xl {
+  margin-bottom: 2rem;
+}
+
+.shimmer-mt-2xl {
+  margin-top: 2rem;
 }

@@ -49,6 +49,18 @@ class BlogPost(models.Model):
     robots_nosnippet = models.BooleanField(default=False)
     max_snippet = models.IntegerField(default=-1)
 
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["status", "-published_date", "-created_at"],
+                name="blog_status_pub_idx",
+            ),
+            models.Index(
+                fields=["status", "category", "-published_date"],
+                name="blog_status_cat_idx",
+            ),
+        ]
+
     def __str__(self):
         return self.title
 

@@ -1,0 +1,68 @@
+[
+  {
+    "page": "/blog",
+    "before": {
+      "page": "/blog",
+      "ttfb_ms": 6.0,
+      "fcp_ms": 52288.4,
+      "lcp_ms": 95196.2,
+      "inp_ms": 199.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0656,
+      "total_transferred_bytes": 22564382,
+      "request_count": 174,
+      "largest_image_bytes": 747670,
+      "largest_image_url": "http://localhost:8000/media/blog/images/Parking-During-Severe-Irish-Weather-Risk-vs-Preparation_b920pN3.png"
+    },
+    "after": {
+      "page": "/blog",
+      "ttfb_ms": 3.0,
+      "fcp_ms": 46354.9,
+      "lcp_ms": 85138.0,
+      "inp_ms": 264.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0,
+      "total_transferred_bytes": 16450717,
+      "request_count": 171,
+      "largest_image_bytes": 190858,
+      "largest_image_url": "http://localhost:5173/src/assets/avatar.png"
+    },
+    "lcp_improvement_pct": 10.6,
+    "bytes_reduction_pct": 27.1,
+    "request_reduction_pct": 1.7,
+    "largest_image_reduction_pct": 74.5
+  },
+  {
+    "page": "/car-safety-dublin-airport-parking",
+    "before": {
+      "page": "/car-safety-dublin-airport-parking",
+      "ttfb_ms": 5.0,
+      "fcp_ms": 49369.7,
+      "lcp_ms": 94193.6,
+      "inp_ms": 242.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0,
+      "total_transferred_bytes": 18189066,
+      "request_count": 171,
+      "largest_image_bytes": 754698,
+      "largest_image_url": "http://localhost:8000/media/blog/images/How-to-Protect-Your-Car-When-Parking-Near-Dublin-Airport_rL9kdz7.png"
+    },
+    "after": {
+      "page": "/car-safety-dublin-airport-parking",
+      "ttfb_ms": 4.0,
+      "fcp_ms": 51955.5,
+      "lcp_ms": 94031.4,
+      "inp_ms": 288.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0,
+      "total_transferred_bytes": 17394517,
+      "request_count": 166,
+      "largest_image_bytes": 190858,
+      "largest_image_url": "http://localhost:5173/src/assets/avatar.png"
+    },
+    "lcp_improvement_pct": 0.2,
+    "bytes_reduction_pct": 4.4,
+    "request_reduction_pct": 2.9,
+    "largest_image_reduction_pct": 74.7
+  }
+]

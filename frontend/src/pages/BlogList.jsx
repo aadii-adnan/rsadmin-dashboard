@@ -16,18 +16,6 @@ import "./Blog.css"; // Import the strict Brand UI styles
 const BLOG_PUBLIC_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/public`;
 const SITE_URL = "https://rsexpressparking.com";
 
-function stripHtml(rawHtml = "") {
-  return rawHtml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function createExcerpt(rawHtml = "", limit = 140) {
-  const plainText = stripHtml(rawHtml);
-  if (plainText.length <= limit) {
-    return plainText;
-  }
-  return `${plainText.slice(0, limit).trim()}...`;
-}
-
 function BlogList() {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -273,7 +261,8 @@ function BlogList() {
                         title={post.title}
                         slug={post.slug}
                         featured_image={post.featured_image}
-                        excerpt={createExcerpt(post.content, 150)}
+                        featured_image_responsive={post.featured_image_responsive}
+                        excerpt={post.excerpt_text || post.excerpt || "Read more about this topic..."}
                         categoryName={post.category?.name}
                         published_date={post.published_date}
                         author={post.author_name}

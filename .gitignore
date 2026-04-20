@@ -1,0 +1,18 @@
+# Lighthouse temporary artifacts (generated during local perf runs)
+perf/lh-tmp/
+perf/lh-profile/
+
+# Large Lighthouse run artifacts (keep summary JSON reports)
+perf/*-0.trace.json
+perf/*-0.devtoolslog.json
+
+# Raw Lighthouse report snapshots
+perf/before-*.json
+perf/after-*.json
+perf/after2-*.json
+
+# Keep compact comparison artifacts (used by perf budget checks)
+!perf/before-after-comparison.json
+!perf/before-after2-comparison.json
+!perf/before-metrics.json
+!perf/before-media-audit.json

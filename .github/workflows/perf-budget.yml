@@ -1,0 +1,30 @@
+name: Perf Budget Check
+
+on:
+  pull_request:
+    paths:
+      - "perf/**"
+      - "frontend/package.json"
+      - ".github/workflows/perf-budget.yml"
+  workflow_dispatch:
+
+jobs:
+  perf-budget:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run perf budget check
+        shell: bash
+        run: |
+          if [[ -f perf/before-after2-comparison.json || -f perf/before-after-comparison.json ]]; then
+            node perf/check-perf-budget.mjs
+          else
+            echo "No comparison artifact found in perf/. Skipping budget check."
+          fi

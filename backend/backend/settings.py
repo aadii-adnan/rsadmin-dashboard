@@ -63,6 +63,26 @@ REST_FRAMEWORK = {
     ],
 }
 
+REDIS_CACHE_URL = config('REDIS_CACHE_URL', default='')
+
+if REDIS_CACHE_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_CACHE_URL,
+            'KEY_PREFIX': 'rsexpressparking',
+            'TIMEOUT': 300,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'rsexpressparking-local-cache',
+            'TIMEOUT': 300,
+        }
+    }
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MIDDLEWARE = [

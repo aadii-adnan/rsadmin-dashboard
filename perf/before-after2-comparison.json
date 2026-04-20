@@ -1,0 +1,68 @@
+[
+  {
+    "page": "/blog",
+    "before": {
+      "page": "/blog",
+      "ttfb_ms": 6.0,
+      "fcp_ms": 52288.4,
+      "lcp_ms": 95196.2,
+      "inp_ms": 199.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0656,
+      "total_transferred_bytes": 22564382,
+      "request_count": 174,
+      "largest_image_bytes": 747670,
+      "largest_image_url": "http://localhost:8000/media/blog/images/Parking-During-Severe-Irish-Weather-Risk-vs-Preparation_b920pN3.png"
+    },
+    "after": {
+      "page": "/blog",
+      "ttfb_ms": 7.0,
+      "fcp_ms": 21113.4,
+      "lcp_ms": 33927.2,
+      "inp_ms": 140.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0,
+      "total_transferred_bytes": 5701935,
+      "request_count": 71,
+      "largest_image_bytes": 115120,
+      "largest_image_url": "https://blog.rsexpressparking.com/wp-content/uploads/2025/01/hb-dennis-airport2.webp"
+    },
+    "lcp_improvement_pct": 64.4,
+    "bytes_reduction_pct": 74.7,
+    "request_reduction_pct": 59.2,
+    "largest_image_reduction_pct": 84.6
+  },
+  {
+    "page": "/car-safety-dublin-airport-parking",
+    "before": {
+      "page": "/car-safety-dublin-airport-parking",
+      "ttfb_ms": 5.0,
+      "fcp_ms": 49369.7,
+      "lcp_ms": 94193.6,
+      "inp_ms": 242.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0,
+      "total_transferred_bytes": 18189066,
+      "request_count": 171,
+      "largest_image_bytes": 754698,
+      "largest_image_url": "http://localhost:8000/media/blog/images/How-to-Protect-Your-Car-When-Parking-Near-Dublin-Airport_rL9kdz7.png"
+    },
+    "after": {
+      "page": "/car-safety-dublin-airport-parking",
+      "ttfb_ms": 4.0,
+      "fcp_ms": 24084.6,
+      "lcp_ms": 37504.4,
+      "inp_ms": 141.0,
+      "inp_note": "Lighthouse lab proxy (maxPotentialFID)",
+      "cls": 0.0,
+      "total_transferred_bytes": 7051203,
+      "request_count": 74,
+      "largest_image_bytes": 44978,
+      "largest_image_url": "http://localhost:5173/src/assets/logo-white.webp"
+    },
+    "lcp_improvement_pct": 60.2,
+    "bytes_reduction_pct": 61.2,
+    "request_reduction_pct": 56.7,
+    "largest_image_reduction_pct": 94.0
+  }
+]

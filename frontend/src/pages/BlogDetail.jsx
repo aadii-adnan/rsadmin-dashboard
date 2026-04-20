@@ -1,11 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Col,
-  Container,
-  Row,
-  Spinner
-} from "react-bootstrap";
+import { Alert, Col, Container, Row } from "react-bootstrap";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
 import FAQSection from "../components/HomePage/FAQSection";
@@ -16,6 +10,14 @@ const BLOG_PUBLIC_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/public`;
 const SITE_URL = "https://rsexpressparking.com";
 const LOGO_URL = `${SITE_URL}/assets/logo.png`;
 
+function stripHtmlAndTruncate(rawHtml = "", limit = 140) {
+  const plainText = rawHtml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (plainText.length <= limit) {
+    return plainText;
+  }
+  return `${plainText.slice(0, limit).trim()}...`;
+}
+
 function BlogDetailSkeleton() {
   return (
     <div className="blog-detail-container">
@@ -24,17 +26,17 @@ function BlogDetailSkeleton() {
         <Row className="g-0 blog-detail-header-split">
           <Col lg={6}>
             <div className="blog-detail-text-side">
-              <div className="shimmer-wrapper shimmer-block shimmer-pill badge-pill" style={{ marginBottom: "1rem" }} />
-              <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ height: "36px", width: "90%", marginBottom: "1.5rem" }} />
-              <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ height: "36px", width: "60%", marginBottom: "2rem" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-pill badge-pill shimmer-mb-lg" />
+              <div className="shimmer-wrapper shimmer-block shimmer-title shimmer-h-36 shimmer-w-90 shimmer-mb-xl" />
+              <div className="shimmer-wrapper shimmer-block shimmer-title shimmer-h-36 shimmer-w-60 shimmer-mb-2xl" />
               <div className="shimmer-wrapper shimmer-block shimmer-text" />
               <div className="shimmer-wrapper shimmer-block shimmer-text" />
-              <div className="shimmer-wrapper shimmer-block shimmer-text short" style={{ marginBottom: "1.5rem" }} />
-              <div className="shimmer-wrapper shimmer-block shimmer-text" style={{ width: "30%" }} />
+              <div className="shimmer-wrapper shimmer-block shimmer-text short shimmer-mb-xl" />
+              <div className="shimmer-wrapper shimmer-block shimmer-text shimmer-w-30" />
             </div>
           </Col>
           <Col lg={6}>
-            <div className="blog-detail-image-side" style={{ height: "100%" }}>
+            <div className="blog-detail-image-side blog-detail-image-side-full">
               <div className="shimmer-wrapper shimmer-block shimmer-img-cover" />
             </div>
           </Col>
@@ -45,25 +47,25 @@ function BlogDetailSkeleton() {
       <Container className="my-5">
         <Row>
           <Col lg={8}>
-            <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ width: "40%", marginBottom: "2rem" }} />
+            <div className="shimmer-wrapper shimmer-block shimmer-title shimmer-w-40 shimmer-mb-2xl" />
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="shimmer-wrapper shimmer-block shimmer-text" style={{ marginBottom: "0.8rem" }} />
+              <div key={i} className="shimmer-wrapper shimmer-block shimmer-text shimmer-mb-md" />
             ))}
             <br />
-            <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ width: "30%", marginTop: "2rem", marginBottom: "1rem" }} />
+            <div className="shimmer-wrapper shimmer-block shimmer-title shimmer-w-30 shimmer-mt-2xl shimmer-mb-lg" />
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="shimmer-wrapper shimmer-block shimmer-text" style={{ marginBottom: "0.8rem" }} />
+              <div key={i} className="shimmer-wrapper shimmer-block shimmer-text shimmer-mb-md" />
             ))}
             <div className="shimmer-wrapper shimmer-block shimmer-text short" />
           </Col>
           
           {/* Promo Sidebar Skeleton */}
           <Col lg={4}>
-            <div className="promo-sidebar sticky-top" style={{ top: "2rem" }}>
-              <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ marginBottom: "1rem", margin: "0 auto 1rem", width: "80%" }} />
-              <div className="shimmer-wrapper shimmer-block shimmer-text" style={{ margin: "0 auto 0.5rem", width: "90%" }} />
-              <div className="shimmer-wrapper shimmer-block shimmer-text short" style={{ margin: "0 auto 1.5rem", width: "60%" }} />
-              <div className="shimmer-wrapper shimmer-block" style={{ height: "45px", width: "100%", borderRadius: "8px" }} />
+            <div className="promo-sidebar sticky-top blog-promo-sticky">
+              <div className="shimmer-wrapper shimmer-block shimmer-title shimmer-center shimmer-w-80 shimmer-mb-lg" />
+              <div className="shimmer-wrapper shimmer-block shimmer-text shimmer-center shimmer-w-90 shimmer-mb-sm" />
+              <div className="shimmer-wrapper shimmer-block shimmer-text short shimmer-center shimmer-w-60 shimmer-mb-xl" />
+              <div className="shimmer-wrapper shimmer-block shimmer-btn" />
             </div>
           </Col>
         </Row>
@@ -72,7 +74,7 @@ function BlogDetailSkeleton() {
       {/* Related Blogs Section Skeleton */}
       <section className="related-blogs-wrapper py-5">
         <Container>
-          <div className="shimmer-wrapper shimmer-block shimmer-title" style={{ width: "30%", marginBottom: "2rem" }} />
+          <div className="shimmer-wrapper shimmer-block shimmer-title shimmer-w-30 shimmer-mb-2xl" />
           <Row className="g-4 mt-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <Col key={`skel-r-${i}`} lg={4} md={6}>
@@ -95,27 +97,35 @@ function BlogDetail() {
 
   useEffect(() => {
     let mounted = true;
+    const controller = new AbortController();
 
     async function fetchPost() {
       setLoading(true);
       setError("");
 
       try {
-        const response = await fetch(`${BLOG_PUBLIC_BASE}/posts/${slug}/`);
-        if (!response.ok) {
+        const [postResponse, relatedResponse] = await Promise.all([
+          fetch(`${BLOG_PUBLIC_BASE}/posts/${slug}/`, { signal: controller.signal }),
+          fetch(
+            `${BLOG_PUBLIC_BASE}/posts/related/?slug=${encodeURIComponent(slug)}&exclude_slug=${encodeURIComponent(slug)}&limit=3`,
+            { signal: controller.signal },
+          ),
+        ]);
+
+        if (!postResponse.ok) {
           throw new Error("Failed to load blog post.");
         }
 
-        const data = await response.json();
-        
-        // Fetch related posts
-        const relatedRes = await fetch(`${BLOG_PUBLIC_BASE}/posts/`);
+        const data = await postResponse.json();
+
         let relatedData = [];
-        if (relatedRes.ok) {
-          const resJson = await relatedRes.json();
-          // Assume response follows DRF pagination (results array) or returns array directly
-          const postsArray = Array.isArray(resJson.results) ? resJson.results : Array.isArray(resJson) ? resJson : [];
-          relatedData = postsArray.filter(p => p.slug !== slug).slice(0, 3);
+        if (relatedResponse.ok) {
+          const resJson = await relatedResponse.json();
+          relatedData = Array.isArray(resJson?.results)
+            ? resJson.results
+            : Array.isArray(resJson)
+              ? resJson
+              : [];
         }
 
         if (mounted) {
@@ -123,6 +133,10 @@ function BlogDetail() {
           setRelatedPosts(relatedData);
         }
       } catch (err) {
+        if (err?.name === "AbortError") {
+          return;
+        }
+
         if (mounted) {
           setError(err.message || "Failed to load blog post.");
           setPost(null);
@@ -139,6 +153,7 @@ function BlogDetail() {
 
     return () => {
       mounted = false;
+      controller.abort();
     };
   }, [slug]);
 
@@ -146,41 +161,62 @@ function BlogDetail() {
   const contentRef = useRef(null);
 
   useEffect(() => {
-    if (!post || !contentRef.current) return;
+    if (!post?.content || !contentRef.current) return;
 
-    const anchors = contentRef.current.querySelectorAll("a");
-    const currentHost = window.location.hostname;
-
-    anchors.forEach((anchor) => {
-      try {
-        const href = anchor.getAttribute("href") || "";
-        // Relative paths or same-host links are internal
-        const isRelative = href.startsWith("/") || href.startsWith("#") || href.startsWith(".");
-        let isInternal = isRelative;
-
-        if (!isRelative && href.startsWith("http")) {
-          const linkUrl = new URL(href);
-          isInternal = linkUrl.hostname === currentHost;
-        }
-
-        if (isInternal) {
-          anchor.setAttribute("target", "_blank");
-          anchor.setAttribute("rel", "noopener noreferrer");
-        } else {
-          anchor.setAttribute("rel", "nofollow noopener noreferrer");
-        }
-      } catch {
-        // Malformed URL — treat as external for safety
-        anchor.setAttribute("rel", "nofollow noopener noreferrer");
+    const frameId = window.requestAnimationFrame(() => {
+      const root = contentRef.current;
+      if (!root) {
+        return;
       }
+
+      const currentHost = window.location.hostname;
+      const nodes = root.querySelectorAll("a[href], img");
+
+      nodes.forEach((node) => {
+        if (node.tagName === "A") {
+          const anchor = node;
+          try {
+            const href = anchor.getAttribute("href") || "";
+            const isRelative = href.startsWith("/") || href.startsWith("#") || href.startsWith(".");
+            let isInternal = isRelative;
+
+            if (!isRelative && href.startsWith("http")) {
+              const linkUrl = new URL(href);
+              isInternal = linkUrl.hostname === currentHost;
+            }
+
+            if (isInternal) {
+              if (anchor.getAttribute("target") !== "_blank") {
+                anchor.setAttribute("target", "_blank");
+              }
+              if (anchor.getAttribute("rel") !== "noopener noreferrer") {
+                anchor.setAttribute("rel", "noopener noreferrer");
+              }
+            } else if (anchor.getAttribute("rel") !== "nofollow noopener noreferrer") {
+              anchor.setAttribute("rel", "nofollow noopener noreferrer");
+            }
+          } catch {
+            if (anchor.getAttribute("rel") !== "nofollow noopener noreferrer") {
+              anchor.setAttribute("rel", "nofollow noopener noreferrer");
+            }
+          }
+          return;
+        }
+
+        if (node.tagName === "IMG") {
+          const image = node;
+          if (!image.getAttribute("loading")) {
+            image.setAttribute("loading", "lazy");
+          }
+          if (!image.getAttribute("decoding")) {
+            image.setAttribute("decoding", "async");
+          }
+        }
+      });
     });
 
-    const images = contentRef.current.querySelectorAll("img");
-    images.forEach(img => {
-      img.setAttribute("loading", "lazy");
-      img.setAttribute("decoding", "async");
-    });
-  }, [post]);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [post?.content]);
 
   if (loading) {
     return <BlogDetailSkeleton />;
@@ -214,6 +250,13 @@ function BlogDetail() {
     ? post.faqs.filter((faq) => faq.is_active !== false)
     : [];
 
+  const featuredImage = post.featured_image_responsive || null;
+  const featuredImageSrc = featuredImage?.src || post.featured_image || "";
+  const featuredImageSrcSet = featuredImage?.srcset || undefined;
+  const featuredImageSizes = featuredImage?.sizes || "(max-width: 992px) 100vw, 50vw";
+  const featuredImageWidth = featuredImage?.width || undefined;
+  const featuredImageHeight = featuredImage?.height || undefined;
+
   /* ── Dynamic Robots Meta ── */
   const robotsParts = [];
   robotsParts.push(post.robots_index === false ? "noindex" : "index");
@@ -231,7 +274,7 @@ function BlogDetail() {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: post.title,
-    image: post.featured_image || undefined,
+    image: featuredImageSrc || undefined,
     datePublished: post.published_date || undefined,
     dateModified: post.updated_date || post.published_date || undefined,
     author: {
@@ -314,10 +357,10 @@ function BlogDetail() {
 
   /* ── SEO helper values ── */
   const seoTitle = post.meta_title || post.title;
-  const seoDescription =
-    post.meta_description || post.excerpt || stripHtmlAndTruncate(post.content, 160);
+  const seoDescription = post.meta_description || post.excerpt_text || post.excerpt || stripHtmlAndTruncate(post.content, 160);
+  const heroExcerpt = post.excerpt_text || post.excerpt || stripHtmlAndTruncate(post.content, 140);
   const canonicalUrl = post.canonical_url || `${SITE_URL}/${slug}`;
-  const ogImage = post.open_graph_image || post.featured_image || "";
+  const ogImage = post.open_graph_image || featuredImageSrc || "";
 
   return (
     <div className="blog-detail-container">
@@ -354,19 +397,29 @@ function BlogDetail() {
           <Col lg={6}>
             <div className="blog-detail-text-side">
               {post.category?.name && <span className="badge-pill">{post.category.name}</span>}
-              <h1 style={{ color: "var(--primary-dark)" }}>{post.title}</h1>
-              <p className="lead">{post.excerpt || stripHtmlAndTruncate(post.content, 140)}</p>
-              <div style={{ color: "var(--primary-light)" }}>
+              <h1 className="blog-detail-title">{post.title}</h1>
+              <p className="lead">{heroExcerpt}</p>
+              <div className="blog-detail-date">
                 {publishedLabel}
               </div>
             </div>
           </Col>
           <Col lg={6}>
             <div className="blog-detail-image-side">
-              {post.featured_image ? (
-                <img src={post.featured_image} alt={post.title} />
+              {featuredImageSrc ? (
+                <img
+                  src={featuredImageSrc}
+                  srcSet={featuredImageSrcSet}
+                  sizes={featuredImageSizes}
+                  width={featuredImageWidth}
+                  height={featuredImageHeight}
+                  alt={post.title}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                />
               ) : (
-                <div style={{ width: '100%', height: '100%', minHeight: '400px', backgroundColor: 'var(--primary-dark)' }} />
+                <div className="blog-detail-image-fallback" aria-hidden="true" />
               )}
             </div>
           </Col>
@@ -383,61 +436,12 @@ function BlogDetail() {
                 className="blog-content"
                 dangerouslySetInnerHTML={{ __html: post.content || "" }}
               />
-
-              <style>{`
-                .blog-content img,
-                .blog-content video,
-                .blog-content iframe {
-                  max-width: 100%;
-                  height: auto;
-                  border-radius: 8px;
-                  margin: 1.5rem 0;
-                }
-                .blog-content table {
-                  width: 100%;
-                  border-collapse: collapse;
-                  margin: 1.5rem 0;
-                  display: block;
-                  overflow-x: auto;
-                }
-                .blog-content table td,
-                .blog-content table th {
-                  border: 1px solid #dee2e6;
-                  padding: 0.75rem;
-                }
-                .blog-content h1,
-                .blog-content h2,
-                .blog-content h3,
-                .blog-content h4,
-                .blog-content h5,
-                .blog-content h6 {
-                  color: var(--primary-dark);
-                  margin-top: 2rem;
-                  margin-bottom: 1rem;
-                  font-weight: 700;
-                  font-family: 'Urbanist', sans-serif;
-                }
-                .blog-content p,
-                .blog-content li {
-                  line-height: 1.8;
-                  color: #495057;
-                  font-size: 1.05rem;
-                  margin-bottom: 1rem;
-                }
-                .blog-content a {
-                  color: var(--primary-light);
-                  text-decoration: none;
-                }
-                .blog-content a:hover {
-                  text-decoration: underline;
-                }
-              `}</style>
             </article>
           </Col>
 
           {/* Promo Sidebar */}
           <Col lg={4}>
-            <div className="promo-sidebar sticky-top" style={{ top: '2rem' }}>
+            <div className="promo-sidebar sticky-top blog-promo-sticky">
               <h4>Need Reliable Airport Parking?</h4>
               <p>Secure your spot today with RS Express Parking and enjoy a hassle-free travel experience.</p>
               <Link to="/" className="btn-modern mt-3 w-100">
@@ -457,26 +461,30 @@ function BlogDetail() {
       {relatedPosts.length > 0 && (
         <section className="related-blogs-wrapper py-5">
           <Container>
-            <h3 style={{ color: "var(--primary-dark)", fontWeight: "700" }}>More Travel Tips & Insights</h3>
+            <h3 className="related-blogs-title">More Travel Tips & Insights</h3>
             <Row className="g-4 mt-3">
               {relatedPosts.map((rPost) => (
                 <Col key={rPost.id || rPost.slug} lg={4} md={6}>
                   <Link to={`/${rPost.slug}`} className="text-decoration-none">
                     <div className="related-blog-card">
-                      {rPost.featured_image ? (
+                      {(rPost.featured_image_responsive?.src || rPost.featured_image) ? (
                         <img 
-                          src={rPost.featured_image} 
+                          src={rPost.featured_image_responsive?.src || rPost.featured_image}
+                          srcSet={rPost.featured_image_responsive?.srcset || undefined}
+                          sizes={rPost.featured_image_responsive?.sizes || "(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"}
+                          width={rPost.featured_image_responsive?.width || undefined}
+                          height={rPost.featured_image_responsive?.height || undefined}
                           alt={rPost.title} 
                           className="related-blog-img" 
                           loading="lazy" 
                           decoding="async" 
                         />
                       ) : (
-                        <div className="related-blog-img" style={{ backgroundColor: 'var(--primary-dark)' }} />
+                        <div className="related-blog-img related-blog-img-fallback" aria-hidden="true" />
                       )}
                       <h4 className="related-blog-title">{rPost.title}</h4>
                       <p className="related-blog-excerpt">
-                        {rPost.excerpt || stripHtmlAndTruncate(rPost.content, 140)}
+                        {rPost.excerpt_text || rPost.excerpt || "Read more about this topic..."}
                       </p>
                       <span className="related-blog-link">Learn more</span>
                     </div>
@@ -489,14 +497,6 @@ function BlogDetail() {
       )}
     </div>
   );
-}
-
-function stripHtmlAndTruncate(rawHtml = "", limit = 140) {
-  const plainText = rawHtml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  if (plainText.length <= limit) {
-    return plainText;
-  }
-  return `${plainText.slice(0, limit).trim()}...`;
 }
 
 export default BlogDetail;
