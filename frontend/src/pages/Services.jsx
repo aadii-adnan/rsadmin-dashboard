@@ -42,6 +42,11 @@ const Services = () => {
 		fetchServices();
 	}, []);
 
+	const isEvChargingService = (service) => {
+		const combined = `${service?.name || ""} ${service?.slug || ""}`.toLowerCase();
+		return combined.includes("ev charging") || combined.includes("ev-charging") || combined.includes("electric vehicle");
+	};
+
 	return (
 		<>
 		<Helmet>
@@ -68,6 +73,7 @@ const Services = () => {
 			{loading ? ([...Array(3)].map((_, index) => (<ServiceShimmer key={index} />))
 			) : ( services
 				.filter(service => service.website === "rsexpressparking" || service.website === "both")
+				.filter(service => !isEvChargingService(service))
 				.map((service, index) => (
 					<ServicesItem key={service.id} service={service} openModal={openModal} index={index} setPopupMessage={setPopupMessage} setIsPopupOpen={setIsPopupOpen} />
 				))

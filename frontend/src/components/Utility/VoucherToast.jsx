@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function VoucherToast() {
   useEffect(() => {
-    toast.info('💸 Use this PROMO DUBRS10', {
+    toast.info('💸 Use this PROMO DUBRS5', {
       position: 'bottom-left',
       autoClose: false, // stays visible
       closeOnClick: true,

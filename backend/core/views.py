@@ -71,21 +71,21 @@ class DiscountSignupView(APIView):
         # Create or get lead
         lead, _ = MarketingLead.objects.get_or_create(email=email.lower().strip())
 
-        # Generate a unique coupon code, e.g., RSP15-XXXXXX
+        # Generate a unique coupon code, e.g., RSP10-XXXXXX
         def gen_code():
             suffix = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            return f"RSP15-{suffix}"
+            return f"RSP10-{suffix}"
 
         code = gen_code()
         # Ensure uniqueness
         while Coupon.objects.filter(code=code).exists():
             code = gen_code()
 
-        # Create lifetime 15% coupon starting now
+        # Create lifetime 10% coupon starting now
         now = timezone.now()
         coupon = Coupon.objects.create(
             code=code,
-            discount_percent=15,
+            discount_percent=10,
             active=True,
             valid_from=now,
             valid_to=None,

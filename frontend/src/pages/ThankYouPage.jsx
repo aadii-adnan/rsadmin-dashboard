@@ -177,6 +177,8 @@ const ThankYouPage = () => {
                   <span className="d-block mt-2">
                     <strong>Driver:</strong> <a href="tel:+353834896505" className="text-decoration-none text-dark">+353 83 489 6505</a>
                   </span>
+                  <span className="d-block mt-2">Customers should go to Car Park A, Level 2.</span>
+                  <span className="d-block">Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.</span>
                 </div>
                 <div className="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
                     <button
@@ -196,7 +198,7 @@ const ThankYouPage = () => {
                 </div>
                 {coupon && (
                   <div className="alert alert-success text-center mt-4 mb-0" style={{ fontSize: "1.08rem" }}>
-                    <strong>Special Offer:</strong> Use code <span className="fw-bold">{coupon}</span> for a <strong>15%</strong> discount on your next booking!
+                    <strong>Special Offer:</strong> Use code <span className="fw-bold">{coupon}</span> for a <strong>10%</strong> discount on your next booking!
                   </div>
                 )}
               </div>

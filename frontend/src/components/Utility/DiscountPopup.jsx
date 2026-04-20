@@ -61,7 +61,7 @@ const DiscountPopup = () => {
         {!submitted && (
           <>
             <p style={styles.text}>
-              Sign up now to receive a <strong>15% discount</strong> and be the first to receive exclusive offers.
+              Sign up now to receive a <strong>10% discount</strong> and be the first to receive exclusive offers.
             </p>
             <form onSubmit={submit} style={styles.form}>
               <input
@@ -79,7 +79,7 @@ const DiscountPopup = () => {
         )}
         {submitted && (
           <div style={styles.resultBox}>
-            <p style={styles.successText}>Your 15% discount code:</p>
+            <p style={styles.successText}>Your 10% discount code:</p>
             <div style={styles.code}>{code}</div>
             <p style={styles.copyNote}>Use this coupon at checkout.</p>
             <button onClick={close} style={styles.doneBtn}>Got It</button>

@@ -73,7 +73,7 @@ def send_completion_email_to_user(booking_id, force_resend=False):
         site_url = "https://dublinairportexpressparking.ie/"
         team_name = "The Dublin Airport Express Parking Team"
         from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
-        default_coupon = "DUBPARK15"
+        default_coupon = "DUBPARK10"
         trustpilot_url = None
         google_review_url = None
         connection = get_connection(
@@ -88,7 +88,7 @@ def send_completion_email_to_user(booking_id, force_resend=False):
         site_url = "https://rsexpressparking.com/"
         team_name = "The RS Express Parking Team"
         from_email = "RS Express Parking <support@rsexpressparking.com>"
-        default_coupon = "RSPARK15"
+        default_coupon = "RSPARK10"
         trustpilot_url = "https://ie.trustpilot.com/review/rsexpressparking.com"
         google_review_url = "https://g.page/r/CZW2D3u4VHTOEAI/review"
         connection = None  # Use default
@@ -142,7 +142,7 @@ Google Maps: {google_review_url}
         </ul>
         <h3 style="color: #444;">🎁 Your Coupon</h3>
         <p>
-            As a thank you, here’s a coupon for <strong>15% off</strong> your next booking:<br>
+            As a thank you, here’s a coupon for <strong>10% off</strong> your next booking:<br>
             <span style="font-size: 18px; font-weight: bold; color: #0066cc;">{coupon}</span>
         </p>
         <h3 style="color: #444;">🙏 Thank You!</h3>
@@ -175,7 +175,7 @@ Vehicle: {booking.car_model} – {booking.car_registration_no}
 -----------------------------
 🎁 Your Coupon
 -----------------------------
-As a thank you, here’s a coupon for 15% off your next booking:
+As a thank you, here’s a coupon for 10% off your next booking:
 {coupon}
 
 -----------------------------
@@ -224,8 +224,8 @@ def send_promotional_emails():
     promo_bookings = all_bookings.exclude(status__name__in=["Confirmed", "Started", "Pending"])
     pending_bookings = all_bookings.filter(status__name="Pending")
 
-    subject_promo = "Park With Us Again & Save 15%"
-    subject_pending = "Complete Your Booking & Save 15% Today!"
+    subject_promo = "Park With Us Again & Save 10%"
+    subject_pending = "Complete Your Booking & Save 10% Today!"
 
     current_year = datetime.now().year
     emails_sent = set()

@@ -2,20 +2,31 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from .models import Service, AddOn, Coupon
 from .serializers import ServiceSerializer, AddOnSerializer, CouponSerializer
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 
+
+def exclude_ev_charging_services(queryset):
+    return queryset.exclude(
+        Q(name__icontains='ev charging') |
+        Q(slug__icontains='ev-charging') |
+        Q(name__icontains='electric vehicle') |
+        Q(description__icontains='ev charging') |
+        Q(long_description__icontains='ev charging')
+    )
+
 class ServiceList(APIView):
     def get(self, request):
-        services = Service.objects.all().order_by('order', 'id')
+        services = exclude_ev_charging_services(Service.objects.all()).order_by('order', 'id')
         serializer = ServiceSerializer(services, many=True)
         return Response(serializer.data)
 
 class ServiceDetail(APIView):
     def get(self, request, slug):
-        service = get_object_or_404(Service, slug=slug)
+        service = get_object_or_404(exclude_ev_charging_services(Service.objects.all()), slug=slug)
         serializer = ServiceSerializer(service)
         return Response(serializer.data)
 

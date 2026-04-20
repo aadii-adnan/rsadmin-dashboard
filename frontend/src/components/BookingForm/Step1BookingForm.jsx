@@ -121,7 +121,6 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
                 >
                   <option value="">Select Terminal</option>
                   <option value="1">Terminal 1</option>
-                  <option value="2">Terminal 2</option>
                 </select>
             </div>
             <div className="bookingform-col">
@@ -136,7 +135,6 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
                 >
                   <option value="">Select Terminal</option>
                   <option value="1">Terminal 1</option>
-                  <option value="2">Terminal 2</option>
                 </select>
             </div>
         </div>

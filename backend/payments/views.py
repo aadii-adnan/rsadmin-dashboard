@@ -231,7 +231,8 @@ def send_booking_confirmation_email(booking):
         <p>
             Call us just before arriving so our driver can assist and park your car.<br>
             <strong>Contact:</strong> +353 (01) 221 0589<br>
-            (Pick Ups and Drop Offs only)<br>
+            Customers should go to Car Park A, Level 2.<br>
+            Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.<br>
             On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
         </p>
         '''
@@ -241,6 +242,12 @@ def send_booking_confirmation_email(booking):
         <ul>
             <li>
                 Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+            </li>
+            <li>
+                Customers should go to Car Park A, Level 2.
+            </li>
+            <li>
+                Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
             </li>
             <li>
                 For any other queries, feel free to reply to this email or contact us directly.
@@ -307,7 +314,8 @@ IMPORTANT: Extra passengers may delay shuttle dispatch to/from the airport.
 -----------------------------
 Call us just before arriving so our driver can assist and park your car.
 Contact: +353 (01) 221 0589
-(Pick Ups and Drop Offs only)
+Customers should go to Car Park A, Level 2.
+Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
 On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
 '''
 if "Park & Fly" in booking.service.name else
@@ -316,6 +324,8 @@ if "Park & Fly" in booking.service.name else
 📞 Important Instructions
 -----------------------------
 - Please make sure to call the driver at +353 83 489 6505 at least 30 minutes before your arrival and departure to ensure a smooth handover.
+- Customers should go to Car Park A, Level 2.
+- Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
 - For any other queries, feel free to reply to this email or contact us directly.
 '''
 )}
@@ -567,7 +577,7 @@ class StripeWebhookView(APIView):
 
                 coupon = Coupon.objects.create(
                     code=code,
-                    discount_percent=15,
+                    discount_percent=10,
                     valid_from=valid_from,
                     valid_to=None,      # not needed for lifetime
                     lifetime=True,
@@ -636,7 +646,8 @@ class StripeWebhookView(APIView):
         <p>
             Call us just before arriving so our driver can assist and park your car.<br>
             <strong>Contact:</strong> +353 (01) 221 0589<br>
-            (Pick Ups and Drop Offs only)<br>
+            Customers should go to Car Park A, Level 2.<br>
+            Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.<br>
             On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
         </p>
         '''
@@ -646,6 +657,12 @@ class StripeWebhookView(APIView):
         <ul>
             <li>
                 Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+            </li>
+            <li>
+                Customers should go to Car Park A, Level 2.
+            </li>
+            <li>
+                Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
             </li>
             <li>
                 For any other queries, feel free to reply to this email or contact us directly.
@@ -712,7 +729,8 @@ class StripeWebhookView(APIView):
     -----------------------------
     Call us just before arriving so our driver can assist and park your car.
     Contact: +353 (01) 221 0589
-    (Pick Ups and Drop Offs only)
+    Customers should go to Car Park A, Level 2.
+    Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
     On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
     '''
     if "Park & Fly" in booking.service.name else
@@ -721,6 +739,8 @@ class StripeWebhookView(APIView):
     📞 Important Instructions
     -----------------------------
     - Please make sure to call the driver at +353 83 489 6505 at least 30 minutes before your arrival and departure to ensure a smooth handover.
+    - Customers should go to Car Park A, Level 2.
+    - Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
     - For any other queries, feel free to reply to this email or contact us directly.
     '''
     )}
