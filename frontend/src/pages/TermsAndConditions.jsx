@@ -133,7 +133,11 @@ export default function TermsAndConditions() {
             <section className="mb-5">
                 <h4 style={{color:"#010659"}} className="mb-3"><strong>6. Early or Late Arrival Policy</strong></h4>
                 <ol className="ps-3">
-                    <li>Customers arriving more than 6 hours earlier or later than their scheduled arrival time will incur a €20 parking charge, payable to RS Express Parking.</li>
+                    <li>Customers arriving <strong>more than 6 hours earlier or later</strong> than their scheduled arrival time will incur a <strong>€20 parking charge</strong>, payable to <strong>RS Express Parking</strong>.</li>
+                    <li>This fee is due at the time of <strong>vehicle drop-off</strong> and may be paid using <strong>cash or debit/credit card</strong>.</li>
+                    <li>For <strong>each full day of delay</strong> beyond the agreed return date, an additional <strong>€20 daily parking charge</strong> will apply.</li>
+                    <li>Arrivals made <strong>earlier than the booked time</strong> are subject to a <strong>one-time charge of €20</strong>.</li>
+                    <li>Kindly allow sufficient time for <strong>vehicle return arrangements</strong>, as timing may vary based on <strong>driver and staff availability</strong>.</li>
                 </ol>
             </section>
 

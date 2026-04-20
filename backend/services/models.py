@@ -49,12 +49,15 @@ class AddOn(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=8, decimal_places=2)
     description = models.TextField(blank=True)
+    active = models.BooleanField(default=True, help_text="Uncheck to disable this add-on")
 
     def __str__(self):
         return self.name
     
     class Meta:
         db_table = 'addons'
+
+
 class Coupon(models.Model):
     code = models.CharField(max_length=20, unique=True)
     discount_percent = models.PositiveIntegerField(help_text="Enter a value between 1 and 100")

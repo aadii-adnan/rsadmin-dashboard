@@ -49,7 +49,7 @@ class ServiceAdmin(admin.ModelAdmin):
 
 @admin.register(AddOn)
 class AddOnAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'price', 'get_description')
+    list_display = ('id', 'name', 'price', 'active', 'get_description')
     search_fields = ('name', 'description')
     
     def get_description(self, obj):
@@ -62,6 +62,7 @@ class AddOnAdmin(admin.ModelAdmin):
                 'name',
                 'price',
                 'description',
+                'active',
             )
         }),
     )

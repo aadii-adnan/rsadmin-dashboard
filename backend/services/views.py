@@ -33,7 +33,7 @@ class ServiceDetail(APIView):
 
 class AddOnList(APIView):
     def get(self, request):
-        addons = AddOn.objects.all()
+        addons = AddOn.objects.filter(active=True).order_by('id')
         serializer = AddOnSerializer(addons, many=True)
         return Response(serializer.data)
 

@@ -16,7 +16,10 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
           try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/addons/`);
             const data = await response.json();
-            setAddons(data);
+            const activeAddOns = Array.isArray(data)
+              ? data.filter((addon) => addon.active !== false)
+              : [];
+            setAddons(activeAddOns);
           } catch (error) {
             console.error("Error fetching add-ons:", error);
           }
