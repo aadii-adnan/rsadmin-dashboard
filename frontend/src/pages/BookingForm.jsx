@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from 'react-helmet-async';
 import { DateTime } from "luxon";
 import { FaCheck } from "react-icons/fa";
+import "../BookingForm.css";
 
 const steps = [
   { id: "account", label: "Account" },

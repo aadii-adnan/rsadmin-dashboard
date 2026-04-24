@@ -14,6 +14,7 @@ from pathlib import Path
 from decouple import config
 import stripe
 import os
+import re
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -99,6 +100,14 @@ MIDDLEWARE = [
 ]
 
 WHITENOISE_MAX_AGE = 31536000
+
+
+def _immutable_static_file_test(path, url):
+    # Django's manifest hash is usually 12 chars; Vite assets are commonly 8 chars.
+    return re.search(r"\.[0-9a-f]{8,12}\.", url) is not None
+
+
+WHITENOISE_IMMUTABLE_FILE_TEST = _immutable_static_file_test
 
 ROOT_URLCONF = 'backend.urls'
 

@@ -126,17 +126,6 @@ img {
 .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger>.ekit-menu-icon {
     color: #fff;
 }
-.ekit-wid-con .icon, .ekit-wid-con .icon::before, .icon, .icon::before {
-    font-family: elementskit !important;
-    speak: none;
-    font-style: normal;
-    font-weight: 400;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
 .elementskit-navbar-nav-default .elementskit-navbar-nav>li {
     position: relative;
 }

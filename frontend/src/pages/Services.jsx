@@ -4,6 +4,7 @@ import ServicesItem from "../components/Services/ServicesItem";
 import { Helmet } from "react-helmet-async";
 import ServiceShimmer from "../components/Services/ServiceShimmer"
 import PopupDialog from "../components/Utility/PopupDialog";
+import "../Services.css";
 
 const Services = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);

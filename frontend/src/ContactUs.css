@@ -8390,54 +8390,6 @@ button.mfp-close.ekit-popup-close:hover {
     border: none
 }
 
-.ekit-wid-con .icon,.ekit-wid-con .icon::before,.icon,.icon::before {
-    font-family: elementskit!important;
-    speak: none;
-    font-style: normal;
-    font-weight: 400;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale
-}
-
-@font-face {
-    font-family: elementskit;
-    src: url('./assets/fonts/elementskit.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap
-}
-
-.ekit-wid-con .icon.icon-phone-handset::before,.icon.icon-phone-handset::before {
-    content: "\e830"
-}
-
-.ekit-wid-con .icon.icon-phone::before,.icon.icon-phone::before {
-    content: "\e831"
-}
-
-.ekit-wid-con .icon.icon-menu1::before,.icon.icon-menu1::before {
-    content: "\e871"
-}
-
-.ekit-wid-con .icon.icon-map-marker1::before,.icon.icon-map-marker1::before {
-    content: "\e973"
-}
-
-.ekit-wid-con .icon.icon-plus::before,.icon.icon-plus::before {
-    content: "\e982"
-}
-
-.ekit-wid-con .icon.icon-envelope2::before,.icon.icon-envelope2::before {
-    content: "\ea13"
-}
-
-.ekit-wid-con .icon.icon-instagram-1::before,.icon.icon-instagram-1::before {
-    content: "\eb6c"
-}
-
 .e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload),.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload) * {
     background-image: none!important
 }

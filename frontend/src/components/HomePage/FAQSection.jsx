@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import FAQItem from './FAQItem';
 import { BiSupport } from "react-icons/bi";
 import { Link } from 'react-router-dom';
+import './FAQSection.css';
 
 const FAQSection = ({ faqs, loading, isBlog = false }) => {
   const [openIndex, setOpenIndex] = useState(null);

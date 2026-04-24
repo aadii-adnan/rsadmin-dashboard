@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useBooking } from "../../context/BookingContext";
 import logo from "../../assets/logo-white.webp";
 import simpleLogo from "../../assets/logo.webp";
-import { FaUserCircle } from "react-icons/fa";
+import { FaBars, FaChevronDown, FaPhoneAlt, FaUserCircle } from "react-icons/fa";
 
 const Header = () => {
 
@@ -95,7 +95,7 @@ const Header = () => {
                   <div className="elementor-widget-container">
                     <nav className="ekit-wid-con ekit_menu_responsive_tablet" data-hamburger-icon="icon icon-menu1" data-hamburger-icon-type="icon" data-responsive-breakpoint="1024">
                         <button onClick={() => setIsOpen(prev => !prev)} className="elementskit-menu-hamburger elementskit-menu-toggler" type="button" aria-label="hamburger-icon">
-                        <i aria-hidden="true" className="ekit-menu-icon icon icon-menu1"></i>            </button>
+                        <i aria-hidden="true" className="ekit-menu-icon icon icon-menu1"><FaBars aria-hidden="true" /></i>            </button>
 
                         {((isMobile && isOpen) || !isMobile) && (<>
                         <div id="ekit-megamenu-main-menu" className="active elementskit-menu-container elementskit-menu-offcanvas-elements elementskit-navbar-nav-default ekit-nav-menu-one-page- ekit-nav-dropdown-hover" ekit-dom-added="yes">
@@ -135,7 +135,21 @@ const Header = () => {
                                     onClick={() => setIsLegalInfoDropdownOpen(prev => !prev)}
                                   >
                                     Legal Information
-                                    <i aria-hidden="true" className="icon icon-plus elementskit-submenu-indicator" style={{ marginLeft: 6, lineHeight: "1.6", fontWeight: 600, }}></i>
+                                    <i
+                                      aria-hidden="true"
+                                      className="icon icon-plus elementskit-submenu-indicator"
+                                      style={{
+                                        marginLeft: 6,
+                                        lineHeight: "1.6",
+                                        fontWeight: 600,
+                                        transform: isLegalInfoDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                                        transition: "transform 0.2s ease",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <FaChevronDown aria-hidden="true" />
+                                    </i>
                                   </span>
                                   <ul
                                     className={`elementskit-dropdown elementskit-submenu-panel${isLegalInfoDropdownOpen ? " elementskit-dropdown-open" : ""}`}
@@ -243,7 +257,19 @@ const Header = () => {
                     color: userDetails?.id ? "#28a745" : "#888" // Green if logged in, gray if not
                   }} />
                   Me
-                  <i className={`icon icon-plus elementskit-submenu-indicator`} style={{ marginLeft: 6 }} />
+                  <i
+                    aria-hidden="true"
+                    className="icon icon-plus elementskit-submenu-indicator"
+                    style={{
+                      marginLeft: 6,
+                      transform: isMeDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease",
+                      display: "inline-flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <FaChevronDown aria-hidden="true" />
+                  </i>
                 </span>
                 <ul
                   style={{
@@ -351,7 +377,7 @@ const Header = () => {
                         <a className="elementor-button elementor-button-link elementor-size-sm" href="tel:+35319640011">
                         <span className="elementor-button-content-wrapper">
                         <span className="elementor-button-icon">
-                        <i aria-hidden="true" className="icon icon-phone-handset"></i>			</span>
+                        <i aria-hidden="true" className="icon icon-phone-handset"><FaPhoneAlt aria-hidden="true" /></i>			</span>
                         </span>
                         </a>
                     </div>

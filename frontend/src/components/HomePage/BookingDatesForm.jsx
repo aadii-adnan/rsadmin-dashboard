@@ -3,6 +3,7 @@ import { useBooking } from "../../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
 import { DateTime } from "luxon";
+import "../../BookingForm.css";
 
 const BookingDatesForm = () => {
   const { setBookingData } = useBooking();

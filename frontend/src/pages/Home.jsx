@@ -1,6 +1,7 @@
-import React, {useEffect, useState, useCallback} from 'react'
+import React, {useEffect, useState} from 'react'
 import BookingDatesForm from '../components/HomePage/BookingDatesForm'
 import { useBooking } from "../context/BookingContext";
+import "../Home.css";
 import secureParking from "../assets/secure-parking.webp"
 import { Helmet } from 'react-helmet-async';
 import "swiper/css";
@@ -15,7 +16,6 @@ import {
 } from "react-icons/fa";
 import { SiTrustpilot } from "react-icons/si"; 
 import { FcGoogle } from "react-icons/fc";
-import logo from "../assets/logo.webp";
 import parkingVideo from "../assets/vid2.mp4"; 
 import videoPoster from "../assets/hero-cover.webp"; 
 import parking from "../assets/parking2.webp";
@@ -29,72 +29,101 @@ const Home = () => {
     const [reviewFilter, setReviewFilter] = useState('all');
     const [showAll, setShowAll] = useState(false);
     
-    // Video loading optimization - don't load video until after initial paint
-    const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+    // Keep the hero poster as the initial LCP candidate, then attach video source later.
+    const [shouldAttachVideoSource, setShouldAttachVideoSource] = useState(false);
+    const [heroVideoReady, setHeroVideoReady] = useState(false);
 
-    // Defer video loading until after initial mount to prevent blocking LCP
     useEffect(() => {
-        // Use requestIdleCallback if available, otherwise setTimeout
-        const loadVideo = () => setShouldLoadVideo(true);
-        
-        if ('requestIdleCallback' in window) {
-            const idleId = requestIdleCallback(loadVideo, { timeout: 2000 });
-            return () => cancelIdleCallback(idleId);
+        let activated = false;
+        let lcpObserver;
+        let idleId;
+        let fallbackTimer;
+
+        const clearTimers = () => {
+            if (idleId && 'cancelIdleCallback' in window) {
+                window.cancelIdleCallback(idleId);
+                idleId = null;
+            }
+            if (fallbackTimer) {
+                window.clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
+        };
+
+        const activateVideo = () => {
+            if (activated) {
+                return;
+            }
+            activated = true;
+            clearTimers();
+            setShouldAttachVideoSource(true);
+            if (lcpObserver) {
+                lcpObserver.disconnect();
+            }
+            window.removeEventListener('pointerdown', activateVideo);
+            window.removeEventListener('scroll', activateVideo);
+            window.removeEventListener('touchstart', activateVideo);
+            window.removeEventListener('keydown', activateVideo);
+            window.removeEventListener('load', scheduleFallback);
+        };
+
+        const scheduleActivationAfterLCP = () => {
+            if (activated) {
+                return;
+            }
+
+            clearTimers();
+            if ('requestIdleCallback' in window) {
+                idleId = window.requestIdleCallback(activateVideo, { timeout: 2500 });
+            } else {
+                fallbackTimer = window.setTimeout(activateVideo, 1200);
+            }
+        };
+
+        const scheduleFallback = () => {
+            if (activated) {
+                return;
+            }
+            clearTimers();
+            fallbackTimer = window.setTimeout(activateVideo, 3500);
+        };
+
+        window.addEventListener('pointerdown', activateVideo, { once: true, passive: true });
+        window.addEventListener('scroll', activateVideo, { once: true, passive: true });
+        window.addEventListener('touchstart', activateVideo, { once: true, passive: true });
+        window.addEventListener('keydown', activateVideo, { once: true });
+
+        if ('PerformanceObserver' in window) {
+            try {
+                lcpObserver = new PerformanceObserver((entryList) => {
+                    if (entryList.getEntries().length > 0) {
+                        scheduleActivationAfterLCP();
+                    }
+                });
+                lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+            } catch {
+                scheduleFallback();
+            }
         } else {
-            const timer = setTimeout(loadVideo, 1000);
-            return () => clearTimeout(timer);
+            scheduleFallback();
         }
-    }, []);
 
-    // Defer non-critical scripts loading
-    useEffect(() => {
-        let stripeTimer;
-        let shapoTimer;
-        
-        const loadStripe = () => {
-            if (!document.getElementById('stripe-js')) {
-                const script = document.createElement("script");
-                script.id = 'stripe-js';
-                script.src = "https://js.stripe.com/basil/stripe.js";
-                script.async = true;
-                document.body.appendChild(script);
-            }
-        };
-
-        const loadShapo = () => {
-            if (!document.getElementById("shapo-embed-js")) {
-                const script = document.createElement("script");
-                script.id = "shapo-embed-js";
-                script.type = "text/javascript";
-                script.src = "https://cdn.shapo.io/js/embed.js";
-                script.defer = true;
-                document.body.appendChild(script);
-            }
-        };
-
-        // Load scripts only after user interaction or after 5s (well after LCP)
-        const handleInteraction = () => {
-            loadStripe();
-            loadShapo();
-            window.removeEventListener('scroll', handleInteraction);
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('touchstart', handleInteraction);
-        };
-        
-        window.addEventListener('scroll', handleInteraction, { passive: true, once: true });
-        window.addEventListener('click', handleInteraction, { passive: true, once: true });
-        window.addEventListener('touchstart', handleInteraction, { passive: true, once: true });
-        
-        // Fallback: load after 5 seconds if no interaction
-        stripeTimer = setTimeout(loadStripe, 5000);
-        shapoTimer = setTimeout(loadShapo, 5000);
+        if (document.readyState === 'complete') {
+            scheduleFallback();
+        } else {
+            window.addEventListener('load', scheduleFallback, { once: true });
+        }
 
         return () => {
-            window.removeEventListener('scroll', handleInteraction);
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('touchstart', handleInteraction);
-            clearTimeout(stripeTimer);
-            clearTimeout(shapoTimer);
+            clearTimers();
+            if (lcpObserver) {
+                lcpObserver.disconnect();
+            }
+            window.removeEventListener('pointerdown', activateVideo);
+            window.removeEventListener('scroll', activateVideo);
+            window.removeEventListener('touchstart', activateVideo);
+            window.removeEventListener('keydown', activateVideo);
+            window.removeEventListener('load', scheduleFallback);
         };
     }, []);
 
@@ -118,7 +147,7 @@ const Home = () => {
           }));
         }
         localStorage.removeItem("payment_status");
-    }, []);
+    }, [setBookingData]);
 
     // Fetch FAQs in background - does NOT block UI render
     useEffect(() => {
@@ -176,11 +205,6 @@ const Home = () => {
       { id: 11, source: 'trustpilot', name: 'John.', type: 'Holiday Traveller', text: 'Good instructions & communication. Easy to deal with. Great service!', stars: 5 },
       { id: 12, source: 'trustpilot', name: 'Ian Parsons', type: 'Frequent Flyer', text: 'Terrific experience with these guys.. very efficient and easy to deal with, will 100% be using them again next year for our family holiday.. 100% recommend.', stars: 5 },
     ];
-
-    // Filter by source
-    const baseFiltered = reviewFilter === 'all'
-      ? allReviews
-      : allReviews.filter(r => r.source === reviewFilter);
 
     // Apply showAll rules:
     // - all: show 6 by default, 12 when showAll
@@ -320,24 +344,8 @@ const Home = () => {
         <div className="home-wrapper">
         <div className="home-banner video-banner">
             
-            {/* LCP OPTIMIZED: Hero poster image loads immediately with high priority */}
-            {/* Video only loads after initial paint to avoid blocking critical resources */}
-            {shouldLoadVideo ? (
-                <video 
-                    autoPlay 
-                    loop 
-                    muted 
-                    playsInline 
-                    preload="auto"
-                    className="banner-video"
-                    width="1920"
-                    height="1080"
-                    poster={videoPoster}
-                >
-                    <source src={parkingVideo} type="video/mp4" />
-                </video>
-            ) : (
-                /* Show poster as static image until video is ready - this is the LCP element */
+            {/* Keep poster on screen until video is attached and can play. */}
+            {(!shouldAttachVideoSource || !heroVideoReady) && (
                 <img 
                     src={videoPoster}
                     alt="Dublin Airport Meet and Greet Parking"
@@ -347,6 +355,25 @@ const Home = () => {
                     fetchpriority="high"
                     decoding="sync"
                 />
+            )}
+
+            {shouldAttachVideoSource && (
+                <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    preload="metadata"
+                    className="banner-video"
+                    width="1920"
+                    height="1080"
+                    poster={videoPoster}
+                    onCanPlay={() => setHeroVideoReady(true)}
+                    style={!heroVideoReady ? { opacity: 0 } : undefined}
+                    aria-hidden={!heroVideoReady}
+                >
+                    <source src={parkingVideo} type="video/mp4" />
+                </video>
             )}
             
 

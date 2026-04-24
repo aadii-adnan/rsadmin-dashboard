@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-WS75DKBQ');</script>
-    <!-- End Google Tag Manager -->
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RS Express Parking</title>
@@ -16,36 +8,180 @@
     <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/images/icon.webp" type="image/webp" />
     
-    <!-- Preconnect to critical origins -->
+    <!-- Preconnect only for first-render critical origins -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://cdn.shapo.io">
-    <link rel="dns-prefetch" href="https://js.stripe.com">
-    <link rel="dns-prefetch" href="https://code.tidio.co">
     
     <!-- Font loading optimized -->
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WS75DKBQ"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    
     <div id="root"></div>
 
     <script type="module" src="/src/main.jsx"></script>
-    
-    <!-- Load third-party scripts with delay -->
+
     <script>
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          // Tidio
+      (function () {
+        var CONSENT_KEY = 'cookieConsent';
+        var GTM_ID = 'GTM-WS75DKBQ';
+        var gtmLoaded = false;
+        var fallbackTimer = null;
+
+        function getConsentChoice() {
+          try {
+            return localStorage.getItem(CONSENT_KEY);
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function hasAcceptedConsent() {
+          return getConsentChoice() === 'accepted';
+        }
+
+        function loadGTM() {
+          if (gtmLoaded || !hasAcceptedConsent()) {
+            return;
+          }
+
+          gtmLoaded = true;
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            'gtm.start': new Date().getTime(),
+            event: 'gtm.js',
+          });
+
+          var script = document.createElement('script');
+          script.async = true;
+          script.src = 'https://www.googletagmanager.com/gtm.js?id=' + GTM_ID;
+          document.head.appendChild(script);
+        }
+
+        function clearFallbackTimer() {
+          if (fallbackTimer) {
+            window.clearTimeout(fallbackTimer);
+            fallbackTimer = null;
+          }
+        }
+
+        function scheduleAfterFirstPaint() {
+          if (gtmLoaded || !hasAcceptedConsent()) {
+            return;
+          }
+
+          clearFallbackTimer();
+          window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+              if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(loadGTM, { timeout: 3500 });
+              } else {
+                fallbackTimer = window.setTimeout(loadGTM, 2000);
+              }
+            });
+          });
+        }
+
+        if (hasAcceptedConsent()) {
+          scheduleAfterFirstPaint();
+        }
+
+        window.addEventListener('cookie-consent-accepted', scheduleAfterFirstPaint, { once: true });
+        window.addEventListener('analytics-consent-granted', scheduleAfterFirstPaint, { once: true });
+        window.addEventListener('cookie-consent-rejected', clearFallbackTimer, { once: true });
+
+        window.addEventListener('pagehide', function () {
+          clearFallbackTimer();
+        });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        var CONSENT_KEY = 'cookieConsent';
+        var TIDIO_SRC = 'https://code.tidio.co/kxnbkl9gy47kmif3wdmd59ed2elnfxto.js';
+        var tidioLoaded = false;
+        var interactionHandler = null;
+        var fallbackTimer = null;
+
+        function getConsentChoice() {
+          try {
+            return localStorage.getItem(CONSENT_KEY);
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function hasAcceptedConsent() {
+          return getConsentChoice() === 'accepted';
+        }
+
+        function clearFallbackTimer() {
+          if (fallbackTimer) {
+            window.clearTimeout(fallbackTimer);
+            fallbackTimer = null;
+          }
+        }
+
+        function removeInteractionListeners() {
+          if (!interactionHandler) {
+            return;
+          }
+
+          window.removeEventListener('pointerdown', interactionHandler);
+          window.removeEventListener('scroll', interactionHandler);
+          window.removeEventListener('keydown', interactionHandler);
+          interactionHandler = null;
+        }
+
+        function loadTidio() {
+          if (tidioLoaded || !hasAcceptedConsent()) {
+            return;
+          }
+
+          tidioLoaded = true;
+          removeInteractionListeners();
+          clearFallbackTimer();
+
           var tidio = document.createElement('script');
-          tidio.src = '//code.tidio.co/kxnbkl9gy47kmif3wdmd59ed2elnfxto.js';
+          tidio.src = TIDIO_SRC;
           tidio.async = true;
-          document.body.appendChild(tidio);                  
-        }, 2000);
-      });
+          tidio.defer = true;
+          document.body.appendChild(tidio);
+        }
+
+        function enableInteractionGate() {
+          if (tidioLoaded || interactionHandler || !hasAcceptedConsent()) {
+            return;
+          }
+
+          interactionHandler = function () {
+            loadTidio();
+          };
+
+          window.addEventListener('pointerdown', interactionHandler, { once: true, passive: true });
+          window.addEventListener('scroll', interactionHandler, { once: true, passive: true });
+          window.addEventListener('keydown', interactionHandler, { once: true });
+
+          clearFallbackTimer();
+          fallbackTimer = window.setTimeout(loadTidio, 20000);
+        }
+
+        if (hasAcceptedConsent()) {
+          enableInteractionGate();
+        }
+
+        window.addEventListener('cookie-consent-accepted', enableInteractionGate, { once: true });
+        window.addEventListener('analytics-consent-granted', enableInteractionGate, { once: true });
+        window.addEventListener('cookie-consent-rejected', function () {
+          removeInteractionListeners();
+          clearFallbackTimer();
+        }, { once: true });
+
+        window.addEventListener('pagehide', function () {
+          removeInteractionListeners();
+          clearFallbackTimer();
+        });
+      })();
     </script>
   </body>
 </html>

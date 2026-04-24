@@ -1,5 +1,6 @@
 import React from "react";
 import Modal from "react-modal";
+import "../Utility/modalStyles.css";
 
 const ServiceModal = ({ isOpen, onClose, long_description }) => {
   if (!long_description) return null; // Return null if no service is provided
@@ -8,31 +9,8 @@ const ServiceModal = ({ isOpen, onClose, long_description }) => {
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      style={{
-        overlay: {
-          backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark overlay
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1000, // Ensure modal is above other elements
-        },
-        content: {
-          maxWidth: "1200px",
-          width: "90%",
-          maxHeight: "80%",
-          margin: "0 auto",
-          padding: "40px 50px",
-          borderRadius: "15px",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-          backgroundColor: "#fff",
-          overflowY: "auto", // Enable vertical scrolling
-          position: "relative", // Ensure the close button is positioned relative to the modal
-          ...(window.innerWidth <= 576 && {
-            padding: "20px 15px", // Reduced padding for mobile
-            position: "static",
-          }),
-        },
-      }}
+      overlayClassName="rse-modal-overlay rse-service-overlay"
+      className="rse-modal-content rse-service-content"
       ariaHideApp={false} // Disable app element warning
     >
       {/* Close Button (Sticky at Top-Right Edge) */}

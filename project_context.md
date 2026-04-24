@@ -113,3 +113,114 @@ APIs are exposed natively using DRF Class-Based Views (e.g., `APIView`, standard
 - **Backend View Formatting**: APIs heavily output `Response(..., status=status.HTTP_..._...)` leveraging explicitly scoped Django DRF Serializers built inside respective apps matching database layers exactly. Code typically features thick controller logic embedded directly inside views rather than offloaded into strict isolated service layers.
 
 *Note for New Blogs Module Setup: Given the SPA nature of this environment natively absent Server-Side Rendering (SSR), SEO strategies required for the new module will heavily necessitate dynamically managing `<Helmet>` tags efficiently per blog post, and might strictly require API-level adjustments generating clean sitemaps or forcing pre-render techniques to ensure web crawlers can effectively read dynamic JS content.*
+
+---
+
+## 6. PRODUCTION CACHING & COMPRESSION DEPLOYMENT NOTES
+
+### Cache-Control Policy (Target State)
+- **Hashed build assets** (example: `/assets/index.abc12345.js`): `Cache-Control: public, max-age=31536000, immutable`
+- **HTML documents** (example: `/`, `/index.html`): `Cache-Control: no-cache, no-store, must-revalidate`
+- **Non-hashed static files**: short cache (recommended `max-age=86400`) to allow safe rollouts
+
+### Django-Controlled Behavior
+- Django static files are served with WhiteNoise (`CompressedManifestStaticFilesStorage`) and precompressed variants (Brotli/gzip) when available.
+- `WHITENOISE_IMMUTABLE_FILE_TEST` is configured to treat 8-12 character fingerprinted filenames as immutable.
+- Dynamic API and HTML response behavior in Django is kept unchanged; HTML cache policy should be enforced at the reverse proxy/CDN edge.
+
+### If Frontend `/assets` Is Served Outside Django
+
+Use one of the following edge/server rule sets.
+
+#### Apache (frontend host)
+```apache
+<IfModule mod_headers.c>
+  <FilesMatch "\.[0-9a-f]{8,12}\.(?:css|js|mjs|json|map|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|eot)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  <FilesMatch "^(?!.*\.[0-9a-f]{8,12}\.).+\.(?:css|js|mjs|json|map|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|eot)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+
+  <FilesMatch "\.html?$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  Header merge Vary "Accept-Encoding"
+</IfModule>
+
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/plain text/html text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain text/html text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+```
+
+#### Nginx (frontend host)
+```nginx
+# Hashed assets: immutable, 1 year
+location ~* \.[0-9a-f]{8,12}\.(css|js|mjs|json|map|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|eot)$ {
+    expires 365d;
+    add_header Cache-Control "public, max-age=31536000, immutable" always;
+}
+
+# Non-hashed static: short cache
+location ~* \.(css|js|mjs|json|map|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|eot)$ {
+    expires 1d;
+    add_header Cache-Control "public, max-age=86400" always;
+}
+
+# HTML: always revalidate
+location = /index.html {
+    expires -1;
+    add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+}
+
+location / {
+    try_files $uri /index.html;
+    add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+}
+
+gzip on;
+gzip_vary on;
+gzip_types text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml;
+
+# Requires ngx_brotli module
+brotli on;
+brotli_comp_level 5;
+brotli_types text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml;
+```
+
+#### CDN Rule Template (Cloudflare/Fastly/Akamai)
+- Rule 1: path matches hashed asset pattern (`/assets/*.[0-9a-f]{8,12}.*`) -> Browser TTL 1 year, mark as immutable.
+- Rule 2: path matches HTML entry (`/`, `/index.html`) -> bypass edge cache or set very low TTL + revalidation.
+- Rule 3: enable Brotli and gzip at edge, and keep `Vary: Accept-Encoding`.
+
+### Compression & Cache Verification Checklist
+
+Run these from any deployment shell:
+
+```bash
+# 1) Hashed asset should be immutable + Brotli when requested
+curl -I -H "Accept-Encoding: br" https://your-domain.com/assets/index.abc12345.js
+
+# 2) Gzip fallback should also work
+curl -I -H "Accept-Encoding: gzip" https://your-domain.com/assets/index.abc12345.js
+
+# 3) HTML must not be long-cached
+curl -I https://your-domain.com/
+
+# 4) API responses must not accidentally inherit immutable static policy
+curl -I https://your-domain.com/api/services/
+```
+
+Expected indicators:
+- Hashed asset response includes `Cache-Control: public, max-age=31536000, immutable`
+- HTML response includes `Cache-Control: no-cache, no-store, must-revalidate`
+- Compressed responses include `Content-Encoding: br` or `Content-Encoding: gzip`
+- `Vary` includes `Accept-Encoding`

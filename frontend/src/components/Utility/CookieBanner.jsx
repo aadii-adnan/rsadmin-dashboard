@@ -1,17 +1,38 @@
 import React, { useEffect, useState } from 'react';
 
+const CONSENT_STORAGE_KEY = 'cookieConsent';
+
 const CookieConsentBanner = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem('cookieConsent');
+    let consent;
+    try {
+      consent = localStorage.getItem(CONSENT_STORAGE_KEY);
+    } catch (error) {
+      consent = null;
+    }
+
     if (!consent) {
       setShowBanner(true);
     }
   }, []);
 
   const handleConsent = (choice) => {
-    localStorage.setItem('cookieConsent', choice);
+    try {
+      localStorage.setItem(CONSENT_STORAGE_KEY, choice);
+    } catch (error) {
+      // Ignore storage failures and still apply in-session behavior.
+    }
+
+    if (choice === 'accepted') {
+      window.dispatchEvent(new Event('cookie-consent-accepted'));
+      window.dispatchEvent(new Event('analytics-consent-granted'));
+    } else {
+      window.dispatchEvent(new Event('cookie-consent-rejected'));
+      window.dispatchEvent(new Event('analytics-consent-denied'));
+    }
+
     setShowBanner(false);
   };
 

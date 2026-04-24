@@ -1,0 +1,50 @@
+.rse-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rse-popup-overlay {
+  z-index: 20;
+}
+
+.rse-service-overlay {
+  z-index: 1000;
+}
+
+.rse-modal-content {
+  background-color: #fff;
+  border-radius: 15px;
+  margin: 0 auto;
+  outline: none;
+  position: relative;
+  inset: auto;
+}
+
+.rse-popup-content {
+  max-width: 500px;
+  width: 90%;
+  max-height: 90%;
+  padding: 30px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  overflow: auto;
+}
+
+.rse-service-content {
+  max-width: 1200px;
+  width: 90%;
+  max-height: 80%;
+  padding: 40px 50px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+}
+
+@media (max-width: 576px) {
+  .rse-popup-content,
+  .rse-service-content {
+    padding: 20px 15px;
+    position: static;
+  }
+}

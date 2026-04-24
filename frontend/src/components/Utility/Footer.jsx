@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom';
+import { FaEnvelope, FaInstagram, FaPhone, FaPhoneAlt } from "react-icons/fa";
 import logo from '../../assets/logo-white.webp'
 
 const Footer = () => {
@@ -28,7 +29,7 @@ const Footer = () => {
                             <span class="elementor-grid-item">
                                 <a style={{color:"#fff"}} class="elementor-icon elementor-social-icon elementor-social-icon-icon-instagram-1 elementor-repeater-item-49f853b" href="https://www.instagram.com/rsexpressparking/" target="_blank">
                                 <span class="elementor-screen-only">Icon-instagram-1</span>
-                                <i class="icon icon-instagram-1"></i>					</a>
+                                <i className="icon icon-instagram-1" aria-hidden="true"><FaInstagram aria-hidden="true" /></i>					</a>
 				            </span>
 					    </div>
                     </div>
@@ -114,7 +115,7 @@ const Footer = () => {
                         <div className="elementor-icon-box-wrapper">
                             <div className="elementor-icon-box-icon">
                                 <a href="tel:+35319640011" className="elementor-icon" tabIndex="-1" aria-label="+353 1 964 0011">
-                                <i aria-hidden="true" className="icon icon-phone-handset"></i>				</a>
+                                <i aria-hidden="true" className="icon icon-phone-handset"><FaPhoneAlt aria-hidden="true" /></i>				</a>
                             </div>
                             <div className="elementor-icon-box-content">
                                 <span className="elementor-icon-box-title">
@@ -130,7 +131,7 @@ const Footer = () => {
                         <div className="elementor-icon-box-wrapper">
                             <div className="elementor-icon-box-icon">
                                 <a href="tel:+353834896505" className="elementor-icon" tabIndex="-1" aria-label="+353 83 489 6505">
-                                <i aria-hidden="true" className="icon icon-phone"></i>				</a>
+                                <i aria-hidden="true" className="icon icon-phone"><FaPhone aria-hidden="true" /></i>				</a>
                             </div>
                             <div className="elementor-icon-box-content">
                                 <span className="elementor-icon-box-title">
@@ -146,7 +147,7 @@ const Footer = () => {
                         <div className="elementor-icon-box-wrapper">
                             <div className="elementor-icon-box-icon">
                                 <a href="mailto:support@rsexpressparking.com" className="elementor-icon" tabIndex="-1" aria-label="support@rsexpressparking.com">
-                                <i aria-hidden="true" className="icon icon-envelope2"></i>				</a>
+                                <i aria-hidden="true" className="icon icon-envelope2"><FaEnvelope aria-hidden="true" /></i>				</a>
                             </div>
                             <div className="elementor-icon-box-content">
                                 <span className="elementor-icon-box-title">

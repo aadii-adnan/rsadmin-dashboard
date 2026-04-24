@@ -1,5 +1,8 @@
 import React, {useState} from 'react'
 import contactImg from "../assets/contact-us.webp"
+import { FaInstagram } from "react-icons/fa";
+import "../ContactUs.css";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const ContactUs = () => {
 
@@ -87,7 +90,7 @@ const ContactUs = () => {
                             <span className="elementor-grid-item">
                             <a className="elementor-icon elementor-social-icon elementor-social-icon-icon-instagram-1 elementor-repeater-item-49f853b" target="_blank">
                             <span className="elementor-screen-only">Icon-instagram-1</span>
-                            <i className="icon icon-instagram-1"></i>					</a>
+                            <i className="icon icon-instagram-1" aria-hidden="true"><FaInstagram aria-hidden="true" /></i>					</a>
                             </span>
                             <span className="elementor-grid-item">
                                 <a className="elementor-icon elementor-social-icon elementor-social-icon-x-twitter elementor-repeater-item-f592de8" target="_blank">
