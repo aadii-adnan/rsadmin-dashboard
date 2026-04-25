@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Col,
@@ -15,7 +15,71 @@ import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
-const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY || "";
+const TINYMCE_SCRIPT_SRC = "/tinymce/tinymce.min.js";
+
+const TINYMCE_BASE_INIT = {
+  plugins: ["code", "image", "imagetools", "link", "lists", "help", "wordcount"],
+  menubar: true,
+  toolbar:
+    "code | image link | undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | removeformat",
+  image_title: true,
+  automatic_uploads: true,
+  image_advtab: true,
+  branding: false,
+  promotion: false,
+  license_key: "gpl",
+};
+
+let tinyMceScriptLoadPromise = null;
+
+function ensureTinyMceScriptLoaded(scriptSrc) {
+  if (typeof window === "undefined") {
+    return Promise.resolve();
+  }
+
+  if (window.tinymce) {
+    return Promise.resolve();
+  }
+
+  if (tinyMceScriptLoadPromise) {
+    return tinyMceScriptLoadPromise;
+  }
+
+  tinyMceScriptLoadPromise = new Promise((resolve, reject) => {
+    const resolveIfReady = () => {
+      if (window.tinymce) {
+        resolve();
+      }
+    };
+
+    const onError = () => {
+      tinyMceScriptLoadPromise = null;
+      reject(new Error("Failed to load TinyMCE editor script."));
+    };
+
+    const existingScript = document.querySelector('script[data-tinymce-self-hosted="true"]');
+    if (existingScript) {
+      if (window.tinymce) {
+        resolve();
+        return;
+      }
+      existingScript.addEventListener("load", resolveIfReady, { once: true });
+      existingScript.addEventListener("error", onError, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = scriptSrc;
+    script.async = true;
+    script.defer = true;
+    script.setAttribute("data-tinymce-self-hosted", "true");
+    script.addEventListener("load", resolveIfReady, { once: true });
+    script.addEventListener("error", onError, { once: true });
+    document.head.appendChild(script);
+  });
+
+  return tinyMceScriptLoadPromise;
+}
 
 function toListPayload(data) {
   if (Array.isArray(data)) {
@@ -56,6 +120,27 @@ function slugify(value = "") {
     .substring(0, 255);
 }
 
+function normalizeFaq(faq) {
+  return {
+    id: faq.id,
+    question: faq.question || "",
+    answer: faq.answer || "",
+    is_active: faq.is_active ?? true,
+    order: faq.order ?? 0,
+  };
+}
+
+function getFaqListEndpoint(postId) {
+  return postId ? `${BLOG_API_BASE}/faqs/?post=${encodeURIComponent(postId)}` : `${BLOG_API_BASE}/faqs/`;
+}
+
+function createTinyMceInit(overrides = {}) {
+  return {
+    ...TINYMCE_BASE_INIT,
+    ...overrides,
+  };
+}
+
 function BlogPostForm() {
   useBlogJwtFromUrl();
   const { id } = useParams();
@@ -68,6 +153,8 @@ function BlogPostForm() {
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [isTinyMceReady, setIsTinyMceReady] = useState(false);
 
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -99,10 +186,36 @@ function BlogPostForm() {
 
   const [faqs, setFaqs] = useState([]);
   const [removedFaqIds, setRemovedFaqIds] = useState([]);
+  const [selectedFaqIndex, setSelectedFaqIndex] = useState(null);
 
   const titleMode = useMemo(() => (isEditMode ? "Edit Blog Post" : "Create Blog Post"), [isEditMode]);
 
-  const fetchPostData = async () => {
+  const contentEditorInit = useMemo(() => createTinyMceInit({ height: 480 }), []);
+  const faqEditorInit = useMemo(
+    () =>
+      createTinyMceInit({
+        height: 320,
+        menubar: false,
+        toolbar:
+          "code | undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat",
+      }),
+    []
+  );
+
+  const selectedFaq = selectedFaqIndex !== null ? faqs[selectedFaqIndex] || null : null;
+
+  const parseErrorMessage = async (response, fallbackMessage) => {
+    const payload = await response.json().catch(() => null);
+    if (typeof payload?.detail === "string" && payload.detail.trim()) {
+      return payload.detail;
+    }
+    if (Array.isArray(payload?.non_field_errors) && payload.non_field_errors[0]) {
+      return String(payload.non_field_errors[0]);
+    }
+    return fallbackMessage;
+  };
+
+  const fetchPostData = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -115,7 +228,7 @@ function BlogPostForm() {
       if (isEditMode) {
         baseRequests.push(
           customFetch(`${BLOG_API_BASE}/posts/${id}/`, { useFinanceJwt: true }),
-          customFetch(`${BLOG_API_BASE}/faqs/`, { useFinanceJwt: true })
+          customFetch(getFaqListEndpoint(id), { useFinanceJwt: true })
         );
       }
 
@@ -173,34 +286,54 @@ function BlogPostForm() {
           featured_image: null,
         });
 
+        const normalizedFaqs = linkedFaqs.map(normalizeFaq);
         setExistingFeaturedImage(post.featured_image || "");
-        setFaqs(
-          linkedFaqs.map((faq) => ({
-            id: faq.id,
-            question: faq.question || "",
-            answer: faq.answer || "",
-            is_active: faq.is_active ?? true,
-            order: faq.order ?? 0,
-          }))
-        );
+        setFaqs(normalizedFaqs);
+        setRemovedFaqIds([]);
+        setSelectedFaqIndex(normalizedFaqs.length ? 0 : null);
+      } else {
+        setFaqs([]);
+        setRemovedFaqIds([]);
+        setSelectedFaqIndex(null);
+        setExistingFeaturedImage("");
       }
     } catch (err) {
       setError(err.message || "Failed to load blog form data.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, isEditMode]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    ensureTinyMceScriptLoaded(TINYMCE_SCRIPT_SRC)
+      .then(() => {
+        if (mounted) {
+          setIsTinyMceReady(true);
+        }
+      })
+      .catch((loadError) => {
+        if (mounted) {
+          setError(loadError.message || "Failed to load TinyMCE editor.");
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     // 1. Check Auth first
     if (!localStorage.getItem("finance_jwt")) {
       navigate("/unauthorized", { replace: true });
-      return; // Stop execution immediately
+      return;
     }
 
     // 2. If Auth passes, fetch the data
     fetchPostData();
-  }, [navigate, id, isEditMode]);
+  }, [navigate, fetchPostData]);
 
   useEffect(() => {
     if (isEditMode) {
@@ -222,6 +355,19 @@ function BlogPostForm() {
       return { ...prev, slug: generatedSlug };
     });
   }, [formData.title, isEditMode, isSlugManuallyEdited]);
+
+  useEffect(() => {
+    if (!faqs.length) {
+      if (selectedFaqIndex !== null) {
+        setSelectedFaqIndex(null);
+      }
+      return;
+    }
+
+    if (selectedFaqIndex === null || selectedFaqIndex >= faqs.length) {
+      setSelectedFaqIndex(0);
+    }
+  }, [faqs, selectedFaqIndex]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -286,6 +432,56 @@ function BlogPostForm() {
     return payload;
   };
 
+  const persistFaqChanges = async ({ postId, faqItems, faqIdsToDelete = [] }) => {
+    const deleteQueue = [...new Set((faqIdsToDelete || []).filter(Boolean))];
+
+    for (const faqId of deleteQueue) {
+      const deleteRes = await customFetch(`${BLOG_API_BASE}/faqs/${faqId}/`, {
+        method: "DELETE",
+        useFinanceJwt: true,
+      });
+
+      if (!deleteRes?.ok) {
+        const message = await parseErrorMessage(deleteRes, "Failed to delete FAQ item.");
+        throw new Error(message);
+      }
+    }
+
+    for (const faq of faqItems) {
+      const faqPayload = {
+        post: Number(postId),
+        question: faq.question,
+        answer: faq.answer,
+        is_active: Boolean(faq.is_active),
+        order: Number(faq.order) || 0,
+      };
+
+      const endpoint = faq.id ? `${BLOG_API_BASE}/faqs/${faq.id}/` : `${BLOG_API_BASE}/faqs/`;
+      const method = faq.id ? "PUT" : "POST";
+
+      const saveRes = await customFetch(endpoint, {
+        method,
+        body: faqPayload,
+        useFinanceJwt: true,
+      });
+
+      if (!saveRes?.ok) {
+        const message = await parseErrorMessage(saveRes, "Failed to save FAQ item.");
+        throw new Error(message);
+      }
+    }
+
+    const faqReloadRes = await customFetch(getFaqListEndpoint(postId), { useFinanceJwt: true });
+    if (!faqReloadRes?.ok) {
+      const message = await parseErrorMessage(faqReloadRes, "Failed to reload FAQs.");
+      throw new Error(message);
+    }
+
+    const faqData = await faqReloadRes.json();
+    const linkedFaqs = toListPayload(faqData).filter((faq) => String(faq.post) === String(postId));
+    return linkedFaqs.map(normalizeFaq);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -304,18 +500,28 @@ function BlogPostForm() {
       });
 
       if (!response?.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.detail || "Failed to save post.");
+        const errorMessage = await parseErrorMessage(response, "Failed to save post.");
+        throw new Error(errorMessage);
       }
 
       const savedPost = await response.json();
-      setSuccessMessage(isEditMode ? "Post updated successfully." : "Post created successfully.");
 
       if (!isEditMode && savedPost?.id) {
+        if (faqs.length > 0) {
+          await persistFaqChanges({
+            postId: savedPost.id,
+            faqItems: faqs,
+          });
+          setSuccessMessage("Post and FAQs created successfully.");
+        } else {
+          setSuccessMessage("Post created successfully.");
+        }
+
         navigate(`/blog-admin/edit/${savedPost.id}`);
         return;
       }
 
+      setSuccessMessage("Post updated successfully.");
       navigate("/blog-admin");
     } catch (err) {
       setError(err.message || "Failed to save post.");
@@ -335,6 +541,7 @@ function BlogPostForm() {
         order: prev.length,
       },
     ]);
+    setSelectedFaqIndex(faqs.length);
   };
 
   const updateFaq = (index, field, value) => {
@@ -347,9 +554,27 @@ function BlogPostForm() {
     setFaqs((prev) => {
       const faqToRemove = prev[index];
       if (faqToRemove?.id) {
-        setRemovedFaqIds((oldIds) => [...oldIds, faqToRemove.id]);
+        setRemovedFaqIds((oldIds) => {
+          if (oldIds.includes(faqToRemove.id)) {
+            return oldIds;
+          }
+          return [...oldIds, faqToRemove.id];
+        });
       }
       return prev.filter((_, faqIndex) => faqIndex !== index);
+    });
+
+    setSelectedFaqIndex((current) => {
+      if (current === null) {
+        return null;
+      }
+      if (current === index) {
+        return index > 0 ? index - 1 : 0;
+      }
+      if (current > index) {
+        return current - 1;
+      }
+      return current;
     });
   };
 
@@ -363,56 +588,15 @@ function BlogPostForm() {
     setSuccessMessage("");
 
     try {
-      for (const faqId of removedFaqIds) {
-        const deleteRes = await customFetch(`${BLOG_API_BASE}/faqs/${faqId}/`, {
-          method: "DELETE",
-          useFinanceJwt: true,
-        });
-        if (!deleteRes?.ok) {
-          throw new Error("Failed to delete FAQ item.");
-        }
-      }
+      const syncedFaqs = await persistFaqChanges({
+        postId: id,
+        faqItems: faqs,
+        faqIdsToDelete: removedFaqIds,
+      });
 
-      for (const faq of faqs) {
-        const faqPayload = {
-          post: Number(id),
-          question: faq.question,
-          answer: faq.answer,
-          is_active: Boolean(faq.is_active),
-          order: Number(faq.order) || 0,
-        };
-
-        const endpoint = faq.id ? `${BLOG_API_BASE}/faqs/${faq.id}/` : `${BLOG_API_BASE}/faqs/`;
-        const method = faq.id ? "PUT" : "POST";
-
-        const saveRes = await customFetch(endpoint, {
-          method,
-          body: faqPayload,
-          useFinanceJwt: true,
-        });
-
-        if (!saveRes?.ok) {
-          throw new Error("Failed to save FAQ item.");
-        }
-      }
-
+      setFaqs(syncedFaqs);
       setRemovedFaqIds([]);
       setSuccessMessage("FAQs saved successfully.");
-
-      const faqReloadRes = await customFetch(`${BLOG_API_BASE}/faqs/`, { useFinanceJwt: true });
-      if (faqReloadRes?.ok) {
-        const faqData = await faqReloadRes.json();
-        const linkedFaqs = toListPayload(faqData).filter((faq) => String(faq.post) === String(id));
-        setFaqs(
-          linkedFaqs.map((faq) => ({
-            id: faq.id,
-            question: faq.question || "",
-            answer: faq.answer || "",
-            is_active: faq.is_active ?? true,
-            order: faq.order ?? 0,
-          }))
-        );
-      }
     } catch (err) {
       setError(err.message || "Failed to save FAQs.");
     } finally {
@@ -427,7 +611,9 @@ function BlogPostForm() {
         <Link to="/blog-admin" className="btn-admin-outline">
           &larr; Back to Dashboard
         </Link>
-        <h2 style={{ color: 'var(--primary-dark)' }} className="fw-bold m-0">{titleMode}</h2>
+        <h2 style={{ color: "var(--primary-dark)" }} className="fw-bold m-0">
+          {titleMode}
+        </h2>
       </div>
 
       {error ? <Alert variant="danger">{error}</Alert> : null}
@@ -448,57 +634,42 @@ function BlogPostForm() {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold">Title</Form.Label>
-                      <Form.Control
-                        name="title"
-                        value={formData.title}
-                        onChange={handleChange}
-                        required
-                      />
+                      <Form.Control name="title" value={formData.title} onChange={handleChange} required />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold">Slug</Form.Label>
-                      <Form.Control
-                        name="slug"
-                        value={formData.slug}
-                        onChange={handleChange}
-                        required
-                      />
+                      <Form.Control name="slug" value={formData.slug} onChange={handleChange} required />
                     </Form.Group>
                   </Col>
                 </Row>
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">Excerpt (Short Summary)</Form.Label>
-                  <Form.Control 
-                    as="textarea" 
-                    rows={3} 
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
                     name="excerpt"
-                    value={formData.excerpt} 
-                    onChange={handleChange} 
-                    placeholder="Write a brief summary for the blog cards..." 
+                    value={formData.excerpt}
+                    onChange={handleChange}
+                    placeholder="Write a brief summary for the blog cards..."
                     className="filter-input"
                   />
                 </Form.Group>
                 <Form.Group>
                   <Form.Label className="fw-semibold">Content</Form.Label>
-                  <Editor
-                    apiKey={TINYMCE_API_KEY}
-                    value={formData.content}
-                    onEditorChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
-                    init={{
-                      plugins: [
-                        'code', 'image', 'imagetools', 'link', 'lists', 'help', 'wordcount'
-                      ],
-                      height: 480,
-                      menubar: true,
-                      toolbar:
-                        "code | image link | undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | removeformat",
-                      image_title: true,
-                      automatic_uploads: true,
-                      image_advtab: true,
-                    }}
-                  />
+                  {isTinyMceReady ? (
+                    <Editor
+                      value={formData.content}
+                      onEditorChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
+                      init={contentEditorInit}
+                    />
+                  ) : (
+                    <div className="tiny-editor-loading">
+                      <Spinner animation="border" size="sm" />
+                      <span>Loading editor...</span>
+                    </div>
+                  )}
                 </Form.Group>
               </div>
 
@@ -508,11 +679,7 @@ function BlogPostForm() {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold">SEO Meta Title</Form.Label>
-                      <Form.Control
-                        name="meta_title"
-                        value={formData.meta_title}
-                        onChange={handleChange}
-                      />
+                      <Form.Control name="meta_title" value={formData.meta_title} onChange={handleChange} />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
@@ -560,80 +727,144 @@ function BlogPostForm() {
                 </div>
               </div>
 
-              {isEditMode ? (
-                <div className="admin-card mt-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="admin-card-title border-0 mb-0 pb-0">Manage FAQs</h5>
-                    <button type="button" className="btn-admin-outline btn-admin-sm" onClick={addFaq}>
-                      + Add FAQ
-                    </button>
-                  </div>
+              <div className="admin-card mt-4">
+                <div className="d-flex justify-content-between align-items-center mb-2 faq-headline-row">
+                  <h5 className="admin-card-title border-0 mb-0 pb-0">Manage FAQs</h5>
+                  <button type="button" className="btn-admin-outline btn-admin-sm" onClick={addFaq}>
+                    + Add FAQ
+                  </button>
+                </div>
+                <p className="faq-help-text mb-3">
+                  {isEditMode
+                    ? "Update questions in the table, then use the shared editor below for rich answer HTML."
+                    : "Draft FAQs now. They will be saved automatically after the post is created."}
+                </p>
 
-                  {faqs.length ? (
-                    <Table bordered responsive className="admin-table">
-                      <thead>
-                        <tr>
-                          <th style={{ width: "25%" }}>Question</th>
-                          <th style={{ width: "45%" }}>Answer</th>
-                          <th style={{ width: "10%" }}>Order</th>
-                          <th style={{ width: "10%" }}>Active</th>
-                          <th style={{ width: "10%" }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {faqs.map((faq, index) => (
-                          <tr key={faq.id || `new-${index}`}>
-                            <td>
-                              <Form.Control
-                                value={faq.question}
-                                onChange={(event) => updateFaq(index, "question", event.target.value)}
-                                placeholder="Question"
-                              />
-                            </td>
-                            <td>
-                              <Form.Control
-                                as="textarea"
-                                rows={2}
-                                value={faq.answer}
-                                onChange={(event) => updateFaq(index, "answer", event.target.value)}
-                                placeholder="Answer"
-                              />
-                            </td>
-                            <td>
-                              <Form.Control
-                                type="number"
-                                value={faq.order}
-                                onChange={(event) => updateFaq(index, "order", event.target.value)}
-                              />
-                            </td>
-                            <td className="text-center align-middle">
-                              <Form.Check
-                                type="switch"
-                                checked={Boolean(faq.is_active)}
-                                onChange={(event) => updateFaq(index, "is_active", event.target.checked)}
-                                label=""
-                              />
-                            </td>
-                            <td>
-                              <button type="button" className="btn-admin-outline btn-admin-sm" onClick={() => removeFaq(index)}>
+                {faqs.length ? (
+                  <Table bordered responsive className="admin-table faq-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "35%" }}>Question</th>
+                        <th style={{ width: "35%" }}>Answer Preview</th>
+                        <th style={{ width: "10%" }}>Order</th>
+                        <th style={{ width: "8%" }}>Active</th>
+                        <th style={{ width: "12%" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {faqs.map((faq, index) => (
+                        <tr
+                          key={faq.id || `new-${index}`}
+                          className={selectedFaqIndex === index ? "faq-row-selected" : ""}
+                        >
+                          <td>
+                            <Form.Control
+                              value={faq.question}
+                              onChange={(event) => updateFaq(index, "question", event.target.value)}
+                              placeholder="Question"
+                            />
+                          </td>
+                          <td>
+                            <div className="faq-answer-preview">
+                              {faq.answer ? (
+                                <div dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                              ) : (
+                                <span className="text-muted">No answer yet.</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <Form.Control
+                              type="number"
+                              value={faq.order}
+                              onChange={(event) => updateFaq(index, "order", event.target.value)}
+                            />
+                          </td>
+                          <td className="text-center align-middle">
+                            <Form.Check
+                              type="switch"
+                              checked={Boolean(faq.is_active)}
+                              onChange={(event) => updateFaq(index, "is_active", event.target.checked)}
+                              label=""
+                            />
+                          </td>
+                          <td>
+                            <div className="faq-row-actions">
+                              <button
+                                type="button"
+                                className={`btn-admin-outline btn-admin-sm ${
+                                  selectedFaqIndex === index ? "faq-select-btn-active" : ""
+                                }`}
+                                onClick={() => setSelectedFaqIndex(index)}
+                              >
+                                {selectedFaqIndex === index ? "Editing" : "Edit"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-admin-outline btn-admin-sm"
+                                onClick={() => removeFaq(index)}
+                              >
                                 Remove
                               </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  ) : (
-                    <Alert variant="info" className="mb-0">No FAQs added yet. Click Add FAQ to create one.</Alert>
-                  )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                ) : (
+                  <Alert variant="info" className="mb-0">
+                    No FAQs added yet. Click Add FAQ to create one.
+                  </Alert>
+                )}
 
-                  <div className="d-flex justify-content-end mt-3 border-top pt-3">
-                    <button type="button" className="btn-admin-outline" onClick={handleSaveFaqs} disabled={savingFaqs}>
+                <div className="faq-editor-shell mt-3">
+                  <div className="faq-editor-shell-header">
+                    <h6 className="mb-1">FAQ Answer Editor</h6>
+                    <p className="mb-0 text-muted">
+                      {selectedFaq
+                        ? `Currently editing: ${selectedFaq.question || "Untitled question"}`
+                        : "Select a FAQ row and click Edit to work on the answer."}
+                    </p>
+                  </div>
+
+                  {selectedFaq ? (
+                    isTinyMceReady ? (
+                      <Editor
+                        value={selectedFaq.answer}
+                        onEditorChange={(value) => updateFaq(selectedFaqIndex, "answer", value)}
+                        init={faqEditorInit}
+                      />
+                    ) : (
+                      <div className="tiny-editor-loading">
+                        <Spinner animation="border" size="sm" />
+                        <span>Loading editor...</span>
+                      </div>
+                    )
+                  ) : (
+                    <Alert variant="secondary" className="mb-0">
+                      Add at least one FAQ and select it to edit the answer.
+                    </Alert>
+                  )}
+                </div>
+
+                <div className="d-flex justify-content-end mt-3 border-top pt-3">
+                  {isEditMode ? (
+                    <button
+                      type="button"
+                      className="btn-admin-outline"
+                      onClick={handleSaveFaqs}
+                      disabled={savingFaqs}
+                    >
                       {savingFaqs ? "Saving FAQs..." : "Save FAQs"}
                     </button>
-                  </div>
+                  ) : (
+                    <span className="text-muted small align-self-center">
+                      FAQs will be saved after the post is created.
+                    </span>
+                  )}
                 </div>
-              ) : null}
+              </div>
             </Col>
 
             {/* RIGHT COLUMN */}
@@ -642,11 +873,7 @@ function BlogPostForm() {
                 <h5 className="admin-card-title">Publishing</h5>
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">Status</Form.Label>
-                  <Form.Select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                  >
+                  <Form.Select name="status" value={formData.status} onChange={handleChange}>
                     <option value="draft">Draft</option>
                     <option value="publish">Publish</option>
                   </Form.Select>
@@ -671,8 +898,12 @@ function BlogPostForm() {
                     placeholder="e.g. 5"
                   />
                 </Form.Group>
-                
-                <button type="submit" className="btn-admin-outline w-100 mt-3 justify-content-center" disabled={saving}>
+
+                <button
+                  type="submit"
+                  className="btn-admin-outline w-100 mt-3 justify-content-center"
+                  disabled={saving}
+                >
                   {saving ? "Saving..." : "Save Post"}
                 </button>
               </div>
@@ -681,11 +912,7 @@ function BlogPostForm() {
                 <h5 className="admin-card-title">Taxonomy</h5>
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">Category</Form.Label>
-                  <Form.Select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                  >
+                  <Form.Select name="category" value={formData.category} onChange={handleChange}>
                     <option value="">Select category</option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>

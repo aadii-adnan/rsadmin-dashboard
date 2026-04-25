@@ -277,6 +277,15 @@ class BlogFAQViewSet(viewsets.ModelViewSet):
     serializer_class = AdminBlogFAQSerializer
     permission_classes = [IsManagerOrAdmin]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        post_id = self.request.query_params.get("post")
+
+        if post_id is not None and post_id != "":
+            queryset = queryset.filter(post_id=post_id)
+
+        return queryset
+
 
 class RedirectRuleViewSet(viewsets.ModelViewSet):
     queryset = RedirectRule.objects.all().order_by("old_path")
