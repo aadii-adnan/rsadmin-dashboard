@@ -217,7 +217,7 @@ const Header = () => {
                                   <li onClick={() => setIsOpen(false)} id="menu-item-924" className="menu-item menu-item-type-post_type menu-item-object-page page_item page-item-596 menu-item-924 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/terms-conditions"}>Terms &amp; Conditions</Link></li>
                                 </>
                               )}
-                            <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><a className='footer-link' href="/blog"><div className="ekit-menu-nav-link">Blog</div></a></li>
+                            <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to="/blog"><div className="ekit-menu-nav-link">Blog</div></Link></li>
                             <li onClick={() => setIsOpen(false)} id="menu-item-754" className="menu-item menu-item-type-post_type menu-item-object-page menu-item-754 nav-item elementskit-mobile-builder-content" data-vertical-menu="750px"><Link className='footer-link' to={"/contact-us"}><div className="ekit-menu-nav-link">Contact Us</div></Link></li>
                            {/* Me Dropdown */}
               {isMobile ? <>

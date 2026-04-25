@@ -7,7 +7,7 @@ export default function AdminNavbar() {
   return (
     <Navbar expand="lg" className="admin-navbar" sticky="top">
       <Container fluid className="px-4">
-        <Navbar.Brand href="/finance-dashboard" className="admin-navbar-brand">
+        <Navbar.Brand as={NavLink} to="/finance-dashboard" className="admin-navbar-brand">
           {/* Replace with actual img logo if available */}
           RS Express Admin
         </Navbar.Brand>

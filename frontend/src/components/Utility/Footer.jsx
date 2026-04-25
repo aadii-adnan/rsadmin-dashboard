@@ -50,9 +50,9 @@ const Footer = () => {
                                 </Link>
                             </li>                                                                                                       
                             <li className="elementor-icon-list-item">
-                                <a className='footer-link' href='/blog'>
+                                <Link className='footer-link' to={'/blog'}>
                                 <span className="elementor-icon-list-text">Blog</span>
-                                </a>
+                                </Link>
                             </li>                                                                                                    
                             <li className="elementor-icon-list-item">
                                 <Link className='footer-link' to={"/contact-us"}>
