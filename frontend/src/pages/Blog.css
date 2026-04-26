@@ -226,7 +226,56 @@
   top: 2rem;
 }
 
-/* ── Table of Contents ── */
+/* ── Table of Contents Mobile (collapsible, shown below lg) ── */
+.toc-mobile {
+  border: 1px solid rgba(40, 144, 205, 0.2);
+  border-radius: var(--radius, 12px);
+  background: #f8fbff;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.toc-mobile-summary {
+  color: var(--primary-dark, #010659);
+  font-family: 'Urbanist', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 14px 20px;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.toc-mobile-summary::-webkit-details-marker {
+  display: none;
+}
+
+.toc-mobile-summary::after {
+  content: '▾';
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.toc-mobile[open] .toc-mobile-summary::after {
+  transform: rotate(-180deg);
+}
+
+.toc-mobile-list {
+  padding: 0 0 8px 0 !important;
+  max-height: none !important;
+  border-top: 1px solid rgba(1, 6, 89, 0.08);
+}
+
+.toc-mobile-list a {
+  padding-left: 20px !important;
+}
+
+/* ── Table of Contents Sidebar (desktop) ── */
 .toc-sidebar {
   border: 1px solid rgba(40, 144, 205, 0.2);
   border-radius: var(--radius, 12px);

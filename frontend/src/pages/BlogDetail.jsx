@@ -476,8 +476,24 @@ function BlogDetail() {
 
       <Container className="py-5">
         <Row>
-          {/* Main Content Content */}
+          {/* Main Content */}
           <Col lg={8} className="mx-auto pe-lg-5 mb-5 mb-lg-0">
+            {/* Mobile-only collapsible TOC */}
+            {tocHeadings.length >= 2 && (
+              <details className="toc-mobile d-lg-none">
+                <summary className="toc-mobile-summary">In This Article</summary>
+                <ul className="toc-list toc-mobile-list">
+                  {tocHeadings.map(({ id, text }) => (
+                    <li key={id}>
+                      <a href={`#${id}`} onClick={(e) => scrollToHeading(e, id)}>
+                        {text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+
             <article>
               <section
                 ref={contentRef}
@@ -491,7 +507,7 @@ function BlogDetail() {
           <Col lg={4}>
             <div className="blog-sidebar-sticky">
               {tocHeadings.length >= 2 && (
-                <nav className="toc-sidebar" aria-label="Table of contents">
+                <nav className="toc-sidebar d-none d-lg-block" aria-label="Table of contents">
                   <p className="toc-sidebar-title">In This Article</p>
                   <ul className="toc-list">
                     {tocHeadings.map(({ id, text }) => (
