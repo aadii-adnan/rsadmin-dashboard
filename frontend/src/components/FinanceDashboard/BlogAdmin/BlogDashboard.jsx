@@ -84,6 +84,7 @@ function BlogDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortDir, setSortDir] = useState("desc");
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -160,7 +161,7 @@ function BlogDashboard() {
   }, [categories]);
 
   const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
+    const filtered = posts.filter((post) => {
       const titleMatch = post.title?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       const statusMatch = statusFilter === "all" ? true : post.status === statusFilter;
       const categoryMatch =
@@ -168,7 +169,15 @@ function BlogDashboard() {
 
       return titleMatch && statusMatch && categoryMatch;
     });
-  }, [posts, debouncedSearchTerm, statusFilter, categoryFilter]);
+
+    filtered.sort((a, b) => {
+      const dateA = a.published_date ? new Date(a.published_date).getTime() : 0;
+      const dateB = b.published_date ? new Date(b.published_date).getTime() : 0;
+      return sortDir === "desc" ? dateB - dateA : dateA - dateB;
+    });
+
+    return filtered;
+  }, [posts, debouncedSearchTerm, statusFilter, categoryFilter, sortDir]);
 
   const tableRows = useMemo(() => {
     if (!filteredPosts.length) {
@@ -526,7 +535,12 @@ function BlogDashboard() {
                   <th>Category</th>
                   <th>Status</th>
                   <th>Author</th>
-                  <th>Published At</th>
+                  <th
+                    className="sortable-th"
+                    onClick={() => setSortDir((d) => d === "desc" ? "asc" : "desc")}
+                  >
+                    Published At {sortDir === "desc" ? "▼" : "▲"}
+                  </th>
                   <th style={{ width: "260px" }}>Actions</th>
                 </tr>
               </thead>

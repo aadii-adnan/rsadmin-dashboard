@@ -216,6 +216,16 @@
   color: var(--primary-light, rgb(40, 144, 205));
 }
 
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sortable-th:hover {
+  color: var(--primary-light, rgb(40, 144, 205));
+}
+
 .status-badge-publish,
 .status-badge-scheduled,
 .status-badge-draft {
