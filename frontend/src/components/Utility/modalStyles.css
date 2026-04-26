@@ -1,4 +1,6 @@
 .rse-modal-overlay {
+  position: fixed;
+  inset: 0;
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
@@ -6,26 +8,26 @@
 }
 
 .rse-popup-overlay {
-  z-index: 20;
+  z-index: 4000;
 }
 
 .rse-service-overlay {
-  z-index: 1000;
+  z-index: 4000;
 }
 
 .rse-modal-content {
+  position: relative;
   background-color: #fff;
   border-radius: 15px;
   margin: 0 auto;
   outline: none;
-  position: relative;
-  inset: auto;
+  box-sizing: border-box;
 }
 
 .rse-popup-content {
   max-width: 500px;
   width: 90%;
-  max-height: 90%;
+  max-height: 90vh;
   padding: 30px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   text-align: center;
@@ -35,7 +37,7 @@
 .rse-service-content {
   max-width: 1200px;
   width: 90%;
-  max-height: 80%;
+  max-height: 80vh;
   padding: 40px 50px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
@@ -45,6 +47,5 @@
   .rse-popup-content,
   .rse-service-content {
     padding: 20px 15px;
-    position: static;
   }
 }

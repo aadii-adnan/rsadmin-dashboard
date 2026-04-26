@@ -3,7 +3,9 @@ import Modal from "react-modal";
 import "../Utility/modalStyles.css";
 
 const ServiceModal = ({ isOpen, onClose, long_description }) => {
-  if (!long_description) return null; // Return null if no service is provided
+  const modalContent = long_description?.trim()
+    ? long_description
+    : "<p>More details are not available for this service yet.</p>";
 
   return (
     <Modal
@@ -25,7 +27,7 @@ const ServiceModal = ({ isOpen, onClose, long_description }) => {
 
 
       {/* Modal Content */}
-      <div dangerouslySetInnerHTML={{ __html: long_description }}></div>
+      <div dangerouslySetInnerHTML={{ __html: modalContent }}></div>
     </Modal>
   );
 };
