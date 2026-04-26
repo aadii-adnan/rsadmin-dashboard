@@ -183,8 +183,8 @@ function BlogDashboard() {
         <td className="fw-semibold"><span className="table-title-link">{post.title || "-"}</span></td>
         <td>{categoryById[post.category] || "-"}</td>
         <td>
-          <span className={post.status === 'publish' ? 'status-badge-publish' : 'status-badge-draft'}>
-            {post.status === 'publish' ? 'Published' : 'Draft'}
+          <span className={`status-badge-${post.status === 'publish' ? 'publish' : post.status === 'scheduled' ? 'scheduled' : 'draft'}`}>
+            {post.status === 'publish' ? 'Published' : post.status === 'scheduled' ? 'Scheduled' : 'Draft'}
           </span>
         </td>
         <td>{post.author_name || post.author || "-"}</td>
@@ -480,6 +480,7 @@ function BlogDashboard() {
             >
               <option value="all">All Statuses</option>
               <option value="publish">Published</option>
+              <option value="scheduled">Scheduled</option>
               <option value="draft">Draft</option>
             </Form.Select>
           </Col>

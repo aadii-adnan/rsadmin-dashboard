@@ -19,6 +19,7 @@ class Tag(models.Model):
 class BlogPost(models.Model):
     STATUS_CHOICES = (
         ('draft', 'Draft'),
+        ('scheduled', 'Scheduled'),
         ('publish', 'Publish'),
     )
 

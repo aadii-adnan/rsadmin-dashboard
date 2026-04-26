@@ -875,11 +875,20 @@ function BlogPostForm() {
                   <Form.Label className="fw-semibold">Status</Form.Label>
                   <Form.Select name="status" value={formData.status} onChange={handleChange}>
                     <option value="draft">Draft</option>
+                    <option value="scheduled">Scheduled</option>
                     <option value="publish">Publish</option>
                   </Form.Select>
+                  {formData.status === 'scheduled' && !formData.published_date && (
+                    <Form.Text className="text-danger">Set a publish date/time to schedule this post.</Form.Text>
+                  )}
+                  {formData.status === 'scheduled' && formData.published_date && (
+                    <Form.Text className="text-muted">Will publish automatically at the set date/time.</Form.Text>
+                  )}
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Publish Date</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    Publish Date{formData.status === 'scheduled' && <span className="text-danger"> *</span>}
+                  </Form.Label>
                   <Form.Control
                     type="datetime-local"
                     name="published_date"
