@@ -175,6 +175,10 @@
   font-family: 'Urbanist', sans-serif;
 }
 
+.blog-content h2 {
+  scroll-margin-top: 5rem;
+}
+
 .blog-content p,
 .blog-content li {
   line-height: 1.8;
@@ -216,8 +220,63 @@
   text-align: center;
 }
 
-.blog-promo-sticky {
+/* ── Sidebar Sticky Wrapper ── */
+.blog-sidebar-sticky {
+  position: sticky;
   top: 2rem;
+}
+
+/* ── Table of Contents ── */
+.toc-sidebar {
+  border: 1px solid rgba(40, 144, 205, 0.2);
+  border-radius: var(--radius, 12px);
+  padding: 20px 24px;
+  background: #f8fbff;
+  margin-top: 1.5rem;
+}
+
+.toc-sidebar-title {
+  color: var(--primary-dark, #010659);
+  font-family: 'Urbanist', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid rgba(1, 6, 89, 0.08);
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.toc-list a {
+  display: block;
+  color: var(--text-grey, #666666);
+  font-family: 'Urbanist', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.toc-list a:hover {
+  color: var(--primary-dark, #010659);
+  border-left-color: var(--primary-light, rgb(40, 144, 205));
+  text-decoration: none;
+}
+
+.toc-list a.active {
+  color: var(--primary-dark, #010659);
+  border-left-color: var(--primary-light, rgb(40, 144, 205));
+  font-weight: 600;
 }
 
 /* ── Pagination ── */

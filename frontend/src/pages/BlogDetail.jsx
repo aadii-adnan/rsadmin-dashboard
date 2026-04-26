@@ -94,6 +94,8 @@ function BlogDetail() {
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tocHeadings, setTocHeadings] = useState([]);
+  const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -217,6 +219,56 @@ function BlogDetail() {
 
     return () => window.cancelAnimationFrame(frameId);
   }, [post?.content]);
+
+  /* ── Table of Contents: extract H2s and inject IDs ── */
+  useEffect(() => {
+    if (!post?.content || !contentRef.current) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      const root = contentRef.current;
+      if (!root) return;
+
+      const h2Elements = Array.from(root.querySelectorAll("h2"));
+      const headings = h2Elements.map((el, idx) => {
+        const text = el.textContent.trim();
+        const id = `toc-${idx}-${text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50)}`;
+        el.id = id;
+        return { id, text };
+      });
+
+      setTocHeadings(headings);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [post?.content]);
+
+  /* ── Table of Contents: active heading via IntersectionObserver ── */
+  useEffect(() => {
+    if (tocHeadings.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-10% 0% -80% 0%" }
+    );
+
+    tocHeadings.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [tocHeadings]);
+
+  const scrollToHeading = (e, id) => {
+    e.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   if (loading) {
     return <BlogDetailSkeleton />;
@@ -439,14 +491,35 @@ function BlogDetail() {
             </article>
           </Col>
 
-          {/* Promo Sidebar */}
+          {/* Sidebar: Table of Contents + Promo */}
           <Col lg={4}>
-            <div className="promo-sidebar sticky-top blog-promo-sticky">
-              <h4>Need Reliable Airport Parking?</h4>
-              <p>Secure your spot today with RS Express Parking and enjoy a hassle-free travel experience.</p>
-              <Link to="/" className="btn-modern mt-3 w-100">
-                BOOK YOUR PARKING NOW
-              </Link>
+            <div className="blog-sidebar-sticky">
+              {tocHeadings.length >= 2 && (
+                <nav className="toc-sidebar" aria-label="Table of contents">
+                  <p className="toc-sidebar-title">In This Article</p>
+                  <ul className="toc-list">
+                    {tocHeadings.map(({ id, text }) => (
+                      <li key={id}>
+                        <a
+                          href={`#${id}`}
+                          className={activeId === id ? "active" : ""}
+                          onClick={(e) => scrollToHeading(e, id)}
+                        >
+                          {text}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              )}
+
+              <div className={`promo-sidebar${tocHeadings.length >= 2 ? " mt-4" : ""}`}>
+                <h4>Need Reliable Airport Parking?</h4>
+                <p>Secure your spot today with RS Express Parking and enjoy a hassle-free travel experience.</p>
+                <Link to="/" className="btn-modern mt-3 w-100">
+                  BOOK YOUR PARKING NOW
+                </Link>
+              </div>
             </div>
           </Col>
         </Row>
