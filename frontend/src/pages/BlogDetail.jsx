@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Col, Container, Row } from "react-bootstrap";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
@@ -94,7 +94,6 @@ function BlogDetail() {
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [tocHeadings, setTocHeadings] = useState([]);
   const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
@@ -220,26 +219,20 @@ function BlogDetail() {
     return () => window.cancelAnimationFrame(frameId);
   }, [post?.content]);
 
-  /* ── Table of Contents: extract H2s and inject IDs ── */
-  useEffect(() => {
-    if (!post?.content || !contentRef.current) return;
+  /* ── Table of Contents: parse HTML string, inject IDs, extract headings ── */
+  const { processedHtml, tocHeadings } = useMemo(() => {
+    if (!post?.content) return { processedHtml: "", tocHeadings: [] };
 
-    const frameId = window.requestAnimationFrame(() => {
-      const root = contentRef.current;
-      if (!root) return;
-
-      const h2Elements = Array.from(root.querySelectorAll("h2"));
-      const headings = h2Elements.map((el, idx) => {
-        const text = el.textContent.trim();
-        const id = `toc-${idx}-${text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50)}`;
-        el.id = id;
-        return { id, text };
-      });
-
-      setTocHeadings(headings);
+    const doc = new DOMParser().parseFromString(post.content, "text/html");
+    const h2Elements = Array.from(doc.querySelectorAll("h2"));
+    const headings = h2Elements.map((el, idx) => {
+      const text = el.textContent.trim();
+      const id = `toc-${idx}-${text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50)}`;
+      el.id = id;
+      return { id, text };
     });
 
-    return () => window.cancelAnimationFrame(frameId);
+    return { processedHtml: doc.body.innerHTML, tocHeadings: headings };
   }, [post?.content]);
 
   /* ── Table of Contents: active heading via IntersectionObserver ── */
@@ -267,7 +260,10 @@ function BlogDetail() {
 
   const scrollToHeading = (e, id) => {
     e.preventDefault();
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = document.getElementById(id);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: "smooth" });
   };
 
   if (loading) {
@@ -486,7 +482,7 @@ function BlogDetail() {
               <section
                 ref={contentRef}
                 className="blog-content"
-                dangerouslySetInnerHTML={{ __html: post.content || "" }}
+                dangerouslySetInnerHTML={{ __html: processedHtml }}
               />
             </article>
           </Col>
