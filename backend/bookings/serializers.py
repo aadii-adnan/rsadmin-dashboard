@@ -46,3 +46,48 @@ class BookingUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookingUser
         fields = '__all__'
+
+
+class SupplierBookingSerializer(serializers.ModelSerializer):
+    add_ons = serializers.PrimaryKeyRelatedField(
+        queryset=AddOn.objects.all(), many=True, required=False
+    )
+    add_ons_detail = AddOnSerializer(source='add_ons', many=True, read_only=True)
+    status = StatusSerializer(read_only=True)
+    service_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Booking
+        fields = [
+            'id', 'booking_id', 'service', 'service_name',
+            'first_name', 'last_name', 'email', 'contact_no', 'total_passengers',
+            'car_registration_no', 'car_model', 'car_colour', 'car_manufacturer',
+            'departure_terminal', 'return_terminal',
+            'departure_flight_number', 'return_flight_number',
+            'departure_time', 'return_time',
+            'total_price', 'discounted_price',
+            'add_ons', 'add_ons_detail',
+            'website', 'note',
+            'status', 'created_at',
+        ]
+        read_only_fields = ['id', 'booking_id', 'status', 'created_at', 'add_ons_detail']
+        extra_kwargs = {
+            'departure_flight_number': {'required': False, 'allow_blank': True},
+            'return_flight_number': {'required': False, 'allow_blank': True},
+            'discounted_price': {'required': False, 'allow_null': True},
+            'website': {'required': False},
+            'note': {'required': False, 'allow_blank': True, 'allow_null': True},
+        }
+
+    def get_service_name(self, obj):
+        return obj.service.name if obj.service else None
+
+    def validate_service(self, service):
+        if service.website not in ('rsexpressparking', 'both'):
+            raise serializers.ValidationError("This service is not available for supplier bookings.")
+        return service
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['add_ons'] = AddOnSerializer(instance.add_ons.all(), many=True).data
+        return ret

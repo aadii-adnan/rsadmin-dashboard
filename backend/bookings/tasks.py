@@ -435,3 +435,20 @@ def send_social_media_follow_emails():
         emails_sent.add(email_norm)
     
     return f"Social media follow emails sent to {len(emails_sent)} recipients"
+
+
+@shared_task
+def send_supplier_booking_manager_notification(booking_id):
+    """Send admin/manager notification email when a supplier creates a booking via API."""
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        from payments.views import generate_invoice, send_manager_new_booking_email
+        response, error = generate_invoice(booking)
+        if error:
+            return f"Invoice generation failed for booking {booking_id}: {error}"
+        send_manager_new_booking_email(booking, response.getvalue())
+        return f"Manager notification sent for booking {booking.booking_id}"
+    except Booking.DoesNotExist:
+        return f"Booking {booking_id} not found"
+    except Exception as e:
+        return f"Error sending manager notification for booking {booking_id}: {e}"

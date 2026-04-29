@@ -11,6 +11,7 @@ from django.views.decorators.cache import cache_page
 from django.urls import reverse_lazy
 from finance.views import finance_jwt_login
 from blogs.views import blogs_jwt_login
+from bookings.views import SupplierBookingCreateView
 from django.contrib.auth import views as auth_views
 from django.http import HttpResponse, Http404
 from django.urls import re_path
@@ -69,6 +70,7 @@ urlpatterns = [
     # Blog sitemap (separate file for RS Express)
     path("blogs.xml", cache_page(86400)(sitemap), {"sitemaps": blog_sitemaps}, name="sitemap_blogs"),
     
+    path('api/supplier/bookings/', SupplierBookingCreateView.as_view(), name='supplier-booking-create'),
     path("api/finance/jwt-login/", finance_jwt_login, name="finance-jwt-login"),
     path("api/blogs/jwt-login/", blogs_jwt_login, name="blogs-jwt-login"),
     path('admin/admin-forgot-password/', auth_views.PasswordResetView.as_view(), name='admin_password_reset'),

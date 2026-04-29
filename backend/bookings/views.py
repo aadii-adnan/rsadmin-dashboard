@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.shortcuts import get_object_or_404
 from .models import Booking, BookingUser
-from .serializers import BookingSerializer, BookingUserSerializer
-from core.permissions import IsManagerOrAdmin
+from .serializers import BookingSerializer, BookingUserSerializer, SupplierBookingSerializer
+from core.permissions import IsManagerOrAdmin, IsSupplier
 from core.models import Status, BookingSettings
 from services.models import Coupon
 from payments.models import Payment
@@ -674,3 +674,25 @@ class BookingUserStatusUpdateView(APIView):
             return Response({'message': 'Status updated', 'booking_completion_status': booking_user.booking_completion_status})
         except BookingUser.DoesNotExist:
             return Response({'error': 'BookingUser not found'}, status=404)
+
+
+class SupplierBookingCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsSupplier]
+
+    def post(self, request):
+        supplier = request.user.supplier_profile
+        serializer = SupplierBookingSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        try:
+            confirmed_status = Status.objects.get(name='Confirmed', type='booking')
+        except Status.DoesNotExist:
+            return Response({'error': 'System configuration error: Confirmed status not found'}, status=500)
+
+        booking = serializer.save(supplier=supplier, status=confirmed_status)
+
+        from .tasks import send_supplier_booking_manager_notification
+        send_supplier_booking_manager_notification.delay(booking.id)
+
+        return Response(SupplierBookingSerializer(booking).data, status=201)
