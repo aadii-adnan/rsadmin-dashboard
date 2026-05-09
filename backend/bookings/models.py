@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from users.models import CustomUser, Supplier
 from services.models import Service, AddOn, Coupon
 from core.models import Status
@@ -7,7 +8,7 @@ import uuid
 from django.utils import timezone
 
 class Booking(models.Model):
-    booking_id = models.CharField(max_length=20, unique=True, editable=False, blank=True, null=True)
+    booking_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     add_ons = models.ManyToManyField(AddOn, blank=True)
@@ -68,15 +69,28 @@ class Booking(models.Model):
         help_text="Admin-only extra amount for supplier bookings. This amount goes fully to RS.",
     )
 
+    @staticmethod
+    def _generate_unique_booking_id(prefix):
+        booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
+        while Booking.objects.filter(booking_id=booking_id).exists():
+            booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
+        return booking_id
+
+    def clean(self):
+        if self.supplier and self.supplier.use_custom_booking_ids and not self.booking_id:
+            raise ValidationError({'booking_id': 'Custom booking ID is required for this supplier.'})
+
     def save(self, *args, **kwargs):
-        if not self.booking_id:
+        if not self.pk:
             if self.supplier:
-                prefix = self.supplier.booking_id_prefix
-            else:
+                if self.supplier.use_custom_booking_ids:
+                    if not self.booking_id:
+                        raise ValidationError({'booking_id': 'Custom booking ID is required for this supplier.'})
+                else:
+                    self.booking_id = self._generate_unique_booking_id(self.supplier.booking_id_prefix)
+            elif not self.booking_id:
                 prefix = "DA" if self.website.lower() == "dublinairportparking" else "RS"
-            self.booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
-            while Booking.objects.filter(booking_id=self.booking_id).exists():
-                self.booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
+                self.booking_id = self._generate_unique_booking_id(prefix)
         
         # Set created_at for new bookings if not provided
         if not self.pk and not self.created_at:

@@ -25,6 +25,10 @@ class Supplier(models.Model):
         max_digits=5, decimal_places=2, default=30.00,
         help_text="Percentage the supplier earns (we keep the rest)"
     )
+    use_custom_booking_ids = models.BooleanField(
+        default=False,
+        help_text="If enabled, supplier must provide a custom booking ID per booking. If disabled, IDs are auto-generated from prefix.",
+    )
     user = models.OneToOneField(
         CustomUser, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='supplier_profile',

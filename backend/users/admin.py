@@ -121,7 +121,7 @@ class SupplierAdminForm(forms.ModelForm):
     class Meta:
         model = Supplier
         fields = ('name', 'contact_person', 'email', 'phone', 'website',
-                  'booking_id_prefix', 'commission_percentage', 'is_active')
+                  'booking_id_prefix', 'commission_percentage', 'use_custom_booking_ids', 'is_active')
 
 
 class SupplierEditForm(forms.ModelForm):
@@ -133,7 +133,7 @@ class SupplierEditForm(forms.ModelForm):
     class Meta:
         model = Supplier
         fields = ('name', 'contact_person', 'email', 'phone', 'website',
-                  'booking_id_prefix', 'commission_percentage', 'is_active')
+                  'booking_id_prefix', 'commission_percentage', 'use_custom_booking_ids', 'is_active')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -145,7 +145,7 @@ class SupplierEditForm(forms.ModelForm):
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'contact_person', 'email', 'phone',
-                    'booking_id_prefix', 'commission_percentage', 'is_active', 'created_at_display')
+                    'booking_id_prefix', 'booking_id_mode', 'commission_percentage', 'is_active', 'created_at_display')
     list_filter = ('is_active',)
     search_fields = ('name', 'contact_person', 'email', 'booking_id_prefix')
     list_per_page = 20
@@ -154,6 +154,10 @@ class SupplierAdmin(admin.ModelAdmin):
         return timezone.localtime(obj.created_at).strftime('%d %b %Y %H:%M')
     created_at_display.short_description = 'Created At'
     created_at_display.admin_order_field = 'created_at'
+
+    def booking_id_mode(self, obj):
+        return "Custom" if obj.use_custom_booking_ids else "Auto"
+    booking_id_mode.short_description = "Booking ID Mode"
 
     def get_form(self, request, obj=None, **kwargs):
         if obj:  # Editing existing supplier
@@ -167,7 +171,7 @@ class SupplierAdmin(admin.ModelAdmin):
             return [
                 ('Vendor Information', {
                     'fields': ('name', 'contact_person', 'email', 'phone', 'website',
-                               'booking_id_prefix', 'commission_percentage', 'is_active')
+                               'booking_id_prefix', 'use_custom_booking_ids', 'commission_percentage', 'is_active')
                 }),
                 ('Login Account', {
                     'fields': ('linked_username',)
@@ -177,7 +181,7 @@ class SupplierAdmin(admin.ModelAdmin):
             return [
                 ('Vendor Information', {
                     'fields': ('name', 'contact_person', 'email', 'phone', 'website',
-                               'booking_id_prefix', 'commission_percentage', 'is_active')
+                               'booking_id_prefix', 'use_custom_booking_ids', 'commission_percentage', 'is_active')
                 }),
                 ('Login Credentials', {
                     'fields': ('username', 'password'),

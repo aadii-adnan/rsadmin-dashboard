@@ -681,7 +681,7 @@ class SupplierBookingCreateView(APIView):
 
     def post(self, request):
         supplier = request.user.supplier_profile
-        serializer = SupplierBookingSerializer(data=request.data)
+        serializer = SupplierBookingSerializer(data=request.data, context={'supplier': supplier})
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 

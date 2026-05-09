@@ -545,7 +545,12 @@ class BookingAdmin(admin.ModelAdmin):
             }))
 
         # Add status section with appropriate fields based on user type
+        supplier_profile = getattr(request.user, 'supplier_profile', None) if getattr(request.user, 'is_supplier', False) else None
+        supplier_uses_custom_ids = bool(supplier_profile and supplier_profile.use_custom_booking_ids)
+
         status_fields = ['status', 'note']
+        if obj or supplier_uses_custom_ids:
+            status_fields.insert(0, 'booking_id')
         if obj:
             # For existing bookings, show the formatted display
             status_fields.extend([('created_at_field', 'modified_at_field')])
@@ -588,7 +593,7 @@ class BookingAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         base = ('modified_at_field', 'download_invoice', 'download_booking_form')
         if obj:  # If editing existing object
-            base = base + ('created_at_field',)
+            base = base + ('created_at_field', 'booking_id')
         if getattr(request.user, 'is_supplier', False):
             base = base + ('supplier',)
         return base

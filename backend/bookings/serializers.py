@@ -25,6 +25,7 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = '__all__'
         extra_kwargs = {
+            'booking_id': {'read_only': True},
             'discounted_price': {'required': False, 'allow_null': True},
             'status': {'required': False},
             'supplier_extended_amount': {'read_only': True},
@@ -51,6 +52,7 @@ class BookingUserSerializer(serializers.ModelSerializer):
 
 
 class SupplierBookingSerializer(serializers.ModelSerializer):
+    booking_id = serializers.CharField(required=False, allow_blank=False)
     add_ons = serializers.PrimaryKeyRelatedField(
         queryset=AddOn.objects.all(), many=True, required=False
     )
@@ -72,7 +74,7 @@ class SupplierBookingSerializer(serializers.ModelSerializer):
             'website', 'note',
             'status', 'created_at',
         ]
-        read_only_fields = ['id', 'booking_id', 'status', 'created_at', 'add_ons_detail']
+        read_only_fields = ['id', 'status', 'created_at', 'add_ons_detail']
         extra_kwargs = {
             'departure_flight_number': {'required': False, 'allow_blank': True},
             'return_flight_number': {'required': False, 'allow_blank': True},
@@ -88,6 +90,20 @@ class SupplierBookingSerializer(serializers.ModelSerializer):
         if service.website not in ('rsexpressparking', 'both'):
             raise serializers.ValidationError("This service is not available for supplier bookings.")
         return service
+
+    def validate(self, attrs):
+        supplier = self.context.get('supplier')
+        booking_id = attrs.get('booking_id')
+
+        if supplier and supplier.use_custom_booking_ids:
+            if not booking_id:
+                raise serializers.ValidationError({
+                    'booking_id': 'This supplier uses custom booking IDs. Please provide booking_id.'
+                })
+        else:
+            attrs.pop('booking_id', None)
+
+        return attrs
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
