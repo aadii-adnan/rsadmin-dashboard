@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { getBookingsSummary, getOrdersCount, getFinancialOverview, addExpense, getMonthlyEarnings, getBookingsOverTime, getSupplierFinanceDetail } from "../components/FinanceDashboard/APIHelper";
+import { getBookingsSummary, getOrdersCount, getFinancialOverview, addExpense, getMonthlyEarnings, getBookingsOverTime, getSupplierFinanceDetail, downloadSupplierInvoice } from "../components/FinanceDashboard/APIHelper";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import '../FinanceDashboard.css';
 import customFetch from "../auth/fetch";
@@ -52,6 +52,16 @@ function FinancialDashboard() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [supplierDetail, setSupplierDetail] = useState(null);
   const [supplierDetailLoading, setSupplierDetailLoading] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceSupplier, setInvoiceSupplier] = useState(null);
+  const [invoicePeriod, setInvoicePeriod] = useState(() => {
+    const now = new Date();
+    const m = now.getMonth() === 0 ? 12 : now.getMonth();
+    const y = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    return `${y}-${String(m).padStart(2, "0")}`;
+  });
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [invoiceError, setInvoiceError] = useState(null);
 
   useEffect(() => {
     if (!localStorage.getItem('finance_jwt')) {
@@ -174,6 +184,27 @@ function FinancialDashboard() {
       console.error("Failed to load supplier detail", e);
     } finally {
       setSupplierDetailLoading(false);
+    }
+  };
+
+  const handleOpenInvoiceModal = (supplier) => {
+    setInvoiceSupplier(supplier);
+    setInvoiceError(null);
+    setShowInvoiceModal(true);
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!invoiceSupplier || !invoicePeriod) return;
+    const [year, month] = invoicePeriod.split("-").map(Number);
+    setInvoiceLoading(true);
+    setInvoiceError(null);
+    try {
+      await downloadSupplierInvoice(invoiceSupplier.supplier_id, month, year, invoiceSupplier.supplier_name);
+      setShowInvoiceModal(false);
+    } catch (e) {
+      setInvoiceError("Failed to generate invoice. Please try again.");
+    } finally {
+      setInvoiceLoading(false);
     }
   };
 
@@ -651,13 +682,21 @@ function FinancialDashboard() {
                             <td style={{ color: "#dc3545" }}>€{s.supplier_share.toLocaleString()}</td>
                             <td style={{ color: "#28a745" }}>€{s.our_share.toLocaleString()}</td>
                             <td>{s.commission_percentage}%</td>
-                            <td>
+                            <td style={{ whiteSpace: "nowrap" }}>
                               <Button
                                 size="sm"
                                 variant="outline-primary"
                                 onClick={() => handleViewSupplierDetail(s.supplier_id)}
+                                style={{ marginRight: 6 }}
                               >
                                 View Details
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline-success"
+                                onClick={() => handleOpenInvoiceModal(s)}
+                              >
+                                Invoice
                               </Button>
                             </td>
                           </tr>
@@ -677,6 +716,39 @@ function FinancialDashboard() {
             </Col>
           </Row>
         )}
+
+        {/* Supplier Invoice Download Modal */}
+        <Modal show={showInvoiceModal} onHide={() => setShowInvoiceModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              Download Invoice — {invoiceSupplier?.supplier_name}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label><strong>Select Month</strong></Form.Label>
+              <Form.Control
+                type="month"
+                value={invoicePeriod}
+                onChange={e => setInvoicePeriod(e.target.value)}
+              />
+              <Form.Text className="text-muted">
+                Invoice covers all Started &amp; Completed bookings in the selected month (add-ons excluded).
+              </Form.Text>
+            </Form.Group>
+            {invoiceError && (
+              <Alert variant="danger" className="mb-0">{invoiceError}</Alert>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowInvoiceModal(false)} disabled={invoiceLoading}>
+              Cancel
+            </Button>
+            <Button variant="success" onClick={handleDownloadInvoice} disabled={invoiceLoading || !invoicePeriod}>
+              {invoiceLoading ? "Generating…" : "Download PDF"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
         {/* Supplier Detail Modal */}
         <Modal show={showSupplierModal} onHide={() => setShowSupplierModal(false)} size="lg">

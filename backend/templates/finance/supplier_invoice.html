@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 11pt;
+        color: #222;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* ── HEADER ─────────────────────────────────── */
+    .page-header {
+        position: relative;
+        background: #ffffff;
+        padding: 16px 20px;
+        text-align: center;
+        min-height: 95px;
+    }
+
+    .deco-navy {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 55px;
+        background: #1c2a6e;
+    }
+
+    .deco-teal {
+        position: absolute;
+        top: 55px;
+        left: 0;
+        width: 82px;
+        height: 28px;
+        background: #27b7d4;
+    }
+
+    .navy-divider {
+        height: 3px;
+        background: #1c2a6e;
+        margin: 0;
+    }
+
+    /* ── CONTENT ────────────────────────────────── */
+    .content {
+        padding: 22px 55px 110px 55px;
+    }
+
+    /* ── INVOICE META ROW ───────────────────────── */
+    .invoice-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+    }
+
+    .meta-side {
+        min-width: 150px;
+        font-size: 11pt;
+    }
+
+    .meta-right {
+        text-align: right;
+    }
+
+    .invoice-title {
+        font-size: 34pt;
+        font-weight: bold;
+        color: #111;
+        text-align: center;
+    }
+
+    /* ── ADDRESS SECTIONS ───────────────────────── */
+    .address-block {
+        line-height: 1.9;
+        font-size: 11pt;
+        margin-bottom: 10px;
+    }
+
+    .address-block.last {
+        margin-bottom: 28px;
+    }
+
+    /* ── COMMISSION TABLE ───────────────────────── */
+    .ctable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 28px;
+    }
+
+    .ctable th {
+        background: #1c2a6e;
+        color: #ffffff;
+        padding: 11px 16px;
+        text-align: left;
+        font-size: 11pt;
+        font-weight: bold;
+    }
+
+    .ctable th.c { text-align: center; }
+    .ctable th.r { text-align: right; }
+
+    .ctable td {
+        padding: 14px 16px;
+        border: 1px solid #d0d0d0;
+        font-size: 11pt;
+        vertical-align: middle;
+    }
+
+    .ctable td.c { text-align: center; font-size: 13pt; }
+    .ctable td.r { text-align: right;  font-size: 13pt; }
+
+    .period-note {
+        font-size: 9pt;
+        color: #666;
+    }
+
+    /* ── SPLIT / STATUS ROW ─────────────────────── */
+    .split-row {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 0;
+    }
+
+    .split-col {
+        flex: 1;
+        line-height: 1.9;
+        font-size: 11pt;
+    }
+
+    /* ── FOOTER ─────────────────────────────────── */
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #1c2a6e;
+        color: #ffffff;
+        font-size: 10.5pt;
+    }
+
+    .footer-inner {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .footer-contacts {
+        flex: 1;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 11px 30px;
+    }
+
+    .footer-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #ffffff;
+    }
+
+    .ficon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 14px;
+        background: #27b7d4;
+        color: #ffffff;
+        font-size: 14pt;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .footer-deco {
+        width: 60px;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .footer-deco-arc {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 60px;
+        height: 100%;
+        background: #27b7d4;
+        border-radius: 24px 0 0 0;
+    }
+</style>
+</head>
+<body>
+
+<!-- ════════════ HEADER ════════════ -->
+<div class="page-header">
+    <div class="deco-navy"></div>
+    <div class="deco-teal"></div>
+    <img src="{{ logo_data }}" alt="RS Express Parking" style="height: 68px; width: auto; position: relative; z-index: 1;"/>
+</div>
+<div class="navy-divider"></div>
+
+<!-- ════════════ CONTENT ════════════ -->
+<div class="content">
+
+    <!-- Invoice No | INVOICE | Invoice Date -->
+    <div class="invoice-meta">
+        <div class="meta-side">
+            <strong>Invoice No:</strong> {{ invoice_number }}
+        </div>
+        <div class="invoice-title">INVOICE</div>
+        <div class="meta-side meta-right">
+            <strong>Invoice Date:</strong> {{ invoice_date }}
+        </div>
+    </div>
+
+    <!-- From -->
+    <div class="address-block">
+        <strong>From:</strong><br/>
+        RS EXPRESS SERVICES LIMITED<br/>
+        Email: support@rsexpressparking.com
+    </div>
+
+    <!-- Bill To -->
+    <div class="address-block last">
+        <strong>Bill To:</strong><br/>
+        {{ supplier.name }}<br/>
+        {% if supplier.contact_person %}Contact: {{ supplier.contact_person }}<br/>{% endif %}
+        {% if supplier.email %}Email: {{ supplier.email }}{% endif %}
+    </div>
+
+    <!-- Commission settlement table -->
+    <table class="ctable">
+        <thead>
+            <tr>
+                <th style="width: 40%;">Description</th>
+                <th class="c" style="width: 20%;">Total Bookings</th>
+                <th class="r" style="width: 20%;">Total Revenue</th>
+                <th class="r" style="width: 20%;">Amount Due</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    Commission Settlement<br/>
+                    <span class="period-note">({{ period_str }})</span>
+                </td>
+                <td class="c">{{ total_bookings }}</td>
+                <td class="r">&euro;{{ total_revenue }}</td>
+                <td class="r">&euro;{{ rs_share }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Commission Split (left) + Booking status (right) -->
+    <div class="split-row">
+        <div class="split-col">
+            <strong>Commission Split:</strong><br/>
+            <br/>
+            {{ supplier.name }}({{ commission_pct }}%): &euro;{{ supplier_share }}<br/>
+            RS Express ({{ rs_commission_pct }}%): &euro;{{ rs_share }}<br/>
+            <br/>
+            <strong>Total Payable: &euro;{{ total_revenue }}</strong>
+            <br/><br/>
+            <strong>Bank Details:</strong><br/>
+            <br/>
+            Account Name: RS EXPRESS SERVICES LIMITED<br/>
+            IBAN: IE59AIBK93356257907059<br/>
+            BIC: AIBKIE2D
+        </div>
+        <div class="split-col">
+            <strong>Total bookings: {{ total_bookings }}</strong><br/>
+            <br/>
+            By status:<br/>
+            &bull;&nbsp;Completed: {{ completed_count }}<br/>
+            &bull;&nbsp;Started: {{ started_count }}<br/>
+        </div>
+    </div>
+
+</div>
+
+<!-- ════════════ FOOTER ════════════ -->
+<div class="footer">
+    <div class="footer-inner">
+        <div class="footer-contacts">
+            <div class="footer-item">
+                <span class="ficon">&#9990;</span>
+                <span>+353 83 489 6505</span>
+            </div>
+            <div class="footer-item">
+                <span class="ficon">&#9673;</span>
+                <span>www.rsexpressparking.com</span>
+            </div>
+            <div class="footer-item">
+                <span class="ficon">&#9993;</span>
+                <span>support@rsexpressparking.com</span>
+            </div>
+        </div>
+        <div class="footer-deco">
+            <div class="footer-deco-arc"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

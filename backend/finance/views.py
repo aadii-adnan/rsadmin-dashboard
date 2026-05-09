@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from bookings.models import Booking
 from payments.models import Payment
-from .models import Expense
+from .models import Expense, SupplierInvoice
 from users.models import Supplier
 from datetime import datetime, timedelta, time
 from django.db.models import Sum
@@ -18,10 +18,15 @@ from datetime import date
 from django.utils import timezone
 from rest_framework.permissions import BasePermission
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
+from django.template.loader import render_to_string
+from django.conf import settings
+from io import BytesIO
+import base64
+import calendar as cal_module
 
 @login_required
 def finance_jwt_login(request):
@@ -620,3 +625,117 @@ class SupplierFinanceDetailView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
+
+class SupplierInvoicePDFView(APIView):
+    permission_classes = [IsSuperAdminNotManager]
+
+    def get(self, request, supplier_id):
+        import weasyprint
+
+        supplier = get_object_or_404(Supplier, id=supplier_id)
+
+        month_str = request.query_params.get('month')
+        year_str = request.query_params.get('year')
+        if not month_str or not year_str:
+            return Response({'error': 'month and year are required.'}, status=400)
+
+        try:
+            month = int(month_str)
+            year = int(year_str)
+            if not (1 <= month <= 12):
+                raise ValueError
+        except ValueError:
+            return Response({'error': 'Invalid month or year.'}, status=400)
+
+        invoice_obj, _ = SupplierInvoice.objects.get_or_create(
+            supplier=supplier,
+            period_month=month,
+            period_year=year,
+            defaults={'invoice_number': self._next_invoice_number(supplier)},
+        )
+
+        start_date = date(year, month, 1)
+        last_day = cal_module.monthrange(year, month)[1]
+        end_date = date(year, month, last_day)
+        start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+        end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
+
+        bookings = (
+            Booking.objects.filter(
+                supplier=supplier,
+                created_at__gte=start_dt,
+                created_at__lte=end_dt,
+                status__name__in=['Started', 'Completed'],
+            )
+            .select_related('status')
+            .prefetch_related('add_ons')
+        )
+
+        total_revenue = Decimal('0.00')
+        completed_count = 0
+        started_count = 0
+        for b in bookings:
+            addons_total = sum(Decimal(str(addon.price)) for addon in b.add_ons.all())
+            price = b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price
+            total_revenue += price - addons_total
+            if b.status.name == 'Completed':
+                completed_count += 1
+            else:
+                started_count += 1
+
+        commission = supplier.commission_percentage / Decimal('100')
+        supplier_share = (total_revenue * commission).quantize(Decimal('0.01'))
+        rs_share = (total_revenue - supplier_share).quantize(Decimal('0.01'))
+        total_revenue = total_revenue.quantize(Decimal('0.01'))
+
+        rs_pct = (Decimal('100') - supplier.commission_percentage).quantize(Decimal('0.01'))
+
+        logo_path = settings.PDF_LOGO_PATH
+        with open(logo_path, 'rb') as f:
+            ext = 'jpeg' if logo_path.lower().endswith('.jpg') else 'png'
+            logo_b64 = f'data:image/{ext};base64,' + base64.b64encode(f.read()).decode()
+
+        month_name = start_date.strftime('%B')
+        period_str = f"01 {month_name} - {last_day} {month_name}"
+
+        if month == 12:
+            inv_date = date(year + 1, 1, 1)
+        else:
+            inv_date = date(year, month + 1, 1)
+        invoice_date_str = f"{inv_date.day} {inv_date.strftime('%B %Y')}"
+
+        def fmt(val):
+            return f"{float(val):,.2f}"
+
+        def fmt_pct(val):
+            v = float(val)
+            return str(int(v)) if v == int(v) else str(v)
+
+        context = {
+            'invoice_number': invoice_obj.invoice_number,
+            'invoice_date': invoice_date_str,
+            'supplier': supplier,
+            'period_str': period_str,
+            'total_bookings': bookings.count(),
+            'total_revenue': fmt(total_revenue),
+            'rs_share': fmt(rs_share),
+            'supplier_share': fmt(supplier_share),
+            'commission_pct': fmt_pct(supplier.commission_percentage),
+            'rs_commission_pct': fmt_pct(rs_pct),
+            'completed_count': completed_count,
+            'started_count': started_count,
+            'logo_data': logo_b64,
+        }
+
+        html = render_to_string('finance/supplier_invoice.html', context)
+        pdf_bytes = weasyprint.HTML(string=html).write_pdf()
+
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{invoice_obj.invoice_number}.pdf"'
+        return response
+
+    @staticmethod
+    def _next_invoice_number(supplier):
+        count = SupplierInvoice.objects.filter(supplier=supplier).count() + 1
+        return f"RS-{supplier.booking_id_prefix}-{str(count).zfill(4)}"

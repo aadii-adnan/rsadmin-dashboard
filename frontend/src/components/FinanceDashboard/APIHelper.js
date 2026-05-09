@@ -70,3 +70,18 @@ export async function getSupplierFinanceDetail(supplierId, month, endMonth, year
   if (!res.ok) throw new Error("Failed to fetch supplier finance detail");
   return res.json();
 }
+
+export async function downloadSupplierInvoice(supplierId, month, year, supplierName) {
+  const url = `${import.meta.env.VITE_API_BASE_URL}/finance/supplier/${supplierId}/invoice/?month=${month}&year=${year}`;
+  const res = await customFetch(url, { useFinanceJwt: true });
+  if (!res.ok) throw new Error("Failed to generate invoice");
+  const blob = await res.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = `invoice-${supplierName}-${year}-${String(month).padStart(2, "0")}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(objectUrl);
+}

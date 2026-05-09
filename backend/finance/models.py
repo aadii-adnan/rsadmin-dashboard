@@ -1,6 +1,5 @@
 from django.db import models
 
-# Create your models here.
 
 class Expense(models.Model):
     WEBSITE_CHOICES = [
@@ -19,3 +18,17 @@ class Expense(models.Model):
 
     class Meta:
         db_table = 'expense'
+
+
+class SupplierInvoice(models.Model):
+    supplier = models.ForeignKey(
+        'users.Supplier', on_delete=models.CASCADE, related_name='invoices'
+    )
+    invoice_number = models.CharField(max_length=30, unique=True)
+    period_month = models.IntegerField()
+    period_year = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'supplier_invoice'
+        unique_together = ('supplier', 'period_month', 'period_year')
