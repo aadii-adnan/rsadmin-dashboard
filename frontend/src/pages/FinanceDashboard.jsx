@@ -666,6 +666,7 @@ function FinancialDashboard() {
                           <th>Prefix</th>
                           <th>Total Bookings</th>
                           <th>Total Revenue (€)</th>
+                          <th>Extended (€)</th>
                           <th>Supplier Share (€)</th>
                           <th>Our Share (€)</th>
                           <th>Commission %</th>
@@ -679,6 +680,7 @@ function FinancialDashboard() {
                             <td>{s.prefix}</td>
                             <td>{s.total_bookings}</td>
                             <td>€{s.total_revenue.toLocaleString()}</td>
+                            <td style={{ color: "#0d6efd" }}>€{Number(s.extended_amount || 0).toLocaleString()}</td>
                             <td style={{ color: "#dc3545" }}>€{s.supplier_share.toLocaleString()}</td>
                             <td style={{ color: "#28a745" }}>€{s.our_share.toLocaleString()}</td>
                             <td>{s.commission_percentage}%</td>
@@ -704,6 +706,7 @@ function FinancialDashboard() {
                         <tr style={{ fontWeight: "bold", background: "#f8f9fa" }}>
                           <td colSpan={3}>Totals</td>
                           <td>€{overview.supplier_summary.totals.total_supplier_revenue.toLocaleString()}</td>
+                          <td style={{ color: "#0d6efd" }}>€{Number(overview.supplier_summary.totals.total_extended_amount || 0).toLocaleString()}</td>
                           <td style={{ color: "#dc3545" }}>€{overview.supplier_summary.totals.total_given_to_suppliers.toLocaleString()}</td>
                           <td style={{ color: "#28a745" }}>€{overview.supplier_summary.totals.total_kept_from_suppliers.toLocaleString()}</td>
                           <td colSpan={2}></td>
@@ -769,6 +772,10 @@ function FinancialDashboard() {
                     <strong>Revenue:</strong> €{supplierDetail.total_revenue.toLocaleString()}
                   </Col>
                   <Col md={3}>
+                    <strong>Extended:</strong>{" "}
+                    <span style={{ color: "#0d6efd" }}>€{Number(supplierDetail.total_extended_amount || 0).toLocaleString()}</span>
+                  </Col>
+                  <Col md={3}>
                     <strong>Supplier Share:</strong>{" "}
                     <span style={{ color: "#dc3545" }}>€{supplierDetail.supplier_share.toLocaleString()}</span>
                   </Col>
@@ -786,6 +793,7 @@ function FinancialDashboard() {
                         <th>Departure</th>
                         <th>Return</th>
                         <th>Price (€)</th>
+                        <th>Extended (€)</th>
                         <th>Earning (€)</th>
                         <th>Status</th>
                       </tr>
@@ -798,6 +806,7 @@ function FinancialDashboard() {
                           <td>{new Date(b.departure_time).toLocaleString()}</td>
                           <td>{new Date(b.return_time).toLocaleString()}</td>
                           <td>€{b.price.toLocaleString()}</td>
+                          <td style={{ color: "#0d6efd" }}>€{Number(b.extended_amount || 0).toLocaleString()}</td>
                           <td>€{b.earning.toLocaleString()}</td>
                           <td>{b.status}</td>
                         </tr>

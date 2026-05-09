@@ -80,6 +80,50 @@ def apply_supplier_deduction(amount, booking):
         return Decimal(str(amount)) * (Decimal('1') - commission)
     return amount
 
+
+def get_supplier_extension_amount(booking):
+    if booking.supplier:
+        return Decimal(str(booking.supplier_extended_amount or 0))
+    return Decimal('0.00')
+
+
+def get_booking_price_amount(booking):
+    price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price
+    return Decimal(str(price))
+
+
+def get_booking_supplier_split_base_amount(booking):
+    price = get_booking_price_amount(booking)
+    addons_total = sum([addon.price for addon in booking.add_ons.all()])
+    extension_amount = get_supplier_extension_amount(booking)
+    split_base = price - Decimal(addons_total) - extension_amount
+    return max(split_base, Decimal('0.00'))
+
+
+def get_supplier_visible_booking_price(booking):
+    price = get_booking_price_amount(booking)
+    if booking.supplier:
+        return max(price - get_supplier_extension_amount(booking), Decimal('0.00'))
+    return price
+
+
+def get_booking_balance_amount(booking):
+    price = get_booking_price_amount(booking)
+    if booking.supplier:
+        addons_total = sum([addon.price for addon in booking.add_ons.all()])
+        split_base = get_booking_supplier_split_base_amount(booking)
+        return apply_supplier_deduction(split_base, booking) + Decimal(addons_total) + get_supplier_extension_amount(booking)
+    return price
+
+
+def get_booking_net_earning(booking):
+    addons_total = sum([addon.price for addon in booking.add_ons.all()])
+    price = get_booking_price_amount(booking)
+    if booking.supplier:
+        split_base = get_booking_supplier_split_base_amount(booking)
+        return apply_supplier_deduction(split_base, booking) + get_supplier_extension_amount(booking)
+    return price - Decimal(addons_total)
+
 class AdminFinancialOverview(APIView):
     permission_classes = [IsSuperAdminNotManager]
 
@@ -150,24 +194,14 @@ class AdminFinancialOverview(APIView):
             # For supplier bookings: addons go to third party, commission only on base price
             total_balance = Decimal('0.00')
             for booking in bookings_in_period:
-                price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price                
-                if booking.supplier:
-                    addons_total = sum([addon.price for addon in booking.add_ons.all()])
-                    base_price = price - Decimal(addons_total)
-                    price = apply_supplier_deduction(base_price, booking) + addons_total
-                total_balance += price
+                total_balance += get_booking_balance_amount(booking)
 
             # Calculate total earnings (completed only, minus add-ons, +15 for cancelled)
             total_earnings = Decimal('0.00')
             for booking in bookings_in_period:
                 status_name = booking.status.name.lower()
                 if status_name in ("completed", "cancelled"):
-                    # Subtract add-ons price
-                    addons_total = sum([addon.price for addon in booking.add_ons.all()])
-                    price = booking.discounted_price if (booking.discounted_price and booking.discounted_price > 0) else booking.total_price
-                    earning = price - Decimal(addons_total)
-                    earning = apply_supplier_deduction(earning, booking)
-                    total_earnings += earning
+                    total_earnings += get_booking_net_earning(booking)
                 # else: do not count for earnings
 
             # Expenses for this period
@@ -215,17 +249,11 @@ class AdminFinancialOverview(APIView):
                 completed_orders = service_bookings.filter(status__name="Completed").count()
                 cancelled_orders = service_bookings.filter(status__name="Cancelled").count()
                 completed_earning = sum(
-                    apply_supplier_deduction(
-                        (b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price) -
-                        sum([addon.price for addon in b.add_ons.all()]), b
-                    )
+                    get_booking_net_earning(b)
                     for b in service_bookings.filter(status__name="Completed")
                 )
                 cancelled_earning = sum(
-                    apply_supplier_deduction(
-                        (b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price) -
-                        sum([addon.price for addon in b.add_ons.all()]), b
-                    )
+                    get_booking_net_earning(b)
                     for b in service_bookings.filter(status__name="Cancelled")
                 )
                 service_details.append({
@@ -290,6 +318,7 @@ class AdminFinancialOverview(APIView):
         total_supplier_revenue = Decimal('0.00')
         total_given_to_suppliers = Decimal('0.00')
         total_kept_from_suppliers = Decimal('0.00')
+        total_extended_amount = Decimal('0.00')
 
         for supplier in Supplier.objects.filter(is_active=True):
             s_bookings = supplier_bookings.filter(supplier=supplier)
@@ -297,16 +326,16 @@ class AdminFinancialOverview(APIView):
                 continue
 
             total_revenue = Decimal('0.00')
+            supplier_extended_amount = Decimal('0.00')
             for b in s_bookings:
                 status_name = b.status.name.lower() if b.status else ''
                 if status_name in ('completed', 'cancelled'):
-                    addons_total = sum([addon.price for addon in b.add_ons.all()])
-                    price = b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price
-                    total_revenue += (price - Decimal(addons_total))
+                    total_revenue += get_booking_supplier_split_base_amount(b)
+                    supplier_extended_amount += get_supplier_extension_amount(b)
 
             commission = supplier.commission_percentage / Decimal('100')
             supplier_share = total_revenue * commission
-            our_share = total_revenue - supplier_share
+            our_share = total_revenue - supplier_share + supplier_extended_amount
 
             suppliers_data.append({
                 'supplier_id': supplier.id,
@@ -316,12 +345,14 @@ class AdminFinancialOverview(APIView):
                 'total_revenue': float(total_revenue),
                 'supplier_share': float(supplier_share),
                 'our_share': float(our_share),
+                'extended_amount': float(supplier_extended_amount),
                 'commission_percentage': float(supplier.commission_percentage),
             })
 
             total_supplier_revenue += total_revenue
             total_given_to_suppliers += supplier_share
             total_kept_from_suppliers += our_share
+            total_extended_amount += supplier_extended_amount
 
         return {
             'suppliers': suppliers_data,
@@ -329,6 +360,7 @@ class AdminFinancialOverview(APIView):
                 'total_supplier_revenue': float(total_supplier_revenue),
                 'total_given_to_suppliers': float(total_given_to_suppliers),
                 'total_kept_from_suppliers': float(total_kept_from_suppliers),
+                'total_extended_amount': float(total_extended_amount),
             }
         }
         
@@ -435,11 +467,7 @@ class MonthlyEarningsTrendView(APIView):
             for b in bookings:
                 status_name = b.status.name.lower()
                 if status_name in ("completed", "cancelled"):
-                    addons_total = sum([addon.price for addon in b.add_ons.all()])
-                    price = b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price
-                    net = price - Decimal(addons_total)
-                    net = apply_supplier_deduction(net, b)
-                    earning += net
+                    earning += get_booking_net_earning(b)
                 # else: do not count for earnings
             data.append({
                 "month": start.strftime("%Y-%m"),
@@ -586,15 +614,18 @@ class SupplierFinanceDetailView(APIView):
             ).select_related('status', 'service').prefetch_related('add_ons').order_by('created_at')
 
             total_revenue = Decimal('0.00')
+            total_extended_amount = Decimal('0.00')
             bookings_list = []
             for b in bookings:
                 status_name = b.status.name.lower() if b.status else ''
-                addons_total = sum([addon.price for addon in b.add_ons.all()])
-                price = b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price
+                price = get_supplier_visible_booking_price(b)
                 if status_name in ('completed', 'cancelled'):
-                    earning = price - Decimal(addons_total)
+                    earning = get_booking_supplier_split_base_amount(b)
+                    extended_amount = get_supplier_extension_amount(b)
+                    total_extended_amount += extended_amount
                 else:
                     earning = Decimal('0.00')
+                    extended_amount = Decimal('0.00')
                 total_revenue += earning
 
                 bookings_list.append({
@@ -604,12 +635,13 @@ class SupplierFinanceDetailView(APIView):
                     'return_time': b.return_time.isoformat(),
                     'price': float(price),
                     'earning': float(earning),
+                    'extended_amount': float(extended_amount),
                     'status': b.status.name if b.status else '',
                 })
 
             commission = supplier.commission_percentage / Decimal('100')
             supplier_share = total_revenue * commission
-            our_share = total_revenue - supplier_share
+            our_share = total_revenue - supplier_share + total_extended_amount
 
             return Response({
                 'supplier_id': supplier.id,
@@ -620,6 +652,7 @@ class SupplierFinanceDetailView(APIView):
                 'total_revenue': float(total_revenue),
                 'supplier_share': float(supplier_share),
                 'our_share': float(our_share),
+                'total_extended_amount': float(total_extended_amount),
                 'bookings': bookings_list,
             })
 
@@ -676,9 +709,7 @@ class SupplierInvoicePDFView(APIView):
         completed_count = 0
         started_count = 0
         for b in bookings:
-            addons_total = sum(Decimal(str(addon.price)) for addon in b.add_ons.all())
-            price = b.discounted_price if (b.discounted_price and b.discounted_price > 0) else b.total_price
-            total_revenue += price - addons_total
+            total_revenue += get_booking_supplier_split_base_amount(b)
             if b.status.name == 'Completed':
                 completed_count += 1
             else:

@@ -27,11 +27,13 @@ class BookingSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'discounted_price': {'required': False, 'allow_null': True},
             'status': {'required': False},
+            'supplier_extended_amount': {'read_only': True},
         }
 
     def to_representation(self, instance):
         """Show add_ons as detailed objects on read."""
         ret = super().to_representation(instance)
+        ret.pop('supplier_extended_amount', None)
         # Replace add_ons (ids) with add_ons_detail (objects) for GET
         ret['add_ons'] = AddOnSerializer(instance.add_ons.all(), many=True).data
         return ret

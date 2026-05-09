@@ -9,6 +9,7 @@ from datetime import datetime
 from django.utils.translation import gettext_lazy as _
 import io
 import zipfile
+from decimal import Decimal
 from django.http import HttpResponse
 from payments.views import generate_invoice, generate_booking_form_pdf
 from django.contrib.admin import FieldListFilter
@@ -280,6 +281,23 @@ class BookingAdmin(admin.ModelAdmin):
 
     price_display.short_description = 'Total Price'
 
+    def supplier_price_display(self, obj):
+        extension = Decimal(str(obj.supplier_extended_amount or 0))
+        total_price = max(Decimal(str(obj.total_price)) - extension, Decimal('0.00'))
+        discounted_price = None
+        if obj.discounted_price is not None:
+            discounted_price = max(Decimal(str(obj.discounted_price)) - extension, Decimal('0.00'))
+
+        if discounted_price is not None and discounted_price < total_price:
+            return format_html(
+                '<span style="text-decoration: line-through; color: #888;">€{}</span><br>'
+                '<span style="color: #28a745; font-weight: bold;">€{}</span>',
+                total_price, discounted_price
+            )
+        return f"€{total_price}"
+
+    supplier_price_display.short_description = 'Total Price'
+
 
     def get_search_results(self, request, queryset, search_term):
         # Normalize terms
@@ -474,7 +492,7 @@ class BookingAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         if getattr(request.user, 'is_supplier', False):
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
-                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
+                'supplier_price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
         if request.user.is_manager:
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display','service', 'vehicle_display', 'terminal_display',  'colored_status', 'created_at_display', 'download_booking_form')
         return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
@@ -512,9 +530,17 @@ class BookingAdmin(admin.ModelAdmin):
         ]
 
         if not request.user.is_manager:
+            is_super_admin = (
+                request.user.is_superuser
+                and not getattr(request.user, 'is_manager', False)
+                and not getattr(request.user, 'is_supplier', False)
+            )
+            pricing_fields = ('total_price', 'coupon', 'discounted_price', 'bonus_points_used', 'previous_price')
+            if obj and obj.supplier and is_super_admin:
+                pricing_fields = pricing_fields + ('supplier_extended_amount',)
             base_fieldsets.append(('Pricing', {
                 'fields': (
-                    ('total_price', 'coupon', 'discounted_price', 'bonus_points_used', 'previous_price'),
+                    pricing_fields,
                 )
             }))
 

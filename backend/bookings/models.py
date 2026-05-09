@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 from users.models import CustomUser, Supplier
 from services.models import Service, AddOn, Coupon
 from core.models import Status
@@ -58,6 +59,13 @@ class Booking(models.Model):
         Supplier, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='bookings',
         help_text="If set, this booking was created by a vendor/supplier"
+    )
+    supplier_extended_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        validators=[MinValueValidator(0)],
+        help_text="Admin-only extra amount for supplier bookings. This amount goes fully to RS.",
     )
 
     def save(self, *args, **kwargs):
