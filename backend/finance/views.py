@@ -141,6 +141,17 @@ def get_booking_net_earning(booking):
         return apply_supplier_deduction(split_base, booking) + get_supplier_extension_amount(booking)
     return price - Decimal(addons_total)
 
+
+def should_count_booking_for_earnings(booking):
+    status_name = booking.status.name.lower() if booking.status else ""
+    if status_name in ("completed", "cancelled"):
+        return True
+    return bool(booking.supplier and status_name == "started")
+
+
+def should_count_supplier_commission_status(status_name):
+    return status_name in ("started", "completed", "cancelled")
+
 class AdminFinancialOverview(APIView):
     permission_classes = [IsSuperAdminNotManager]
 
@@ -213,11 +224,11 @@ class AdminFinancialOverview(APIView):
             for booking in bookings_in_period:
                 total_balance += get_booking_balance_amount(booking)
 
-            # Calculate total earnings (completed only, minus add-ons, +15 for cancelled)
+            # Calculate total earnings.
+            # Supplier bookings are counted from Started onward (departure done).
             total_earnings = Decimal('0.00')
             for booking in bookings_in_period:
-                status_name = booking.status.name.lower()
-                if status_name in ("completed", "cancelled"):
+                if should_count_booking_for_earnings(booking):
                     total_earnings += get_booking_net_earning(booking)
                 # else: do not count for earnings
 
@@ -347,7 +358,7 @@ class AdminFinancialOverview(APIView):
             supplier_extended_amount = Decimal('0.00')
             for b in s_bookings:
                 status_name = b.status.name.lower() if b.status else ''
-                if status_name in ('completed', 'cancelled'):
+                if should_count_supplier_commission_status(status_name):
                     split_base = get_booking_supplier_split_base_amount(b)
                     total_revenue += split_base
                     supplier_share += get_booking_supplier_share_amount(b)
@@ -488,8 +499,7 @@ class MonthlyEarningsTrendView(APIView):
             ).select_related('status', 'supplier').prefetch_related('add_ons')
             earning = Decimal('0.00')
             for b in bookings:
-                status_name = b.status.name.lower()
-                if status_name in ("completed", "cancelled"):
+                if should_count_booking_for_earnings(b):
                     earning += get_booking_net_earning(b)
                 # else: do not count for earnings
             data.append({
@@ -643,7 +653,7 @@ class SupplierFinanceDetailView(APIView):
             for b in bookings:
                 status_name = b.status.name.lower() if b.status else ''
                 price = get_supplier_visible_booking_price(b)
-                if status_name in ('completed', 'cancelled'):
+                if should_count_supplier_commission_status(status_name):
                     earning = get_booking_supplier_split_base_amount(b)
                     supplier_share += get_booking_supplier_share_amount(b)
                     extended_amount = get_supplier_extension_amount(b)
