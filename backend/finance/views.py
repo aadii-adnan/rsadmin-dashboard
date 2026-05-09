@@ -76,9 +76,21 @@ def apply_supplier_deduction(amount, booking):
     E.g., if commission is 30%, return 70% of the amount.
     """
     if booking.supplier:
-        commission = booking.supplier.commission_percentage / Decimal('100')
+        commission = get_booking_supplier_commission_ratio(booking)
         return Decimal(str(amount)) * (Decimal('1') - commission)
     return amount
+
+
+def get_booking_supplier_commission_percentage(booking):
+    if not booking.supplier:
+        return Decimal('0.00')
+    if booking.supplier_commission_percentage is not None:
+        return Decimal(str(booking.supplier_commission_percentage))
+    return Decimal(str(booking.supplier.commission_percentage))
+
+
+def get_booking_supplier_commission_ratio(booking):
+    return get_booking_supplier_commission_percentage(booking) / Decimal('100')
 
 
 def get_supplier_extension_amount(booking):
@@ -98,6 +110,11 @@ def get_booking_supplier_split_base_amount(booking):
     extension_amount = get_supplier_extension_amount(booking)
     split_base = price - Decimal(addons_total) - extension_amount
     return max(split_base, Decimal('0.00'))
+
+
+def get_booking_supplier_share_amount(booking):
+    split_base = get_booking_supplier_split_base_amount(booking)
+    return split_base * get_booking_supplier_commission_ratio(booking)
 
 
 def get_supplier_visible_booking_price(booking):
@@ -326,16 +343,22 @@ class AdminFinancialOverview(APIView):
                 continue
 
             total_revenue = Decimal('0.00')
+            supplier_share = Decimal('0.00')
             supplier_extended_amount = Decimal('0.00')
             for b in s_bookings:
                 status_name = b.status.name.lower() if b.status else ''
                 if status_name in ('completed', 'cancelled'):
-                    total_revenue += get_booking_supplier_split_base_amount(b)
+                    split_base = get_booking_supplier_split_base_amount(b)
+                    total_revenue += split_base
+                    supplier_share += get_booking_supplier_share_amount(b)
                     supplier_extended_amount += get_supplier_extension_amount(b)
 
-            commission = supplier.commission_percentage / Decimal('100')
-            supplier_share = total_revenue * commission
             our_share = total_revenue - supplier_share + supplier_extended_amount
+            effective_commission_percentage = (
+                (supplier_share / total_revenue) * Decimal('100')
+                if total_revenue > 0
+                else Decimal('0.00')
+            ).quantize(Decimal('0.01'))
 
             suppliers_data.append({
                 'supplier_id': supplier.id,
@@ -346,7 +369,7 @@ class AdminFinancialOverview(APIView):
                 'supplier_share': float(supplier_share),
                 'our_share': float(our_share),
                 'extended_amount': float(supplier_extended_amount),
-                'commission_percentage': float(supplier.commission_percentage),
+                'commission_percentage': float(effective_commission_percentage),
             })
 
             total_supplier_revenue += total_revenue
@@ -614,6 +637,7 @@ class SupplierFinanceDetailView(APIView):
             ).select_related('status', 'service').prefetch_related('add_ons').order_by('created_at')
 
             total_revenue = Decimal('0.00')
+            supplier_share = Decimal('0.00')
             total_extended_amount = Decimal('0.00')
             bookings_list = []
             for b in bookings:
@@ -621,6 +645,7 @@ class SupplierFinanceDetailView(APIView):
                 price = get_supplier_visible_booking_price(b)
                 if status_name in ('completed', 'cancelled'):
                     earning = get_booking_supplier_split_base_amount(b)
+                    supplier_share += get_booking_supplier_share_amount(b)
                     extended_amount = get_supplier_extension_amount(b)
                     total_extended_amount += extended_amount
                 else:
@@ -639,15 +664,18 @@ class SupplierFinanceDetailView(APIView):
                     'status': b.status.name if b.status else '',
                 })
 
-            commission = supplier.commission_percentage / Decimal('100')
-            supplier_share = total_revenue * commission
             our_share = total_revenue - supplier_share + total_extended_amount
+            effective_commission_percentage = (
+                (supplier_share / total_revenue) * Decimal('100')
+                if total_revenue > 0
+                else Decimal('0.00')
+            ).quantize(Decimal('0.01'))
 
             return Response({
                 'supplier_id': supplier.id,
                 'supplier_name': supplier.name,
                 'prefix': supplier.booking_id_prefix,
-                'commission_percentage': float(supplier.commission_percentage),
+                'commission_percentage': float(effective_commission_percentage),
                 'total_bookings': len(bookings_list),
                 'total_revenue': float(total_revenue),
                 'supplier_share': float(supplier_share),
@@ -706,21 +734,27 @@ class SupplierInvoicePDFView(APIView):
         )
 
         total_revenue = Decimal('0.00')
+        supplier_share = Decimal('0.00')
         completed_count = 0
         started_count = 0
         for b in bookings:
             total_revenue += get_booking_supplier_split_base_amount(b)
+            supplier_share += get_booking_supplier_share_amount(b)
             if b.status.name == 'Completed':
                 completed_count += 1
             else:
                 started_count += 1
 
-        commission = supplier.commission_percentage / Decimal('100')
-        supplier_share = (total_revenue * commission).quantize(Decimal('0.01'))
+        effective_commission_percentage = (
+            (supplier_share / total_revenue) * Decimal('100')
+            if total_revenue > 0
+            else Decimal('0.00')
+        ).quantize(Decimal('0.01'))
+        rs_pct = (Decimal('100') - effective_commission_percentage).quantize(Decimal('0.01'))
+
+        supplier_share = supplier_share.quantize(Decimal('0.01'))
         rs_share = (total_revenue - supplier_share).quantize(Decimal('0.01'))
         total_revenue = total_revenue.quantize(Decimal('0.01'))
-
-        rs_pct = (Decimal('100') - supplier.commission_percentage).quantize(Decimal('0.01'))
 
         logo_path = settings.PDF_LOGO_PATH
         with open(logo_path, 'rb') as f:
@@ -752,7 +786,7 @@ class SupplierInvoicePDFView(APIView):
             'total_revenue': fmt(total_revenue),
             'rs_share': fmt(rs_share),
             'supplier_share': fmt(supplier_share),
-            'commission_pct': fmt_pct(supplier.commission_percentage),
+            'commission_pct': fmt_pct(effective_commission_percentage),
             'rs_commission_pct': fmt_pct(rs_pct),
             'completed_count': completed_count,
             'started_count': started_count,

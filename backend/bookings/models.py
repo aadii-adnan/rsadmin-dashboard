@@ -61,6 +61,14 @@ class Booking(models.Model):
         null=True, blank=True, related_name='bookings',
         help_text="If set, this booking was created by a vendor/supplier"
     )
+    supplier_commission_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Commission percentage snapshot saved at booking time for supplier payouts.",
+    )
     supplier_extended_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -91,6 +99,13 @@ class Booking(models.Model):
             elif not self.booking_id:
                 prefix = "DA" if self.website.lower() == "dublinairportparking" else "RS"
                 self.booking_id = self._generate_unique_booking_id(prefix)
+
+        if self.supplier and self.supplier_commission_percentage is None:
+            self.supplier_commission_percentage = self.supplier.commission_percentage
+            if kwargs.get("update_fields") is not None:
+                update_fields = set(kwargs["update_fields"])
+                update_fields.add("supplier_commission_percentage")
+                kwargs["update_fields"] = list(update_fields)
         
         # Set created_at for new bookings if not provided
         if not self.pk and not self.created_at:
