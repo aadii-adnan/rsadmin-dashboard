@@ -494,7 +494,7 @@ class BookingAdmin(admin.ModelAdmin):
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
                 'supplier_price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
         if request.user.is_manager:
-            return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display','service', 'vehicle_display', 'terminal_display',  'colored_status', 'created_at_display', 'download_booking_form')
+            return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display', 'vehicle_display', 'terminal_display', 'colored_status', 'created_at_display', 'download_booking_form')
         return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
                 'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form', 'website_abbr')
     
