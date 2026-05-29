@@ -22,6 +22,10 @@ from datetime import timedelta
 from decouple import config
 from payments.views import calculate_parking_days  # Make sure this import is at the top
 from django.db.models import Q
+from django.db import transaction
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def send_reschedule_email(booking):
@@ -693,6 +697,16 @@ class SupplierBookingCreateView(APIView):
         booking = serializer.save(supplier=supplier, status=confirmed_status)
 
         from .tasks import send_supplier_booking_manager_notification
-        send_supplier_booking_manager_notification.delay(booking.id)
+
+        def queue_manager_notification():
+            try:
+                send_supplier_booking_manager_notification.delay(booking.id)
+            except Exception:
+                logger.exception(
+                    "Failed to queue supplier booking manager notification for booking %s",
+                    booking.id,
+                )
+
+        transaction.on_commit(queue_manager_notification)
 
         return Response(SupplierBookingSerializer(booking).data, status=201)

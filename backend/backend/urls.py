@@ -17,6 +17,7 @@ from django.http import HttpResponse, Http404
 from django.urls import re_path
 from django.views.decorators.cache import cache_control
 from django.views.static import serve as static_serve
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 # Blog sitemap (RS Express Parking only)
 blog_sitemaps = {
@@ -62,6 +63,8 @@ urlpatterns = [
     path('api/payments/', include('payments.urls')),
     path('api/finance/', include('finance.urls')),
     path('api/core/', include('core.urls')),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("robots.txt", robots_txt, name="robots_txt"),
     
     path('sitemap.xml', custom_sitemap_index, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.index'),

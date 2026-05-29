@@ -1,6 +1,6 @@
-# RS Express Parking — Supplier Booking API
+# RS Express Parking - Supplier Booking API
 
-**Version:** 1.0  
+**Version:** 1.1
 **Base URL (Production):** `https://www.rsexpressparking.com`  
 **Protocol:** HTTPS only  
 **Format:** JSON (`Content-Type: application/json`)
@@ -9,26 +9,33 @@
 
 ## Overview
 
-This API allows RS Express Parking suppliers to create bookings programmatically from their own systems. Once a booking is submitted, it appears immediately in the RS Express Parking admin portal with **Confirmed** status and the operations team receives an automated notification email with an invoice PDF attached — exactly the same as a standard online booking.
+This API allows RS Express Parking suppliers to create bookings programmatically from their own systems. Once a booking is submitted, it appears immediately in the RS Express Parking admin portal with **Confirmed** status. The RS Express Parking operations team receives an automated notification email with an invoice PDF attached.
 
-**What the API does NOT do:**
-- Send any confirmation email to the customer (that is the supplier's responsibility)
-- Handle payment (pricing is provided by the supplier in the request; Stripe is not involved)
-- Send completion or follow-up emails to the customer
+**What the API does not do:**
+- Send a confirmation email to the customer. That is the supplier's responsibility.
+- Handle payment. Pricing is supplied in the request; Stripe is not involved.
+- Send completion, follow-up, marketing, or review emails to the customer.
+
+RS Express Parking will provide each supplier with:
+- Username and password
+- Production or staging base URL
+- Allowed service IDs
+- Available add-on IDs, if any
+- Booking ID prefix, or confirmation that a custom `booking_id` must be supplied
 
 ---
 
 ## Authentication
 
-The API uses **JWT (JSON Web Token)** authentication. You must obtain a token pair first, then include the access token on every booking request.
+The API uses JWT authentication. Obtain a token pair first, then include the access token on every booking request.
 
-Your credentials (username and password) will be provided by RS Express Parking. Each supplier has a dedicated account.
+Each supplier has a dedicated account. Store credentials and tokens securely. Do not expose them in client-side code or version control.
 
-### Step 1 — Obtain tokens
+### Step 1 - Obtain Tokens
 
-**Request:**
+**Request**
 
-```
+```http
 POST /api/token/
 Content-Type: application/json
 
@@ -38,7 +45,7 @@ Content-Type: application/json
 }
 ```
 
-**Response (200 OK):**
+**Response - 200 OK**
 
 ```json
 {
@@ -47,22 +54,22 @@ Content-Type: application/json
 }
 ```
 
-Store both tokens securely. **Do not expose them in client-side code or version control.**
-
 | Token | Lifetime | Purpose |
-|---|---|---|
-| `access` | 3 hours | Used in the `Authorization` header on every API request |
-| `refresh` | 24 hours | Used to get a new access token without re-entering your password |
+|---|---:|---|
+| `access` | 3 hours | Used in the `Authorization` header on API requests |
+| `refresh` | 24 hours | Used to get a new access token without re-entering the password |
+
+Compatibility aliases are also available: `POST /api/auth/login/` and `POST /api/auth/token/refresh/`.
 
 ---
 
-### Step 2 — Refresh an expired access token
+### Step 2 - Refresh an Expired Access Token
 
-When the access token expires (after 3 hours), use the refresh token to get a new one without re-authenticating.
+When the access token expires, use the refresh token to get a new access token.
 
-**Request:**
+**Request**
 
-```
+```http
 POST /api/token/refresh/
 Content-Type: application/json
 
@@ -71,7 +78,7 @@ Content-Type: application/json
 }
 ```
 
-**Response (200 OK):**
+**Response - 200 OK**
 
 ```json
 {
@@ -79,9 +86,9 @@ Content-Type: application/json
 }
 ```
 
-If the refresh token has also expired (after 24 hours), repeat Step 1 to obtain a new token pair.
+If the refresh token has expired, repeat Step 1 to obtain a new token pair.
 
-**Recommended implementation:** Build token refresh logic into your HTTP client so it automatically retries with a fresh access token on a `401 Unauthorized` response.
+Recommended implementation: when a booking request returns `401 Unauthorized`, refresh the access token once and retry the booking request.
 
 ---
 
@@ -89,7 +96,7 @@ If the refresh token has also expired (after 24 hours), repeat Step 1 to obtain 
 
 ### Endpoint
 
-```
+```http
 POST /api/supplier/bookings/
 Authorization: Bearer <access_token>
 Content-Type: application/json
@@ -113,8 +120,8 @@ Content-Type: application/json
   "return_terminal": "T1",
   "departure_flight_number": "FR1234",
   "return_flight_number": "FR5678",
-  "departure_time": "2025-06-01T06:00:00",
-  "return_time": "2025-06-08T18:00:00",
+  "departure_time": "2025-06-01T05:00:00",
+  "return_time": "2025-06-08T17:00:00",
   "total_price": "120.00",
   "discounted_price": "120.00",
   "add_ons": [2],
@@ -126,36 +133,46 @@ Content-Type: application/json
 ### Field Reference
 
 | Field | Type | Required | Notes |
-|---|---|---|---|
-| `service` | integer | **Yes** | ID of the parking service. Ask RS Express Parking for your allowed service IDs. |
-| `first_name` | string | **Yes** | Customer's first name |
-| `last_name` | string | **Yes** | Customer's last name |
-| `email` | string (email) | **Yes** | Customer's email address |
-| `contact_no` | string | **Yes** | Customer's phone number (include country code, e.g. `+353…`) |
-| `total_passengers` | integer | **Yes** | Number of passengers |
-| `car_registration_no` | string | **Yes** | Vehicle registration plate |
-| `car_model` | string | **Yes** | Vehicle model (e.g. `Corolla`) |
-| `car_colour` | string | **Yes** | Vehicle colour |
-| `car_manufacturer` | string | **Yes** | Vehicle make (e.g. `Toyota`) |
-| `departure_terminal` | string | **Yes** | Dublin Airport terminal for drop-off (e.g. `T1`, `T2`) |
-| `return_terminal` | string | **Yes** | Dublin Airport terminal for pick-up |
-| `departure_time` | datetime (ISO 8601) | **Yes** | Drop-off date and time in UTC (e.g. `2025-06-01T06:00:00`) |
-| `return_time` | datetime (ISO 8601) | **Yes** | Pick-up date and time in UTC (e.g. `2025-06-08T18:00:00`) |
-| `total_price` | decimal string | **Yes** | Price before any discount, in EUR (e.g. `"120.00"`) |
-| `discounted_price` | decimal string | No | Final price after any discount. If omitted or null, `total_price` is used. |
-| `departure_flight_number` | string | No | Outbound flight number (e.g. `FR1234`) |
-| `return_flight_number` | string | No | Return flight number (e.g. `FR5678`) |
-| `add_ons` | array of integers | No | List of add-on IDs to attach. Use `[]` or omit if none. Ask RS Express Parking for available add-on IDs. |
-| `website` | string | No | `"rsexpressparking"` (default) or `"dublinairportparking"` |
-| `note` | string | No | Any internal note visible to the RS Express Parking operations team |
+|---|---|---:|---|
+| `service` | integer | Yes | Enabled RS Express Parking service ID. Ask RS Express Parking for allowed IDs. |
+| `booking_id` | string | Conditional | Only required if RS Express Parking tells you your account uses custom booking IDs. Otherwise omit it. |
+| `first_name` | string | Yes | Customer's first name. |
+| `last_name` | string | Yes | Customer's last name. |
+| `email` | string | Yes | Customer's email address. |
+| `contact_no` | string | Yes | Customer's phone number. Include country code where possible, e.g. `+353871234567`. |
+| `total_passengers` | integer | Yes | Number of passengers. Minimum `1`. |
+| `car_registration_no` | string | Yes | Vehicle registration plate. |
+| `car_model` | string | Yes | Vehicle model, e.g. `Corolla`. |
+| `car_colour` | string | Yes | Vehicle colour. |
+| `car_manufacturer` | string | Yes | Vehicle make, e.g. `Toyota`. |
+| `departure_terminal` | string | Yes | Dublin Airport terminal for drop-off, e.g. `T1` or `T2`. |
+| `return_terminal` | string | Yes | Dublin Airport terminal for pick-up. |
+| `departure_time` | datetime | Yes | Drop-off date and time in UTC. |
+| `return_time` | datetime | Yes | Pick-up date and time in UTC. Must be after `departure_time`. |
+| `total_price` | decimal string | Yes | Price before any discount, in EUR, e.g. `"120.00"`. Must not be negative. |
+| `discounted_price` | decimal string | No | Final price after any discount. If omitted or `null`, `total_price` is used. Must not be negative. |
+| `departure_flight_number` | string | No | Outbound flight number, e.g. `FR1234`. |
+| `return_flight_number` | string | No | Return flight number, e.g. `FR5678`. |
+| `add_ons` | array of integers | No | Active add-on IDs to attach. Use `[]` or omit if none. |
+| `website` | string | No | `rsexpressparking` by default. `dublinairportparking` is also accepted if instructed by RS Express Parking. |
+| `note` | string | No | Internal note visible to the RS Express Parking operations team. |
 
-**Important notes on datetime format:**
-- Send all times in **UTC**. Example: if the customer's drop-off is at 6:00 AM Irish time (IST = UTC+1 in summer), send `05:00:00` UTC.
-- Format: `YYYY-MM-DDTHH:MM:SS` — no timezone suffix needed, server interprets as UTC.
+### Datetime Format
+
+Send all booking times in UTC.
+
+Accepted examples:
+- `2025-06-01T05:00:00`
+- `2025-06-01T05:00:00Z`
+- `2025-06-01T06:00:00+01:00`
+
+If you send no timezone suffix, the server treats the value as UTC. For example, if the customer's drop-off is 6:00 AM Irish summer time (IST, UTC+1), send `2025-06-01T05:00:00` or `2025-06-01T05:00:00Z`.
 
 ---
 
-### Successful Response (201 Created)
+## Successful Response
+
+**201 Created**
 
 ```json
 {
@@ -176,57 +193,71 @@ Content-Type: application/json
   "return_terminal": "T1",
   "departure_flight_number": "FR1234",
   "return_flight_number": "FR5678",
-  "departure_time": "2025-06-01T06:00:00Z",
-  "return_time": "2025-06-08T18:00:00Z",
+  "departure_time": "2025-06-01T05:00:00Z",
+  "return_time": "2025-06-08T17:00:00Z",
   "total_price": "120.00",
   "discounted_price": "120.00",
   "add_ons": [
-    { "id": 2, "name": "Baby Seat", "price": "10.00" }
+    {
+      "id": 2,
+      "name": "Baby Seat",
+      "price": "10.00",
+      "description": "",
+      "active": true
+    }
   ],
   "website": "rsexpressparking",
   "note": "Customer travelling with oversized luggage",
-  "status": { "id": 2, "name": "Confirmed", "type": "booking" },
+  "status": {
+    "id": 2,
+    "name": "Confirmed",
+    "type": "booking"
+  },
   "created_at": "2025-04-29T10:32:15.123456Z"
 }
 ```
 
-**Store the `booking_id`** (e.g. `SUP-A3F9C21B`) in your system — it uniquely identifies the booking in the RS Express Parking portal and is required if you ever need to contact RS Express Parking about the booking.
+Store the `booking_id` in your system. It uniquely identifies the booking in the RS Express Parking portal and should be used when contacting RS Express Parking about a booking.
 
-The booking ID prefix (e.g. `SUP`) is unique to your supplier account.
+If your account uses generated booking IDs, the prefix, such as `SUP`, is unique to your supplier account.
 
 ---
 
-### Error Responses
+## Error Responses
 
 | HTTP Status | When it happens | Example response body |
 |---|---|---|
 | `400 Bad Request` | Missing or invalid fields | `{ "email": ["This field is required."] }` |
-| `400 Bad Request` | Service not available for suppliers | `{ "service": ["This service is not available for supplier bookings."] }` |
+| `400 Bad Request` | Return time is not after departure time | `{ "return_time": "return_time must be after departure_time." }` |
+| `400 Bad Request` | Service is disabled or unavailable for supplier bookings | `{ "service": ["This service is not available for supplier bookings."] }` |
+| `400 Bad Request` | Inactive or unknown add-on ID | `{ "add_ons": ["Invalid pk \"99\" - object does not exist."] }` |
+| `400 Bad Request` | Custom booking ID is required for your supplier account | `{ "booking_id": "This supplier uses custom booking IDs. Please provide booking_id." }` |
+| `400 Bad Request` | Duplicate custom booking ID | `{ "booking_id": "A booking with this booking_id already exists." }` |
 | `401 Unauthorized` | Missing or expired access token | `{ "detail": "Authentication credentials were not provided." }` |
 | `403 Forbidden` | Account is not a supplier or is deactivated | `{ "detail": "You do not have permission to perform this action." }` |
-| `500 Internal Server Error` | Unexpected server error | `{ "error": "System configuration error: Confirmed status not found" }` |
+| `500 Internal Server Error` | RS Express Parking configuration issue | `{ "error": "System configuration error: Confirmed status not found" }` |
 
 ---
 
 ## Code Examples
 
-### Python (requests)
+### Python
 
 ```python
 import requests
 
 BASE_URL = "https://www.rsexpressparking.com"
 
-# Step 1: Authenticate
 auth_response = requests.post(f"{BASE_URL}/api/token/", json={
     "username": "your_supplier_username",
-    "password": "your_supplier_password"
+    "password": "your_supplier_password",
 })
+auth_response.raise_for_status()
+
 tokens = auth_response.json()
 access_token = tokens["access"]
 refresh_token = tokens["refresh"]
 
-# Step 2: Create booking
 booking_payload = {
     "service": 3,
     "first_name": "John",
@@ -242,49 +273,44 @@ booking_payload = {
     "return_terminal": "T1",
     "departure_flight_number": "FR1234",
     "return_flight_number": "FR5678",
-    "departure_time": "2025-06-01T06:00:00",
-    "return_time": "2025-06-08T18:00:00",
+    "departure_time": "2025-06-01T05:00:00Z",
+    "return_time": "2025-06-08T17:00:00Z",
     "total_price": "120.00",
     "discounted_price": "120.00",
     "add_ons": [],
-    "website": "rsexpressparking"
+    "website": "rsexpressparking",
 }
 
-response = requests.post(
-    f"{BASE_URL}/api/supplier/bookings/",
-    json=booking_payload,
-    headers={"Authorization": f"Bearer {access_token}"}
-)
-
-if response.status_code == 201:
-    booking = response.json()
-    print(f"Booking created: {booking['booking_id']}")
-elif response.status_code == 401:
-    # Access token expired — refresh and retry
-    refresh_response = requests.post(f"{BASE_URL}/api/token/refresh/", json={
-        "refresh": refresh_token
-    })
-    new_access = refresh_response.json()["access"]
-    response = requests.post(
+def create_booking(access):
+    return requests.post(
         f"{BASE_URL}/api/supplier/bookings/",
         json=booking_payload,
-        headers={"Authorization": f"Bearer {new_access}"}
+        headers={"Authorization": f"Bearer {access}"},
     )
+
+response = create_booking(access_token)
+
+if response.status_code == 401:
+    refresh_response = requests.post(f"{BASE_URL}/api/token/refresh/", json={
+        "refresh": refresh_token,
+    })
+    refresh_response.raise_for_status()
+    access_token = refresh_response.json()["access"]
+    response = create_booking(access_token)
+
+if response.status_code == 201:
     booking = response.json()
     print(f"Booking created: {booking['booking_id']}")
 else:
     print(f"Error {response.status_code}: {response.json()}")
 ```
 
----
-
-### Node.js (fetch / axios)
+### Node.js
 
 ```javascript
 const BASE_URL = 'https://www.rsexpressparking.com';
 
 async function createSupplierBooking(bookingData) {
-  // Step 1: Authenticate
   const authRes = await fetch(`${BASE_URL}/api/token/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -293,9 +319,13 @@ async function createSupplierBooking(bookingData) {
       password: 'your_supplier_password',
     }),
   });
-  const { access, refresh } = await authRes.json();
 
-  // Step 2: Create booking
+  if (!authRes.ok) {
+    throw new Error(`Authentication failed (${authRes.status})`);
+  }
+
+  const { access } = await authRes.json();
+
   const res = await fetch(`${BASE_URL}/api/supplier/bookings/`, {
     method: 'POST',
     headers: {
@@ -305,14 +335,14 @@ async function createSupplierBooking(bookingData) {
     body: JSON.stringify(bookingData),
   });
 
+  const body = await res.json();
+
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(`Booking failed (${res.status}): ${JSON.stringify(err)}`);
+    throw new Error(`Booking failed (${res.status}): ${JSON.stringify(body)}`);
   }
 
-  const booking = await res.json();
-  console.log(`Booking created: ${booking.booking_id}`);
-  return booking;
+  console.log(`Booking created: ${body.booking_id}`);
+  return body;
 }
 
 createSupplierBooking({
@@ -328,8 +358,8 @@ createSupplierBooking({
   car_manufacturer: 'Toyota',
   departure_terminal: 'T1',
   return_terminal: 'T1',
-  departure_time: '2025-06-01T06:00:00',
-  return_time: '2025-06-08T18:00:00',
+  departure_time: '2025-06-01T05:00:00Z',
+  return_time: '2025-06-08T17:00:00Z',
   total_price: '120.00',
   discounted_price: '120.00',
   add_ons: [],
@@ -337,16 +367,13 @@ createSupplierBooking({
 });
 ```
 
----
-
-### PHP (cURL)
+### PHP
 
 ```php
 <?php
 
 $baseUrl = 'https://www.rsexpressparking.com';
 
-// Step 1: Authenticate
 $authCurl = curl_init("$baseUrl/api/token/");
 curl_setopt_array($authCurl, [
     CURLOPT_POST => true,
@@ -357,32 +384,33 @@ curl_setopt_array($authCurl, [
         'password' => 'your_supplier_password',
     ]),
 ]);
+
 $authResponse = json_decode(curl_exec($authCurl), true);
 curl_close($authCurl);
+
 $accessToken = $authResponse['access'];
 
-// Step 2: Create booking
 $bookingPayload = [
-    'service'              => 3,
-    'first_name'           => 'John',
-    'last_name'            => 'Doe',
-    'email'                => 'john.doe@example.com',
-    'contact_no'           => '+353871234567',
-    'total_passengers'     => 2,
-    'car_registration_no'  => '192-D-1234',
-    'car_model'            => 'Corolla',
-    'car_colour'           => 'Silver',
-    'car_manufacturer'     => 'Toyota',
-    'departure_terminal'   => 'T1',
-    'return_terminal'      => 'T1',
+    'service' => 3,
+    'first_name' => 'John',
+    'last_name' => 'Doe',
+    'email' => 'john.doe@example.com',
+    'contact_no' => '+353871234567',
+    'total_passengers' => 2,
+    'car_registration_no' => '192-D-1234',
+    'car_model' => 'Corolla',
+    'car_colour' => 'Silver',
+    'car_manufacturer' => 'Toyota',
+    'departure_terminal' => 'T1',
+    'return_terminal' => 'T1',
     'departure_flight_number' => 'FR1234',
     'return_flight_number' => 'FR5678',
-    'departure_time'       => '2025-06-01T06:00:00',
-    'return_time'          => '2025-06-08T18:00:00',
-    'total_price'          => '120.00',
-    'discounted_price'     => '120.00',
-    'add_ons'              => [],
-    'website'              => 'rsexpressparking',
+    'departure_time' => '2025-06-01T05:00:00Z',
+    'return_time' => '2025-06-08T17:00:00Z',
+    'total_price' => '120.00',
+    'discounted_price' => '120.00',
+    'add_ons' => [],
+    'website' => 'rsexpressparking',
 ];
 
 $bookingCurl = curl_init("$baseUrl/api/supplier/bookings/");
@@ -395,6 +423,7 @@ curl_setopt_array($bookingCurl, [
     ],
     CURLOPT_POSTFIELDS => json_encode($bookingPayload),
 ]);
+
 $bookingResponse = json_decode(curl_exec($bookingCurl), true);
 $httpCode = curl_getinfo($bookingCurl, CURLINFO_HTTP_CODE);
 curl_close($bookingCurl);
@@ -406,17 +435,13 @@ if ($httpCode === 201) {
 }
 ```
 
----
-
-### curl (command line / testing)
+### curl
 
 ```bash
-# Step 1: Obtain tokens
 curl -s -X POST https://www.rsexpressparking.com/api/token/ \
   -H "Content-Type: application/json" \
   -d '{"username":"your_supplier_username","password":"your_supplier_password"}'
 
-# Step 2: Create booking (replace ACCESS_TOKEN with value from step 1)
 curl -X POST https://www.rsexpressparking.com/api/supplier/bookings/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ACCESS_TOKEN" \
@@ -433,8 +458,8 @@ curl -X POST https://www.rsexpressparking.com/api/supplier/bookings/ \
     "car_manufacturer": "Toyota",
     "departure_terminal": "T1",
     "return_terminal": "T1",
-    "departure_time": "2025-06-01T06:00:00",
-    "return_time": "2025-06-08T18:00:00",
+    "departure_time": "2025-06-01T05:00:00Z",
+    "return_time": "2025-06-08T17:00:00Z",
     "total_price": "120.00",
     "discounted_price": "120.00",
     "add_ons": [],
@@ -446,117 +471,20 @@ curl -X POST https://www.rsexpressparking.com/api/supplier/bookings/ \
 
 ## Testing
 
-Before going live, RS Express Parking can set up a **test supplier account** pointing to a staging environment. Contact RS Express Parking to arrange test credentials.
+Before going live, RS Express Parking can provide a test supplier account for a staging environment.
 
 When testing:
-1. Use the staging base URL (provided by RS Express Parking)
-2. Create a booking and verify the `booking_id` in the response
-3. Confirm the booking appears in the RS Express Parking admin portal
-4. Verify that no email is delivered to the test customer email address
+1. Use the staging base URL provided by RS Express Parking.
+2. Obtain JWT tokens with the supplier credentials.
+3. Create a booking and store the `booking_id` from the response.
+4. Confirm the booking appears in the RS Express Parking admin portal with `Confirmed` status.
+5. Confirm no email is delivered to the customer email address.
 
 ---
 
 ## Support
 
-For credentials, service/add-on IDs, or integration questions, contact:
+For credentials, service IDs, add-on IDs, or integration questions, contact:
 
 **RS Express Parking**  
 Email: `support@rsexpressparking.com`
-
----
----
-
-# Production Infrastructure Notes (Internal — RS Express Parking Team)
-
-> This section is for the RS Express Parking technical team. Do not share with suppliers.
-
-## CORS — No Issue for Supplier API Calls
-
-**CORS (Cross-Origin Resource Sharing) is a browser-only security mechanism.** It does not apply to server-to-server HTTP calls.
-
-When a supplier's backend system (PHP app, Python script, Node.js service, etc.) calls `POST /api/supplier/bookings/`, the request goes directly from their server to ours — no browser is involved. The browser never sees it, so no CORS check is performed. The current `CORS_ALLOWED_ORIGINS` whitelist in `settings.py` has zero effect on these calls.
-
-**The only scenario where CORS would apply** is if a supplier built a browser-based web app where user browsers call our API directly. This is uncommon for B2B integrations and not expected here. If it ever arises, the fix is to add the supplier's domain to `CORS_ALLOWED_ORIGINS` in `backend/settings.py`:
-
-```python
-CORS_ALLOWED_ORIGINS = [
-    'https://www.rsexpressparking.com',
-    'https://dublinairportexpressparking.ie',
-    'https://www.dublinairportexpressparking.ie',
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://supplier-domain.com',  # ← add here if needed
-]
-```
-
----
-
-## Nginx — What to Check in Production
-
-If the production server uses Nginx as a reverse proxy (common with Hostinger or any VPS setup), there are two things to verify:
-
-### 1. Rate limiting
-
-If Nginx has `limit_req` rules configured (e.g. to protect against DDoS), suppliers may hit rate limits during high-volume periods. Check the Nginx config for rules like:
-
-```nginx
-limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
-limit_req zone=api burst=20;
-```
-
-**Fix:** Create a separate, more permissive zone for the supplier endpoint, or raise the burst limit:
-
-```nginx
-# More lenient rate limit for supplier API (trusted server-to-server calls)
-limit_req_zone $binary_remote_addr zone=supplier_api:10m rate=30r/s;
-
-location /api/supplier/ {
-    limit_req zone=supplier_api burst=50 nodelay;
-    proxy_pass http://127.0.0.1:8000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-```
-
-### 2. IP allowlist / firewall rules
-
-If the server has `allow`/`deny` rules in Nginx or a firewall (UFW, iptables, Hostinger panel) that restrict which IPs can reach `/api/`, supplier IPs will be blocked with a 403 or connection refused.
-
-**Fix:** Either remove IP restrictions from the API paths entirely (preferred for a public API), or add supplier IP ranges to the allowlist. To check if Nginx has IP restrictions:
-
-```bash
-grep -r "allow\|deny" /etc/nginx/
-```
-
-If using UFW:
-
-```bash
-sudo ufw allow from <supplier_ip> to any port 443
-```
-
-### 3. `ALLOWED_HOSTS` — Not an issue
-
-Django's `ALLOWED_HOSTS` in `settings.py` validates the `Host` HTTP header, not the client's IP. Suppliers send requests to `rsexpressparking.com`, which is already in `ALLOWED_HOSTS`. No change needed.
-
-### 4. Add DRF throttling (recommended)
-
-Currently there is no API-level rate limiting in Django (`REST_FRAMEWORK` has no `DEFAULT_THROTTLE_CLASSES`). For production with multiple suppliers, it is advisable to add throttling to protect the endpoint:
-
-```python
-# backend/settings.py
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.UserRateThrottle',
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'user': '200/hour',  # per authenticated user (i.e. per supplier account)
-    },
-}
-```
-
-This limits each supplier account to 200 requests per hour, which is well within normal usage but prevents abuse.

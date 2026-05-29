@@ -4,6 +4,8 @@ from services.models import AddOn, Coupon, Service
 from core.models import Status
 from core.serializers import StatusSerializer
 from services.serializers import AddOnSerializer
+from datetime import timezone as dt_timezone
+from decimal import Decimal
 
 class BookingSerializer(serializers.ModelSerializer):
     # This will be used for writes (POST/PUT)
@@ -54,9 +56,22 @@ class BookingUserSerializer(serializers.ModelSerializer):
 
 
 class SupplierBookingSerializer(serializers.ModelSerializer):
-    booking_id = serializers.CharField(required=False, allow_blank=False)
+    booking_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    contact_no = serializers.CharField(required=True, allow_blank=False, allow_null=False)
+    total_passengers = serializers.IntegerField(required=True, min_value=1)
+    departure_time = serializers.DateTimeField(default_timezone=dt_timezone.utc)
+    return_time = serializers.DateTimeField(default_timezone=dt_timezone.utc)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.00'))
+    discounted_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, min_value=Decimal('0.00'), required=False, allow_null=True
+    )
+    website = serializers.ChoiceField(
+        choices=('rsexpressparking', 'dublinairportparking'),
+        required=False,
+        default='rsexpressparking',
+    )
     add_ons = serializers.PrimaryKeyRelatedField(
-        queryset=AddOn.objects.all(), many=True, required=False
+        queryset=AddOn.objects.filter(active=True), many=True, required=False
     )
     add_ons_detail = AddOnSerializer(source='add_ons', many=True, read_only=True)
     status = StatusSerializer(read_only=True)
@@ -89,6 +104,8 @@ class SupplierBookingSerializer(serializers.ModelSerializer):
         return obj.service.name if obj.service else None
 
     def validate_service(self, service):
+        if not service.enabled:
+            raise serializers.ValidationError("This service is not available for supplier bookings.")
         if service.website not in ('rsexpressparking', 'both'):
             raise serializers.ValidationError("This service is not available for supplier bookings.")
         return service
@@ -97,10 +114,23 @@ class SupplierBookingSerializer(serializers.ModelSerializer):
         supplier = self.context.get('supplier')
         booking_id = attrs.get('booking_id')
 
+        if attrs['return_time'] <= attrs['departure_time']:
+            raise serializers.ValidationError({
+                'return_time': 'return_time must be after departure_time.'
+            })
+
+        if attrs.get('discounted_price') is None:
+            attrs['discounted_price'] = attrs['total_price']
+
         if supplier and supplier.use_custom_booking_ids:
-            if not booking_id:
+            if not booking_id or not str(booking_id).strip():
                 raise serializers.ValidationError({
                     'booking_id': 'This supplier uses custom booking IDs. Please provide booking_id.'
+                })
+            attrs['booking_id'] = str(booking_id).strip()
+            if Booking.objects.filter(booking_id=attrs['booking_id']).exists():
+                raise serializers.ValidationError({
+                    'booking_id': 'A booking with this booking_id already exists.'
                 })
         else:
             attrs.pop('booking_id', None)
@@ -109,5 +139,6 @@ class SupplierBookingSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        ret.pop('add_ons_detail', None)
         ret['add_ons'] = AddOnSerializer(instance.add_ons.all(), many=True).data
         return ret
