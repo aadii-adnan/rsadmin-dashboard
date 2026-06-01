@@ -129,6 +129,31 @@ function FinancialDashboard() {
     color: s.color
   }));
 
+  const formatMonthLabel = (value) => {
+    if (!value) return "";
+    const [monthYear, monthNumber] = value.split("-").map(Number);
+    if (!monthYear || !monthNumber) return value;
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    }).format(new Date(monthYear, monthNumber - 1, 1));
+  };
+
+  const selectedPeriodLabel = allTime
+    ? "Showing finance totals for all time."
+    : year
+      ? `Showing finance totals for ${year}.`
+      : startMonth && endMonth
+        ? startMonth === endMonth
+          ? `Showing finance totals for ${formatMonthLabel(startMonth)}.`
+          : `Showing finance totals for ${formatMonthLabel(startMonth)} to ${formatMonthLabel(endMonth)}.`
+        : startMonth
+          ? `Showing finance totals for ${formatMonthLabel(startMonth)}.`
+          : "Select a month, range, year, or all time to view finance totals.";
+
+  const supplierEarningsHelp = "Shows supplier/vendor bookings with departure dates in the selected period. Includes Cancelled, Started, and Completed bookings only. Confirmed bookings are not included.";
+  const helperTextStyle = { fontSize: 13, lineHeight: 1.35 };
+
   // Expense form handlers
 
   // Expense update handler
@@ -285,9 +310,15 @@ function FinancialDashboard() {
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Total Balance</Card.Title>
+              <div className="text-muted mb-2" style={helperTextStyle}>
+                Bookings created in the selected period, excluding pending and payment failed.
+              </div>
               <h2 className="text-primary">
                 {overview ? `€${overview.balance.toLocaleString()}` : "--"}
               </h2>
+              <div className="text-muted mb-2" style={helperTextStyle}>
+                {selectedPeriodLabel}
+              </div>
               <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "center" }}>
                 <Form.Control
                   type="month"
@@ -349,6 +380,9 @@ function FinancialDashboard() {
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Total Expenses</Card.Title>
+              <div className="text-muted mb-2" style={helperTextStyle}>
+                Fixed and recurring expenses counted for the selected period.
+              </div>
               <h2 className="text-danger">
                 {overview ? `€${overview.expenses.toLocaleString()}` : "--"}
               </h2>
@@ -365,6 +399,9 @@ function FinancialDashboard() {
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Total Add-ons Price</Card.Title>
+              <div className="text-muted mb-2" style={helperTextStyle}>
+                Add-ons on non-cancelled bookings in the selected period.
+              </div>
               <h2 className="text-info">
                 {overview?.details?.all_addons_total !== undefined
                   ? "€" + Number(overview.details.all_addons_total).toLocaleString()
@@ -377,6 +414,9 @@ function FinancialDashboard() {
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Total Parking Price</Card.Title>
+              <div className="text-muted mb-2" style={helperTextStyle}>
+                Total balance minus add-ons.
+              </div>
               <h2 className="text-primary">
                 {overview && overview.details?.all_addons_total !== undefined
                   ? "€" + (overview.balance - Number(overview.details.all_addons_total)).toLocaleString()
@@ -389,6 +429,9 @@ function FinancialDashboard() {
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Total Earnings</Card.Title>
+              <div className="text-muted mb-2" style={helperTextStyle}>
+                Counted earnings after supplier/vendor rules.
+              </div>
               <h2 className="text-success">
                 {overview ? `€${overview.earnings.toLocaleString()}` : "--"}
               </h2>
@@ -399,6 +442,9 @@ function FinancialDashboard() {
           <Card className="mb-4 text-center">
             <Card.Body>
               <Card.Title>Profit / Loss</Card.Title>
+              <div className="text-muted mb-2" style={helperTextStyle}>
+                Earnings minus expenses.
+              </div>
               <h2 className={overview && overview.profit_or_loss >= 0 ? "text-success" : "text-danger"}>
                 {overview ? `€${overview.profit_or_loss.toLocaleString()}` : "--"}
               </h2>
@@ -411,6 +457,9 @@ function FinancialDashboard() {
         <Card className="mb-4">
           <Card.Body>
             <Card.Title>Service Earning Details</Card.Title>
+            <div className="text-muted mb-2" style={helperTextStyle}>
+              Uses bookings created in the selected period.
+            </div>
             <div style={{ maxHeight: 300, overflowY: "auto" }}>
               <table className="table table-sm table-bordered">
                 <thead>
@@ -442,6 +491,9 @@ function FinancialDashboard() {
       <Card className="mb-4">
         <Card.Body>
           <Card.Title>Add-on Earning Details</Card.Title>
+          <div className="text-muted mb-2" style={helperTextStyle}>
+            Supplier/vendor add-ons are excluded from our add-on earnings.
+          </div>
           <div style={{ maxHeight: 300, overflowY: "auto" }}>
             <table className="table table-sm table-bordered">
               <thead>
@@ -496,6 +548,9 @@ function FinancialDashboard() {
             <Card className="mb-4">
               <Card.Body>
                 <Card.Title>Expenses</Card.Title>
+                <div className="text-muted mb-2" style={helperTextStyle}>
+                  Recurring expenses may be multiplied by the number of months counted.
+                </div>
                 <div style={{ maxHeight: 300, overflowY: "auto" }}>
                   <table className="table table-sm table-bordered">
                     <thead>
@@ -553,6 +608,9 @@ function FinancialDashboard() {
             <Card className="mb-4">
               <Card.Body>
                 <Card.Title>Bookings by Status</Card.Title>
+                <div className="text-muted mb-2" style={helperTextStyle}>
+                  Current booking status counts across all bookings.
+                </div>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={bookingsStatusData}>
                     <XAxis dataKey="status" />
@@ -568,7 +626,10 @@ function FinancialDashboard() {
           <Col md={4}>
             <Card className="mb-4">
               <Card.Body>
-                {/* <Card.Title>Service Orders</Card.Title> */}
+                <Card.Title>Service Orders</Card.Title>
+                <div className="text-muted mb-2" style={helperTextStyle}>
+                  Service order split across all bookings.
+                </div>
                 <ResponsiveContainer width="100%" height={350}>
                 <div>
                   <ul style={{ listStyle: "none", paddingLeft: 0 }}>
@@ -615,6 +676,9 @@ function FinancialDashboard() {
             <Card className="mb-4 admin-card">
               <Card.Body>
                 <Card.Title>Monthly Earnings Trend</Card.Title>
+                <div className="text-muted mb-2" style={helperTextStyle}>
+                  Last 12 months; not affected by the selected dashboard period.
+                </div>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={monthlyEarnings}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -631,6 +695,9 @@ function FinancialDashboard() {
             <Card className="mb-4 admin-card">
               <Card.Body>
                 <Card.Title>Bookings Over Time (Last 30 Days)</Card.Title>
+                <div className="text-muted mb-2" style={helperTextStyle}>
+                  Last 30 days; not affected by the selected dashboard period.
+                </div>
                 <ResponsiveContainer width="100%" height={250}>
                   <AreaChart data={bookingsOverTime}>
                     <defs>
@@ -658,15 +725,18 @@ function FinancialDashboard() {
               <Card className="mb-4">
                 <Card.Body>
                   <Card.Title>Supplier / Vendor Earnings</Card.Title>
+                  <div className="text-muted mb-2" style={helperTextStyle}>
+                    {supplierEarningsHelp}
+                  </div>
                   <div style={{ overflowX: "auto" }}>
                     <table className="table table-sm table-bordered">
                       <thead>
                         <tr>
                           <th>Supplier Name</th>
                           <th>Prefix</th>
-                          <th>Total Bookings</th>
-                          <th>Total Revenue (€)</th>
-                          <th>Extended (€)</th>
+                          <th>Eligible Bookings</th>
+                          <th>Supplier Revenue Base (€)</th>
+                          <th>Extended Amount (€)</th>
                           <th>Supplier Share (€)</th>
                           <th>Our Share (€)</th>
                           <th>Commission %</th>
@@ -766,13 +836,13 @@ function FinancialDashboard() {
               <>
                 <Row className="mb-3">
                   <Col md={3}>
-                    <strong>Total Bookings:</strong> {supplierDetail.total_bookings}
+                    <strong>Eligible Bookings:</strong> {supplierDetail.total_bookings}
                   </Col>
                   <Col md={3}>
-                    <strong>Revenue:</strong> €{supplierDetail.total_revenue.toLocaleString()}
+                    <strong>Revenue Base:</strong> €{supplierDetail.total_revenue.toLocaleString()}
                   </Col>
                   <Col md={3}>
-                    <strong>Extended:</strong>{" "}
+                    <strong>Extended Amount:</strong>{" "}
                     <span style={{ color: "#0d6efd" }}>€{Number(supplierDetail.total_extended_amount || 0).toLocaleString()}</span>
                   </Col>
                   <Col md={3}>
@@ -784,6 +854,9 @@ function FinancialDashboard() {
                     <span style={{ color: "#28a745" }}>€{supplierDetail.our_share.toLocaleString()}</span>
                   </Col>
                 </Row>
+                <div className="text-muted mb-2" style={helperTextStyle}>
+                  {supplierEarningsHelp}
+                </div>
                 <div style={{ maxHeight: 400, overflowY: "auto" }}>
                   <table className="table table-sm table-bordered">
                     <thead>
@@ -793,8 +866,8 @@ function FinancialDashboard() {
                         <th>Departure</th>
                         <th>Return</th>
                         <th>Price (€)</th>
-                        <th>Extended (€)</th>
-                        <th>Earning (€)</th>
+                        <th>Extended Amount (€)</th>
+                        <th>Revenue Base (€)</th>
                         <th>Status</th>
                       </tr>
                     </thead>

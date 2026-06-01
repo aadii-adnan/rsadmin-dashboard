@@ -152,6 +152,9 @@ def should_count_booking_for_earnings(booking):
 def should_count_supplier_commission_status(status_name):
     return status_name in ("started", "completed", "cancelled")
 
+
+SUPPLIER_EARNING_STATUSES = ("Cancelled", "Started", "Completed")
+
 class AdminFinancialOverview(APIView):
     permission_classes = [IsSuperAdminNotManager]
 
@@ -213,6 +216,21 @@ class AdminFinancialOverview(APIView):
 
             if website and website.lower() != "all":
                 bookings_in_period = bookings_in_period.filter(website__iexact=website)
+
+            supplier_summary_bookings = Booking.objects.filter(
+                supplier__isnull=False,
+                status__name__in=SUPPLIER_EARNING_STATUSES,
+            )
+            if all_time != "true":
+                supplier_summary_bookings = supplier_summary_bookings.filter(
+                    departure_time__gte=start_datetime,
+                    departure_time__lte=end_datetime,
+                )
+            if website and website.lower() != "all":
+                supplier_summary_bookings = supplier_summary_bookings.filter(website__iexact=website)
+            supplier_summary_bookings = supplier_summary_bookings.select_related(
+                'service', 'status', 'supplier'
+            ).prefetch_related('add_ons')
 
             all_addons_total = 0
             for booking in bookings_in_period.exclude(status__name="Cancelled"):
@@ -333,7 +351,7 @@ class AdminFinancialOverview(APIView):
                     'addon_details': addon_details,
                     'all_addons_total': float(all_addons_total),
                 },
-                'supplier_summary': self._build_supplier_summary(bookings_in_period),
+                'supplier_summary': self._build_supplier_summary(supplier_summary_bookings),
             })
 
         except Exception as e:
@@ -341,7 +359,10 @@ class AdminFinancialOverview(APIView):
 
     def _build_supplier_summary(self, bookings_in_period):
         """Build supplier financial summary from bookings queryset."""
-        supplier_bookings = bookings_in_period.filter(supplier__isnull=False).select_related('supplier')
+        supplier_bookings = bookings_in_period.filter(
+            supplier__isnull=False,
+            status__name__in=SUPPLIER_EARNING_STATUSES,
+        ).select_related('supplier')
         suppliers_data = []
         total_supplier_revenue = Decimal('0.00')
         total_given_to_suppliers = Decimal('0.00')
@@ -640,11 +661,16 @@ class SupplierFinanceDetailView(APIView):
 
             bookings = Booking.objects.filter(
                 supplier=supplier,
-                created_at__gte=start_datetime,
-                created_at__lte=end_datetime,
-            ).exclude(
-                status__name__in=["Pending", "Payment Failed"]
-            ).select_related('status', 'service').prefetch_related('add_ons').order_by('created_at')
+                status__name__in=SUPPLIER_EARNING_STATUSES,
+            )
+            if all_time != "true":
+                bookings = bookings.filter(
+                    departure_time__gte=start_datetime,
+                    departure_time__lte=end_datetime,
+                )
+            bookings = bookings.select_related(
+                'status', 'service'
+            ).prefetch_related('add_ons').order_by('departure_time')
 
             total_revenue = Decimal('0.00')
             supplier_share = Decimal('0.00')
