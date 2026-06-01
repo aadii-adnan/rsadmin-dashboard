@@ -16,13 +16,14 @@ def process_bookings_for_completion():
     now = timezone.now()
     threshold = now - timedelta(hours=3)
     completed_status = Status.objects.get(name="Completed", type='booking')
+    confirmed_status = Status.objects.get(name="Confirmed", type='booking')
     started_status = Status.objects.get(name="Started", type='booking')
 
-    # Process Started bookings regardless of completion_email_sent.
+    # Process Confirmed and Started bookings regardless of completion_email_sent.
     # This allows admins to reset a booking to Started to trigger a resend.
     bookings = Booking.objects.filter(
         return_time__lte=threshold,
-        status=started_status
+        status__in=[confirmed_status, started_status]
     )
 
     for booking in bookings:
