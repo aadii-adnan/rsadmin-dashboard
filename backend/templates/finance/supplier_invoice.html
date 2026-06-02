@@ -270,9 +270,10 @@
             <strong>Commission Split:</strong><br/>
             <br/>
             {{ supplier.name }}({{ commission_pct }}%): &euro;{{ supplier_share }}<br/>
-            RS Express ({{ rs_commission_pct }}%): &euro;{{ rs_share }}<br/>
+            RS Express ({{ rs_commission_pct }}%): &euro;{{ rs_commission_share }}<br/>
+            Extended Amount: &euro;{{ total_extended_amount }}<br/>
             <br/>
-            <strong>Total Payable: &euro;{{ total_revenue }}</strong>
+            <strong>Total Payable: &euro;{{ rs_share }}</strong>
             <br/><br/>
             <strong>Bank Details:</strong><br/>
             <br/>
@@ -286,6 +287,7 @@
             By status:<br/>
             &bull;&nbsp;Completed: {{ completed_count }}<br/>
             &bull;&nbsp;Started: {{ started_count }}<br/>
+            &bull;&nbsp;Cancelled: {{ cancelled_count }}<br/>
         </div>
     </div>
 
