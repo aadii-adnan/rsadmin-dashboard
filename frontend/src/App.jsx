@@ -18,6 +18,8 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const UnauthorizedPage = lazy(() => import("./pages/UnauthorizedPage"));
 const ThankYouPage = lazy(() => import("./pages/ThankYouPage"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
+const ManageBookingLookup = lazy(() => import("./pages/ManageBookingLookup"));
+const ManageBooking = lazy(() => import("./pages/ManageBooking"));
 const Login = lazy(() => import("./pages/Login"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -109,6 +111,8 @@ function App() {
           <Route path="/book-now" element={<Home />} />
           <Route path="/dublin-airport-parking-offer" element={<Home />} />
           <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+          <Route path="/manage-booking" element={<ManageBookingLookup />} />
+          <Route path="/manage-booking/booking" element={<ManageBooking />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

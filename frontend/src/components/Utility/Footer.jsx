@@ -4,7 +4,7 @@ import { FaEnvelope, FaInstagram, FaPhone, FaPhoneAlt } from "react-icons/fa";
 import logo from '../../assets/logo-white.webp'
 
 const Footer = () => {
-  
+
     return (
     <div style={{backgroundColor : "#010659"}} data-elementor-type="footer" data-elementor-id="330" className="elementor elementor-330 elementor-location-footer" data-elementor-post-type="elementor_library">
         <div className="elementor-element elementor-element-365e4719 e-flex e-con-boxed e-con e-parent e-lazyloaded" data-id="365e4719" data-element_type="container" data-settings="{&quot;background_background&quot;:&quot;classNameic&quot;}">

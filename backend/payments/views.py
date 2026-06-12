@@ -3,6 +3,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from bookings.models import Booking
+from bookings.booking_rules import (
+    calculate_parking_days,
+    compute_reschedule_pricing,
+    parse_and_localize,
+    validate_reschedule,
+)
 from .models import Payment
 from django.shortcuts import get_object_or_404
 from .serializers import PaymentSerializer
@@ -30,25 +36,6 @@ import pytz
 
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
-def calculate_parking_days(departure_dt, return_dt):
-    """
-    Calculate parking days by calendar date in Dublin time, always counting both start and end date as full days.
-    """
-    # Use Europe/Dublin timezone
-    dublin_tz = pytz.timezone("Europe/Dublin")
-    # Convert to Dublin time if not already aware
-    if timezone.is_naive(departure_dt):
-        departure_dt = timezone.make_aware(departure_dt, timezone.utc)
-    if timezone.is_naive(return_dt):
-        return_dt = timezone.make_aware(return_dt, timezone.utc)
-    # Convert to Dublin time
-    departure_dt = departure_dt.astimezone(dublin_tz)
-    return_dt = return_dt.astimezone(dublin_tz)
-    from_date = departure_dt.date()
-    to_date = return_dt.date()
-    days = (to_date - from_date).days + 1
-    return days
 
 def link_callback(uri, rel):
     """
@@ -165,6 +152,7 @@ def send_booking_confirmation_email(booking):
         site_url = "https://dublinairportexpressparking.ie/"
         team_name = "The Dublin Airport Express Parking Team"
         from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
+        manage_url = settings.FRONTEND_DUBLIN_MANAGE_BOOKING_URL
         connection = get_connection(
             host=config('EMAIL_HOST'),
             port=config('EMAIL_PORT', cast=int),
@@ -177,6 +165,7 @@ def send_booking_confirmation_email(booking):
         site_url = "https://rsexpressparking.com/"
         team_name = "The RS Express Parking Team"
         from_email = "RS Express Parking <support@rsexpressparking.com>"
+        manage_url = settings.FRONTEND_RS_MANAGE_BOOKING_URL
         connection = None  # Use default
 
     # Generate invoice PDF
@@ -255,6 +244,11 @@ def send_booking_confirmation_email(booking):
         </ul>
         '''
         )}
+        <h3 style="color: #444;">🔧 Manage Your Booking</h3>
+        <p>
+        Need to reschedule or cancel? You can manage your booking any time at
+        <a href="{manage_url}" style="color: #0066cc;">{manage_url}</a> using your Booking ID and email address.
+        </p>
         <p>
         Thanks again, and we look forward to seeing you soon!
         </p>
@@ -330,10 +324,15 @@ if "Park & Fly" in booking.service.name else
 '''
 )}
 
+-----------------------------
+🔧 Manage Your Booking
+-----------------------------
+Need to reschedule or cancel? Manage your booking any time at {manage_url} using your Booking ID and email address.
+
 Thanks again, and we look forward to seeing you soon!
 
-Warm regards,  
-{team_name}  
+Warm regards,
+{team_name}
 {site_url} | +353 1 964 0011
 """
 
@@ -349,6 +348,7 @@ Warm regards,
     email.send()
     booking.email_sent = True
     booking.save(update_fields=["email_sent"])
+    return pdf_content
 
 def send_manager_new_booking_email(booking, pdf_content):
     departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
@@ -461,15 +461,39 @@ class CreateStripePaymentIntent(APIView):
         user = booking.user  # adjust if your Booking model uses a different field
 
         try:
-            extra_amount = request.data.get("amount")
             is_reschedule_extra = request.data.get("is_reschedule_extra", False)
             bonus_points_used = Decimal(str(request.data.get("bonus_points_used", 0)))
 
             customer = stripe.Customer.create(email=booking.email)
             amount_to_charge = float(booking.discounted_price if booking.discounted_price > 0 else booking.total_price)
-            
-            if is_reschedule_extra and extra_amount:
-                amount_to_charge = float(extra_amount)
+            extra_metadata = {}
+
+            if is_reschedule_extra:
+                # Never trust a client-provided amount for extensions — recompute
+                # from the new dates at the flat per-day extension rate.
+                new_departure_raw = request.data.get("new_departure_time")
+                new_return_raw = request.data.get("new_return_time")
+                if not new_departure_raw or not new_return_raw:
+                    return Response(
+                        {'error': 'new_departure_time and new_return_time are required for reschedule payments.'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                new_departure = parse_and_localize(new_departure_raw)
+                new_return = parse_and_localize(new_return_raw)
+                rule_error = validate_reschedule(booking, new_departure, new_return)
+                if rule_error:
+                    return Response({'error': rule_error}, status=status.HTTP_400_BAD_REQUEST)
+                pricing = compute_reschedule_pricing(booking, new_departure, new_return)
+                if pricing['extra_amount'] <= 0:
+                    return Response(
+                        {'error': 'No extra payment is required for these dates.'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                amount_to_charge = float(pricing['extra_amount'])
+                extra_metadata = {
+                    'new_departure_time': new_departure.isoformat(),
+                    'new_return_time': new_return.isoformat(),
+                }
             else:
                 discounted_total = booking.total_price
                 if booking.coupon and booking.coupon.is_valid():
@@ -487,8 +511,9 @@ class CreateStripePaymentIntent(APIView):
                 customer=customer.id,
                 metadata={
                     'booking_id': booking.id,
-                    'is_reschedule_extra': str(is_reschedule_extra),
+                    'is_reschedule_extra': str(bool(is_reschedule_extra)),
                     'bonus_points_used': str(bonus_points_used),
+                    **extra_metadata,
                 },
             )
 
@@ -569,7 +594,15 @@ class StripeWebhookView(APIView):
                 new_status = 'Succeeded'
                 status_obj = get_object_or_404(Status, name=new_status, type='payment')
                 payment.status = status_obj
-                payment.save()                
+                payment.save()
+
+                # Reschedule-extension payments only mark the payment as
+                # succeeded — the booking itself (dates, prices, status) is
+                # updated by the reschedule endpoint. Awarding a coupon,
+                # re-confirming the booking or re-sending the confirmation
+                # email here would corrupt the existing booking.
+                if str(intent['metadata'].get('is_reschedule_extra', '')).lower() == 'true':
+                    return HttpResponse(status=200)
 
                 # Award a new coupon to the user
                 code = generate_coupon_code()
@@ -594,177 +627,11 @@ class StripeWebhookView(APIView):
                     booking.coupon.times_used += 1
                     booking.coupon.save()
 
-                # Generate and email the invoice    
-                if not booking.email_sent:            
+                # Generate and email the invoice (single source of truth for
+                # the confirmation email body, including the manage-booking link)
+                if not booking.email_sent:
                     try:
-                        response, error = generate_invoice(booking)
-                        if error:
-                            return HttpResponse(f'Error: {error}', status=500)
-                        departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
-                        return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
-                        pdf_content = response.getvalue()
-                        html_body = f"""
-    <html>
-    <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #0066cc;">Booking Confirmation – {booking.service.name}</h2>
-        <p>Hi {booking.first_name},</p>
-        <p>
-        Thank you for choosing <strong>{site_name}</strong> – {booking.service.name}.
-        We're happy to confirm that your booking has been successfully completed and your payment has been received.
-        </p>
-        <h3 style="color: #444;">🚗 Booking Summary</h3>
-        <ul>
-        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-        <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
-        <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
-        <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
-        </ul>
-        <h3 style="color: #444;">💳 Payment Details</h3>
-        <ul>
-        <li><strong>Total Paid:</strong> €{booking.discounted_price}</li>
-        <li><strong>Payment Method:</strong> Stripe</li>
-        </ul>
-        <h3 style="color: #444;">📄 Your Invoice</h3>
-        <p>
-        Your invoice is attached to this email as a PDF file. Please download it from the email attachment.
-        </p>
-        {(
-        '''
-        <h3 style="color: #444;">🅿️ Parking Details</h3>
-        <ul>
-            <li><strong>Customer Support:</strong> +353 (01) 221 0589</li>
-            <li><strong>Address:</strong> Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29</li>
-            <li><strong>Navigation:</strong> <a href="https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb" style="color: #010659;">View on Google Maps</a></li>
-        </ul>
-        <h3 style="color: #444;">🚐 Arrival Instructions</h3>
-        <p>
-            Dublin Airport Park & Fly will greet you on site, assist with parking, and arrange a frequent minibus/coach to the airport.<br>
-            <strong>Note:</strong> Please report any delay, damage, or issues directly to Dublin Airport Park & Fly.<br>
-            <strong>IMPORTANT:</strong> Extra passengers may delay shuttle dispatch to/from the airport.
-        </p>
-        <h3 style="color: #444;">📝 What To Do When You Arrive</h3>
-        <p>
-            Call us just before arriving so our driver can assist and park your car.<br>
-            <strong>Contact:</strong> +353 (01) 221 0589<br>
-            Customers should go to Car Park A, Level 2.<br>
-            Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.<br>
-            On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
-        </p>
-        '''
-        if "Park & Fly" in booking.service.name else
-        '''
-        <h3 style="color: #444;">📞 Important Instructions</h3>
-        <ul>
-            <li>
-                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
-            </li>
-            <li>
-                Customers should go to Car Park A, Level 2.
-            </li>
-            <li>
-                Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
-            </li>
-            <li>
-                For any other queries, feel free to reply to this email or contact us directly.
-            </li>
-        </ul>
-        '''
-        )}
-        <p>
-        Thanks again, and we look forward to seeing you soon!
-        </p>
-        <p>
-        Warm regards,<br>
-        <strong>{team_name}</strong><br>
-        <a href="{site_url}" style="color: #0066cc;">{site_url}</a> | +353 1 964 0011
-        </p>
-    </body>
-    </html>
-    """
-                        
-                        text_body = f"""
-    Hi {booking.first_name},
-
-    Thank you for choosing {site_name} – {booking.service.name}.
-
-    We're happy to confirm that your booking has been successfully completed and your payment has been received.
-
-    -----------------------------
-    🚗 Booking Summary
-    -----------------------------
-    Booking ID: {booking.booking_id}
-    Drop-Off Date & Time: {departure_time}
-    Pick-Up Date & Time: {return_time}
-    Vehicle: {booking.car_model} – {booking.car_registration_no}
-
-    -----------------------------
-    💳 Payment Details
-    -----------------------------
-    Total Paid: €{booking.discounted_price}
-    Payment Method: Stripe
-
-    -----------------------------
-    📄 Your Invoice
-    -----------------------------
-    Your invoice is attached to this email as a PDF file. Please download it from the email attachment.
-
-    {(
-    '''
-    -----------------------------
-    🅿️ Parking Details
-    -----------------------------
-    Customer Support: +353 (01) 221 0589
-    Address: Limewoods, Cooks Road, Forrest Great, Swords, Co. Dublin, K67 WA29
-    Navigation: https://maps.app.goo.gl/JKijteSn8DwTo1cx9?g_st=iwb
-
-    -----------------------------
-    🚐 Arrival Instructions
-    -----------------------------
-    Dublin Airport Park & Fly will greet you on site, assist with parking, and arrange a frequent minibus/coach to the airport.
-    Note: Please report any delay, damage, or issues directly to Dublin Airport Park & Fly.
-    IMPORTANT: Extra passengers may delay shuttle dispatch to/from the airport.
-
-    -----------------------------
-    📝 What To Do When You Arrive
-    -----------------------------
-    Call us just before arriving so our driver can assist and park your car.
-    Contact: +353 (01) 221 0589
-    Customers should go to Car Park A, Level 2.
-    Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
-    On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
-    '''
-    if "Park & Fly" in booking.service.name else
-    '''
-    -----------------------------
-    📞 Important Instructions
-    -----------------------------
-    - Please make sure to call the driver at +353 83 489 6505 at least 30 minutes before your arrival and departure to ensure a smooth handover.
-    - Customers should go to Car Park A, Level 2.
-    - Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
-    - For any other queries, feel free to reply to this email or contact us directly.
-    '''
-    )}
-
-    Thanks again, and we look forward to seeing you soon!
-
-    Warm regards,  
-    {team_name}  
-    {site_url} | +353 1 964 0011
-    """
-
-
-                        email = EmailMultiAlternatives(
-                            subject="Booking Confirmation – " + str(booking.service.name),
-                            body=text_body,
-                            from_email=from_email,
-                            to=[booking.email],
-                            connection=connection
-                        )
-                        email.attach_alternative(html_body, "text/html")
-                        email.attach(f"Invoice-{booking.booking_id}.pdf", pdf_content, 'application/pdf')
-                        email.send()
-                        booking.email_sent = True
-                        booking.save()
+                        pdf_content = send_booking_confirmation_email(booking)
                         send_manager_new_booking_email(booking, pdf_content)
                     except Exception as e:
                         print(f"Error sending email: {str(e)}")
@@ -895,17 +762,31 @@ class VerifyBookingAmountView(APIView):
             amount_to_verify = Decimal(str(amount_to_verify))
 
             if is_reschedule_extra:
-                # Accept any positive amount for extra days (frontend must ensure correct calculation)
-                if amount_to_verify > 0:
-                    return Response({
-                        'valid': True,
-                        'message': 'Extra payment for reschedule accepted'
-                    })
-                else:
+                # Recompute the extension charge server-side from the new dates
+                new_departure_raw = request.data.get('new_departure_time')
+                new_return_raw = request.data.get('new_return_time')
+                if not new_departure_raw or not new_return_raw:
                     return Response({
                         'valid': False,
-                        'message': 'Extra payment must be positive'
+                        'message': 'new_departure_time and new_return_time are required'
                     }, status=status.HTTP_400_BAD_REQUEST)
+                pricing = compute_reschedule_pricing(
+                    booking,
+                    parse_and_localize(new_departure_raw),
+                    parse_and_localize(new_return_raw),
+                )
+                expected_amount = pricing['extra_amount']
+                if expected_amount > 0 and amount_to_verify == expected_amount:
+                    return Response({
+                        'valid': True,
+                        'message': 'Extra payment for reschedule verified'
+                    })
+                return Response({
+                    'valid': False,
+                    'message': 'Amount does not match the required extension charge',
+                    'expected_amount': str(expected_amount),
+                    'provided_amount': str(amount_to_verify)
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             # Calculate the actual amount
             service = booking.service            

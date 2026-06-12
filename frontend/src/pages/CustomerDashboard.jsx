@@ -6,7 +6,14 @@ import parkingImg from "../assets/parking.webp";
 import customFetch from "../auth/fetch";
 import ReschedulePopup from "../components/CustomerDashboard/ReschedulePopup";
 import PayPopup from "../components/CustomerDashboard/PayPopup";
+import CancelBookingModal from "../components/CustomerDashboard/CancelBookingModal";
 import { useAuth } from "../auth/AuthContext";
+import {
+  RESCHEDULE_DAY_RATE,
+  getCancellationPolicy,
+  isDepartureLocked,
+  isReturnLocked,
+} from "../utils/bookingRules";
 
 const statusColors = {
     'Completed': '#28a745',
@@ -76,24 +83,17 @@ const CustomerDashboard = () => {
       return;
     }
 
-    const now = new Date();
-    const departure = new Date(booking.departure_time);
-
-    if (booking.service_name === "Standard Meet & Greet Parking") {
-      const seventyTwoHoursBefore = new Date(departure.getTime() - 72 * 60 * 60 * 1000);
-      if (now > seventyTwoHoursBefore) {
-        alert("Standard Meet & Greet Parking bookings can only be cancelled at least 72 hours before departure.");
-        return;
-      }
-    } else if (booking.service_name === "Flexible Meet & Greet Parking") {
-      if (now > departure) {
-        alert("You can only cancel Flexible Meet & Greet Parking bookings before the departure time.");
-        return;
-      }
+    // Pre-check for instant feedback; the backend enforces the same policy.
+    const policy = getCancellationPolicy(booking);
+    if (!policy.allowed) {
+      alert(policy.reason);
+      return;
     }
+
     setActionLoading(true);
     try {
-      // Always call cancel API, pass refund type
+      // Always call cancel API, pass refund type. Within 72h of departure
+      // the backend ignores the flag and cancels with no refund at all.
       const res = await customFetch(
         `${import.meta.env.VITE_API_BASE_URL}/bookings/${bookingId}/cancel/`,
         {
@@ -102,34 +102,25 @@ const CustomerDashboard = () => {
           body: { refund: type === "refund" }, // true for refund, false for points
         }
       );
-      if (!res.ok) throw new Error("Failed to cancel booking.");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to cancel booking.");
 
-      if (type === "refund") {
-        alert("Your booking was cancelled. €15 cancellation fee will be deducted and the remaining amount will be refunded to your original payment method.");
-      } else if (type === "points") {
-        // Find the booking to get its value
-        const booking = bookings.find(b => b.id === bookingId);
-        const orderValue = Number(booking.discounted_price > 0 ? booking.discounted_price : booking.total_price);
-        const bonusToAdd = Math.max(0, orderValue - 15); // Deduct €15 fee
-        // Call backend to add bonus points
-        await customFetch(
-          `${import.meta.env.VITE_API_BASE_URL}/auth/add-bonus/`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: { amount: bonusToAdd },
-          }
-        );
-        const updatedUser = { 
-          ...user, 
-          bonus_points: Number(user.bonus_points || 0) + Number(bonusToAdd)
+      if (data.outcome === "no_refund") {
+        alert("Your booking was cancelled. As it was cancelled within 72 hours of departure, no refund applies.");
+      } else if (data.outcome === "points") {
+        // Bonus points are credited server-side; sync the new balance.
+        const updatedUser = {
+          ...user,
+          bonus_points: Number(data.bonus_points ?? user.bonus_points ?? 0),
         };
-        setUser(updatedUser); 
+        setUser(updatedUser);
         setBookingData((prev) => ({
             ...prev,
             userDetails: updatedUser,
-          }));       
-        alert(`Your booking was cancelled. €15 cancellation fee has been deducted. Credit points (€${bonusToAdd.toFixed(2)}) have been added to your account.`);
+          }));
+        alert("Your booking was cancelled. €15 cancellation fee has been deducted and the remaining amount has been added to your account as credit points.");
+      } else {
+        alert("Your booking was cancelled. €15 cancellation fee will be deducted and the remaining amount will be refunded to your original payment method.");
       }
       // Update status in frontend immediately
       setBookings((prev) =>
@@ -174,7 +165,10 @@ const CustomerDashboard = () => {
           body: { departure_time, return_time },
         }
       );
-      if (!res.ok) throw new Error("Failed to reschedule booking.");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || data.error || "Failed to reschedule booking.");
+      }
       setBookings(prev =>
         prev.map(b =>
           b.id === bookingId
@@ -182,7 +176,8 @@ const CustomerDashboard = () => {
                 ...b,
                 departure_time,
                 return_time,
-                status: { ...b.status, name: "Rescheduled" }, // <-- Add this line
+                // Started bookings keep their status (in-progress, return-only change)
+                status: { ...b.status, name: b.status?.name === "Started" ? "Started" : "Rescheduled" },
               }
             : b
         )
@@ -228,46 +223,17 @@ const CustomerDashboard = () => {
           (1000 * 60 * 60 * 24)
       ) + 1;
     const extraDays = newDays - prevDays;
-    const perDay = Number(booking.service_per_day_price);
 
-    // If user saves days, add bonus points
+    // Reducing days does not change the price (no refunds or credit).
+    // Extensions on paid bookings cost a flat €20/day, paid before the
+    // reschedule is applied (the backend computes and verifies the amount).
     if (
-      (booking.status?.name === "Confirmed" || booking.status?.name === "Rescheduled") &&
-      extraDays < 0
-    ) {
-      const savedAmount = perDay * Math.abs(extraDays);
-      // Call backend to add bonus points
-      try {
-        await customFetch(
-          `${import.meta.env.VITE_API_BASE_URL}/auth/add-bonus/`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: { amount: savedAmount },
-          }
-        );
-        // Update user bonus points in context
-        const updatedUser = { 
-          ...user, 
-          bonus_points: Number(user.bonus_points || 0) + Number(savedAmount)
-        };
-        setUser(updatedUser); 
-        setBookingData((prev) => ({
-            ...prev,
-            userDetails: updatedUser,
-          }));       
-      } catch (err) {
-        alert("Failed to add credit points.");
-      }
-    }
-
-    // Only require payment if status is Confirmed or Rescheduled and extra days > 0
-    if (
-      (booking.status?.name === "Confirmed" || booking.status?.name === "Rescheduled") &&
+      (booking.status?.name === "Confirmed" ||
+        booking.status?.name === "Rescheduled" ||
+        booking.status?.name === "Started") &&
       extraDays > 0
     ) {
-      // Calculate extra amount (use your own price logic)
-      const extraAmount = perDay * extraDays;
+      const extraAmount = RESCHEDULE_DAY_RATE * extraDays;
 
       setPendingReschedule({
         booking,
@@ -284,8 +250,10 @@ const CustomerDashboard = () => {
           departure_time: data.departure_time,
           return_time: data.return_time,
         },
-        extraAmount, 
-        onPaymentSuccess:handleExtraPaymentSuccess
+        extraAmount,
+        newDepartureTime: data.departure_time,
+        newReturnTime: data.return_time,
+        onPaymentSuccess: handleExtraPaymentSuccess
       });
       return;
     }
@@ -499,18 +467,18 @@ const CustomerDashboard = () => {
                             boxShadow: "0 2px 8px rgba(40,144,205,0.08)",
                             transition: "background 0.2s, box-shadow 0.2s, transform 0.15s",
                             opacity:
-                              !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed" || b.status?.name === "Pending") ||
+                              !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed" || b.status?.name === "Pending" || b.status?.name === "Started") ||
                               actionLoading
                                 ? 0.5
                                 : 1,
                             cursor:
-                              !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed" || b.status?.name === "Pending") ||
+                              !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed" || b.status?.name === "Pending" || b.status?.name === "Started") ||
                               actionLoading
                                 ? "not-allowed"
                                 : "pointer",
                           }}
                           disabled={
-                            !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed" || b.status?.name === "Pending") ||
+                            !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed" || b.status?.name === "Pending" || b.status?.name === "Started") ||
                             actionLoading
                           }
                           onClick={() => handleReschedule(b.id)}
@@ -589,6 +557,9 @@ const CustomerDashboard = () => {
         booking={reschedulePopup.booking}
         onSubmit={handleRescheduleSubmit}
         loading={rescheduleLoading}
+        lockDeparture={reschedulePopup.booking ? isDepartureLocked(reschedulePopup.booking) : false}
+        lockReturn={reschedulePopup.booking ? isReturnLocked(reschedulePopup.booking) : false}
+        dayRate={RESCHEDULE_DAY_RATE}
       />
 
       <PayPopup
@@ -597,6 +568,8 @@ const CustomerDashboard = () => {
         booking={payPopup.booking}
         extraAmount={payPopup.extraAmount}
         onPaymentSuccess={payPopup.onPaymentSuccess}
+        newDepartureTime={payPopup.newDepartureTime || null}
+        newReturnTime={payPopup.newReturnTime || null}
       />
     <style>
       {`
@@ -678,90 +651,21 @@ const CustomerDashboard = () => {
       `}
     </style>
 
-    {cancelModal.open && (
-      <div
-        className="modal fade show"
-        tabIndex="-1"
-        style={{
-          display: "block",
-          background: "rgba(0,0,0,0.45)",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          zIndex: 1050,
-          overflowY: "auto",
-        }}
-        aria-modal="true"
-        role="dialog"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setCancelModal({ open: false, booking: null });
-        }}
-      >
-        <div className="modal-dialog modal-dialog-centered" style={{ borderTopLeftRadius: 12, borderTopRightRadius: 12, maxWidth: 520 }}>
-          <div className="modal-content shadow-lg border-0">
-            <div className="modal-header text-white" style={{ backgroundColor: "#010659" }}>
-              <h5 className="modal-title">Cancel Booking</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                aria-label="Close"
-                onClick={() => setCancelModal({ open: false, booking: null })}
-              ></button>
-            </div>
-            <div className="modal-body">
-              <p className="mb-3">
-                How would you like to receive your refund for this booking?
-              </p>
-              <div className="mb-3 p-3 rounded bg-light border">
-                <strong>Refund to Original Payment Method</strong>
-                <br />
-                <span className="text-muted" style={{ fontSize: "0.97rem" }}>
-                  The amount will be returned to your original payment method. Processing may take 5-10 business days depending on your bank.
-                </span>
-              </div>
-              <div className="mb-3 p-3 rounded bg-light border">
-                <strong>Credit Points</strong>
-                <br />
-                <span className="text-muted" style={{ fontSize: "0.97rem" }}>
-                  Instantly receive the booking amount as credit points in your account. You can use these points for discounts on your next booking.
-                </span>
-              </div>
-              <div className="alert alert-warning mt-3 mb-0 text-center" style={{ fontSize: "0.98rem" }}>
-                <b>Note:</b> A €15 cancellation fee applies to all cancellations.
-              </div>
-            </div>
-            <div className="modal-footer d-flex flex-column flex-sm-row justify-content-between gap-2">
-              <button
-                className="btn btn-danger w-100"
-                onClick={async () => {
-                  setCancelModal({ open: false, booking: null });
-                  await handleCancel(cancelModal.booking.id, "refund");
-                }}
-              >
-                Refund to Card/Bank
-              </button>
-              <button
-                className="btn btn-success w-100"
-                onClick={async () => {
-                  setCancelModal({ open: false, booking: null });
-                  await handleCancel(cancelModal.booking.id, "points");
-                }}
-              >
-                Get Credit Points
-              </button>
-              <button
-                className="btn btn-outline-secondary w-100"
-                onClick={() => setCancelModal({ open: false, booking: null })}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
+    <CancelBookingModal
+      open={cancelModal.open}
+      booking={cancelModal.booking}
+      onClose={() => setCancelModal({ open: false, booking: null })}
+      allowPoints={true}
+      refundEligible={cancelModal.booking ? getCancellationPolicy(cancelModal.booking).refundEligible : true}
+      loading={actionLoading}
+      onConfirm={async (type) => {
+        const bookingId = cancelModal.booking.id;
+        setCancelModal({ open: false, booking: null });
+        // "no_refund" still posts refund=true; the backend ignores the flag
+        // inside the no-refund window and returns nothing either way.
+        await handleCancel(bookingId, type === "points" ? "points" : "refund");
+      }}
+    />
   </>
 );
 };

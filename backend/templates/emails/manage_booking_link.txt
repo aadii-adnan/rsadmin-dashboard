@@ -1,0 +1,12 @@
+Hi {{ first_name }},
+
+We received a request to manage your {{ site_name }} booking {{ booking_id }}.
+
+Use the link below to view, reschedule or cancel your booking. This link is valid for 24 hours:
+{{ manage_link }}
+
+If you did not request this, you can safely ignore this email.
+
+Regards,
+The {{ site_name }} Team
+{{ support_email }}

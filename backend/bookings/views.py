@@ -23,165 +23,20 @@ from decouple import config
 from payments.views import calculate_parking_days  # Make sure this import is at the top
 from django.db.models import Q
 from django.db import transaction
+from decimal import Decimal
+from .booking_rules import (
+    CANCELLATION_FEE,
+    compute_reschedule_pricing,
+    find_succeeded_extra_payment,
+    get_cancellation_policy,
+    parse_and_localize,
+    validate_reschedule,
+)
+from .tasks import send_reschedule_email_task, send_cancellation_email_task
 import logging
 
 logger = logging.getLogger(__name__)
 
-
-def send_reschedule_email(booking):
-    departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
-    return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
-
-    # Website-specific names, emails, and SMTP connection
-    if booking.website.lower() == "dublinairportparking":
-        site_name = "Dublin Airport Express Parking"
-        site_url = "https://dublinairportexpressparking.ie/"
-        team_name = "The Dublin Airport Express Parking Team"
-        from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
-        connection = get_connection(
-            host=config('EMAIL_HOST'),
-            port=config('EMAIL_PORT', cast=int),
-            username="support@dublinairportexpressparking.ie",
-            password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
-            use_tls=config('EMAIL_USE_TLS', cast=bool)
-        )
-    else:
-        site_name = "RS Express Parking"
-        site_url = "https://rsexpressparking.com/"
-        team_name = "The RS Express Parking Team"
-        from_email = "RS Express Parking <support@rsexpressparking.com>"
-        connection = None  # Use default
-
-    # Generate invoice PDF (implement this utility to return bytes or file path)
-    response, error = generate_invoice(booking)
-    if error:
-        return HttpResponse(f'Error: {error}', status=500)
-    pdf_content = response.getvalue()
-
-    # --- Customer Email ---
-    subject_customer = f"Your Booking Has Been Rescheduled – {booking.service.name}"
-    html_body_customer = f"""
-    <html>
-    <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #0066cc;">Booking Rescheduled – {booking.service.name}</h2>
-        <p>
-        Dear {booking.first_name},<br><br>
-        Your booking has been <strong>successfully rescheduled</strong>. Please find your updated booking details below and download your updated invoice from the attachment.
-        </p>
-        <ul>
-        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-        <li><strong>New Drop-Off Date & Time:</strong> {departure_time}</li>
-        <li><strong>New Pick-Up Date & Time:</strong> {return_time}</li>
-        <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
-        <li><strong>Service:</strong> {booking.service.name}</li>
-        <li><strong>Add-ons:</strong> {', '.join([a.name for a in booking.add_ons.all()])}</li>
-        </ul>
-        <p>
-        If you have any questions, please reply to this email or contact our support team.<br>
-        <strong>{team_name}</strong>
-        </p>
-        <p>
-        <a href="{site_url}" style="color: #0066cc;">{site_url}</a>
-        </p>
-    </body>
-    </html>
-    """
-    text_body_customer = f"""
-Dear {booking.first_name},
-
-Your booking has been successfully rescheduled. Please find your updated booking details below and download your updated invoice from the attachment.
-
-Booking ID: {booking.booking_id}
-New Drop-Off Date & Time: {departure_time}
-New Pick-Up Date & Time: {return_time}
-Vehicle: {booking.car_model} – {booking.car_registration_no}
-Service: {booking.service.name}
-Add-ons: {', '.join([a.name for a in booking.add_ons.all()])}
-
-If you have any questions, please reply to this email or contact our support team.
-
-{team_name}
-{site_url}
-"""
-
-    email_user = EmailMultiAlternatives(
-        subject=subject_customer,
-        body=text_body_customer,
-        from_email=from_email,
-        to=[booking.email],
-        connection=connection
-    )
-    email_user.attach_alternative(html_body_customer, "text/html")
-    email_user.attach(f"Invoice_{booking.booking_id}.pdf", pdf_content, "application/pdf")
-    email_user.send()
-
-    # --- Manager Email ---
-    subject_manager = f"Booking Rescheduled – {booking.service.name}"
-    html_body_manager = f"""
-    <html>
-    <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #0066cc;">Booking Rescheduled – {booking.service.name}</h2>
-        <p>
-        The following booking has been <strong>rescheduled</strong>:
-        </p>
-        <ul>
-        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-        <li><strong>Customer Name:</strong> {booking.first_name} {booking.last_name}</li>
-        <li><strong>Email:</strong> {booking.email}</li>
-        <li><strong>Phone:</strong> {booking.contact_no}</li>
-        <li><strong>New Drop-Off Date & Time:</strong> {departure_time}</li>
-        <li><strong>New Pick-Up Date & Time:</strong> {return_time}</li>
-        <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
-        <li><strong>Service:</strong> {booking.service.name}</li>
-        <li><strong>Add-ons:</strong> {', '.join([a.name for a in booking.add_ons.all()])}</li>
-        </ul>
-        <p>
-        Please check the admin panel for more details or to manage this booking.<br>
-        The updated invoice is attached.
-        </p>
-        <p>
-        Regards,<br>
-        <strong>{site_name} System</strong>
-        </p>
-    </body>
-    </html>
-    """
-    text_body_manager = f"""
-The following booking has been rescheduled:
-
-Booking ID: {booking.booking_id}
-Customer Name: {booking.first_name} {booking.last_name}
-Email: {booking.email}
-Phone: {booking.contact_no}
-New Drop-Off Date & Time: {departure_time}
-New Pick-Up Date & Time: {return_time}
-Vehicle: {booking.car_model} – {booking.car_registration_no}
-Service: {booking.service.name}
-Add-ons: {', '.join([a.name for a in booking.add_ons.all()])}
-
-Please check the admin panel for more details or to manage this booking.
-The updated invoice is attached.
-
-Regards,
-{site_name} System
-"""
-
-    settings = BookingSettings.objects.first()
-    if settings:
-        manager_emails = settings.get_manager_email_list(booking.website)
-    else:
-        manager_emails = ["rsexpressparking@gmail.com"]  # fallback
-
-    email_manager = EmailMultiAlternatives(
-        subject=subject_manager,
-        body=text_body_manager,
-        from_email=from_email,
-        to=manager_emails,
-        connection=connection
-    )
-    email_manager.attach_alternative(html_body_manager, "text/html")
-    email_manager.attach(f"Invoice_{booking.booking_id}.pdf", pdf_content, "application/pdf")
-    email_manager.send()
 
 class BookingListCreate(APIView):
     permission_classes = [AllowAny]
@@ -249,58 +104,44 @@ class BookingRescheduleView(APIView):
     def put(self, request, pk):
         booking = get_object_or_404(Booking, id=pk, user=request.user)
 
-        if booking.status.name.lower() in ['cancelled', 'completed']:
-            return Response({'error': 'Cannot reschedule this booking.'}, status=400)
-
         start = request.data.get('departure_time')
         end = request.data.get('return_time')
-
         if not start or not end:
             return Response({'error': 'Both start and end times are required.'}, status=400)
-        
-        if isinstance(start, str):
-            start = timezone.datetime.fromisoformat(start)
-        if isinstance(end, str):
-            end = timezone.datetime.fromisoformat(end)
 
-        # Localize to Ireland timezone if naive
-        ireland_tz = pytz.timezone('Europe/Dublin')
-        if timezone.is_naive(start):
-            start = ireland_tz.localize(start)
-        if timezone.is_naive(end):
-            end = ireland_tz.localize(end)
+        start = parse_and_localize(start)
+        end = parse_and_localize(end)
 
-        # --- UPDATE BOOKING DATES ---
+        rule_error = validate_reschedule(booking, start, end)
+        if rule_error:
+            return Response({'error': rule_error}, status=400)
+
+        pricing = compute_reschedule_pricing(booking, start, end)
+        # Pending bookings haven't been paid yet — the extension just raises
+        # the price they'll pay. Paid bookings must pay the extension first.
+        status_name = booking.status.name.lower() if booking.status else ''
+        if pricing['extra_amount'] > 0 and status_name in ('confirmed', 'rescheduled', 'started'):
+            payment = find_succeeded_extra_payment(booking, pricing['extra_amount'])
+            if not payment:
+                return Response({
+                    'error': 'payment_required',
+                    'message': 'The extension must be paid before the booking can be rescheduled.',
+                    'extra_amount': float(pricing['extra_amount']),
+                }, status=402)
+
+        was_started = status_name == 'started'
+
         booking.departure_time = start
         booking.return_time = end
-
-       # --- RECALCULATE AMOUNT ---
-        days = calculate_parking_days(start, end)
-        if days < 1:
-            return Response({'error': 'Invalid date range.'}, status=400)
-        service = booking.service
-
-        # Calculate new total price
-        new_total_price = float(service.base_price) + float(service.per_day_price) * (days - 1)
-        if hasattr(booking, 'add_ons'):
-            new_total_price += sum([float(a.price) for a in booking.add_ons.all()])
-
-        # Calculate difference from previous total
-        prev_total_price = float(booking.total_price or 0)
-        prev_discounted_price = float(booking.discounted_price or prev_total_price)
-        difference = new_total_price - prev_total_price
-
-        # Update booking prices
-        booking.total_price = new_total_price
-        booking.discounted_price = max(0, prev_discounted_price + difference)
-
-        # --- UPDATE STATUS ---
-        new_status = 'Rescheduled'
-        status_obj = get_object_or_404(Status, name=new_status)
-        booking.status = status_obj
+        booking.total_price = pricing['new_total_price']
+        booking.discounted_price = pricing['new_discounted_price']
+        if not was_started:
+            # A Started booking keeps its status so the in-progress state
+            # isn't lost (the beat task would only flip it back later).
+            booking.status = get_object_or_404(Status, name='Rescheduled', type='booking')
         booking.save()
 
-        send_reschedule_email(booking)
+        send_reschedule_email_task.delay(booking.id)
 
         return Response({'message': 'Booking rescheduled successfully.'})
 
@@ -320,251 +161,41 @@ class CancelBookingView(APIView):
     def post(self, request, pk):
         booking = get_object_or_404(Booking, id=pk, user=request.user)
 
-        if booking.status.name.lower() in ['cancelled', 'completed', 'started']:
-            return Response({'error': 'Booking already finalized.'}, status=400)
+        policy = get_cancellation_policy(booking)
+        if not policy['allowed']:
+            return Response({'error': policy['reason']}, status=400)
 
         refund = request.data.get("refund", True)  # Default to refund if not provided
 
-        new_status = 'Cancelled'
-        status_obj = get_object_or_404(Status, name=new_status)
-        booking.status = status_obj
+        booking.status = get_object_or_404(Status, name='Cancelled', type='booking')
         booking.save()
 
-        # Prepare email details
-        departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
-        return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
-        booking_amount = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
-        refund_amount = max(0, booking_amount - 15)
-
-        if booking.website.lower() == "dublinairportparking":
-            site_name = "Dublin Airport Express Parking"
-            site_url = "https://dublinairportexpressparking.ie/"
-            team_name = "The Dublin Airport Express Parking Team"
-            from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
-            connection = get_connection(
-                host=config('EMAIL_HOST'),
-                port=config('EMAIL_PORT', cast=int),
-                username="support@dublinairportexpressparking.ie",
-                password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
-                use_tls=config('EMAIL_USE_TLS', cast=bool)
-            )
+        bonus_points = None
+        if not policy['refund_eligible']:
+            # Cancelled within the no-refund window: nothing is returned.
+            outcome = 'no_refund'
+        elif refund:
+            outcome = 'refund'
         else:
-            site_name = "RS Express Parking"
-            site_url = "https://rsexpressparking.com/"
-            team_name = "The RS Express Parking Team"
-            from_email = "RS Express Parking <support@rsexpressparking.com>"
-            connection = None
+            outcome = 'points'
+            booking_amount = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
+            bonus_to_add = max(Decimal('0.00'), Decimal(str(booking_amount)) - CANCELLATION_FEE)
+            user = request.user
+            user.bonus_points = (user.bonus_points or Decimal('0.00')) + bonus_to_add
+            user.save(update_fields=['bonus_points'])
+            bonus_points = float(user.bonus_points)
 
-        # --- Customer Email ---
-        if refund:
-            subject_customer = f"Your Booking Has Been Cancelled – Refund Initiated"
-            html_body_customer = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                <h2 style="color: #e53935;">Booking Cancelled – Refund Initiated</h2>
-                <p>
-                Dear {booking.first_name},<br><br>
-                We regret to inform you that your booking <strong>#{booking.booking_id}</strong> has been <strong>cancelled</strong>.<br>
-                <b>€15</b> has been deducted as a cancellation fee.<br>
-                The remaining amount of <b>€{refund_amount:.2f}</b> will be refunded to your original payment method.<br>
-                <span style="color: #888;">Please note: Stripe may take 5-10 business days to process the refund.</span>
-                </p>
-                <ul>
-                    <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-                    <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
-                    <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
-                    <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
-                    <li><strong>Service:</strong> {booking.service.name}</li>
-                </ul>
-                <p>
-                If you have any questions, please reply to this email or contact our support team.<br>
-                <strong>{team_name}</strong>
-                </p>
-                <p>
-                <a href="{site_url}" style="color: #0066cc;">{site_url}</a>
-                </p>
-            </body>
-            </html>
-            """
-            text_body_customer = f"""
-        Dear {booking.first_name},
+        send_cancellation_email_task.delay(booking.id, outcome)
 
-        We regret to inform you that your booking #{booking.booking_id} has been cancelled.
-        €15 has been deducted as a cancellation fee.
-        The remaining amount of €{refund_amount:.2f} will be refunded to your original payment method.
-        Please note: Stripe may take 5-10 business days to process the refund.
+        response_data = {
+            'message': 'Booking cancelled successfully.',
+            'outcome': outcome,
+            'refund_eligible': policy['refund_eligible'],
+        }
+        if bonus_points is not None:
+            response_data['bonus_points'] = bonus_points
+        return Response(response_data)
 
-        Booking ID: {booking.booking_id}
-        Drop-Off Date & Time: {departure_time}
-        Pick-Up Date & Time: {return_time}
-        Vehicle: {booking.car_model} – {booking.car_registration_no}
-        Service: {booking.service.name}
-
-        If you have any questions, please reply to this email or contact our support team.
-
-        {team_name}
-        {site_url}
-        """
-        else:
-            subject_customer = f"Your Booking Has Been Cancelled – Bonus Points Added"
-            html_body_customer = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                <h2 style="color: #43a047;">Booking Cancelled – Bonus Points Added</h2>
-                <p>
-                Dear {booking.first_name},<br><br>
-                Your booking <strong>#{booking.booking_id}</strong> has been <strong>cancelled</strong>.<br>
-                <b>€15</b> has been deducted as a cancellation fee.<br>
-                The remaining amount of <b>€{refund_amount:.2f}</b> has been instantly added to your account as bonus points.<br>
-                <span style="color: #888;">You can use these points for discounts on your next booking.</span>
-                </p>
-                <ul>
-                    <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-                    <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
-                    <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
-                    <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
-                    <li><strong>Service:</strong> {booking.service.name}</li>
-                </ul>
-                <p>
-                If you have any questions, please reply to this email or contact our support team.<br>
-                <strong>{team_name}</strong>
-                </p>
-                <p>
-                <a href="{site_url}" style="color: #0066cc;">{site_url}</a>
-                </p>
-            </body>
-            </html>
-            """
-            text_body_customer = f"""
-        Dear {booking.first_name},
-
-        Your booking #{booking.booking_id} has been cancelled.
-        €15 has been deducted as a cancellation fee.
-        The remaining amount of €{refund_amount:.2f} has been instantly added to your account as bonus points.
-        You can use these points for discounts on your next booking.
-
-        Booking ID: {booking.booking_id}
-        Drop-Off Date & Time: {departure_time}
-        Pick-Up Date & Time: {return_time}
-        Vehicle: {booking.car_model} – {booking.car_registration_no}
-        Service: {booking.service.name}
-
-        If you have any questions, please reply to this email or contact our support team.
-
-        {team_name}
-        {site_url}
-        """
-
-        email_user = EmailMultiAlternatives(
-            subject=subject_customer,
-            body=text_body_customer,
-            from_email=from_email,
-            to=[booking.email],
-            connection=connection
-        )
-        email_user.attach_alternative(html_body_customer, "text/html")
-        email_user.send()
-
-        # --- Manager Email ---
-        if refund:
-            subject_manager = f"Booking Cancelled – Refund Required"
-            html_body_manager = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                <h2 style="color: #e53935;">Booking Cancelled – Refund Required</h2>
-                <p>
-                The following booking has been <strong>cancelled</strong> and requires a refund to be processed via Stripe.<br>
-                <b>€15</b> has been deducted as a cancellation fee.
-                </p>
-                <ul>
-                    <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-                    <li><strong>Customer Name:</strong> {booking.first_name} {booking.last_name}</li>
-                    <li><strong>Email:</strong> {booking.email}</li>
-                    <li><strong>Phone:</strong> {booking.contact_no}</li>
-                    <li><strong>Refund Amount:</strong> €{refund_amount:.2f}</li>
-                    <li><strong>Service:</strong> {booking.service.name}</li>
-                </ul>
-                <p>
-                Please process the refund in Stripe.<br>
-                <strong>{site_name} System</strong>
-                </p>
-            </body>
-            </html>
-            """
-            text_body_manager = f"""
-        The following booking has been cancelled and requires a refund to be processed via Stripe.
-        €15 has been deducted as a cancellation fee.
-
-        Booking ID: {booking.booking_id}
-        Customer Name: {booking.first_name} {booking.last_name}
-        Email: {booking.email}
-        Phone: {booking.contact_no}
-        Refund Amount: €{refund_amount:.2f}
-        Service: {booking.service.name}
-
-        Please process the refund in Stripe.
-
-        {site_name} System
-        """
-        else:
-            subject_manager = f"Booking Cancelled – Bonus Points Issued"
-            html_body_manager = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                <h2 style="color: #43a047;">Booking Cancelled – Bonus Points Issued</h2>
-                <p>
-                The following booking has been <strong>cancelled</strong> and the refund has been issued as bonus points.<br>
-                <b>€15</b> has been deducted as a cancellation fee.
-                </p>
-                <ul>
-                    <li><strong>Booking ID:</strong> {booking.booking_id}</li>
-                    <li><strong>Customer Name:</strong> {booking.first_name} {booking.last_name}</li>
-                    <li><strong>Email:</strong> {booking.email}</li>
-                    <li><strong>Phone:</strong> {booking.contact_no}</li>
-                    <li><strong>Bonus Points Added:</strong> €{refund_amount:.2f}</li>
-                    <li><strong>Service:</strong> {booking.service.name}</li>
-                </ul>
-                <p>
-                No Stripe refund is required for this booking.<br>
-                <strong>{site_name} System</strong>
-                </p>
-            </body>
-            </html>
-            """
-            text_body_manager = f"""
-        The following booking has been cancelled and the refund has been issued as bonus points.
-        €15 has been deducted as a cancellation fee.
-
-        Booking ID: {booking.booking_id}
-        Customer Name: {booking.first_name} {booking.last_name}
-        Email: {booking.email}
-        Phone: {booking.contact_no}
-        Bonus Points Added: €{refund_amount:.2f}
-        Service: {booking.service.name}
-
-        No Stripe refund is required for this booking.
-
-        {site_name} System
-        """
-
-        settings = BookingSettings.objects.first()
-        if settings:
-            manager_emails = settings.get_manager_email_list(booking.website)
-        else:
-            manager_emails = ["rsexpressparking@gmail.com"]  # fallback
-
-        email_manager = EmailMultiAlternatives(
-            subject=subject_manager,
-            body=text_body_manager,
-            from_email=from_email,
-            to=manager_emails,
-            connection=connection
-        )
-        email_manager.attach_alternative(html_body_manager, "text/html")
-        email_manager.send()
-
-        return Response({'message': 'Booking cancelled successfully.'})
-    
 
 class ManagerBookingList(APIView):
     permission_classes = [IsManagerOrAdmin]

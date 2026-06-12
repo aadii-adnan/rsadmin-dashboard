@@ -49,6 +49,32 @@ class BookingSerializer(serializers.ModelSerializer):
     def get_service_per_day_price(self, obj):
         return obj.service.per_day_price if obj.service else None
 
+class GuestBookingSerializer(serializers.ModelSerializer):
+    """Read-only booking representation for the guest manage-booking flow.
+
+    Explicit whitelist: the token holder proved email ownership, but supplier,
+    coupon and bonus internals still must not leak.
+    """
+    add_ons = AddOnSerializer(many=True, read_only=True)
+    status = StatusSerializer(read_only=True)
+    service_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Booking
+        fields = [
+            'id', 'booking_id', 'service_name',
+            'first_name',
+            'car_registration_no', 'car_model', 'car_colour',
+            'departure_time', 'return_time',
+            'total_price', 'discounted_price',
+            'add_ons', 'status', 'website',
+        ]
+        read_only_fields = fields
+
+    def get_service_name(self, obj):
+        return obj.service.name if obj.service else None
+
+
 class BookingUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookingUser

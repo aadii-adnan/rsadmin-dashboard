@@ -6,6 +6,10 @@ const ReschedulePopup = ({
   booking,
   onSubmit,
   loading,
+  lockDeparture = false,
+  lockReturn = false,
+  dayRate = 20,
+  infoNote = null,
 }) => {
   const [depDate, setDepDate] = useState("");
   const [depTime, setDepTime] = useState("");
@@ -70,14 +74,26 @@ const ReschedulePopup = ({
       return;
     }
 
-    // Check: Both times must be at least 4 hours from now
-    const now = new Date();
-    const fourHoursLater = new Date(now.getTime() + 4 * 60 * 60 * 1000);
-    const depDateTime = new Date(departure);
-    const arrDateTime = new Date(arrival);
+    // Which fields actually changed (minute precision)?
+    const origDeparture = booking.departure_time ? booking.departure_time.slice(0, 16) : "";
+    const origArrival = booking.return_time ? booking.return_time.slice(0, 16) : "";
+    const departureChanged = departure !== origDeparture;
+    const arrivalChanged = arrival !== origArrival;
 
-    if (depDateTime < fourHoursLater || arrDateTime < fourHoursLater) {
-      setError("Both departure and arrival times must be at least 4 hours from now.");
+    if (!departureChanged && !arrivalChanged) {
+      setError("No changes were made to the booking times.");
+      return;
+    }
+
+    // Check: newly picked times must be at least 24 hours from now
+    const now = new Date();
+    const minNewTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    if (departureChanged && new Date(departure) < minNewTime) {
+      setError("The new departure time must be at least 24 hours from now.");
+      return;
+    }
+    if (arrivalChanged && new Date(arrival) < minNewTime) {
+      setError("The new arrival time must be at least 24 hours from now.");
       return;
     }
 
@@ -129,11 +145,22 @@ const ReschedulePopup = ({
           </div>
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
-              {/* Add this note */}
+              {/* Pricing / policy note */}
               <div className="alert alert-info d-flex align-items-center py-2 mb-3" style={{ fontSize: "0.98rem" }}>
                 <span className="me-2" style={{ fontSize: "1.2em" }}>💡</span>
-                If you reduce your booking days, the saved amount will be instantly added as credit points to your account for future discounts.
+                {infoNote ||
+                  `Extending your booking costs €${dayRate} per extra day. Reducing days does not change the price — no refunds are given for shortened stays.`}
               </div>
+              {lockDeparture && (
+                <div className="alert alert-warning py-2 mb-3" style={{ fontSize: "0.95rem" }}>
+                  The departure can no longer be changed — only the arrival date and time can be updated.
+                </div>
+              )}
+              {!lockDeparture && lockReturn && (
+                <div className="alert alert-warning py-2 mb-3" style={{ fontSize: "0.95rem" }}>
+                  The arrival can no longer be changed (within 24 hours) — only the departure date and time can be updated.
+                </div>
+              )}
               {error && <div className="alert alert-danger py-2">{error}</div>}
               <div className="row g-3">
                 <div className="col-12 col-md-6">
@@ -145,12 +172,13 @@ const ReschedulePopup = ({
                     onChange={e => setDepDate(e.target.value)}
                     required
                     min={today}
+                    disabled={lockDeparture}
                   />
                 </div>
                 <div className="col-12 col-md-6">
                   <label className="form-label">Departure Time</label>
                   <select
-                    style={{ backgroundColor: "#fff", cursor: "pointer" }}
+                    style={{ backgroundColor: "#fff", cursor: lockDeparture ? "not-allowed" : "pointer" }}
                     id="depTime"
                     name="depTime"
                     type="time"
@@ -158,6 +186,7 @@ const ReschedulePopup = ({
                     value={depTime}
                     onChange={e => setDepTime(e.target.value)}
                     required
+                    disabled={lockDeparture}
                   >
                     <option value={depTime}>{depTime}</option>
                     {generate24HourTimeOptions().map((time) => (
@@ -176,12 +205,13 @@ const ReschedulePopup = ({
                     onChange={e => setArrDate(e.target.value)}
                     required
                     min={depDate || today}
+                    disabled={lockReturn}
                   />
                 </div>
                 <div className="col-12 col-md-6">
                   <label className="form-label">Arrival Time</label>
                   <select
-                    style={{ backgroundColor: "#fff", cursor: "pointer" }}
+                    style={{ backgroundColor: "#fff", cursor: lockReturn ? "not-allowed" : "pointer" }}
                     id="arrTime"
                     name="arrTime"
                     type="date"
@@ -189,6 +219,7 @@ const ReschedulePopup = ({
                     value={arrTime}
                     onChange={e => setArrTime(e.target.value)}
                     required
+                    disabled={lockReturn}
                   >
                     <option value={arrTime}>{arrTime}</option>
                         {generate24HourTimeOptions().map((time) => (

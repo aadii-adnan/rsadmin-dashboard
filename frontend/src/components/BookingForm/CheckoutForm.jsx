@@ -8,7 +8,7 @@ const PAYMENT_CHECK_INTERVAL = 2000; // 2 seconds
 const MAX_PAYMENT_CHECKS = 5;
 const PAYMENT_TIMEOUT = 60000; // 1 minute
 
-const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed , onPaymentSuccess = null }) => {
+const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed , onPaymentSuccess = null, skipSuccessNavigate = false }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
@@ -57,12 +57,18 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
     setMessage(null);
   }, []);
 
+  const rescheduleNewTimes =
+    formData.isRescheduleExtra && formData.newDepartureTime && formData.newReturnTime
+      ? { departureTime: formData.newDepartureTime, returnTime: formData.newReturnTime }
+      : null;
+
   const verifyAmount = async (bookingId, amount) => {
     try {
       const { valid, expected_amount } = await verifyPaymentAmount(
         bookingId,
         amount,
-        formData.isRescheduleExtra || false
+        formData.isRescheduleExtra || false,
+        rescheduleNewTimes
       );
       if (!valid) {
         throw new Error(`Amount mismatch. Expected: ${expected_amount}`);
@@ -89,7 +95,9 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
             if (onPaymentSuccess) {
               await onPaymentSuccess(); // <-- await here!
             }
-            navigate("/thank-you");
+            if (!skipSuccessNavigate) {
+              navigate("/thank-you");
+            }
             break;
           case 'Failed':
             setError("Payment failed. Please try again.");
@@ -145,7 +153,8 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
         formData.booking_id,
         formData.isRescheduleExtra ? formData.total_price.toFixed(2) : null,
         formData.isRescheduleExtra || false,
-        bonusUsed || 0
+        bonusUsed || 0,
+        rescheduleNewTimes
       );
       if (!paymentIntentResponse?.clientSecret) {
         

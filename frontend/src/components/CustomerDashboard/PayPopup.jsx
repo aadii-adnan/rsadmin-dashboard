@@ -9,7 +9,16 @@ import { useBooking } from "../../context/BookingContext";
 // Use the same Stripe public key as your booking form
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-const PayPopup = ({ open, onClose, booking, extraAmount = null, onPaymentSuccess = null }) => {
+const PayPopup = ({
+  open,
+  onClose,
+  booking,
+  extraAmount = null,
+  onPaymentSuccess = null,
+  newDepartureTime = null,
+  newReturnTime = null,
+  skipSuccessNavigate = false,
+}) => {
 
     const { setBookingData } = useBooking();
     
@@ -55,7 +64,10 @@ const PayPopup = ({ open, onClose, booking, extraAmount = null, onPaymentSuccess
     total_price: extraAmount !== null ? extraAmount : booking.total_price,
     discounted_price: extraAmount !== null ? extraAmount : booking.discounted_price,
     isRescheduleExtra: !!extraAmount,
-    // Add any other fields your CheckoutForm expects
+    // New dates for reschedule extensions — the backend recomputes the
+    // charge from these, so they must match the pending reschedule.
+    newDepartureTime,
+    newReturnTime,
   };
 
   // Optionally, you can pass a goNext handler to close the popup and update status
@@ -121,6 +133,7 @@ const PayPopup = ({ open, onClose, booking, extraAmount = null, onPaymentSuccess
                   labelStyle={labelStyle}
                   nextButtonStyle={nextButtonStyle}
                   onPaymentSuccess={onPaymentSuccess}
+                  skipSuccessNavigate={skipSuccessNavigate}
                 />
               </Elements>
             </div>

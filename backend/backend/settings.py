@@ -62,6 +62,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_THROTTLE_RATES': {
+        # Guest manage-booking flow (ScopedRateThrottle, per IP)
+        'manage_booking_link': '5/hour',
+        'manage_booking_actions': '60/hour',
+    },
 }
 
 REDIS_CACHE_URL = config('REDIS_CACHE_URL', default='')
@@ -223,6 +228,17 @@ FRONTEND_RS_RESET_PASSWORD_URL = config(
 FRONTEND_DUBLIN_RESET_PASSWORD_URL = config(
     'FRONTEND_DUBLIN_RESET_PASSWORD_URL',
     default='https://www.dublinairportexpressparking.ie/reset-password',
+)
+
+# Guest manage-booking flow
+MANAGE_BOOKING_TOKEN_MAX_AGE = config('MANAGE_BOOKING_TOKEN_MAX_AGE', default=60 * 60 * 24, cast=int)
+FRONTEND_RS_MANAGE_BOOKING_URL = config(
+    'FRONTEND_RS_MANAGE_BOOKING_URL',
+    default='https://www.rsexpressparking.com/manage-booking',
+)
+FRONTEND_DUBLIN_MANAGE_BOOKING_URL = config(
+    'FRONTEND_DUBLIN_MANAGE_BOOKING_URL',
+    default='https://www.dublinairportexpressparking.ie/manage-booking',
 )
 
 CORS_ALLOW_METHODS = [
