@@ -4,6 +4,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { useBooking } from "../../context/BookingContext";
 import PopupDialog from "../Utility/PopupDialog";
 import { PhoneInput } from 'react-international-phone';
+import 'react-international-phone/style.css';
 
 const Step0BookingForm = ({
   formData,

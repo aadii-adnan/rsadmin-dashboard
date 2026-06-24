@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PopupDialog from "../Utility/PopupDialog";
 import { useBooking } from "../../context/BookingContext";
 import { PhoneInput } from 'react-international-phone';
+import 'react-international-phone/style.css';
 
 const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, goBack, prevButtonStyle, contactNo, setContactNo, serviceDetails, couponId, discountedPrice, totalPrice, statuses, setFormData, selectedAddOns, addOnsDetails }) => {
   const [error, setError] = useState(""); // State to store validation error messages
