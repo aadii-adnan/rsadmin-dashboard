@@ -3,10 +3,15 @@ import PopupDialog from "../Utility/PopupDialog";
 import { useBooking } from "../../context/BookingContext";
 import { PhoneInput } from 'react-international-phone';
 
-const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, goBack, prevButtonStyle, contactNo, setContactNo }) => {
+const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, goBack, prevButtonStyle, contactNo, setContactNo, serviceDetails, couponId, discountedPrice, totalPrice, statuses, setFormData, selectedAddOns, addOnsDetails }) => {
   const [error, setError] = useState(""); // State to store validation error messages
   const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
-  const { bookingData } = useBooking();
+  const [loading, setLoading] = useState(false); // Loading state while creating the booking
+  const {
+    bookingData,
+    setBookingData,
+    bookingData: { bookingDates: { parkingFromDate, parkingFromTime, carCollectionDate, carCollectionTime }, userDetails },
+  } = useBooking();
 
   useEffect(() => {
     window.scrollTo(0, 300)
@@ -19,15 +24,128 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
       setIsPopupOpen(true);
       return false;
     }
-    
+
+    if (totalPrice <= 0) {
+      setError("Invalid price calculation");
+      setIsPopupOpen(true);
+      return false;
+    }
+
     setError(""); // Clear error if validation passes
     return true;
   };
 
+  const updateBookingUserStatus = async (bookingUserId) => {
+    if (!bookingUserId) return;
+    try {
+      await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/${bookingUserId}/status/`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ booking_completion_status: true }),
+        }
+      );
+    } catch (err) {
+      console.error("Failed to update booking user status", err);
+    }
+  };
+
+  // Create/update the booking record, then advance to payment.
+  // (The previous "Add Ons" step is skipped, so booking creation happens here.)
+  const handleBooking = async () => {
+    try {
+      const statusId = statuses.find((status) => status.name === formData.status_name && status.type === "booking")?.id;
+
+      if (!statusId) {
+        alert("Invalid status selected.");
+        return;
+      }
+
+      if (!parkingFromDate || !carCollectionDate) {
+        throw new Error("Invalid booking dates");
+      }
+
+      const bookingPayload = {
+        ...formData,
+        service: serviceDetails.id,
+        user: userDetails?.id,
+        contact_no: contactNo,
+        departure_time: parkingFromDate + " " + parkingFromTime,
+        return_time: carCollectionDate + " " + carCollectionTime,
+        coupon: couponId,
+        discounted_price: discountedPrice == 0 ? totalPrice.toFixed(2) : discountedPrice.toFixed(2),
+        total_price: totalPrice.toFixed(2),
+        status: statusId,
+        website: "rsexpressparking",
+        add_ons: selectedAddOns,
+      };
+
+      let response, data;
+      if (formData.booking_id) {
+        // Update existing booking
+        response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/bookings/${formData.booking_id}/`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bookingPayload),
+          }
+        );
+      } else {
+        // Create new booking
+        response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingPayload),
+        });
+      }
+      data = await response.json();
+
+      if (response.ok) {
+        setFormData((prev) => ({
+          ...prev,
+          booking_id: data.id,
+        }));
+        setBookingData((prev) => ({
+          ...prev,
+          bookingDetails: {
+            ...prev.bookingDetails,
+            booking_id: data.id,
+            booking_unique_id: data?.booking_id,
+            total_price: totalPrice,
+          },
+          carFlightDetails: {
+            ...prev.carFlightDetails,
+            addOnsDetails: addOnsDetails,
+          },
+        }));
+        if (formData.booking_user_id) {
+          await updateBookingUserStatus(formData.booking_user_id);
+        }
+        goNext();
+      } else {
+        if (data.error === "Coupon has been fully used") {
+          setError(data.error);
+          setIsPopupOpen(true);
+          return;
+        }
+        setError(data.message || "An error occurred.");
+        setIsPopupOpen(true);
+      }
+    } catch (error) {
+      console.error("Error creating/updating booking:", error);
+    }
+  };
+
   // Handle Next button click
-  const handleNext = () => {
-    if (validateInputs()) {
-      goNext(); // Proceed to the next step if validation passes
+  const handleNext = async () => {
+    if (!validateInputs()) return;
+    setLoading(true);
+    try {
+      await handleBooking(); // Creates the booking and advances on success
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -228,7 +346,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
             </>}
            
       </div>
-      <input type="button" className="next action-button" value="Next" onClick={handleNext} style={nextButtonStyle} />
+      <input type="button" className="next action-button" value={loading ? "loading..." : "Next"} onClick={handleNext} disabled={loading} style={nextButtonStyle} />
       {!bookingData?.userDetails?.id && <input type="button" className="previous action-button-previous" value="Back" onClick={goBack} style={prevButtonStyle} />}
     </fieldset>
 

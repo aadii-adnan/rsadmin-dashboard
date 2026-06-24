@@ -5,7 +5,6 @@ import { useBooking } from "../context/BookingContext";
 import PriceSummaryBookingForm from "../components/BookingForm/PriceSummaryBookingForm";
 import Step0BookingForm from "../components/BookingForm/Step0BookingForm";
 import Step1BookingForm from "../components/BookingForm/Step1BookingForm";
-import Step2BookingForm from "../components/BookingForm/Step2BookingForm";
 import Step3BookingForm from "../components/BookingForm/Step3BookingForm";
 import Step4BookingForm from "../components/BookingForm/Step4BookingForm";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +16,6 @@ import "../BookingForm.css";
 const steps = [
   { id: "account", label: "Account" },
   { id: "car", label: "Details" },
-  { id: "addons", label: "Add Ons" },
   { id: "payment", label: "Payment" },
 //   { id: "confirm", label: "Success" },
 ];
@@ -179,8 +177,8 @@ const BookingForm = () => {
                               booking_id: bookingDetails.booking_id
                           }));
 
-                          if (currentStep < 4 && localStorage.getItem("payment_status") === "succeeded") {
-                              setCurrentStep(4);
+                          if (currentStep < 3 && localStorage.getItem("payment_status") === "succeeded") {
+                              setCurrentStep(3);
                           }
                       } else {
                         setBookingData((prev) => ({
@@ -333,13 +331,11 @@ const BookingForm = () => {
             <form id="msform">
                 {currentStep === 0 && <Step0BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} setFormData={setFormData} goNext={goNext} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo}/>}
 
-                {currentStep === 1 && <Step1BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} goNext={goNext} nextButtonStyle={nextButtonStyle} goBack={goBack} prevButtonStyle={prevButtonStyle} contactNo={contactNo} setContactNo={setContactNo}/>}
+                {currentStep === 1 && <Step1BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} goNext={goNext} nextButtonStyle={nextButtonStyle} goBack={goBack} prevButtonStyle={prevButtonStyle} contactNo={contactNo} setContactNo={setContactNo} serviceDetails={serviceDetails} couponId={couponId} totalPrice={totalPrice} discountedPrice={discountedPrice} statuses={statuses} setFormData={setFormData} selectedAddOns={selectedAddOns} addOnsDetails={addOnsDetails}/>}
 
-                {currentStep === 2 && <Step2BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} contactNo={contactNo} setContactNo={setContactNo} serviceDetails={serviceDetails} couponId={couponId} totalPrice={totalPrice} discountedPrice={discountedPrice} goNext={goNext} statuses={statuses} goBack={goBack} prevButtonStyle={prevButtonStyle} setFormData={setFormData} addOnsDetails={addOnsDetails} setTotalPrice={setTotalPrice}  selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} setAddOnsDetails={setAddOnsDetails}/>}
+                {currentStep === 2 && <Step3BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} prevButtonStyle={prevButtonStyle} goNext={goNext} goBack={goBack} totalPrice={totalPrice} discountedPrice={discountedPrice}  bonusUsed={bonusUsed}/>}
 
-                {currentStep === 3 && <Step3BookingForm formData={formData} handleChange={handleChange} labelStyle={labelStyle} inputStyle={inputStyle} nextButtonStyle={nextButtonStyle} prevButtonStyle={prevButtonStyle} goNext={goNext} goBack={goBack} totalPrice={totalPrice} discountedPrice={discountedPrice}  bonusUsed={bonusUsed}/>}
-
-                {currentStep === 4 && <Step4BookingForm />}
+                {currentStep === 3 && <Step4BookingForm />}
 
             </form>
         </div>

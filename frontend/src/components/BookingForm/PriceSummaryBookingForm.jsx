@@ -242,7 +242,7 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
           </>
           )}      
 
-          {(currentStep !== 3 && currentStep !== 4) && (
+          {(currentStep !== 2 && currentStep !== 3) && (
             <div className="row" style={{marginBottom:10}}>
               <div className="col" style={{display:"flex",alignItems:"center",gap:8}}>
                 <input type="text" value={coupon} onChange={e=>setCoupon(e.target.value)} placeholder="Enter coupon code" style={{flex:1,padding:"8px",borderRadius:"5px",border:"1px solid #ccc",fontSize:"14px"}} disabled={isCouponApplied}/>

@@ -48,7 +48,7 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
           </div>
           <div className="col-5">
             <h2 className="steps" style={{ fontSize: "16px", color: "#555", marginBottom: "20px" }}>
-              Step 4 - 4
+              Step 3 - 3
             </h2>
           </div>
         </div>
