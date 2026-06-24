@@ -23,6 +23,8 @@ from openpyxl.styles import Font, Alignment, PatternFill
 import pytz
 from django.db.models.functions import Lower
 from payments.views import send_booking_confirmation_email, send_manager_new_booking_email
+from django.contrib import messages
+from .tasks import send_booking_updated_email
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -1076,6 +1078,33 @@ class BookingAdmin(admin.ModelAdmin):
                     send_manager_new_booking_email(obj, pdf_content)
             except Exception as e:
                 self.message_user(request, f"Error sending confirmation/manager email: {e}", level='error')
+
+    def response_change(self, request, obj):
+        # "Save and send update email" button: by the time response_change
+        # runs, both the model and its add_ons (M2M) are saved, so the email
+        # reflects the final state of the edit.
+        if "_save_and_send_email" in request.POST:
+            try:
+                try:
+                    send_booking_updated_email.delay(obj.id)
+                except Exception:
+                    # Celery broker unavailable — send inline so staff aren't
+                    # left thinking the customer was notified when they weren't.
+                    send_booking_updated_email(obj.id)
+                self.message_user(
+                    request,
+                    f"Booking saved. Update email sent to {obj.email}.",
+                    level=messages.SUCCESS,
+                )
+            except Exception as e:
+                self.message_user(
+                    request,
+                    f"Booking saved, but the update email could not be sent: {e}",
+                    level=messages.ERROR,
+                )
+            from django.http import HttpResponseRedirect
+            return HttpResponseRedirect(request.path)
+        return super().response_change(request, obj)
 
 
     class Media:

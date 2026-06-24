@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+{{ block.super }}
+{% if original %}
+<div class="submit-row" style="margin-top: -10px;">
+    <input type="submit" value="💾 Save and send update email to customer"
+           name="_save_and_send_email"
+           style="background: #28a745; color: #fff; font-weight: bold; float: left;"
+           title="Saves the booking, then emails the customer their updated details with the latest invoice attached.">
+</div>
+{% endif %}
+{% endblock %}

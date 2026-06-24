@@ -533,6 +533,99 @@ def send_manage_booking_link_email(booking_id):
 
 
 @shared_task
+def send_booking_updated_email(booking_id):
+    """Email the customer their latest booking details after a staff edit.
+
+    Triggered by the "Save and send update email" button in the Booking admin
+    (used when customers phone in changes). Customer-only — staff made the
+    change, so no manager notification is needed.
+    """
+    try:
+        booking = Booking.objects.get(id=booking_id)
+    except Booking.DoesNotExist:
+        return f"Booking {booking_id} not found"
+
+    from payments.views import generate_invoice
+
+    brand = _brand_context(booking)
+    departure_time = timezone.localtime(booking.departure_time).strftime('%d %b %Y %H:%M')
+    return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
+    add_ons = ', '.join([a.name for a in booking.add_ons.all()])
+    total = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
+    manage_lookup_url = brand['manage_url']
+
+    response, error = generate_invoice(booking)
+    if error:
+        return f"Invoice generation failed for booking {booking_id}: {error}"
+    pdf_content = response.getvalue()
+
+    subject = f"Your Booking Has Been Updated – {booking.service.name}"
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+        <h2 style="color: #0066cc;">Booking Updated – {booking.service.name}</h2>
+        <p>
+        Dear {booking.first_name},<br><br>
+        As requested, your booking has been <strong>updated</strong>. Please find your latest booking details below and your updated invoice in the attachment.
+        </p>
+        <ul>
+        <li><strong>Booking ID:</strong> {booking.booking_id}</li>
+        <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
+        <li><strong>Pick-Up Date & Time:</strong> {return_time}</li>
+        <li><strong>Vehicle:</strong> {booking.car_model} – {booking.car_registration_no}</li>
+        <li><strong>Service:</strong> {booking.service.name}</li>
+        <li><strong>Add-ons:</strong> {add_ons or 'None'}</li>
+        <li><strong>Total:</strong> €{total}</li>
+        </ul>
+        <p>
+        Need another change? You can manage your booking any time at
+        <a href="{manage_lookup_url}" style="color: #0066cc;">{manage_lookup_url}</a>.
+        </p>
+        <p>
+        If anything looks incorrect, please reply to this email or contact our support team.<br>
+        <strong>{brand['team_name']}</strong>
+        </p>
+        <p>
+        <a href="{brand['site_url']}" style="color: #0066cc;">{brand['site_url']}</a>
+        </p>
+    </body>
+    </html>
+    """
+    text_body = f"""
+Dear {booking.first_name},
+
+As requested, your booking has been updated. Please find your latest booking details below and your updated invoice in the attachment.
+
+Booking ID: {booking.booking_id}
+Drop-Off Date & Time: {departure_time}
+Pick-Up Date & Time: {return_time}
+Vehicle: {booking.car_model} – {booking.car_registration_no}
+Service: {booking.service.name}
+Add-ons: {add_ons or 'None'}
+Total: €{total}
+
+Need another change? You can manage your booking any time at {manage_lookup_url}
+
+If anything looks incorrect, please reply to this email or contact our support team.
+
+{brand['team_name']}
+{brand['site_url']}
+"""
+
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_body,
+        from_email=brand['from_email'],
+        to=[booking.email],
+        connection=brand['connection'],
+    )
+    email.attach_alternative(html_body, "text/html")
+    email.attach(f"Invoice_{booking.booking_id}.pdf", pdf_content, "application/pdf")
+    email.send()
+    return f"Booking updated email sent for {booking.booking_id}"
+
+
+@shared_task
 def send_reschedule_email_task(booking_id):
     """Send reschedule confirmation to the customer and a notification to managers."""
     try:
