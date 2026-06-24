@@ -537,8 +537,8 @@ def send_booking_updated_email(booking_id):
     """Email the customer their latest booking details after a staff edit.
 
     Triggered by the "Save and send update email" button in the Booking admin
-    (used when customers phone in changes). Customer-only — staff made the
-    change, so no manager notification is needed.
+    (used when customers phone in changes). Goes to the customer, with the
+    manager(s) CC'd so they have a record of the updated details.
     """
     try:
         booking = Booking.objects.get(id=booking_id)
@@ -617,6 +617,7 @@ If anything looks incorrect, please reply to this email or contact our support t
         body=text_body,
         from_email=brand['from_email'],
         to=[booking.email],
+        cc=_manager_email_list(booking),
         connection=brand['connection'],
     )
     email.attach_alternative(html_body, "text/html")
