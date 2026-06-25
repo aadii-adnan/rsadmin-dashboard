@@ -402,7 +402,6 @@ const Home = () => {
             <section className="section-padding bg-white info-sect">
                 <div className="container">
                     <div className="section-header text-center mb-5">
-                        <span className="badge-pill">Simple Process</span>
                         <h2 className="section-title">How Our Meet & Greet Works</h2>
                     </div>
                     
@@ -500,7 +499,6 @@ const Home = () => {
                             </div>
                         </div>
                         <div className="col-lg-6 ps-lg-5">
-                            <span className="badge-pill mb-3">Safety First</span>
                             <h2 className="section-title mb-4">Your Car Stays in Safe Hands</h2>
                             <p className="text-muted mb-4">
                                 Your vehicle is parked in a gated, well-lit facility monitored around the clock. 

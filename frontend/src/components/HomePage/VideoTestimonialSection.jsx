@@ -107,7 +107,6 @@ const VideoTestimonialSection = ({
         <section className="video-testimonial-section section-padding">
             <div className="container">
                 <div className="section-header text-center">
-                    <span className="badge-pill">Video Reviews</span>
                     <h2 className="section-title">{sectionTitle}</h2>
                     <p className="section-subtitle">{sectionSubtitle}</p>
                 </div>

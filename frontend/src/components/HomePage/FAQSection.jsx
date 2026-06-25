@@ -17,7 +17,6 @@ const FAQSection = ({ faqs, loading, isBlog = false }) => {
         
         {/* Header */}
         <div className="section-header text-center mb-5">
-          <span className="badge-pill">Help Center</span>
           <h2 className="section-title">Frequently Asked Questions</h2>
           {!isBlog && <p className="section-subtitle">Everything you need to know about parking with RS Express</p>}
         </div>
