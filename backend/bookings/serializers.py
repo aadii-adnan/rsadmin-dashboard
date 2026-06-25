@@ -32,6 +32,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'status': {'required': False},
             'supplier_extended_amount': {'read_only': True},
             'supplier_commission_percentage': {'read_only': True},
+            'source_channel': {'read_only': True},
         }
 
     def to_representation(self, instance):

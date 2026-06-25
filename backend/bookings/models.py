@@ -5,7 +5,55 @@ from users.models import CustomUser, Supplier
 from services.models import Service, AddOn, Coupon
 from core.models import Status
 import uuid
+from urllib.parse import urlparse
 from django.utils import timezone
+
+# --- Marketing attribution helpers ---------------------------------------
+# Keyword lists kept as module constants so the SEO team can extend them later.
+PAID_SEARCH_SOURCES = ("google", "bing")
+PAID_MEDIUMS = ("cpc", "ppc", "paid", "paidsearch", "paid-search")
+SOCIAL_KEYWORDS = (
+    "facebook", "fb", "instagram", "ig", "twitter", "x.com", "linkedin",
+    "tiktok", "youtube", "pinterest", "snapchat", "reddit", "whatsapp",
+    "t.co", "lnkd.in",
+)
+SEARCH_ENGINE_KEYWORDS = ("google", "bing", "yahoo", "duckduckgo", "ecosia", "baidu", "yandex")
+
+
+def classify_source(utm_source=None, utm_medium=None, gclid=None, fbclid=None, referrer_url=None):
+    """Derive a clean channel label from raw attribution data (first-touch)."""
+    src = (utm_source or "").lower()
+    medium = (utm_medium or "").lower()
+
+    referrer_host = ""
+    if referrer_url:
+        try:
+            referrer_host = (urlparse(referrer_url).hostname or "").lower()
+        except (ValueError, TypeError):
+            referrer_host = ""
+
+    # Google Ads / paid search
+    if gclid or (any(k in src for k in PAID_SEARCH_SOURCES) and medium in PAID_MEDIUMS):
+        return "Google Ads"
+
+    # Social media
+    if fbclid or any(k in src for k in SOCIAL_KEYWORDS) or any(k in referrer_host for k in SOCIAL_KEYWORDS):
+        return "Social Media"
+
+    # Any other tagged campaign — label from medium (or source) capitalised
+    if medium:
+        return medium.capitalize()
+    if src:
+        return src.capitalize()
+
+    # No UTM tags — fall back to referrer
+    if referrer_host:
+        if any(k in referrer_host for k in SEARCH_ENGINE_KEYWORDS):
+            return "Organic Search"
+        return "Referral"
+
+    return "Direct"
+
 
 class Booking(models.Model):
     booking_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
@@ -77,6 +125,20 @@ class Booking(models.Model):
         help_text="Admin-only extra amount for supplier bookings. This amount goes fully to RS.",
     )
 
+    # Marketing attribution (first-touch). Raw values captured from the landing URL/referrer.
+    utm_source = models.CharField(max_length=255, blank=True, null=True)
+    utm_medium = models.CharField(max_length=255, blank=True, null=True)
+    utm_campaign = models.CharField(max_length=255, blank=True, null=True)
+    utm_term = models.CharField(max_length=255, blank=True, null=True)
+    utm_content = models.CharField(max_length=255, blank=True, null=True)
+    gclid = models.CharField(max_length=255, blank=True, null=True, help_text="Google Ads click id")
+    fbclid = models.CharField(max_length=255, blank=True, null=True, help_text="Facebook click id")
+    referrer_url = models.URLField(max_length=500, blank=True, null=True)
+    source_channel = models.CharField(
+        max_length=30, blank=True, null=True,
+        help_text="Derived marketing channel (e.g. Google Ads, Social Media, Organic Search, Referral, Direct)."
+    )
+
     @staticmethod
     def _generate_unique_booking_id(prefix):
         booking_id = f"{prefix}-{uuid.uuid4().hex[:8].upper()}"
@@ -110,7 +172,17 @@ class Booking(models.Model):
         # Set created_at for new bookings if not provided
         if not self.pk and not self.created_at:
             self.created_at = timezone.now()
-            
+
+        # Derive marketing channel on creation if not already set
+        if not self.pk and not self.source_channel:
+            self.source_channel = classify_source(
+                utm_source=self.utm_source,
+                utm_medium=self.utm_medium,
+                gclid=self.gclid,
+                fbclid=self.fbclid,
+                referrer_url=self.referrer_url,
+            )
+
         super().save(*args, **kwargs)
 
     def __str__(self):

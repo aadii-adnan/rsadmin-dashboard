@@ -283,6 +283,11 @@ class BookingAdmin(admin.ModelAdmin):
 
     price_display.short_description = 'Total Price'
 
+    def source_display(self, obj):
+        return obj.source_channel or "—"
+
+    source_display.short_description = 'Source'
+
     def supplier_price_display(self, obj):
         extension = Decimal(str(obj.supplier_extended_amount or 0))
         total_price = max(Decimal(str(obj.total_price)) - extension, Decimal('0.00'))
@@ -497,8 +502,8 @@ class BookingAdmin(admin.ModelAdmin):
                 'supplier_price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form')
         if request.user.is_manager:
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display', 'vehicle_display', 'terminal_display', 'colored_status', 'created_at_display', 'download_booking_form')
-        return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
-                'price_display', 'colored_status', 'created_at_display', 'download_invoice', 'download_booking_form', 'website_abbr')
+        return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display',
+                'price_display', 'colored_status', 'source_display', 'created_at_display', 'download_invoice', 'download_booking_form', 'website_abbr')
     
 
     def get_fieldsets(self, request, obj=None):
@@ -546,6 +551,24 @@ class BookingAdmin(admin.ModelAdmin):
                 )
             }))
 
+        # Marketing attribution (read-only) — only for full admins, on existing bookings
+        is_super_admin = (
+            request.user.is_superuser
+            and not getattr(request.user, 'is_manager', False)
+            and not getattr(request.user, 'is_supplier', False)
+        )
+        if obj and is_super_admin:
+            base_fieldsets.append(('Marketing Attribution', {
+                'classes': ('collapse',),
+                'fields': (
+                    'source_channel',
+                    ('utm_source', 'utm_medium'),
+                    ('utm_campaign', 'utm_term', 'utm_content'),
+                    ('gclid', 'fbclid'),
+                    'referrer_url',
+                )
+            }))
+
         # Add status section with appropriate fields based on user type
         supplier_profile = getattr(request.user, 'supplier_profile', None) if getattr(request.user, 'is_supplier', False) else None
         supplier_uses_custom_ids = bool(supplier_profile and supplier_profile.use_custom_booking_ids)
@@ -579,6 +602,7 @@ class BookingAdmin(admin.ModelAdmin):
             ('service', ServiceFilter),
             ('website', WebsiteFilter),
             ('supplier', SupplierFilter),
+            'source_channel',
         ]
         # Remove 'website' filter for managers and suppliers
         if getattr(request.user, "is_manager", False) or getattr(request.user, "is_supplier", False):
@@ -590,12 +614,16 @@ class BookingAdmin(admin.ModelAdmin):
                 ('service', ServiceFilter),
             ]
         return base_filters
-    search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id', 'id')
+    search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id', 'id', 'source_channel', 'utm_campaign')
 
     def get_readonly_fields(self, request, obj=None):
         base = ('modified_at_field', 'download_invoice', 'download_booking_form')
         if obj:  # If editing existing object
             base = base + ('created_at_field', 'booking_id')
+            base = base + (
+                'source_channel', 'utm_source', 'utm_medium', 'utm_campaign',
+                'utm_term', 'utm_content', 'gclid', 'fbclid', 'referrer_url',
+            )
         if getattr(request.user, 'is_supplier', False):
             base = base + ('supplier',)
         return base

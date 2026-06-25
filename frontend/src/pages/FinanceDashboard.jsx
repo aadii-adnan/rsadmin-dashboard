@@ -542,6 +542,53 @@ function FinancialDashboard() {
       </Card>
     </Row>
 
+      <Row>
+        <Card className="mb-4">
+          <Card.Body>
+            <Card.Title>Bookings by Source</Card.Title>
+            <div className="text-muted mb-2" style={helperTextStyle}>
+              Marketing channel of bookings created in the selected period (first-touch attribution).
+            </div>
+            <div style={{ maxHeight: 300, overflowY: "auto" }}>
+              <table className="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th>Bookings</th>
+                    <th>Earning</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overview?.details?.source_details?.map((s) => (
+                    <tr key={s.source_channel}>
+                      <td>{s.source_channel}</td>
+                      <td>{s.total_orders.toLocaleString()}</td>
+                      <td>€{s.earning.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  {overview?.details?.source_details?.length > 0 && (
+                    <tr style={{ fontWeight: "bold", background: "#f8f9fa" }}>
+                      <td>All Sources Combined</td>
+                      <td>
+                        {overview.details.source_details
+                          .reduce((sum, s) => sum + s.total_orders, 0)
+                          .toLocaleString()}
+                      </td>
+                      <td>
+                        €
+                        {overview.details.source_details
+                          .reduce((sum, s) => sum + s.earning, 0)
+                          .toLocaleString()}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card.Body>
+        </Card>
+      </Row>
+
         {/* Expenses Section */}
         <Row>
           <Col md={12}>

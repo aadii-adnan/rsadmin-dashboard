@@ -338,6 +338,27 @@ class AdminFinancialOverview(APIView):
                     "cancelled_earning": float(cancelled_earning),
                 })
 
+            # Marketing source breakdown (bookings + earnings per channel)
+            source_details = []
+            source_channels = (
+                bookings_in_period
+                .values_list('source_channel', flat=True)
+                .distinct()
+            )
+            for channel in source_channels:
+                channel_bookings = bookings_in_period.filter(source_channel=channel)
+                channel_earning = sum(
+                    get_booking_net_earning(b)
+                    for b in channel_bookings
+                    if should_count_booking_for_earnings(b)
+                )
+                source_details.append({
+                    "source_channel": channel or "Unknown",
+                    "total_orders": channel_bookings.count(),
+                    "earning": float(channel_earning),
+                })
+            source_details.sort(key=lambda s: s["total_orders"], reverse=True)
+
             return Response({
                 'period': period_label,
                 'balance': float(total_balance),
@@ -349,6 +370,7 @@ class AdminFinancialOverview(APIView):
                     'recurring_expenses': [{ 'id': e.id, 'name': e.name, 'amount': float(e.amount), 'months_counted': count_overlapping_months(start_date, end_date, e.recurring_start_month or start_date, e.recurring_end_month or end_date), 'total': float(e.amount) * count_overlapping_months(start_date, end_date, e.recurring_start_month or start_date, e.recurring_end_month or end_date)} for e in recurring_expenses],
                     'service_details': service_details,
                     'addon_details': addon_details,
+                    'source_details': source_details,
                     'all_addons_total': float(all_addons_total),
                 },
                 'supplier_summary': self._build_supplier_summary(supplier_summary_bookings),

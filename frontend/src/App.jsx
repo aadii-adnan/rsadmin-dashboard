@@ -5,6 +5,7 @@ import Footer from "./components/Utility/Footer";
 import { useAuth } from "./auth/AuthContext";
 import CookieBanner from "./components/Utility/CookieBanner";
 import avatar from "./assets/avatar.png";
+import { captureAttribution } from "./utils/attribution";
 import "react-toastify/dist/ReactToastify.css";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -57,6 +58,11 @@ function App() {
   const hideHeaderFooter =
     location.pathname.startsWith("/finance-dashboard") ||
     location.pathname.startsWith("/blog-admin");
+
+  // Capture first-touch marketing attribution on initial load.
+  useEffect(() => {
+    captureAttribution();
+  }, []);
 
   useEffect(() => {
     if (hideHeaderFooter) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PopupDialog from "../Utility/PopupDialog";
 import { useBooking } from "../../context/BookingContext";
+import { getAttribution } from "../../utils/attribution";
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 
@@ -94,11 +95,11 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
           }
         );
       } else {
-        // Create new booking
+        // Create new booking — attach first-touch marketing attribution (create only)
         response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bookingPayload),
+          body: JSON.stringify({ ...bookingPayload, ...getAttribution() }),
         });
       }
       data = await response.json();
