@@ -8,6 +8,7 @@ import { BookingProvider } from "./context/BookingContext";
 import "./ContactUs.css";
 import "./pages/Blog.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import "./Home.css"; // Base theme (CSS variables, .btn-modern, Urbanist) — must load on every page, not just Home
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
