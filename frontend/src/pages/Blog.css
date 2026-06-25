@@ -196,12 +196,24 @@
   margin: 1.5rem 0;
 }
 
+/* Wrapper that gives wide tables a horizontal scrollbar on small screens.
+   WordPress-exported tables already ship inside <div style="overflow-x:auto">. */
 .blog-content table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   margin: 1.5rem 0;
-  display: block;
-  overflow-x: auto;
+  table-layout: auto;
+}
+
+/* Let any inline overflow wrapper around a table scroll instead of the
+   table itself, so the table can use real table layout and fill its column. */
+.blog-content div[style*="overflow"] {
+  margin: 1.5rem 0;
+}
+
+.blog-content div[style*="overflow"] table {
+  margin: 0;
 }
 
 .blog-content table td,

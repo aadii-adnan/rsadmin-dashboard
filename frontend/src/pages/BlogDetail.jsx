@@ -172,6 +172,24 @@ function BlogDetail() {
       }
 
       const currentHost = window.location.hostname;
+
+      // Ensure every table can scroll horizontally on small screens without
+      // forcing display:block on the table itself (which breaks full-width fill).
+      root.querySelectorAll("table").forEach((table) => {
+        const parent = table.parentElement;
+        const alreadyWrapped =
+          parent && parent.classList.contains("blog-table-scroll");
+        const parentScrolls =
+          parent && /auto|scroll/.test(parent.style.overflowX || "");
+        if (alreadyWrapped || parentScrolls) return;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "blog-table-scroll";
+        wrapper.style.overflowX = "auto";
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+
       const nodes = root.querySelectorAll("a[href], img");
 
       nodes.forEach((node) => {
