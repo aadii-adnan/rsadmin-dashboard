@@ -137,6 +137,9 @@ const Footer = () => {
                                 <span className="elementor-icon-box-title">
                                 <a href="tel:+353834896505">
                                 Driver: +353 83 489 6505						</a>
+                                <br />
+                                <a href="tel:+353838208082">
+                                Driver: +353 83 820 8082						</a>
                                 </span>
                             </div>
                         </div>

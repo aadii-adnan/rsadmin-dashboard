@@ -110,6 +110,7 @@ const PrivacyPolicy = () => {
             <h2 style={{color:"#010659"}} className="h4">9. Contact Us</h2>
             <p><strong>Phone:</strong> <a href="tel:+35319640011">+353 1 964 0011</a></p>
             <p><strong>Phone:</strong> <a href="tel:+353834896505">+353 83 489 6505</a></p>
+            <p><strong>Phone:</strong> <a href="tel:+353838208082">+353 83 820 8082</a></p>
             <p><strong>Email:</strong> <a href="mailto:support@rsexpressparking.com"><strong>support@rsexpressparking.com</strong></a></p>
         </section>
         </div>

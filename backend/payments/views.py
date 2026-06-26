@@ -230,7 +230,7 @@ def send_booking_confirmation_email(booking):
         <h3 style="color: #444;">📞 Important Instructions</h3>
         <ul>
             <li>
-                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
+                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> or <a href="tel:+353838208082" style="color:#0066cc;">+353 83 820 8082</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
             </li>
             <li>
                 Customers should go to Car Park A, Level 2.
@@ -317,7 +317,7 @@ if "Park & Fly" in booking.service.name else
 -----------------------------
 📞 Important Instructions
 -----------------------------
-- Please make sure to call the driver at +353 83 489 6505 at least 30 minutes before your arrival and departure to ensure a smooth handover.
+- Please make sure to call the driver at +353 83 489 6505 or +353 83 820 8082 at least 30 minutes before your arrival and departure to ensure a smooth handover.
 - Customers should go to Car Park A, Level 2.
 - Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
 - For any other queries, feel free to reply to this email or contact us directly.

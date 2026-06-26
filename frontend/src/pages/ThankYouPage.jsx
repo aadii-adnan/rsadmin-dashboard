@@ -176,6 +176,8 @@ const ThankYouPage = () => {
                   <strong>Important:</strong> Please call our drivers <strong>30 minutes</strong> before your <u>departure</u> and <u>arrival</u>.<br />
                   <span className="d-block mt-2">
                     <strong>Driver:</strong> <a href="tel:+353834896505" className="text-decoration-none text-dark">+353 83 489 6505</a>
+                    <br />
+                    <strong>Driver:</strong> <a href="tel:+353838208082" className="text-decoration-none text-dark">+353 83 820 8082</a>
                   </span>
                   <span className="d-block mt-2">Customers should go to Car Park A, Level 2.</span>
                   <span className="d-block">Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.</span>
