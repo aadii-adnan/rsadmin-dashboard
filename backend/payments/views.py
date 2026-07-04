@@ -9,9 +9,9 @@ from bookings.booking_rules import (
     parse_and_localize,
     validate_reschedule,
 )
-from .models import Payment
+from .models import Payment, CreditTransaction
 from django.shortcuts import get_object_or_404
-from .serializers import PaymentSerializer
+from .serializers import PaymentSerializer, CreditTransactionSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
@@ -28,11 +28,23 @@ import base64
 import os
 from rest_framework.renderers import BaseRenderer
 from django.core.mail import EmailMultiAlternatives, get_connection
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from datetime import timezone as tz, timedelta, time
 from django.utils import timezone
+from django.db import transaction
+from django.contrib.auth import get_user_model
 from decimal import Decimal
 import pytz
+import logging
+from users.views import _resolve_website
+
+logger = logging.getLogger(__name__)
+User = get_user_model()
+
+# Credit top-up limits (euros) — enforced server-side, mirrored in the frontend UI
+TOPUP_MIN = Decimal('5.00')
+TOPUP_MAX = Decimal('1000.00')
 
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -129,6 +141,43 @@ def generate_invoice(booking, template_name='payments/invoice.html'):
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="Invoice-{booking.booking_id}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
+
+    if pisa_status.err:
+        return None, 'Error generating PDF'
+    return response, None
+
+def generate_topup_invoice(credit_transaction):
+    """
+    Generate an invoice PDF for a credit top-up. Returns (response, error).
+    """
+    logo_data = None
+    try:
+        with open(settings.PDF_LOGO_PATH, 'rb') as f:
+            logo_data = base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        pass  # gracefully handle missing logo
+
+    dublin_logo_data = None
+    try:
+        with open(settings.DUBLIN_PDF_LOGO_PATH, 'rb') as f:
+            dublin_logo_data = base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        pass  # gracefully handle missing logo
+
+    context = {
+        'tx': credit_transaction,
+        'customer': credit_transaction.user,
+        'logo_data': f"data:image/png;base64,{logo_data}" if logo_data else None,
+        'dublin_logo_data': f"data:image/png;base64,{dublin_logo_data}" if dublin_logo_data else None,
+    }
+
+    template = get_template('payments/credit_topup_invoice.html')
+    html = template.render(context)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Credit-TopUp-Invoice-{credit_transaction.id}.pdf"'
 
     pisa_status = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
 
@@ -462,7 +511,23 @@ class CreateStripePaymentIntent(APIView):
 
         try:
             is_reschedule_extra = request.data.get("is_reschedule_extra", False)
-            bonus_points_used = Decimal(str(request.data.get("bonus_points_used", 0)))
+            try:
+                bonus_points_used = Decimal(str(request.data.get("bonus_points_used", 0)))
+                if not bonus_points_used.is_finite():
+                    raise ValueError
+            except Exception:
+                return Response({'error': 'Invalid bonus_points_used.'}, status=status.HTTP_400_BAD_REQUEST)
+            if bonus_points_used < 0:
+                return Response({'error': 'Invalid bonus_points_used.'}, status=status.HTTP_400_BAD_REQUEST)
+            if bonus_points_used > 0:
+                # Credit points can only be spent by the authenticated owner
+                # of the booking, and never more than their real balance.
+                if not request.user.is_authenticated or booking.user_id != request.user.id:
+                    return Response(
+                        {'error': 'You must be logged in as the booking owner to use credit points.'},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+                bonus_points_used = min(bonus_points_used, request.user.bonus_points or Decimal('0.00'))
 
             customer = stripe.Customer.create(email=booking.email)
             amount_to_charge = float(booking.discounted_price if booking.discounted_price > 0 else booking.total_price)
@@ -495,13 +560,23 @@ class CreateStripePaymentIntent(APIView):
                     'new_return_time': new_return.isoformat(),
                 }
             else:
-                discounted_total = booking.total_price
+                # Coupon discount and credit points both apply, coupon first.
+                base_total = Decimal(str(booking.total_price))
+                has_discount = False
                 if booking.coupon and booking.coupon.is_valid():
-                    discount_amount = (booking.total_price * booking.coupon.discount_percent) / 100
-                    discounted_total = booking.total_price - discount_amount
-                    discounted_total = max(0, discounted_total - bonus_points_used)
-                    booking.discounted_price = discounted_total
-                    booking.save()
+                    discount_amount = (base_total * booking.coupon.discount_percent) / 100
+                    base_total -= discount_amount
+                    has_discount = True
+                if bonus_points_used > 0:
+                    # Stripe can't charge less than €0.50 — when paying the
+                    # remainder by card, credits must leave at least that much.
+                    max_usable = max(Decimal('0.00'), base_total - Decimal('0.50'))
+                    bonus_points_used = min(bonus_points_used, max_usable)
+                    base_total -= bonus_points_used
+                    has_discount = True
+                if has_discount:
+                    booking.discounted_price = base_total
+                    booking.save(update_fields=['discounted_price'])
                 amount_to_charge = float(booking.discounted_price if booking.discounted_price > 0 else booking.total_price)
 
             # Create PaymentIntent
@@ -558,74 +633,82 @@ class StripeWebhookView(APIView):
 
             if event['type'] == 'payment_intent.succeeded':
                 intent = event['data']['object']
+
+                # Credit top-ups are handled separately from booking payments
+                if intent.get('metadata', {}).get('purpose') == 'credit_topup':
+                    return self._handle_topup_succeeded(intent)
+
                 payment_intent_id = intent['id']
+                is_reschedule_extra = str(intent['metadata'].get('is_reschedule_extra', '')).lower() == 'true'
 
-                payment = Payment.objects.get(stripe_payment_intent=payment_intent_id)
-                booking = payment.booking
-                user = booking.user
+                with transaction.atomic():
+                    payment = Payment.objects.select_for_update().get(stripe_payment_intent=payment_intent_id)
+                    booking = payment.booking
+                    user = booking.user
 
-                website = getattr(booking, 'website', 'rsexpressparking')
-                if website.lower() == "dublinairportparking":
-                    site_name = "Dublin Airport Express Parking"
-                    site_url = "https://dublinairportexpressparking.ie/"
-                    team_name = "The Dublin Airport Express Parking Team"
-                    from_email = "Dublin Airport Express Parking <support@dublinairportexpressparking.ie>"
-                    connection = get_connection(
-                        host=config('EMAIL_HOST'),
-                        port=config('EMAIL_PORT', cast=int),
-                        username="support@dublinairportexpressparking.ie",
-                        password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
-                        use_tls=config('EMAIL_USE_TLS', cast=bool)
-                    )
-                else:
-                    site_name = "RS Express Parking"
-                    site_url = "https://rsexpressparking.com/"
-                    team_name = "The RS Express Parking Team"
-                    from_email = "RS Express Parking <support@rsexpressparking.com>"
-                    connection = None  # Use default
+                    # Idempotency guard: Stripe can deliver the same event more
+                    # than once. Skip the balance/coupon/status mutations on a
+                    # replay, but still fall through to the email block below so
+                    # a previously failed email send gets retried.
+                    already_processed = payment.status and payment.status.name == 'Succeeded'
+                    if not already_processed:
+                        # Deduct credit points if used, with a ledger entry
+                        bonus_points_used = Decimal(str(intent['metadata'].get('bonus_points_used', 0)))
+                        if bonus_points_used > 0 and user:
+                            locked_user = User.objects.select_for_update().get(pk=user.pk)
+                            deducted = min(locked_user.bonus_points or Decimal('0.00'), bonus_points_used)
+                            if deducted > 0:
+                                locked_user.bonus_points -= deducted
+                                locked_user.save(update_fields=['bonus_points'])
+                                CreditTransaction.objects.create(
+                                    user=locked_user,
+                                    transaction_type=CreditTransaction.TYPE_BOOKING_SPEND,
+                                    amount=-deducted,
+                                    balance_after=locked_user.bonus_points,
+                                    booking=booking,
+                                    status=CreditTransaction.STATUS_SUCCEEDED,
+                                    website=getattr(booking, 'website', None) or 'rsexpressparking',
+                                )
+                            if deducted < bonus_points_used:
+                                logger.warning(
+                                    "Booking %s: expected to deduct %s credit points but balance only allowed %s",
+                                    booking.booking_id, bonus_points_used, deducted,
+                                )
 
-                # Deduct bonus points if used
-                bonus_points_used = float(intent['metadata'].get('bonus_points_used', 0))
-                if bonus_points_used > 0 and user:
-                    user.bonus_points = max(Decimal('0.00'), getattr(user, 'bonus_points', Decimal('0.00')) - Decimal(str(bonus_points_used)))
-                    user.save(update_fields=['bonus_points'])
+                        status_obj = get_object_or_404(Status, name='Succeeded', type='payment')
+                        payment.status = status_obj
+                        payment.save()
 
-                # Update booking and payment statuses
-                new_status = 'Succeeded'
-                status_obj = get_object_or_404(Status, name=new_status, type='payment')
-                payment.status = status_obj
-                payment.save()
+                        if not is_reschedule_extra:
+                            # Award a new coupon to the user
+                            code = generate_coupon_code()
+                            valid_from = timezone.now()
+
+                            coupon = Coupon.objects.create(
+                                code=code,
+                                discount_percent=10,
+                                valid_from=valid_from,
+                                valid_to=None,      # not needed for lifetime
+                                lifetime=True,
+                                active=True
+                            )
+
+                            status_obj = get_object_or_404(Status, name='Confirmed', type='booking')
+                            booking.status = status_obj
+                            booking.discount_coupon_awarded = coupon.code
+                            booking.save()
+
+                            if booking.coupon:
+                                booking.coupon.times_used += 1
+                                booking.coupon.save()
 
                 # Reschedule-extension payments only mark the payment as
                 # succeeded — the booking itself (dates, prices, status) is
                 # updated by the reschedule endpoint. Awarding a coupon,
                 # re-confirming the booking or re-sending the confirmation
                 # email here would corrupt the existing booking.
-                if str(intent['metadata'].get('is_reschedule_extra', '')).lower() == 'true':
+                if is_reschedule_extra:
                     return HttpResponse(status=200)
-
-                # Award a new coupon to the user
-                code = generate_coupon_code()
-                valid_from = timezone.now()
-
-                coupon = Coupon.objects.create(
-                    code=code,
-                    discount_percent=10,
-                    valid_from=valid_from,
-                    valid_to=None,      # not needed for lifetime
-                    lifetime=True,
-                    active=True
-                )
-
-                new_booking_status = 'Confirmed'
-                status_obj = get_object_or_404(Status, name=new_booking_status, type='booking')
-                booking.status = status_obj
-                booking.discount_coupon_awarded = coupon.code
-                booking.save()
-
-                if booking.coupon:
-                    booking.coupon.times_used += 1
-                    booking.coupon.save()
 
                 # Generate and email the invoice (single source of truth for
                 # the confirmation email body, including the manage-booking link)
@@ -640,6 +723,14 @@ class StripeWebhookView(APIView):
             elif event['type'] == 'payment_intent.payment_failed':
                 intent = event['data']['object']
                 payment_intent_id = intent['id']
+
+                if intent.get('metadata', {}).get('purpose') == 'credit_topup':
+                    CreditTransaction.objects.filter(
+                        stripe_payment_intent=payment_intent_id,
+                        status=CreditTransaction.STATUS_PENDING,
+                    ).update(status=CreditTransaction.STATUS_FAILED)
+                    return HttpResponse(status=200)
+
                 payment = Payment.objects.get(stripe_payment_intent=payment_intent_id)
 
                 new_status = 'Failed'
@@ -657,6 +748,58 @@ class StripeWebhookView(APIView):
             return HttpResponse(status=400)
         except Exception as e:
             return HttpResponse(f"Error: {str(e)}", status=400)
+
+        return HttpResponse(status=200)
+
+    def _handle_topup_succeeded(self, intent):
+        payment_intent_id = intent['id']
+
+        # Never credit non-euro amounts 1:1
+        if (intent.get('currency') or '').lower() != 'eur':
+            CreditTransaction.objects.filter(
+                stripe_payment_intent=payment_intent_id,
+                status=CreditTransaction.STATUS_PENDING,
+            ).update(status=CreditTransaction.STATUS_FAILED)
+            logger.error(
+                "Credit top-up %s paid in unexpected currency %s — not credited.",
+                payment_intent_id, intent.get('currency'),
+            )
+            return HttpResponse(status=200)
+
+        # Stripe's received amount is authoritative — never trust client values
+        amount = Decimal(intent['amount_received']) / Decimal('100')
+        if amount <= 0:
+            return HttpResponse(status=200)
+
+        with transaction.atomic():
+            try:
+                tx = CreditTransaction.objects.select_for_update().get(
+                    stripe_payment_intent=payment_intent_id
+                )
+            except CreditTransaction.DoesNotExist:
+                logger.error("No credit transaction found for intent %s", payment_intent_id)
+                return HttpResponse(status=200)
+
+            if tx.status == CreditTransaction.STATUS_SUCCEEDED:
+                # Replayed/duplicate webhook event — already credited.
+                return HttpResponse(status=200)
+
+            locked_user = User.objects.select_for_update().get(pk=tx.user_id)
+            locked_user.bonus_points = (locked_user.bonus_points or Decimal('0.00')) + amount
+            locked_user.save(update_fields=['bonus_points'])
+
+            tx.amount = amount
+            tx.status = CreditTransaction.STATUS_SUCCEEDED
+            tx.balance_after = locked_user.bonus_points
+            tx.save(update_fields=['amount', 'status', 'balance_after', 'updated_at'])
+
+            tx_id = tx.id
+
+            def _queue_email():
+                from .tasks import send_topup_confirmation_email_task
+                send_topup_confirmation_email_task.delay(tx_id)
+
+            transaction.on_commit(_queue_email)
 
         return HttpResponse(status=200)
 
@@ -840,6 +983,21 @@ class UpdatePaymentStatusView(APIView):
             if not new_status_name:
                 return Response({'error': 'Status is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+            # This public endpoint exists only so the frontend can report
+            # client-side failures. Success is decided exclusively by the
+            # Stripe webhook — allowing it here would let anyone mark a
+            # payment as paid (and defeat the webhook idempotency guard).
+            if new_status_name != 'Failed':
+                return Response(
+                    {'error': 'Only the Failed status can be set from the client.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if payment.status and payment.status.name == 'Succeeded':
+                return Response(
+                    {'error': 'This payment has already succeeded.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # Fetch the new status object
             new_status = get_object_or_404(Status, name=new_status_name, type='payment')
 
@@ -862,3 +1020,212 @@ class UpdatePaymentStatusView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CreateCreditTopUpIntent(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        raw_amount = request.data.get('amount')
+        if raw_amount is None:
+            return Response({'error': 'Amount is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            amount = Decimal(str(raw_amount))
+            if not amount.is_finite():
+                raise ValueError
+            valid_precision = amount == amount.quantize(Decimal('0.01'))
+        except Exception:
+            return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not valid_precision:
+            return Response(
+                {'error': 'Amount can have at most 2 decimal places.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if amount < TOPUP_MIN or amount > TOPUP_MAX:
+            return Response(
+                {'error': f'Top-up amount must be between €{TOPUP_MIN} and €{TOPUP_MAX}.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        website = _resolve_website(request.data.get('website'), request.get_host())
+
+        tx = CreditTransaction.objects.create(
+            user=request.user,
+            transaction_type=CreditTransaction.TYPE_TOPUP,
+            amount=amount,
+            status=CreditTransaction.STATUS_PENDING,
+            website=website,
+        )
+
+        try:
+            # The charge amount is set exclusively from the validated
+            # server-side value; the webhook later credits from Stripe's
+            # amount_received, so a tampered client can never mint credits.
+            intent = stripe.PaymentIntent.create(
+                amount=int(amount * 100),
+                currency='eur',
+                receipt_email=request.user.email or None,
+                metadata={
+                    'purpose': 'credit_topup',
+                    'credit_transaction_id': tx.id,
+                    'user_id': request.user.id,
+                },
+            )
+        except Exception as e:
+            tx.status = CreditTransaction.STATUS_FAILED
+            tx.save(update_fields=['status', 'updated_at'])
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        tx.stripe_payment_intent = intent['id']
+        tx.save(update_fields=['stripe_payment_intent', 'updated_at'])
+
+        return Response({
+            'clientSecret': intent['client_secret'],
+            'amount': str(amount),
+            'transaction_id': tx.id,
+        })
+
+
+class CreditTopUpStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, transaction_id):
+        tx = get_object_or_404(CreditTransaction, id=transaction_id, user=request.user)
+        # Re-read the balance so the caller sees the webhook's update
+        balance = User.objects.values_list('bonus_points', flat=True).get(pk=request.user.pk)
+        return Response({'status': tx.status, 'balance': str(balance)})
+
+
+class CreditHistoryPagination(PageNumberPagination):
+    page_size = 10
+
+
+class CreditHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = CreditTransaction.objects.filter(
+            user=request.user,
+            status=CreditTransaction.STATUS_SUCCEEDED,
+        ).select_related('booking')
+        paginator = CreditHistoryPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        serializer = CreditTransactionSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+class TopUpInvoiceDownloadView(APIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [PDFRenderer]
+
+    def get(self, request, transaction_id):
+        tx = get_object_or_404(
+            CreditTransaction,
+            id=transaction_id,
+            user=request.user,
+            transaction_type=CreditTransaction.TYPE_TOPUP,
+            status=CreditTransaction.STATUS_SUCCEEDED,
+        )
+        response, error = generate_topup_invoice(tx)
+        if error:
+            return HttpResponse(f'Error: {error}', status=500)
+        return response
+
+
+class PayBookingWithCreditsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, booking_id):
+        with transaction.atomic():
+            booking = get_object_or_404(
+                Booking.objects.select_for_update(),
+                id=booking_id,
+                user=request.user,
+            )
+
+            if booking.status and booking.status.name == 'Confirmed':
+                return Response({'error': 'This booking is already paid.'}, status=status.HTTP_400_BAD_REQUEST)
+            if booking.payments.filter(status__name='Succeeded').exists():
+                return Response({'error': 'This booking is already paid.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Compute the payable amount server-side (coupon discount first) —
+            # never trust a client-provided amount.
+            payable = Decimal(str(booking.total_price))
+            if booking.coupon and booking.coupon.is_valid():
+                payable -= (payable * booking.coupon.discount_percent) / 100
+            payable = payable.quantize(Decimal('0.01'))
+
+            if payable <= 0:
+                return Response({'error': 'Nothing to pay for this booking.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            locked_user = User.objects.select_for_update().get(pk=request.user.pk)
+            balance = locked_user.bonus_points or Decimal('0.00')
+            if balance < payable:
+                return Response({
+                    'error': 'Insufficient credit balance.',
+                    'balance': str(balance),
+                    'required': str(payable),
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            locked_user.bonus_points = balance - payable
+            locked_user.save(update_fields=['bonus_points'])
+
+            ledger = CreditTransaction.objects.create(
+                user=locked_user,
+                transaction_type=CreditTransaction.TYPE_BOOKING_SPEND,
+                amount=-payable,
+                balance_after=locked_user.bonus_points,
+                booking=booking,
+                status=CreditTransaction.STATUS_SUCCEEDED,
+                website=getattr(booking, 'website', None) or 'rsexpressparking',
+            )
+
+            # Record the payment so finance reporting and the payment-status
+            # endpoint stay consistent with card-paid bookings.
+            succeeded_status = get_object_or_404(Status, name='Succeeded', type='payment')
+            Payment.objects.create(
+                booking=booking,
+                stripe_payment_intent=f'credits-{ledger.id}',
+                stripe_customer_id='',
+                amount=payable,
+                status=succeeded_status,
+                status_message='Paid in full with account credits',
+            )
+
+            booking.bonus_points_used = payable
+            booking.discounted_price = payable
+
+            # Mirror the webhook's success path: award the 10% lifetime coupon
+            # and confirm the booking.
+            coupon = Coupon.objects.create(
+                code=generate_coupon_code(),
+                discount_percent=10,
+                valid_from=timezone.now(),
+                valid_to=None,
+                lifetime=True,
+                active=True,
+            )
+            booking.status = get_object_or_404(Status, name='Confirmed', type='booking')
+            booking.discount_coupon_awarded = coupon.code
+            booking.save()
+
+            if booking.coupon:
+                booking.coupon.times_used += 1
+                booking.coupon.save()
+
+            new_balance = locked_user.bonus_points
+            booking_pk = booking.id
+
+            def _queue_email():
+                from .tasks import send_credit_booking_confirmation_task
+                send_credit_booking_confirmation_task.delay(booking_pk)
+
+            transaction.on_commit(_queue_email)
+
+        return Response({
+            'status': 'paid',
+            'balance': str(new_balance),
+            'booking_status': 'Confirmed',
+        })

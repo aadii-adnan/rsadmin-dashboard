@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 6mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        p {
+            margin: 0px 0px 0px 0px;
+            line-height: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 14px;
+            border-bottom: 1px solid #ccc;
+            border-top: 1px solid #ccc;
+            margin: 0;
+            text-align: center;
+        }
+
+        .info-table th, .info-table td {
+            border-bottom: 1px solid #ccc;
+            text-align: left;
+            padding: 3px 4px;
+            vertical-align: top;
+        }
+
+        .info-table th {
+            background-color: #ccc;
+        }
+
+        .summary-table td {
+            padding: 3px 4px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .summary-table td:first-child {
+            font-weight: bold;
+        }
+
+        .section {
+            margin-bottom: 0px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .logo h2 {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .logo strong {
+            font-size: 12px;
+        }
+
+        .logo span {
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div style="padding: 10px;">
+
+    <div class="logo">
+        {% if tx.website and tx.website|lower == "dublinairportparking" %}
+            <img src="{{ dublin_logo_data }}" alt="Dublin Airport Express Parking Logo" style="width: 150px; height: auto;"/><br/>
+            <strong>Dublin Airport Express Parking</strong><br/>
+            <span>Seamless Parking, Stress-Free Travel</span>
+        {% else %}
+            <img src="{{ logo_data }}" alt="RS Express Parking Logo" style="width: 150px; height: auto;"/><br/>
+            <strong>RS Express Parking</strong><br/>
+            <span>Seamless Parking, Stress-Free Travel</span>
+        {% endif %}
+    </div>
+
+    <div style="margin-bottom: 0px;">
+        <strong style="font-size: 20px;">Credit Top-Up Invoice</strong><br/>
+        {% if tx.website and tx.website|lower == "dublinairportparking" %}
+            <strong>Thank you for topping up your Dublin Airport Express Parking account credits.</strong><br/>
+        {% else %}
+            <strong>Thank you for topping up your RS Express Parking account credits.</strong><br/>
+        {% endif %}
+    </div>
+
+    <div style="text-align: right; margin-bottom: 2px; margin-top: 0px;">
+        <strong>Transaction ID:</strong> #{{ tx.id }}<br/>
+        <strong>Date:</strong> {{ tx.created_at|date:"d/m/Y H:i" }}
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <th>Description</th>
+            <th>Amount</th>
+        </tr>
+        <tr>
+            <td>Account credit top-up</td>
+            <td>€{{ tx.amount }}</td>
+        </tr>
+    </table>
+
+    <table class="summary-table" style="margin-top: 12px;">
+        <tr style="border-bottom: none;">
+            <td style="border-bottom: none;">Total paid: </td>
+            <td style="border-bottom: none;"><strong>€{{ tx.amount }}</strong></td>
+        </tr>
+        <tr style="border-bottom: none;">
+            <td style="border-bottom: none; border-top: none;">Payment method: </td>
+            <td style="border-bottom: none; border-top: none;">Stripe</td>
+        </tr>
+        <tr style="border-bottom: none;">
+            <td style="border-bottom: none; border-top: none;">Credit balance after top-up: </td>
+            <td style="border-bottom: none; border-top: none;">€{{ tx.balance_after }}</td>
+        </tr>
+    </table>
+
+    <div class="section">
+        <p class="section-title" style="margin-top: 10px;">Your Details</p>
+        <p>
+            <strong>Name:</strong> {{ customer.first_name }} {{ customer.last_name }}<br/><br/>
+            <strong>Email:</strong> {{ customer.email }}<br/><br/>
+            {% if customer.phone %}<strong>Phone:</strong> {{ customer.phone }}<br/><br/>{% endif %}
+        </p>
+    </div>
+
+    <div class="section">
+        <p class="section-title">Our Company Details</p>
+        {% if tx.website and tx.website|lower == "dublinairportparking" %}
+            <p>
+                <strong>Customer Support:</strong> +353 1 964 0011<br/><br/>
+                <strong>Email:</strong> support@dublinairportexpressparking.ie<br/><br/>
+                <strong>Website:</strong> dublinairportexpressparking.ie<br/><br/>
+            </p>
+        {% else %}
+            <p>
+                <strong>Customer Support:</strong> +353 1 964 0011<br/><br/>
+                <strong>Email:</strong> support@rsexpressparking.com<br/><br/>
+                <strong>Website:</strong> rsexpressparking.com<br/><br/>
+            </p>
+        {% endif %}
+    </div>
+
+    <p class="section-title">About Your Credits</p>
+    <p>
+        Your account credits are applied automatically at checkout when you make a booking.<br/><br/>
+        While your balance covers the booking total, no card payment is required.<br/><br/>
+        You can view your full credit history any time from your account dashboard.
+    </p>
+
+</div>
+
+</body>
+</html>

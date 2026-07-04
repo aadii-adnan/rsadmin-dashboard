@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6;">
+    <h2 style="color: #2890cd; margin-bottom: 16px;">Credit top-up confirmed</h2>
+    <p>Hi {{ first_name }},</p>
+    <p>
+      Your account credits at <strong>{{ site_name }}</strong> have been topped up successfully.
+    </p>
+    <table style="border-collapse: collapse; margin: 16px 0;">
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>Amount added:</strong></td>
+        <td style="padding: 6px 0;">€{{ amount }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>New credit balance:</strong></td>
+        <td style="padding: 6px 0;">€{{ balance }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>Date:</strong></td>
+        <td style="padding: 6px 0;">{{ created_at|date:"d/m/Y H:i" }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>Transaction reference:</strong></td>
+        <td style="padding: 6px 0;">#{{ transaction_id }}</td>
+      </tr>
+    </table>
+    <p>
+      Your invoice is attached to this email as a PDF file.
+    </p>
+    <p>
+      Your credits are applied automatically at checkout the next time you book —
+      no card details needed while your balance covers the booking.
+    </p>
+    <p>
+      Regards,<br />
+      The {{ site_name }} Team<br />
+      <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+    </p>
+  </body>
+</html>

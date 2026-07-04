@@ -48,7 +48,10 @@ class CustomUserAdmin(UserAdmin):
                 ('first_name', 'last_name'),
                 ('email', 'phone'),
                 'username', 'bonus_points'
-            )
+            ),
+            'description': 'Credit Points are read-only here — add or deduct credits via '
+                           'Payments &rsaquo; Credit transactions so every change is recorded '
+                           'in the customer\'s credit history.',
         }),
         ('Permissions', {
             'fields': (
@@ -84,7 +87,9 @@ class CustomUserAdmin(UserAdmin):
             return self.readonly_fields + ('username',)
         return self.readonly_fields  # Adding a new user
 
-    readonly_fields = ('date_joined_display', 'last_login_display')
+    # bonus_points is read-only so every balance change goes through the
+    # CreditTransaction ledger (Payments > Credit transactions > Add).
+    readonly_fields = ('date_joined_display', 'last_login_display', 'bonus_points')
 
     def full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}"

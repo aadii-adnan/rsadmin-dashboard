@@ -7,7 +7,7 @@ from .serializers import BookingSerializer, BookingUserSerializer, SupplierBooki
 from core.permissions import IsManagerOrAdmin, IsSupplier
 from core.models import Status, BookingSettings
 from services.models import Coupon
-from payments.models import Payment
+from payments.models import Payment, CreditTransaction
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -180,9 +180,21 @@ class CancelBookingView(APIView):
             outcome = 'points'
             booking_amount = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
             bonus_to_add = max(Decimal('0.00'), Decimal(str(booking_amount)) - CANCELLATION_FEE)
-            user = request.user
-            user.bonus_points = (user.bonus_points or Decimal('0.00')) + bonus_to_add
-            user.save(update_fields=['bonus_points'])
+            User = get_user_model()
+            with transaction.atomic():
+                user = User.objects.select_for_update().get(pk=request.user.pk)
+                user.bonus_points = (user.bonus_points or Decimal('0.00')) + bonus_to_add
+                user.save(update_fields=['bonus_points'])
+                if bonus_to_add > 0:
+                    CreditTransaction.objects.create(
+                        user=user,
+                        transaction_type=CreditTransaction.TYPE_CANCELLATION_REFUND,
+                        amount=bonus_to_add,
+                        balance_after=user.bonus_points,
+                        booking=booking,
+                        status=CreditTransaction.STATUS_SUCCEEDED,
+                        website=getattr(booking, 'website', None) or 'rsexpressparking',
+                    )
             bonus_points = float(user.bonus_points)
 
         send_cancellation_email_task.delay(booking.id, outcome)

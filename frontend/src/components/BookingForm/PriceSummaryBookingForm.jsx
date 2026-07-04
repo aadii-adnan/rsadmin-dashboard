@@ -63,10 +63,18 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
 
       // Deduct bonus points if user is logged in and has any
       if (user && user.bonus_points > 0) {
-        const maxBonusUsable = Math.max(0, tempPrice - 0.5);
-        tempBonusUsed = Math.min(user.bonus_points, maxBonusUsable);
-        tempBonusUsed = Number(tempBonusUsed).toFixed(2);
-        tempPrice = tempPrice - tempBonusUsed;
+        const balance = Number(user.bonus_points);
+        if (tempPrice > 0 && balance >= tempPrice) {
+          // Credits cover the whole booking — no card payment needed
+          tempBonusUsed = Number(tempPrice).toFixed(2);
+          tempPrice = 0;
+        } else {
+          // Partial cover: the card payment must stay above Stripe's €0.50 minimum
+          const maxBonusUsable = Math.max(0, tempPrice - 0.5);
+          tempBonusUsed = Math.min(balance, maxBonusUsable);
+          tempBonusUsed = Number(tempBonusUsed).toFixed(2);
+          tempPrice = tempPrice - tempBonusUsed;
+        }
         setDiscountedPrice(tempPrice);
         setBonusUsed(Number(tempBonusUsed));
       } else {
@@ -276,10 +284,14 @@ const PriceSummaryBookingForm = ({ serviceDetails, totalPrice, price, perDayPric
                 <h6 style={{ fontSize: "14px", color: "#43a047", marginBottom: "10px" }}>
                   Credit Points Used: <span style={{ fontWeight: "bold", color: "#2890cd" }}>€{bonusUsed.toFixed(2)}</span>
                 </h6>
-                {/* Show note if bonus covers almost all price */}
-                {finalPrice.toFixed(2) <= 0.5 && (
+                {/* Fully covered: booking is paid from credits, no card needed */}
+                {finalPrice <= 0 ? (
+                  <div style={{ fontSize: "13px", color: "#43a047", marginBottom: "10px" }}>
+                    <strong>Great news!</strong> Your credit points cover this booking in full — no card payment is needed.
+                  </div>
+                ) : finalPrice.toFixed(2) <= 0.5 && (
                   <div style={{ fontSize: "13px", color: "#e53935", marginBottom: "10px" }}>
-                    <strong>Note:</strong> Even if your credit points cover the full price, a minimum payment of €0.50 is required to complete the booking. This is necessary for payment verification and fraud prevention.
+                    <strong>Note:</strong> A minimum card payment of €0.50 applies when credits don't cover the full price. This is necessary for payment verification and fraud prevention.
                   </div>
                 )}
               </div>

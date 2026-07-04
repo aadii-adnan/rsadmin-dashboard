@@ -1,0 +1,17 @@
+Hi {{ first_name }},
+
+Your account credits at {{ site_name }} have been topped up successfully.
+
+Amount added: EUR {{ amount }}
+New credit balance: EUR {{ balance }}
+Date: {{ created_at|date:"d/m/Y H:i" }}
+Transaction reference: #{{ transaction_id }}
+
+Your invoice is attached to this email as a PDF file.
+
+Your credits are applied automatically at checkout the next time you book —
+no card details needed while your balance covers the booking.
+
+Regards,
+The {{ site_name }} Team
+{{ support_email }}

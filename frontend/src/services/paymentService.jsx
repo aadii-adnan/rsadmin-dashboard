@@ -1,3 +1,4 @@
+import customFetch from "../auth/fetch";
 
 const PAYMENT_ENDPOINTS = {
   CREATE_INTENT: (bookingId) => `${import.meta.env.VITE_API_BASE_URL}/payments/create-intent/${bookingId}/`,
@@ -8,22 +9,35 @@ const PAYMENT_ENDPOINTS = {
 // newTimes ({ departureTime, returnTime }) is required when isRescheduleExtra:
 // the backend computes the extension charge from the new dates server-side.
 export const createPaymentIntent = async (bookingId, extraAmount = null, isRescheduleExtra = false, bonusPointsUsed = 0, newTimes = null) => {
+  const body = {
+    amount: extraAmount,
+    is_reschedule_extra: isRescheduleExtra,
+    bonus_points_used: bonusPointsUsed,
+    ...(newTimes
+      ? {
+          new_departure_time: newTimes.departureTime,
+          new_return_time: newTimes.returnTime,
+        }
+      : {}),
+  };
+
+  // Spending credit points requires the backend to know who the user is, so
+  // send the JWT when logged in; guests (no token, no credits) use plain fetch.
+  if (localStorage.getItem("access_token")) {
+    const response = await customFetch(PAYMENT_ENDPOINTS.CREATE_INTENT(bookingId), {
+      method: "POST",
+      body,
+    });
+    if (!response) return {};
+    return response.json();
+  }
+
   const response = await fetch(PAYMENT_ENDPOINTS.CREATE_INTENT(bookingId), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      amount: extraAmount,
-      is_reschedule_extra: isRescheduleExtra,
-      bonus_points_used: bonusPointsUsed,
-      ...(newTimes
-        ? {
-            new_departure_time: newTimes.departureTime,
-            new_return_time: newTimes.returnTime,
-          }
-        : {}),
-    }),
+    body: JSON.stringify(body),
   });
   return response.json();
 };

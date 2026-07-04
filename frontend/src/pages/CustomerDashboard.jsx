@@ -7,6 +7,8 @@ import customFetch from "../auth/fetch";
 import ReschedulePopup from "../components/CustomerDashboard/ReschedulePopup";
 import PayPopup from "../components/CustomerDashboard/PayPopup";
 import CancelBookingModal from "../components/CustomerDashboard/CancelBookingModal";
+import AddCreditsModal from "../components/CustomerDashboard/AddCreditsModal";
+import CreditHistory from "../components/CustomerDashboard/CreditHistory";
 import { useAuth } from "../auth/AuthContext";
 import {
   RESCHEDULE_DAY_RATE,
@@ -40,6 +42,28 @@ const CustomerDashboard = () => {
   const { user, setUser } = useAuth();
   const pendingRescheduleRef = useRef(pendingReschedule);
   const [cancelModal, setCancelModal] = useState({ open: false, booking: null });
+  const [addCreditsOpen, setAddCreditsOpen] = useState(false);
+  const [creditRefreshKey, setCreditRefreshKey] = useState(0);
+
+  // Refresh the user profile (and both stores) after a successful top-up so
+  // the balance badge and credit history update immediately.
+  const handleTopUpSuccess = async () => {
+    try {
+      const res = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/auth/me/`);
+      if (res && res.ok) {
+        const profile = await res.json();
+        const updatedUser = { ...user, ...profile };
+        setUser(updatedUser);
+        setBookingData((prev) => ({
+          ...prev,
+          userDetails: { ...(prev?.userDetails || {}), ...profile },
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to refresh profile after top-up:", err);
+    }
+    setCreditRefreshKey((k) => k + 1);
+  };
 
   useEffect(() => {
     pendingRescheduleRef.current = pendingReschedule;
@@ -340,6 +364,27 @@ const CustomerDashboard = () => {
                   Credit Points: €{Number(user.bonus_points).toFixed(2)}
                 </div>
               )}
+              {user && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setAddCreditsOpen(true)}
+                  style={{
+                    background: "#010659",
+                    border: "none",
+                    fontWeight: 700,
+                    borderRadius: "8px",
+                    padding: "10px 22px",
+                    fontSize: "1.05rem",
+                    color: "#fff",
+                    boxShadow: "0 2px 12px rgba(1,6,89,0.10)",
+                    transition: "background 0.2s",
+                    marginRight: "10px",
+                  }}
+                >
+                  + Top Up Credits
+                </button>
+              )}
               <a
                 href="/"
                 className="btn"
@@ -540,6 +585,36 @@ const CustomerDashboard = () => {
                           Pay
                         </button>
                         }
+                        {(b.status?.name === "Confirmed" ||
+                          b.status?.name === "Rescheduled" ||
+                          b.status?.name === "Started" ||
+                          b.status?.name === "Completed") && (
+                          <button
+                            className="minimal-action-btn"
+                            style={{
+                              background: "#fff",
+                              color: "#010659",
+                              border: "1px solid #2890cd",
+                              borderRadius: "999px",
+                              fontWeight: 700,
+                              minWidth: "90px",
+                              padding: "8px 0",
+                              fontSize: "15px",
+                              boxShadow: "0 2px 8px rgba(40,144,205,0.08)",
+                              transition: "background 0.2s, box-shadow 0.2s, transform 0.15s",
+                              cursor: "pointer",
+                            }}
+                            onClick={() =>
+                              window.open(
+                                `${import.meta.env.VITE_API_BASE_URL}/payments/invoice/${b.id}/`,
+                                "_blank",
+                                "noopener"
+                              )
+                            }
+                          >
+                            Invoice
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -548,6 +623,8 @@ const CustomerDashboard = () => {
             </table>
           </div>
         )}
+
+        {user && <CreditHistory refreshKey={creditRefreshKey} />}
       </div>
     </div>
 
@@ -570,6 +647,26 @@ const CustomerDashboard = () => {
         onPaymentSuccess={payPopup.onPaymentSuccess}
         newDepartureTime={payPopup.newDepartureTime || null}
         newReturnTime={payPopup.newReturnTime || null}
+        onCreditPaymentSuccess={async () => {
+          await handleTopUpSuccess();
+          // Reflect the paid booking in the table immediately
+          if (payPopup.booking) {
+            setBookings((prev) =>
+              prev.map((b) =>
+                b.id === payPopup.booking.id
+                  ? { ...b, status: { ...b.status, name: "Confirmed" } }
+                  : b
+              )
+            );
+          }
+          setPayPopup({ open: false, booking: null, extraAmount: null });
+        }}
+      />
+
+      <AddCreditsModal
+        open={addCreditsOpen}
+        onClose={() => setAddCreditsOpen(false)}
+        onTopUpSuccess={handleTopUpSuccess}
       />
     <style>
       {`

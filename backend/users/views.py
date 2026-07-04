@@ -181,24 +181,7 @@ class CurrentUserView(APIView):
         })
     
 
-class AddBonusPointsView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        try:
-            amount = request.data.get("amount")
-            if amount is None:
-                return Response({"error": "Amount is required."}, status=status.HTTP_400_BAD_REQUEST)
-            try:
-                amount = Decimal(str(amount))
-            except Exception:
-                return Response({"error": "Invalid amount."}, status=status.HTTP_400_BAD_REQUEST)
-            if amount <= 0:
-                return Response({"error": "Amount must be positive."}, status=status.HTTP_400_BAD_REQUEST)
-
-            user = request.user
-            user.bonus_points += amount
-            user.save(update_fields=["bonus_points"])
-            return Response({"message": f"Added {amount} bonus points.", "bonus_points": str(user.bonus_points)})
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+# NOTE: AddBonusPointsView was removed deliberately — it let any authenticated
+# user add arbitrary credits to their own account for free. Credits are now
+# only added via the Stripe top-up flow (payments.views.CreateCreditTopUpIntent)
+# or by admins via the CreditTransaction ledger in the Django admin.

@@ -1,5 +1,19 @@
 from django.urls import path
-from .views import PaymentList, CreateStripePaymentIntent, StripeWebhookView, InvoiceDownloadView, BookingFormDownloadView, PaymentStatusView, VerifyBookingAmountView, UpdatePaymentStatusView
+from .views import (
+    PaymentList,
+    CreateStripePaymentIntent,
+    StripeWebhookView,
+    InvoiceDownloadView,
+    BookingFormDownloadView,
+    PaymentStatusView,
+    VerifyBookingAmountView,
+    UpdatePaymentStatusView,
+    CreateCreditTopUpIntent,
+    CreditTopUpStatusView,
+    CreditHistoryView,
+    TopUpInvoiceDownloadView,
+    PayBookingWithCreditsView,
+)
 
 urlpatterns = [
     path('', PaymentList.as_view(), name='payment-list'),
@@ -10,4 +24,9 @@ urlpatterns = [
     path('status/<int:booking_id>/', PaymentStatusView.as_view(), name='payment-status'),
     path('verify-amount/<int:booking_id>/', VerifyBookingAmountView.as_view(), name='verify-booking-amount'),
     path('update-status/<int:payment_id>/', UpdatePaymentStatusView.as_view(), name='update-payment-status'),
+    path('credits/create-intent/', CreateCreditTopUpIntent.as_view(), name='credit-topup-create-intent'),
+    path('credits/status/<int:transaction_id>/', CreditTopUpStatusView.as_view(), name='credit-topup-status'),
+    path('credits/history/', CreditHistoryView.as_view(), name='credit-history'),
+    path('credits/invoice/<int:transaction_id>/', TopUpInvoiceDownloadView.as_view(), name='credit-topup-invoice'),
+    path('pay-with-credits/<int:booking_id>/', PayBookingWithCreditsView.as_view(), name='pay-with-credits'),
 ]

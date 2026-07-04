@@ -5,6 +5,8 @@ import CheckoutForm from "../BookingForm/CheckoutForm";
 import wifi from "../../assets/wifi.png";
 import masterCardLogo from "../../assets/master-card.png";
 import { useBooking } from "../../context/BookingContext";
+import { useAuth } from "../../auth/AuthContext";
+import { payBookingWithCredits } from "../../services/creditService";
 
 // Use the same Stripe public key as your booking form
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -18,9 +20,13 @@ const PayPopup = ({
   newDepartureTime = null,
   newReturnTime = null,
   skipSuccessNavigate = false,
+  onCreditPaymentSuccess = null,
 }) => {
 
     const { setBookingData } = useBooking();
+    const { user } = useAuth();
+    const [creditProcessing, setCreditProcessing] = useState(false);
+    const [creditError, setCreditError] = useState(null);
     
     useEffect(() => {
         if (open && booking) {
@@ -57,6 +63,37 @@ const PayPopup = ({
     }, [open, booking]);
 
   if (!open || !booking) return null;
+
+  // Reschedule extras stay card-only; normal pending bookings can be paid
+  // entirely with account credits when the balance covers the amount due.
+  // The backend recomputes and enforces the amount server-side.
+  const amountDue = Number(
+    booking.discounted_price > 0 ? booking.discounted_price : booking.total_price
+  );
+  const creditBalance = Number(user?.bonus_points || 0);
+  const canPayWithCredits = !extraAmount && creditBalance >= amountDue && amountDue > 0;
+
+  const handlePayWithCredits = async () => {
+    if (creditProcessing) return;
+    setCreditError(null);
+    setCreditProcessing(true);
+    try {
+      const { ok, data } = await payBookingWithCredits(booking.id);
+      if (!ok) {
+        throw new Error(data?.error || "Could not pay with credits. Please try again.");
+      }
+      alert("Your booking has been paid with account credits and is now confirmed. You'll receive a confirmation email shortly.");
+      if (onCreditPaymentSuccess) {
+        await onCreditPaymentSuccess();
+      } else {
+        onClose();
+      }
+    } catch (err) {
+      setCreditError(err.message || "Could not pay with credits. Please try again.");
+    } finally {
+      setCreditProcessing(false);
+    }
+  };
 
   // Prepare formData as expected by CheckoutForm
   const formData = {
@@ -124,6 +161,46 @@ const PayPopup = ({
                 <img src={masterCardLogo} alt="Card Logo" style={{ width: "50px", height: "50px" }} />
               </div>
             </div>
+            {/* Pay with account credits when the balance covers the amount */}
+            {canPayWithCredits && (
+              <div
+                className="p-3 shadow bg-white position-relative mb-3"
+                style={{ borderRadius: 12, border: "1px solid #43a047" }}
+              >
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span style={{ fontWeight: 600, color: "#555" }}>Your credit balance</span>
+                  <span style={{ fontWeight: 700, color: "#43a047" }}>
+                    €{creditBalance.toFixed(2)}
+                  </span>
+                </div>
+                {creditError && (
+                  <div className="alert alert-danger mb-2" style={{ fontSize: 14 }}>
+                    {creditError}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="btn w-100"
+                  onClick={handlePayWithCredits}
+                  disabled={creditProcessing}
+                  style={{
+                    background: "#43a047",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: 16,
+                    borderRadius: 8,
+                    padding: "10px 0",
+                  }}
+                >
+                  {creditProcessing
+                    ? "Processing..."
+                    : `Pay with Credits (€${amountDue.toFixed(2)})`}
+                </button>
+                <div className="text-center mt-2" style={{ color: "#888", fontSize: 13 }}>
+                  — or pay by card below —
+                </div>
+              </div>
+            )}
             {/* Stripe Elements Form */}
             <div className="p-3 shadow bg-white position-relative" style={{ borderRadius: 12 }}>
               <Elements stripe={stripePromise}>
