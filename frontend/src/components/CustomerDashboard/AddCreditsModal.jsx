@@ -14,6 +14,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const STATUS_CHECK_INTERVAL = 2000; // 2 seconds
 const MAX_STATUS_CHECKS = 10;
+const THEME_DARK_BLUE = "#010659";
 
 const cardElementOptions = {
   style: {
@@ -123,9 +124,17 @@ const TopUpCheckoutForm = ({ amount, clientSecret, transactionId, onSuccess }) =
         <button
           type="button"
           onClick={handleSubmit}
-          className="btn btn-primary w-100"
+          className="btn w-100"
           disabled={processing || !stripe}
-          style={{ fontWeight: 700, fontSize: 16, borderRadius: 8, padding: "10px 0" }}
+          style={{
+            fontWeight: 700,
+            fontSize: 16,
+            borderRadius: 8,
+            padding: "10px 0",
+            background: THEME_DARK_BLUE,
+            borderColor: THEME_DARK_BLUE,
+            color: "#fff",
+          }}
         >
           {processing ? "Processing..." : `Pay €${Number(amount).toFixed(2)}`}
         </button>
@@ -240,10 +249,10 @@ const AddCreditsModal = ({ open, onClose, onTopUpSuccess }) => {
                         borderRadius: 8,
                         border:
                           Number(amount) === preset
-                            ? "2px solid #2890cd"
+                            ? `2px solid ${THEME_DARK_BLUE}`
                             : "1px solid #d1d5db",
-                        background: Number(amount) === preset ? "#eaf5fc" : "#fff",
-                        color: "#010659",
+                        background: Number(amount) === preset ? "rgba(1,6,89,0.08)" : "#fff",
+                        color: THEME_DARK_BLUE,
                       }}
                     >
                       €{preset}
@@ -276,10 +285,18 @@ const AddCreditsModal = ({ open, onClose, onTopUpSuccess }) => {
                 <div className="mt-4">
                   <button
                     type="button"
-                    className="btn btn-primary w-100"
+                    className="btn w-100"
                     onClick={handleContinue}
                     disabled={creatingIntent}
-                    style={{ fontWeight: 700, fontSize: 16, borderRadius: 8, padding: "10px 0" }}
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 16,
+                      borderRadius: 8,
+                      padding: "10px 0",
+                      background: THEME_DARK_BLUE,
+                      borderColor: THEME_DARK_BLUE,
+                      color: "#fff",
+                    }}
                   >
                     {creatingIntent ? "Please wait..." : "Continue to Payment"}
                   </button>
@@ -292,7 +309,7 @@ const AddCreditsModal = ({ open, onClose, onTopUpSuccess }) => {
                   style={{ background: "#f8fafc", borderRadius: 12 }}
                 >
                   <span style={{ fontWeight: 600, color: "#555" }}>Top-up amount</span>
-                  <span style={{ fontWeight: 700, fontSize: 18, color: "#010659" }}>
+                  <span style={{ fontWeight: 700, fontSize: 18, color: THEME_DARK_BLUE }}>
                     €{Number(intentData.amount).toFixed(2)}
                   </span>
                 </div>
@@ -309,7 +326,7 @@ const AddCreditsModal = ({ open, onClose, onTopUpSuccess }) => {
                 <button
                   type="button"
                   className="btn btn-link mt-2 p-0"
-                  style={{ color: "#2890cd", fontWeight: 600, textDecoration: "none" }}
+                  style={{ color: THEME_DARK_BLUE, fontWeight: 600, textDecoration: "none" }}
                   onClick={() => {
                     setStep("amount");
                     setIntentData(null);

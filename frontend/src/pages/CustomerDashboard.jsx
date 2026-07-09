@@ -17,14 +17,34 @@ import {
   isReturnLocked,
 } from "../utils/bookingRules";
 
+const THEME_DARK_BLUE = "#010659";
+const THEME_BLUE_TINT = "rgba(1,6,89,0.08)";
+const THEME_BLUE_BORDER = "rgba(1,6,89,0.18)";
+const THEME_SUCCESS = "#15803d";
+const THEME_DANGER = "#b42318";
+
+const dashboardControlStyle = {
+  minHeight: 52,
+  minWidth: 218,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 8,
+  padding: "0 22px",
+  fontSize: "1.05rem",
+  fontWeight: 700,
+  lineHeight: 1.2,
+  whiteSpace: "nowrap",
+};
+
 const statusColors = {
-    'Completed': '#28a745',
-    'Confirmed': '#ffc107',
-    'Cancelled': '#dc3545',
-    'Payment Failed': '#dc3545',
-    'Rescheduled': '#fd7e14',
-    'Pending': 'gray',
-    'Started': "#3552b1",
+    'Completed': THEME_DARK_BLUE,
+    'Confirmed': THEME_DARK_BLUE,
+    'Cancelled': THEME_DANGER,
+    'Payment Failed': THEME_DANGER,
+    'Rescheduled': THEME_DARK_BLUE,
+    'Pending': '#6b7280',
+    'Started': THEME_DARK_BLUE,
 };
 
 const CustomerDashboard = () => {
@@ -303,7 +323,7 @@ const CustomerDashboard = () => {
       <div
         className="d-flex flex-column justify-content-center align-items-center text-white text-center"
         style={{
-          backgroundImage: `linear-gradient(120deg,rgba(1,6,89,0.68),rgba(40,144,205,0.38)),url(${parkingImg})`,
+          backgroundImage: `linear-gradient(120deg,rgba(1,6,89,0.72),rgba(1,6,89,0.36)),url(${parkingImg})`,
           backgroundRepeat: "no-repeat",
           backgroundSize: "cover",
           minHeight: "220px",
@@ -324,7 +344,7 @@ const CustomerDashboard = () => {
             style={{
             background: "#fff",
             borderRadius: "20px",
-            boxShadow: "0 8px 32px rgba(40,144,205,0.10)",
+            boxShadow: "0 8px 32px rgba(1,6,89,0.10)",
             padding: "50px 25px",
             marginTop: "30px",
             marginBottom: "30px",
@@ -347,18 +367,16 @@ const CustomerDashboard = () => {
                 Manage all your reservations in one place.
               </div>
             </div>
-            <div className="d-flex flex-column flex-md-row align-items-md-center gap-2">
+            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
               {user && typeof user.bonus_points !== "undefined" && (
                 <div
-                  className="badge bg-success"
+                  className="dashboard-control"
                   style={{
-                    fontSize: "1rem",
-                    fontWeight: 600,
-                    padding: "10px 18px",
-                    borderRadius: "8px",
-                    marginRight: "10px",
-                    background: "#43a047",
-                    color: "#fff",
+                    ...dashboardControlStyle,
+                    background: THEME_BLUE_TINT,
+                    border: `1px solid ${THEME_BLUE_BORDER}`,
+                    color: THEME_DARK_BLUE,
+                    boxShadow: "0 2px 12px rgba(1,6,89,0.06)",
                   }}
                 >
                   Credit Points: €{Number(user.bonus_points).toFixed(2)}
@@ -370,16 +388,12 @@ const CustomerDashboard = () => {
                   className="btn"
                   onClick={() => setAddCreditsOpen(true)}
                   style={{
-                    background: "#010659",
+                    ...dashboardControlStyle,
+                    background: THEME_DARK_BLUE,
                     border: "none",
-                    fontWeight: 700,
-                    borderRadius: "8px",
-                    padding: "10px 22px",
-                    fontSize: "1.05rem",
                     color: "#fff",
                     boxShadow: "0 2px 12px rgba(1,6,89,0.10)",
                     transition: "background 0.2s",
-                    marginRight: "10px",
                   }}
                 >
                   + Top Up Credits
@@ -389,14 +403,11 @@ const CustomerDashboard = () => {
                 href="/"
                 className="btn"
                 style={{
-                  background: "linear-gradient(90deg, #2890cd 60%, #43a047 100%)",
+                  ...dashboardControlStyle,
+                  background: THEME_SUCCESS,
                   border: "none",
-                  fontWeight: 700,
-                  borderRadius: "8px",
-                  padding: "10px 28px",
-                  fontSize: "1.1rem",
                   color: "#fff",
-                  boxShadow: "0 2px 12px rgba(40,144,205,0.10)",
+                  boxShadow: "0 2px 12px rgba(21,128,61,0.14)",
                   transition: "background 0.2s",
                 }}
               >
@@ -406,14 +417,24 @@ const CustomerDashboard = () => {
           </div>
           {loading ? (
           <div className="text-center py-5">
-            <span className="spinner-border text-primary" />
+            <span className="spinner-border" style={{ color: THEME_DARK_BLUE }} />
             <p className="mt-3">Loading your bookings...</p>
           </div>
         ) : error ? (
           <div className="alert alert-danger text-center">{error}</div>
         ) : bookings.length === 0 ? (
-          <div className="alert alert-info text-center">
-            No bookings found. <a href="/">Book now</a>
+          <div
+            className="text-center"
+            style={{
+              background: THEME_BLUE_TINT,
+              border: `1px solid ${THEME_BLUE_BORDER}`,
+              color: THEME_DARK_BLUE,
+              borderRadius: 8,
+              padding: "16px 18px",
+              fontWeight: 500,
+            }}
+          >
+            No bookings found. <a href="/" style={{ color: THEME_DARK_BLUE, fontWeight: 700 }}>Book now</a>
           </div>
         ) : (
           <div className="table-responsive">
@@ -433,7 +454,7 @@ const CustomerDashboard = () => {
                 {sortedBookings.map((b) => (
                   <tr key={b.id} style={{ verticalAlign: "middle" }}>
                     <td>
-                      <span style={{ fontWeight: 600, color: "#2890cd", fontSize: "0.9rem" }}>
+                      <span style={{ fontWeight: 600, color: THEME_DARK_BLUE, fontSize: "0.9rem" }}>
                         {b.booking_id || b.id}
                       </span>
                     </td>
@@ -467,7 +488,7 @@ const CustomerDashboard = () => {
                           fontWeight: 600,
                           fontSize: "12px",
                           letterSpacing: "0.5px",
-                          boxShadow: "0 1px 6px rgba(40,144,205,0.10)",
+                          boxShadow: "0 1px 6px rgba(1,6,89,0.10)",
                           display: "inline-block",
                           minWidth: 130,
                           textAlign: "center",
@@ -485,7 +506,7 @@ const CustomerDashboard = () => {
                             <span style={{ fontWeight: 500, color: "#888", textDecoration: "line-through", marginRight: 6 }}>
                                 €{b.total_price}
                             </span>
-                            <span style={{ fontWeight: 700, color: "#43a047" }}>
+                            <span style={{ fontWeight: 700, color: THEME_DARK_BLUE }}>
                                 €{b.discounted_price}
                             </span>
                             </span>
@@ -501,7 +522,7 @@ const CustomerDashboard = () => {
                         <button
                           className="minimal-action-btn"
                           style={{
-                            background: "linear-gradient(90deg, #2890cd 60%, #43a047 100%)",
+                            background: THEME_DARK_BLUE,
                             color: "#fff",
                             border: "none",
                             borderRadius: "999px",
@@ -509,7 +530,7 @@ const CustomerDashboard = () => {
                             minWidth: "100px",
                             padding: "8px 0",
                             fontSize: "15px",
-                            boxShadow: "0 2px 8px rgba(40,144,205,0.08)",
+                            boxShadow: "0 2px 8px rgba(1,6,89,0.08)",
                             transition: "background 0.2s, box-shadow 0.2s, transform 0.15s",
                             opacity:
                               !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed" || b.status?.name === "Pending" || b.status?.name === "Started") ||
@@ -533,7 +554,7 @@ const CustomerDashboard = () => {
                         {b.status?.name !== "Pending" ? <button
                           className="minimal-action-btn"
                           style={{
-                            background: "linear-gradient(90deg, #e53935 60%, #ff9800 100%)",
+                            background: THEME_DANGER,
                             color: "#fff",
                             border: "none",
                             borderRadius: "999px",
@@ -541,7 +562,7 @@ const CustomerDashboard = () => {
                             minWidth: "90px",
                             padding: "8px 0",
                             fontSize: "15px",
-                            boxShadow: "0 2px 8px rgba(229,57,53,0.08)",
+                            boxShadow: "0 2px 8px rgba(180,35,24,0.10)",
                             transition: "background 0.2s, box-shadow 0.2s, transform 0.15s",
                             opacity:
                               !(b.status?.name === "Rescheduled" || b.status?.name === "Confirmed") ||
@@ -574,7 +595,7 @@ const CustomerDashboard = () => {
                             minWidth: "90px",
                             padding: "8px 0",
                             fontSize: "15px",
-                            boxShadow: "0 2px 8px rgba(40,144,205,0.08)",
+                            boxShadow: "0 2px 8px rgba(1,6,89,0.08)",
                             transition: "background 0.2s, box-shadow 0.2s, transform 0.15s",
                             opacity: 1,
                             cursor: "pointer",
@@ -593,14 +614,14 @@ const CustomerDashboard = () => {
                             className="minimal-action-btn"
                             style={{
                               background: "#fff",
-                              color: "#010659",
-                              border: "1px solid #2890cd",
+                              color: THEME_DARK_BLUE,
+                              border: `1px solid ${THEME_DARK_BLUE}`,
                               borderRadius: "999px",
                               fontWeight: 700,
                               minWidth: "90px",
                               padding: "8px 0",
                               fontSize: "15px",
-                              boxShadow: "0 2px 8px rgba(40,144,205,0.08)",
+                              boxShadow: "0 2px 8px rgba(1,6,89,0.08)",
                               transition: "background 0.2s, box-shadow 0.2s, transform 0.15s",
                               cursor: "pointer",
                             }}
@@ -692,7 +713,7 @@ const CustomerDashboard = () => {
       .minimal-table td {
         border: none !important;
         background: #fff !important;
-        box-shadow: 0 2px 12px rgba(40,144,205,0.04);
+        box-shadow: 0 2px 12px rgba(1,6,89,0.04);
         border-radius: 12px;
         vertical-align: middle !important;
       }
@@ -700,20 +721,20 @@ const CustomerDashboard = () => {
         border: none !important;
       }
       .status-pill {
-        box-shadow: 0 2px 12px rgba(40,144,205,0.08);
+        box-shadow: 0 2px 12px rgba(1,6,89,0.08);
         border: 2px solid #fff;
         transition: box-shadow 0.2s, border 0.2s;
       }
       .status-pill:hover {
-        box-shadow: 0 4px 18px rgba(40,144,205,0.18);
-        border: 2px solid #2890cd;
+        box-shadow: 0 4px 18px rgba(1,6,89,0.18);
+        border: 2px solid #010659;
       }
       .minimal-action-btn {
         outline: none !important;
       }
       .minimal-action-btn:hover:not(:disabled) {
         transform: translateY(-2px) scale(1.04);
-        box-shadow: 0 4px 18px rgba(40,144,205,0.18);
+        box-shadow: 0 4px 18px rgba(1,6,89,0.18);
         filter: brightness(1.08);
       }
       .minimal-action-btn:active:not(:disabled) {

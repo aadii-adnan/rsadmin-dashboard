@@ -46,6 +46,23 @@ User = get_user_model()
 TOPUP_MIN = Decimal('5.00')
 TOPUP_MAX = Decimal('1000.00')
 
+
+def stripe_configuration_error_response():
+    stripe_secret_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
+    if stripe_secret_key:
+        stripe.api_key = stripe_secret_key
+        return None
+
+    logger.error('STRIPE_SECRET_KEY is not configured; cannot create Stripe payment intent.')
+    message = 'Payment processing is not configured.'
+    if settings.DEBUG:
+        message = (
+            'Stripe secret key is not configured on the backend. '
+            'Add STRIPE_SECRET_KEY=sk_... to backend/.env and restart the backend server.'
+        )
+    return Response({'error': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 def generate_coupon_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
@@ -506,6 +523,10 @@ class PaymentList(APIView):
 class CreateStripePaymentIntent(APIView):
     permission_classes = [AllowAny]
     def post(self, request, booking_id):
+        config_error = stripe_configuration_error_response()
+        if config_error:
+            return config_error
+
         booking = get_object_or_404(Booking, id=booking_id)
         user = booking.user  # adjust if your Booking model uses a different field
 
@@ -1026,6 +1047,10 @@ class CreateCreditTopUpIntent(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        config_error = stripe_configuration_error_response()
+        if config_error:
+            return config_error
+
         raw_amount = request.data.get('amount')
         if raw_amount is None:
             return Response({'error': 'Amount is required.'}, status=status.HTTP_400_BAD_REQUEST)

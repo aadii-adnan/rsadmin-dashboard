@@ -8,6 +8,11 @@ const TYPE_LABELS = {
   adjustment: "Adjustment",
 };
 
+const THEME_DARK_BLUE = "#010659";
+const THEME_BLUE_TINT = "rgba(1,6,89,0.08)";
+const THEME_BLUE_BORDER = "rgba(1,6,89,0.18)";
+const THEME_DANGER = "#b42318";
+
 const formatDateTime = (dateStr) => {
   if (!dateStr) return "-";
   const date = new Date(dateStr);
@@ -91,7 +96,16 @@ const CreditHistory = ({ refreshKey = 0 }) => {
       {error ? (
         <div className="alert alert-danger">{error}</div>
       ) : transactions.length === 0 && !loading ? (
-        <div className="alert alert-info">
+        <div
+          style={{
+            background: THEME_BLUE_TINT,
+            border: `1px solid ${THEME_BLUE_BORDER}`,
+            color: THEME_DARK_BLUE,
+            borderRadius: 8,
+            padding: "16px 18px",
+            fontWeight: 500,
+          }}
+        >
           No credit activity yet. Top up your account to get started.
         </div>
       ) : (
@@ -122,7 +136,7 @@ const CreditHistory = ({ refreshKey = 0 }) => {
                       <span
                         style={{
                           fontWeight: 700,
-                          color: isCredit ? "#43a047" : "#dc3545",
+                          color: isCredit ? THEME_DARK_BLUE : THEME_DANGER,
                         }}
                       >
                         {isCredit ? "+" : "−"}€{Math.abs(amountNum).toFixed(2)}
@@ -171,7 +185,7 @@ const CreditHistory = ({ refreshKey = 0 }) => {
 
       {loading && (
         <div className="text-center py-3">
-          <span className="spinner-border spinner-border-sm text-primary" />
+          <span className="spinner-border spinner-border-sm" style={{ color: THEME_DARK_BLUE }} />
         </div>
       )}
 
@@ -181,8 +195,8 @@ const CreditHistory = ({ refreshKey = 0 }) => {
             type="button"
             className="btn"
             style={{
-              border: "1px solid #2890cd",
-              color: "#2890cd",
+              border: `1px solid ${THEME_DARK_BLUE}`,
+              color: THEME_DARK_BLUE,
               fontWeight: 700,
               borderRadius: 8,
               padding: "8px 28px",
