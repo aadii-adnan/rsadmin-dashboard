@@ -24,7 +24,7 @@ import pytz
 from django.db.models.functions import Lower
 from payments.views import send_booking_confirmation_email, send_manager_new_booking_email
 from django.contrib import messages
-from .tasks import send_booking_updated_email
+from .tasks import send_booking_updated_email, send_cancellation_email_task
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -245,6 +245,80 @@ class RemoveChars(Func):
 IRELAND_TZ = pytz.timezone('Europe/Dublin')
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
+    UPDATE_EMAIL_FIELD_LABELS = {
+        'departure_time': 'Drop-off date & time',
+        'return_time': 'Pick-up date & time',
+        'departure_terminal': 'Departure terminal',
+        'return_terminal': 'Return terminal',
+        'departure_flight_number': 'Departure flight number',
+        'return_flight_number': 'Return flight number',
+        'car_registration_no': 'Car registration',
+        'car_model': 'Car model',
+        'car_colour': 'Car colour',
+        'car_manufacturer': 'Car manufacturer',
+        'contact_no': 'Phone number',
+        'total_passengers': 'Total passengers',
+        'add_ons': 'Add-ons',
+        'total_price': 'Total price',
+        'discounted_price': 'Discounted price',
+        'bonus_points_used': 'Bonus points used',
+    }
+    UPDATE_EMAIL_EXCLUDED_FIELDS = {
+        'note',
+        'previous_price',
+        'supplier_extended_amount',
+    }
+
+    def _format_update_email_value(self, value):
+        if value is None or value == '':
+            return 'None'
+        if isinstance(value, datetime):
+            if timezone.is_aware(value):
+                value = timezone.localtime(value)
+            return value.strftime('%d %b %Y %H:%M')
+        if hasattr(value, 'all') and callable(value.all):
+            value = list(value.all())
+        if isinstance(value, (list, tuple, set)):
+            return ', '.join(str(item) for item in value) or 'None'
+        if isinstance(value, bool):
+            return 'Yes' if value else 'No'
+        return str(value)
+
+    def _update_email_field_label(self, form, field_name):
+        if field_name in self.UPDATE_EMAIL_FIELD_LABELS:
+            return self.UPDATE_EMAIL_FIELD_LABELS[field_name]
+        if field_name in form.fields and form.fields[field_name].label:
+            return str(form.fields[field_name].label)
+        try:
+            return self.model._meta.get_field(field_name).verbose_name.title()
+        except Exception:
+            return field_name.replace('_', ' ').title()
+
+    def _build_update_email_changes(self, obj, form):
+        original = (
+            self.model.objects
+            .select_related('service', 'status', 'coupon')
+            .prefetch_related('add_ons')
+            .get(pk=obj.pk)
+        )
+        changes = []
+        for field_name in form.changed_data:
+            if field_name not in form.fields or field_name in self.UPDATE_EMAIL_EXCLUDED_FIELDS:
+                continue
+            old_value = list(original.add_ons.all()) if field_name == 'add_ons' else getattr(original, field_name, None)
+            new_value = form.cleaned_data.get(field_name, getattr(obj, field_name, None))
+            if field_name == 'add_ons':
+                new_value = list(new_value)
+            changes.append({
+                'label': self._update_email_field_label(form, field_name),
+                'old': self._format_update_email_value(old_value),
+                'new': self._format_update_email_value(new_value),
+            })
+        return changes
+
+    def _status_changed_to_cancelled(self, form):
+        status = form.cleaned_data.get('status') if 'status' in form.cleaned_data else None
+        return 'status' in form.changed_data and status and status.name.lower() == 'cancelled'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -1095,6 +1169,11 @@ class BookingAdmin(admin.ModelAdmin):
         if getattr(request.user, 'is_supplier', False) and hasattr(request.user, 'supplier_profile'):
             obj.supplier = request.user.supplier_profile
         is_new = not change
+        request._booking_update_email_changes = []
+        request._booking_send_cancellation_email = False
+        if change and "_save_and_send_email" in request.POST:
+            request._booking_update_email_changes = self._build_update_email_changes(obj, form)
+            request._booking_send_cancellation_email = self._status_changed_to_cancelled(form)
         super().save_model(request, obj, form, change)
         if is_new and obj.status and obj.status.name.lower() == "confirmed" and not obj.email_sent and obj.supplier is None:
             try:
@@ -1113,15 +1192,23 @@ class BookingAdmin(admin.ModelAdmin):
         # reflects the final state of the edit.
         if "_save_and_send_email" in request.POST:
             try:
+                update_changes = getattr(request, '_booking_update_email_changes', [])
+                send_cancellation_email = getattr(request, '_booking_send_cancellation_email', False)
                 try:
-                    send_booking_updated_email.delay(obj.id)
+                    if send_cancellation_email:
+                        send_cancellation_email_task.delay(obj.id, 'admin_cancelled')
+                    else:
+                        send_booking_updated_email.delay(obj.id, update_changes)
                 except Exception:
                     # Celery broker unavailable — send inline so staff aren't
                     # left thinking the customer was notified when they weren't.
-                    send_booking_updated_email(obj.id)
+                    if send_cancellation_email:
+                        send_cancellation_email_task(obj.id, 'admin_cancelled')
+                    else:
+                        send_booking_updated_email(obj.id, update_changes)
                 self.message_user(
                     request,
-                    f"Booking saved. Update email sent to {obj.email}.",
+                    f"Booking saved. {'Cancellation' if send_cancellation_email else 'Update'} email sent to {obj.email}.",
                     level=messages.SUCCESS,
                 )
             except Exception as e:

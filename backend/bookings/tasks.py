@@ -3,6 +3,7 @@ from django.core.mail import EmailMultiAlternatives, get_connection
 from .models import Booking
 from core.models import Status, UnsubscribedEmail, BookingSettings
 from django.utils import timezone
+from django.utils.html import escape
 from datetime import timedelta, datetime
 from decouple import config
 
@@ -493,6 +494,36 @@ def _manager_email_list(booking):
     return ["rsexpressparking@gmail.com"]  # fallback
 
 
+def _booking_update_change_sections(update_changes):
+    if not update_changes:
+        return "", ""
+
+    html_items = []
+    text_lines = []
+    for change in update_changes:
+        label = str(change.get('label') or 'Booking detail')
+        old = str(change.get('old') or 'None')
+        new = str(change.get('new') or 'None')
+        html_items.append(
+            "<li><strong>{}</strong> updated from <span>{}</span> to <span>{}</span>.</li>".format(
+                escape(label),
+                escape(old),
+                escape(new),
+            )
+        )
+        text_lines.append(f"- {label}: updated from {old} to {new}")
+
+    html_section = """
+        <h3 style="color: #444;">What changed</h3>
+        <p>The following booking detail(s) were updated:</p>
+        <ul>
+        {}
+        </ul>
+    """.format("\n".join(html_items))
+    text_section = "\nWhat changed\n------------\n{}\n".format("\n".join(text_lines))
+    return html_section, text_section
+
+
 @shared_task
 def send_manage_booking_link_email(booking_id):
     """Email a signed 24h manage-booking link after a successful lookup."""
@@ -533,7 +564,7 @@ def send_manage_booking_link_email(booking_id):
 
 
 @shared_task
-def send_booking_updated_email(booking_id):
+def send_booking_updated_email(booking_id, update_changes=None):
     """Email the customer their latest booking details after a staff edit.
 
     Triggered by the "Save and send update email" button in the Booking admin
@@ -553,6 +584,7 @@ def send_booking_updated_email(booking_id):
     add_ons = ', '.join([a.name for a in booking.add_ons.all()])
     total = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
     manage_lookup_url = brand['manage_url']
+    changes_html, changes_text = _booking_update_change_sections(update_changes or [])
 
     response, error = generate_invoice(booking)
     if error:
@@ -568,6 +600,7 @@ def send_booking_updated_email(booking_id):
         Dear {booking.first_name},<br><br>
         As requested, your booking has been <strong>updated</strong>. Please find your latest booking details below and your updated invoice in the attachment.
         </p>
+        {changes_html}
         <ul>
         <li><strong>Booking ID:</strong> {booking.booking_id}</li>
         <li><strong>Drop-Off Date & Time:</strong> {departure_time}</li>
@@ -595,6 +628,7 @@ def send_booking_updated_email(booking_id):
 Dear {booking.first_name},
 
 As requested, your booking has been updated. Please find your latest booking details below and your updated invoice in the attachment.
+{changes_text}
 
 Booking ID: {booking.booking_id}
 Drop-Off Date & Time: {departure_time}
@@ -776,7 +810,7 @@ Regards,
 
 @shared_task
 def send_cancellation_email_task(booking_id, outcome='refund'):
-    """Send cancellation emails. outcome: 'refund' | 'points' | 'no_refund'."""
+    """Send cancellation emails. outcome: 'refund' | 'points' | 'no_refund' | 'admin_cancelled'."""
     try:
         booking = Booking.objects.get(id=booking_id)
     except Booking.DoesNotExist:
@@ -842,6 +876,25 @@ We regret to inform you that your booking #{booking.booking_id} has been cancell
 €15 has been deducted as a cancellation fee.
 The remaining amount of €{refund_amount:.2f} will be refunded to your original payment method.
 Please note: Stripe may take 5-10 business days to process the refund.
+{booking_details_text}"""
+    elif outcome == 'admin_cancelled':
+        subject_customer = "Your Booking Has Been Cancelled"
+        html_body_customer = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+            <h2 style="color: #e53935;">Booking Cancelled</h2>
+            <p>
+            Dear {booking.first_name},<br><br>
+            Your booking <strong>#{booking.booking_id}</strong> has been <strong>cancelled</strong>.
+            Please find the cancelled booking details below for your records.
+            </p>
+            {booking_details_html}
+        """
+        text_body_customer = f"""
+Dear {booking.first_name},
+
+Your booking #{booking.booking_id} has been cancelled.
+Please find the cancelled booking details below for your records.
 {booking_details_text}"""
     elif outcome == 'points':
         subject_customer = "Your Booking Has Been Cancelled – Bonus Points Added"
@@ -915,6 +968,15 @@ Service: {booking.service.name}
         amount_line_text = f"Refund Amount: €{refund_amount:.2f}"
         outro_html = "Please process the refund in Stripe."
         outro_text = "Please process the refund in Stripe."
+    elif outcome == 'admin_cancelled':
+        subject_manager = "Booking Cancelled"
+        heading = "Booking Cancelled"
+        intro_html = "The following booking has been <strong>cancelled</strong> from the admin dashboard."
+        intro_text = "The following booking has been cancelled from the admin dashboard."
+        amount_line_html = ""
+        amount_line_text = ""
+        outro_html = "Please check the admin panel for more details if needed."
+        outro_text = "Please check the admin panel for more details if needed."
     elif outcome == 'points':
         subject_manager = "Booking Cancelled – Bonus Points Issued"
         heading = "Booking Cancelled – Bonus Points Issued"
