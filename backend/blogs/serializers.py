@@ -210,6 +210,27 @@ class PublicBlogPostDetailSerializer(serializers.ModelSerializer):
         return build_responsive_image_payload(obj.featured_image, sizes=sizes)
 
 
+class AdminBlogPostListSerializer(serializers.ModelSerializer):
+    author_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BlogPost
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "category",
+            "status",
+            "author_name",
+            "published_date",
+        ]
+
+    def get_author_name(self, obj):
+        if not obj.author:
+            return "Unknown"
+        return obj.author.get_full_name() or getattr(obj.author, "username", str(obj.author))
+
+
 class AdminBlogPostSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),

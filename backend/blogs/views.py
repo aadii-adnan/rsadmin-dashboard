@@ -18,6 +18,7 @@ from django.http import HttpResponseRedirect
 from django.utils.text import slugify
 
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -33,9 +34,10 @@ from .image_utils import (
     save_deduplicated_image,
 )
 from .models import BlogFAQ, BlogPost, Category, RedirectRule, Tag
-from .pagination import BlogPagination
+from .pagination import AdminBlogPagination, BlogPagination
 from .serializers import (
     AdminBlogFAQSerializer,
+    AdminBlogPostListSerializer,
     AdminBlogPostSerializer,
     CategorySerializer,
     PublicBlogPostDetailSerializer,
@@ -250,10 +252,69 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class BlogPostViewSet(viewsets.ModelViewSet):
-    queryset = BlogPost.objects.all().select_related("category", "author").prefetch_related("tags", "faqs")
+    queryset = BlogPost.objects.all()
     serializer_class = AdminBlogPostSerializer
+    pagination_class = AdminBlogPagination
     permission_classes = [IsManagerOrAdmin]
     lookup_field = "id"
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return AdminBlogPostListSerializer
+        return AdminBlogPostSerializer
+
+    def get_queryset(self):
+        if self.action != "list":
+            return (
+                BlogPost.objects.all()
+                .select_related("category", "author")
+                .prefetch_related("tags", "faqs")
+            )
+
+        queryset = (
+            BlogPost.objects.select_related("author")
+            .only(
+                "id",
+                "title",
+                "slug",
+                "category_id",
+                "status",
+                "published_date",
+                "created_at",
+                "author__id",
+                "author__username",
+                "author__first_name",
+                "author__last_name",
+            )
+        )
+
+        search = self.request.query_params.get("search", "").strip()
+        category = self.request.query_params.get("category", "").strip()
+        status = self.request.query_params.get("status", "").strip()
+        ordering = self.request.query_params.get("ordering", "-published_date").strip()
+
+        if search:
+            queryset = queryset.filter(title__icontains=search)
+
+        if category:
+            try:
+                category_id = int(category)
+            except (TypeError, ValueError) as exc:
+                raise ValidationError({"category": "Category must be a numeric ID."}) from exc
+            queryset = queryset.filter(category_id=category_id)
+
+        valid_statuses = {choice[0] for choice in BlogPost.STATUS_CHOICES}
+        if status:
+            if status not in valid_statuses:
+                raise ValidationError({"status": "Invalid blog post status."})
+            queryset = queryset.filter(status=status)
+
+        if ordering not in {"published_date", "-published_date"}:
+            raise ValidationError({"ordering": "Use 'published_date' or '-published_date'."})
+
+        if ordering == "published_date":
+            return queryset.order_by("published_date", "created_at", "id")
+        return queryset.order_by("-published_date", "-created_at", "-id")
 
     def perform_create(self, serializer):
         author = serializer.validated_data.get("author")

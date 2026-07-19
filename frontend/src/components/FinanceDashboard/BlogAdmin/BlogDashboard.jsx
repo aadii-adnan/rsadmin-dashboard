@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Col,
@@ -15,6 +15,7 @@ import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
+const POSTS_PER_PAGE = 25;
 
 function TableSkeletonRow() {
   return (
@@ -76,19 +77,31 @@ function BlogDashboard() {
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [tagsLoading, setTagsLoading] = useState(false);
+  const [tagsLoaded, setTagsLoaded] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [error, setError] = useState("");
+  const [postsError, setPostsError] = useState("");
+  const [categoriesError, setCategoriesError] = useState("");
+  const [tagsError, setTagsError] = useState("");
+  const [actionError, setActionError] = useState("");
   const fileInputRef = useRef(null);
+  const postRequestIdRef = useRef(0);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortDir, setSortDir] = useState("desc");
+  const [page, setPage] = useState(1);
+  const [postCount, setPostCount] = useState(0);
+  const [nextPageUrl, setNextPageUrl] = useState(null);
+  const [prevPageUrl, setPrevPageUrl] = useState(null);
 
   useEffect(() => {
     const timerId = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
+      setPage(1);
     }, 500);
     return () => clearTimeout(timerId);
   }, [searchTerm]);
@@ -110,36 +123,73 @@ function BlogDashboard() {
     slug: "",
   });
 
-  const fetchAllData = async () => {
-    setLoading(true);
-    setError("");
+  const fetchPosts = useCallback(async () => {
+    const requestId = postRequestIdRef.current + 1;
+    postRequestIdRef.current = requestId;
+    setPostsLoading(true);
+    setPostsError("");
+
+    const params = new URLSearchParams({
+      page: String(page),
+      ordering: sortDir === "desc" ? "-published_date" : "published_date",
+    });
+    if (debouncedSearchTerm) params.set("search", debouncedSearchTerm);
+    if (categoryFilter !== "all") params.set("category", categoryFilter);
+    if (statusFilter !== "all") params.set("status", statusFilter);
 
     try {
-      const [postsRes, categoriesRes, tagsRes] = await Promise.all([
-        customFetch(`${BLOG_API_BASE}/posts/`, { useFinanceJwt: true }),
-        customFetch(`${BLOG_API_BASE}/categories/`, { useFinanceJwt: true }),
-        customFetch(`${BLOG_API_BASE}/tags/`, { useFinanceJwt: true }),
-      ]);
+      const response = await customFetch(`${BLOG_API_BASE}/posts/?${params.toString()}`, {
+        useFinanceJwt: true,
+      });
+      if (!response?.ok) throw new Error("Failed to load blog posts.");
 
-      if (!postsRes?.ok || !categoriesRes?.ok || !tagsRes?.ok) {
-        throw new Error("Failed to fetch one or more blog resources.");
-      }
+      const data = await response.json();
+      if (postRequestIdRef.current !== requestId) return;
 
-      const [postsData, categoriesData, tagsData] = await Promise.all([
-        postsRes.json(),
-        categoriesRes.json(),
-        tagsRes.json(),
-      ]);
-
-      setPosts(toListPayload(postsData));
-      setCategories(toListPayload(categoriesData));
-      setTags(toListPayload(tagsData));
+      setPosts(toListPayload(data));
+      setPostCount(Number(data?.count) || 0);
+      setNextPageUrl(data?.next || null);
+      setPrevPageUrl(data?.previous || null);
     } catch (err) {
-      setError(err.message || "Failed to load blog dashboard data.");
+      if (postRequestIdRef.current !== requestId) return;
+      setPosts([]);
+      setPostCount(0);
+      setNextPageUrl(null);
+      setPrevPageUrl(null);
+      setPostsError(err.message || "Failed to load blog posts.");
     } finally {
-      setLoading(false);
+      if (postRequestIdRef.current === requestId) setPostsLoading(false);
     }
-  };
+  }, [page, debouncedSearchTerm, categoryFilter, statusFilter, sortDir]);
+
+  const fetchCategories = useCallback(async () => {
+    setCategoriesLoading(true);
+    setCategoriesError("");
+    try {
+      const response = await customFetch(`${BLOG_API_BASE}/categories/`, { useFinanceJwt: true });
+      if (!response?.ok) throw new Error("Failed to load blog categories.");
+      setCategories(toListPayload(await response.json()));
+    } catch (err) {
+      setCategoriesError(err.message || "Failed to load blog categories.");
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
+
+  const fetchTags = useCallback(async () => {
+    setTagsLoading(true);
+    setTagsError("");
+    try {
+      const response = await customFetch(`${BLOG_API_BASE}/tags/`, { useFinanceJwt: true });
+      if (!response?.ok) throw new Error("Failed to load blog tags.");
+      setTags(toListPayload(await response.json()));
+      setTagsLoaded(true);
+    } catch (err) {
+      setTagsError(err.message || "Failed to load blog tags.");
+    } finally {
+      setTagsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     // 1. Check Auth first
@@ -148,9 +198,16 @@ function BlogDashboard() {
       return; // Stop execution immediately
     }
 
-    // 2. If Auth passes, fetch the data
-    fetchAllData();
-  }, [navigate]); // navigate is the only external dependency needed here
+    fetchCategories();
+  }, [navigate, fetchCategories]);
+
+  useEffect(() => {
+    if (localStorage.getItem("finance_jwt")) fetchPosts();
+  }, [fetchPosts]);
+
+  useEffect(() => {
+    if (activeTab === "tags" && !tagsLoaded) fetchTags();
+  }, [activeTab, tagsLoaded, fetchTags]);
 
   const categoryById = useMemo(() => {
     const map = {};
@@ -160,34 +217,52 @@ function BlogDashboard() {
     return map;
   }, [categories]);
 
-  const filteredPosts = useMemo(() => {
-    const filtered = posts.filter((post) => {
-      const titleMatch = post.title?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
-      const statusMatch = statusFilter === "all" ? true : post.status === statusFilter;
-      const categoryMatch =
-        categoryFilter === "all" ? true : String(post.category) === String(categoryFilter);
+  const totalPages = Math.max(1, Math.ceil(postCount / POSTS_PER_PAGE));
+  const visiblePages = useMemo(() => {
+    const pages = [];
+    const maxVisible = 7;
+    let start = Math.max(1, page - 3);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    start = Math.max(1, end - maxVisible + 1);
+    for (let pageNumber = start; pageNumber <= end; pageNumber += 1) pages.push(pageNumber);
+    return pages;
+  }, [page, totalPages]);
 
-      return titleMatch && statusMatch && categoryMatch;
-    });
+  const handleDeletePost = useCallback(async (id) => {
+    if (!window.confirm("Delete this post permanently?")) {
+      return;
+    }
 
-    filtered.sort((a, b) => {
-      const dateA = a.published_date ? new Date(a.published_date).getTime() : 0;
-      const dateB = b.published_date ? new Date(b.published_date).getTime() : 0;
-      return sortDir === "desc" ? dateB - dateA : dateA - dateB;
-    });
+    setActionError("");
+    try {
+      const response = await customFetch(`${BLOG_API_BASE}/posts/${id}/`, {
+        method: "DELETE",
+        useFinanceJwt: true,
+      });
 
-    return filtered;
-  }, [posts, debouncedSearchTerm, statusFilter, categoryFilter, sortDir]);
+      if (!response?.ok) {
+        throw new Error("Failed to delete post.");
+      }
+
+      if (posts.length === 1 && page > 1) {
+        setPage((currentPage) => currentPage - 1);
+      } else {
+        fetchPosts();
+      }
+    } catch (err) {
+      setActionError(err.message || "Could not delete this post.");
+    }
+  }, [posts.length, page, fetchPosts]);
 
   const tableRows = useMemo(() => {
-    if (!filteredPosts.length) {
+    if (!posts.length) {
       return (
         <tr>
           <td colSpan="6" className="text-center py-4">No posts found.</td>
         </tr>
       );
     }
-    return filteredPosts.map((post) => (
+    return posts.map((post) => (
       <tr key={post.id}>
         <td className="fw-semibold"><span className="table-title-link">{post.title || "-"}</span></td>
         <td>{categoryById[post.category] || "-"}</td>
@@ -226,27 +301,13 @@ function BlogDashboard() {
         </td>
       </tr>
     ));
-  }, [filteredPosts, categoryById]);
+  }, [posts, categoryById, navigate, handleDeletePost]);
 
-  const handleDeletePost = async (id) => {
-    if (!window.confirm("Delete this post permanently?")) {
-      return;
-    }
-
-    try {
-      const response = await customFetch(`${BLOG_API_BASE}/posts/${id}/`, {
-        method: "DELETE",
-        useFinanceJwt: true,
-      });
-
-      if (!response?.ok) {
-        throw new Error("Failed to delete post.");
-      }
-
-      setPosts((prev) => prev.filter((post) => post.id !== id));
-    } catch (err) {
-      setError(err.message || "Could not delete this post.");
-    }
+  const refreshDashboard = () => {
+    setActionError("");
+    fetchPosts();
+    fetchCategories();
+    if (tagsLoaded) fetchTags();
   };
 
   const resetCategoryForm = () => {
@@ -300,6 +361,7 @@ function BlogDashboard() {
 
   const handleCategorySubmit = async (event) => {
     event.preventDefault();
+    setActionError("");
 
     try {
       const endpoint = editingCategoryId
@@ -318,14 +380,14 @@ function BlogDashboard() {
       }
 
       closeCategoryModal();
-      fetchAllData();
+      await Promise.all([fetchCategories(), fetchPosts()]);
     } catch (err) {
-      setError(err.message || "Failed to save category.");
+      setActionError(err.message || "Failed to save category.");
     }
   };
-
   const handleTagSubmit = async (event) => {
     event.preventDefault();
+    setActionError("");
 
     try {
       const endpoint = editingTagId
@@ -344,17 +406,17 @@ function BlogDashboard() {
       }
 
       closeTagModal();
-      fetchAllData();
+      await fetchTags();
     } catch (err) {
-      setError(err.message || "Failed to save tag.");
+      setActionError(err.message || "Failed to save tag.");
     }
   };
-
   const handleDeleteCategory = async (id) => {
     if (!window.confirm("Are you sure?")) {
       return;
     }
 
+    setActionError("");
     try {
       const response = await customFetch(`${BLOG_API_BASE}/categories/${id}/`, {
         method: "DELETE",
@@ -365,17 +427,23 @@ function BlogDashboard() {
         throw new Error("Failed to delete category.");
       }
 
-      fetchAllData();
+      await fetchCategories();
+      if (String(categoryFilter) === String(id)) {
+        setCategoryFilter("all");
+        setPage(1);
+      } else {
+        fetchPosts();
+      }
     } catch (err) {
-      setError(err.message || "Failed to delete category.");
+      setActionError(err.message || "Failed to delete category.");
     }
   };
-
   const handleDeleteTag = async (id) => {
     if (!window.confirm("Are you sure?")) {
       return;
     }
 
+    setActionError("");
     try {
       const response = await customFetch(`${BLOG_API_BASE}/tags/${id}/`, {
         method: "DELETE",
@@ -386,9 +454,9 @@ function BlogDashboard() {
         throw new Error("Failed to delete tag.");
       }
 
-      fetchAllData();
+      await fetchTags();
     } catch (err) {
-      setError(err.message || "Failed to delete tag.");
+      setActionError(err.message || "Failed to delete tag.");
     }
   };
 
@@ -399,6 +467,7 @@ function BlogDashboard() {
     }
 
     setIsImporting(true);
+    setActionError("");
     const formData = new FormData();
     formData.append("file", file);
 
@@ -428,7 +497,9 @@ function BlogDashboard() {
       if (fileInputRef.current) {
         fileInputRef.current.value = null;
       }
-      fetchAllData();
+      fetchPosts();
+      fetchCategories();
+      if (tagsLoaded) fetchTags();
     }
   };
 
@@ -458,7 +529,11 @@ function BlogDashboard() {
         </div>
       </div>
 
-      {error && <Alert variant="danger">{error}</Alert>}
+      {(actionError || postsError || categoriesError || tagsError) && (
+        <Alert variant="danger">
+          {actionError || postsError || categoriesError || tagsError}
+        </Alert>
+      )}
 
       {/* Filters Area */}
       <div className="filter-card">
@@ -474,7 +549,11 @@ function BlogDashboard() {
           <Col md={3}>
             <Form.Select
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setPage(1);
+              }}
+              disabled={categoriesLoading}
             >
               <option value="all">All Categories</option>
               {categories.map((cat) => (
@@ -485,7 +564,10 @@ function BlogDashboard() {
           <Col md={3}>
             <Form.Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
             >
               <option value="all">All Statuses</option>
               <option value="publish">Published</option>
@@ -494,7 +576,7 @@ function BlogDashboard() {
             </Form.Select>
           </Col>
           <Col md={1} className="d-grid">
-            <button className="btn-admin-outline w-100 justify-content-center" onClick={fetchAllData}>
+            <button className="btn-admin-outline w-100 justify-content-center" onClick={refreshDashboard}>
               Refresh
             </button>
           </Col>
@@ -528,6 +610,7 @@ function BlogDashboard() {
         </div>
         <div className="px-4 pb-4">
           {activeTab === "posts" && (
+            <>
             <Table responsive hover className="modern-table mt-3">
               <thead>
                 <tr>
@@ -537,7 +620,10 @@ function BlogDashboard() {
                   <th>Author</th>
                   <th
                     className="sortable-th"
-                    onClick={() => setSortDir((d) => d === "desc" ? "asc" : "desc")}
+                    onClick={() => {
+                      setPage(1);
+                      setSortDir((d) => d === "desc" ? "asc" : "desc");
+                    }}
                   >
                     Published At {sortDir === "desc" ? "▼" : "▲"}
                   </th>
@@ -545,13 +631,50 @@ function BlogDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {postsLoading ? (
                   Array.from({ length: 6 }).map((_, i) => <TableSkeletonRow key={`skel-row-${i}`} />)
                 ) : (
                   tableRows
                 )}
               </tbody>
             </Table>
+            {!postsLoading && postCount > 0 && (
+              <div className="admin-pagination">
+                <span className="admin-pagination-summary">
+                  Showing {(page - 1) * POSTS_PER_PAGE + 1}–{Math.min(page * POSTS_PER_PAGE, postCount)} of {postCount}
+                </span>
+                <div className="admin-pagination-controls">
+                  <button
+                    type="button"
+                    className="btn-admin-outline btn-admin-sm"
+                    disabled={!prevPageUrl || page <= 1}
+                    onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+                  >
+                    Previous
+                  </button>
+                  {visiblePages.map((pageNumber) => (
+                    <button
+                      type="button"
+                      key={pageNumber}
+                      className={`btn-admin-outline btn-admin-sm admin-page-button ${pageNumber === page ? "active" : ""}`}
+                      onClick={() => setPage(pageNumber)}
+                      aria-current={pageNumber === page ? "page" : undefined}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn-admin-outline btn-admin-sm"
+                    disabled={!nextPageUrl || page >= totalPages}
+                    onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           )}
           {activeTab === "categories" && (
             <><div className="d-flex justify-content-between align-items-center mb-3">
@@ -568,7 +691,9 @@ function BlogDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {categories.length ? (
+                {categoriesLoading ? (
+                  <tr><td colSpan="4" className="text-center py-4"><Spinner size="sm" /> Loading categories...</td></tr>
+                ) : categories.length ? (
                   categories.map((category) => (
                     <tr key={category.id}>
                       <td>{category.name || "-"}</td>
@@ -617,7 +742,9 @@ function BlogDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {tags.length ? (
+                {tagsLoading ? (
+                  <tr><td colSpan="3" className="text-center py-4"><Spinner size="sm" /> Loading tags...</td></tr>
+                ) : tags.length ? (
                   tags.map((tag) => (
                     <tr key={tag.id}>
                       <td>{tag.name || "-"}</td>

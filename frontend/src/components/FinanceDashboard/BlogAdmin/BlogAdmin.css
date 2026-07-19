@@ -160,6 +160,32 @@
   border-bottom: 1px solid #F3F4F6;
 }
 
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.admin-pagination-summary {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.admin-pagination-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-page-button.active {
+  color: #ffffff;
+  background: var(--primary-dark, #010659);
+  border-color: var(--primary-dark, #010659);
+}
+
 .table-card .px-4.pt-4 {
   padding-top: 1.5rem !important;
   padding-left: 2rem !important;
@@ -204,6 +230,11 @@
   .table-card .px-4.pb-4 {
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
+  }
+
+  .admin-pagination {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 .table-title-link {

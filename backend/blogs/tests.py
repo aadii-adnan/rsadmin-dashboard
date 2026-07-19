@@ -151,3 +151,102 @@ class AdminBlogFaqFilteringTests(TestCase):
         self.assertEqual(len(payload), 1)
         self.assertEqual(payload[0]["id"], self.faq_one.id)
         self.assertEqual(payload[0]["post"], self.post_one.id)
+
+
+class AdminBlogPostListTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.manager = get_user_model().objects.create_user(
+            username="post_manager",
+            email="post-manager@example.com",
+            password="pass1234",
+            first_name="Post",
+            last_name="Manager",
+            is_manager=True,
+        )
+        self.client.force_authenticate(user=self.manager)
+        self.airport_category = Category.objects.create(name="Airport", slug="admin-airport")
+        self.travel_category = Category.objects.create(name="Travel", slug="admin-travel")
+        self.tag = Tag.objects.create(name="Featured", slug="admin-featured")
+        self.now = timezone.now()
+
+        self.posts = []
+        for index in range(30):
+            post = BlogPost.objects.create(
+                title=f"Dashboard Post {index:02d}",
+                slug=f"dashboard-post-{index:02d}",
+                content="<p>" + (f"Large body {index}. " * 300) + "</p>",
+                excerpt=f"Excerpt {index}",
+                featured_image="blog/images/large-image.jpg",
+                status="publish" if index % 2 == 0 else "draft",
+                published_date=self.now + timedelta(minutes=index),
+                author=self.manager,
+                category=self.airport_category if index % 3 else self.travel_category,
+                meta_title=f"Meta title {index}",
+                meta_description=f"Meta description {index}",
+            )
+            post.tags.add(self.tag)
+            BlogFAQ.objects.create(
+                post=post,
+                question=f"Question {index}?",
+                answer=f"Answer {index}",
+            )
+            self.posts.append(post)
+
+    def test_admin_list_is_paginated_and_lightweight(self):
+        response = self.client.get("/api/blogs/admin/posts/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 30)
+        self.assertEqual(len(response.data["results"]), 25)
+        self.assertIsNotNone(response.data["next"])
+        self.assertIsNone(response.data["previous"])
+        self.assertEqual(
+            set(response.data["results"][0]),
+            {"id", "title", "slug", "category", "status", "author_name", "published_date"},
+        )
+        self.assertEqual(response.data["results"][0]["title"], "Dashboard Post 29")
+
+        second_page = self.client.get("/api/blogs/admin/posts/", {"page": 2})
+        self.assertEqual(second_page.status_code, 200)
+        self.assertEqual(len(second_page.data["results"]), 5)
+        self.assertIsNone(second_page.data["next"])
+        self.assertIsNotNone(second_page.data["previous"])
+
+    def test_admin_list_applies_search_category_status_and_ordering(self):
+        response = self.client.get(
+            "/api/blogs/admin/posts/",
+            {
+                "search": "Post 12",
+                "category": self.travel_category.id,
+                "status": "publish",
+                "ordering": "published_date",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["title"], "Dashboard Post 12")
+
+        ascending = self.client.get(
+            "/api/blogs/admin/posts/",
+            {"status": "draft", "ordering": "published_date"},
+        )
+        dates = [item["published_date"] for item in ascending.data["results"]]
+        self.assertEqual(dates, sorted(dates))
+        self.assertTrue(all(item["status"] == "draft" for item in ascending.data["results"]))
+
+    def test_admin_retrieve_keeps_full_editor_payload(self):
+        post = self.posts[0]
+        response = self.client.get(f"/api/blogs/admin/posts/{post.id}/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("content", response.data)
+        self.assertIn("tags", response.data)
+        self.assertIn("featured_image", response.data)
+        self.assertIn("meta_title", response.data)
+
+    def test_admin_list_requires_manager_or_admin_authentication(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get("/api/blogs/admin/posts/")
+        self.assertIn(response.status_code, {401, 403})
