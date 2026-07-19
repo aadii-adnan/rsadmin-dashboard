@@ -460,6 +460,7 @@ class BookingAdmin(admin.ModelAdmin):
             'rescheduled': '#fd7e14',
             'pending': 'gray',
             'started': "#3552b1",
+            'no show': '#6f42c1',
         }
         status_html = ''
 

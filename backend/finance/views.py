@@ -65,7 +65,7 @@ def calculate_payment_earning(payment, booking_status):
     status_name = booking_status.name.lower() if booking_status else ""
     if status_name == "cancelled":
         return Decimal('15.00')
-    elif status_name in ["confirmed", "rescheduled", "completed"]:
+    elif status_name in ["confirmed", "rescheduled", "completed", "no show"]:
         return payment.amount
     else:
         return Decimal('0.00')
@@ -144,16 +144,16 @@ def get_booking_net_earning(booking):
 
 def should_count_booking_for_earnings(booking):
     status_name = booking.status.name.lower() if booking.status else ""
-    if status_name in ("completed", "cancelled"):
+    if status_name in ("completed", "cancelled", "no show"):
         return True
     return bool(booking.supplier and status_name == "started")
 
 
 def should_count_supplier_commission_status(status_name):
-    return status_name in ("started", "completed", "cancelled")
+    return status_name in ("started", "completed", "cancelled", "no show")
 
 
-SUPPLIER_EARNING_STATUSES = ("Cancelled", "Started", "Completed")
+SUPPLIER_EARNING_STATUSES = ("Cancelled", "Started", "Completed", "No Show")
 
 class AdminFinancialOverview(APIView):
     permission_classes = [IsSuperAdminNotManager]
@@ -318,11 +318,11 @@ class AdminFinancialOverview(APIView):
             addon_details = []
             for addon in AddOn.objects.all():
                 addon_bookings = bookings_in_period.filter(add_ons=addon)
-                completed_orders = addon_bookings.filter(status__name__in=["Completed", "Confirmed", "Rescheduled", "Started"]).count()
+                completed_orders = addon_bookings.filter(status__name__in=["Completed", "Confirmed", "Rescheduled", "Started", "No Show"]).count()
                 cancelled_orders = addon_bookings.filter(status__name="Cancelled").count()
                 # Addon revenue from supplier bookings goes straight to third party — exclude from our earnings
                 completed_earning = Decimal('0.00')
-                for b in addon_bookings.filter(status__name__in=["Completed", "Confirmed", "Rescheduled", "Started"]):
+                for b in addon_bookings.filter(status__name__in=["Completed", "Confirmed", "Rescheduled", "Started", "No Show"]):
                     if not b.supplier:
                         completed_earning += Decimal(addon.price)
                 cancelled_earning = Decimal('0.00')
@@ -797,6 +797,7 @@ class SupplierInvoicePDFView(APIView):
         completed_count = 0
         started_count = 0
         cancelled_count = 0
+        no_show_count = 0
         for b in bookings:
             status_name = b.status.name.lower() if b.status else ''
             if should_count_supplier_commission_status(status_name):
@@ -810,6 +811,8 @@ class SupplierInvoicePDFView(APIView):
                 started_count += 1
             elif status_name == 'cancelled':
                 cancelled_count += 1
+            elif status_name == 'no show':
+                no_show_count += 1
 
         effective_commission_percentage = (
             (supplier_share / total_revenue) * Decimal('100')
@@ -861,6 +864,7 @@ class SupplierInvoicePDFView(APIView):
             'completed_count': completed_count,
             'started_count': started_count,
             'cancelled_count': cancelled_count,
+            'no_show_count': no_show_count,
             'logo_data': logo_b64,
         }
 

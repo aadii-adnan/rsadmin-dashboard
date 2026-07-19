@@ -63,10 +63,11 @@ def _manage_flags(booking, now=None):
     status_name = booking.status.name.lower() if booking.status else ''
     cutoff = timedelta(hours=RESCHEDULE_MIN_HOURS)
 
-    departure_locked = status_name == 'started' or now > booking.departure_time - cutoff
-    return_locked = now > booking.return_time - cutoff
+    terminal_status = status_name in ('cancelled', 'completed', 'no show')
+    departure_locked = terminal_status or status_name == 'started' or now > booking.departure_time - cutoff
+    return_locked = terminal_status or now > booking.return_time - cutoff
     can_reschedule = (
-        status_name not in ('cancelled', 'completed')
+        not terminal_status
         and not (departure_locked and return_locked)
     )
     policy = get_cancellation_policy(booking, now)

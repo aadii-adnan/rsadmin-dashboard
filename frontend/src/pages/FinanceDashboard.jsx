@@ -151,7 +151,7 @@ function FinancialDashboard() {
           ? `Showing finance totals for ${formatMonthLabel(startMonth)}.`
           : "Select a month, range, year, or all time to view finance totals.";
 
-  const supplierEarningsHelp = "Shows supplier/vendor bookings with departure dates in the selected period. Includes Cancelled, Started, and Completed bookings only. Confirmed bookings are not included.";
+  const supplierEarningsHelp = "Shows supplier/vendor bookings with departure dates in the selected period. Includes Cancelled, Started, Completed, and No Show bookings only. Confirmed bookings are not included.";
   const helperTextStyle = { fontSize: 13, lineHeight: 1.35 };
 
   // Expense form handlers

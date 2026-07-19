@@ -236,10 +236,14 @@ class ManagerBookingStatusUpdate(APIView):
         booking = get_object_or_404(Booking, id=pk)
         new_status = request.data.get('status')
 
-        if new_status not in ['Completed', 'Cancelled']:
-            return Response({'error': 'Invalid status. Allowed: Completed or Cancelled'}, status=400)
+        allowed_statuses = ['Completed', 'Cancelled', 'No Show']
+        if new_status not in allowed_statuses:
+            return Response(
+                {'error': f"Invalid status. Allowed: {', '.join(allowed_statuses)}"},
+                status=400,
+            )
 
-        status_obj = get_object_or_404(Status, name=new_status)
+        status_obj = get_object_or_404(Status, name=new_status, type='booking')
         booking.status = status_obj
         booking.save()
         return Response({'message': f'Booking marked as {new_status}.'})

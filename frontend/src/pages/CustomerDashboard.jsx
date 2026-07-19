@@ -45,6 +45,7 @@ const statusColors = {
     'Rescheduled': THEME_DARK_BLUE,
     'Pending': '#6b7280',
     'Started': THEME_DARK_BLUE,
+    'No Show': '#6f42c1',
 };
 
 const CustomerDashboard = () => {

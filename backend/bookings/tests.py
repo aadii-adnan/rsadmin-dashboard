@@ -10,6 +10,7 @@ from services.models import AddOn, Service
 from users.models import Supplier
 
 from .models import Booking
+from .booking_rules import get_cancellation_policy, validate_reschedule
 from .serializers import SupplierBookingSerializer
 
 
@@ -144,3 +145,55 @@ class SupplierBookingSerializerTests(TestCase):
         self.assertNotIn('add_ons_detail', data)
         self.assertEqual(data['add_ons'][0]['id'], self.add_on.id)
         self.assertEqual(data['booking_id'][:4], 'SUP-')
+
+
+class NoShowBookingRuleTests(TestCase):
+    def setUp(self):
+        self.service = Service.objects.create(
+            name='Meet and Greet',
+            description='Short description',
+            long_description='Long description',
+            base_price=Decimal('50.00'),
+            per_day_price=Decimal('10.00'),
+            enabled=True,
+            website='rsexpressparking',
+        )
+        self.no_show_status, _ = Status.objects.get_or_create(name='No Show', type='booking')
+        self.booking = Booking.objects.create(
+            service=self.service,
+            first_name='No',
+            last_name='Show',
+            email='no.show@example.com',
+            contact_no='+353871234567',
+            total_passengers=1,
+            car_registration_no='192-D-1234',
+            car_model='Corolla',
+            car_colour='Silver',
+            car_manufacturer='Toyota',
+            departure_terminal='T1',
+            return_terminal='T1',
+            departure_time=datetime(2026, 8, 1, 5, tzinfo=dt_timezone.utc),
+            return_time=datetime(2026, 8, 8, 17, tzinfo=dt_timezone.utc),
+            total_price=Decimal('120.00'),
+            discounted_price=Decimal('120.00'),
+            status=self.no_show_status,
+        )
+
+    def test_no_show_booking_cannot_be_cancelled(self):
+        policy = get_cancellation_policy(
+            self.booking,
+            now=datetime(2026, 7, 1, tzinfo=dt_timezone.utc),
+        )
+
+        self.assertFalse(policy['allowed'])
+        self.assertFalse(policy['refund_eligible'])
+
+    def test_no_show_booking_cannot_be_rescheduled(self):
+        error = validate_reschedule(
+            self.booking,
+            datetime(2026, 8, 2, 5, tzinfo=dt_timezone.utc),
+            datetime(2026, 8, 9, 17, tzinfo=dt_timezone.utc),
+            now=datetime(2026, 7, 1, tzinfo=dt_timezone.utc),
+        )
+
+        self.assertEqual(error, 'Cannot reschedule this booking.')

@@ -15,7 +15,7 @@ const CANCEL_72H_SERVICES = [
 // {allowed, reason, refundEligible}
 export const getCancellationPolicy = (booking, now = new Date()) => {
   const statusName = (booking.status?.name || "").toLowerCase();
-  if (["cancelled", "completed", "started"].includes(statusName)) {
+  if (["cancelled", "completed", "started", "no show"].includes(statusName)) {
     return {
       allowed: false,
       reason: "This booking can no longer be cancelled.",
@@ -46,7 +46,7 @@ export const getCancellationPolicy = (booking, now = new Date()) => {
 // (and never once the booking has started).
 export const isDepartureLocked = (booking, now = new Date()) => {
   const statusName = (booking.status?.name || "").toLowerCase();
-  if (statusName === "started") return true;
+  if (["started", "cancelled", "completed", "no show"].includes(statusName)) return true;
   const cutoff = new Date(
     new Date(booking.departure_time).getTime() - RESCHEDULE_MIN_HOURS * 60 * 60 * 1000
   );
@@ -55,6 +55,8 @@ export const isDepartureLocked = (booking, now = new Date()) => {
 
 // The return can only be changed until 24h before the current return.
 export const isReturnLocked = (booking, now = new Date()) => {
+  const statusName = (booking.status?.name || "").toLowerCase();
+  if (["cancelled", "completed", "no show"].includes(statusName)) return true;
   const cutoff = new Date(
     new Date(booking.return_time).getTime() - RESCHEDULE_MIN_HOURS * 60 * 60 * 1000
   );

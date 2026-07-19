@@ -66,7 +66,7 @@ def get_cancellation_policy(booking, now=None):
     now = now or timezone.now()
     status_name = booking.status.name.lower() if booking.status else ''
 
-    if status_name in ('cancelled', 'completed', 'started'):
+    if status_name in ('cancelled', 'completed', 'started', 'no show'):
         return {
             'allowed': False,
             'reason': 'This booking can no longer be cancelled.',
@@ -92,7 +92,7 @@ def validate_reschedule(booking, new_departure, new_return, now=None):
     """Return an error message if the reschedule is not allowed, else None.
 
     Rules:
-    - Cancelled/Completed bookings cannot be rescheduled; Started ones can,
+    - Cancelled/Completed/No Show bookings cannot be rescheduled; Started ones can,
       but only the return time may change.
     - Each date can only be changed until RESCHEDULE_MIN_HOURS before its
       current value (per-field cutoff — an untouched field never blocks).
@@ -101,7 +101,7 @@ def validate_reschedule(booking, new_departure, new_return, now=None):
     now = now or timezone.now()
     status_name = booking.status.name.lower() if booking.status else ''
 
-    if status_name in ('cancelled', 'completed'):
+    if status_name in ('cancelled', 'completed', 'no show'):
         return 'Cannot reschedule this booking.'
 
     departure_changed = not _same_minute(new_departure, booking.departure_time)
