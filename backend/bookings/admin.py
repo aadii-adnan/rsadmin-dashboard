@@ -265,6 +265,8 @@ class BookingAdmin(admin.ModelAdmin):
     }
     UPDATE_EMAIL_EXCLUDED_FIELDS = {
         'note',
+        'customer_experience',
+        'customer_experience_details',
         'previous_price',
         'supplier_extended_amount',
     }
@@ -571,6 +573,29 @@ class BookingAdmin(admin.ModelAdmin):
         return obj.website or "-"
     website_abbr.short_description = "Website"
 
+    def previous_customer_experience_display(self, obj):
+        previous = obj.get_previous_customer_experience()
+        if not previous:
+            return format_html(
+                '<span style="color: #666;">{}</span>',
+                'No prior reviewed experience.',
+            )
+
+        color = '#198754' if previous.customer_experience == Booking.CustomerExperience.GOOD else '#dc3545'
+        details = previous.customer_experience_details or 'No additional details.'
+        return format_html(
+            '<strong style="color: {};">{}</strong><br>'
+            '<span>Booking: {}</span><br>'
+            '<span>Trip ended: {}</span><br>'
+            '<span>Details: {}</span>',
+            color,
+            previous.get_customer_experience_display(),
+            previous.booking_id or previous.pk,
+            timezone.localtime(previous.return_time).strftime('%d %b %Y %H:%M'),
+            details,
+        )
+    previous_customer_experience_display.short_description = 'Previous Customer Experience'
+
     def get_list_display(self, request):
         if getattr(request.user, 'is_supplier', False):
             return ('number', 'booking_id', 'customer_display', 'departure_time_display', 'return_time_display', 'service_display','vehicle_display', 'terminal_display', 
@@ -582,6 +607,13 @@ class BookingAdmin(admin.ModelAdmin):
     
 
     def get_fieldsets(self, request, obj=None):
+        experience_fields = [
+            'customer_experience',
+            'customer_experience_details',
+        ]
+        if obj:
+            experience_fields.append('previous_customer_experience_display')
+
         base_fieldsets = [
             ('Customer Information', {
                 'fields': (
@@ -608,6 +640,9 @@ class BookingAdmin(admin.ModelAdmin):
                     'service',
                     'add_ons',
                 )
+            }),
+            ('Customer Experience', {
+                'fields': tuple(experience_fields),
             }),
         ]
 
@@ -692,7 +727,12 @@ class BookingAdmin(admin.ModelAdmin):
     search_fields = ('first_name', 'last_name', 'email', 'car_registration_no', 'contact_no', 'booking_id', 'id', 'source_channel', 'utm_campaign')
 
     def get_readonly_fields(self, request, obj=None):
-        base = ('modified_at_field', 'download_invoice', 'download_booking_form')
+        base = (
+            'modified_at_field',
+            'download_invoice',
+            'download_booking_form',
+            'previous_customer_experience_display',
+        )
         if obj:  # If editing existing object
             base = base + ('created_at_field', 'booking_id')
             base = base + (
@@ -700,7 +740,11 @@ class BookingAdmin(admin.ModelAdmin):
                 'utm_term', 'utm_content', 'gclid', 'fbclid', 'referrer_url',
             )
         if getattr(request.user, 'is_supplier', False):
-            base = base + ('supplier',)
+            base = base + (
+                'supplier',
+                'customer_experience',
+                'customer_experience_details',
+            )
         return base
     
     list_per_page = 20 

@@ -101,6 +101,7 @@ def generate_booking_form_pdf(booking, template_name='payments/invoice_manager.h
         'booking': booking,
         'service': service,
         'add_ons': add_ons,
+        'previous_experience': booking.get_previous_customer_experience(),
         'image_data': f"data:image/png;base64,{image_data}" if image_data else None,
     }
 
@@ -865,6 +866,7 @@ class BookingFormDownloadView(APIView):
             'booking': booking,            
             'service': service,            
             'add_ons': add_ons,            
+            'previous_experience': booking.get_previous_customer_experience(),
             'image_data': f"data:image/png;base64,{image_data}" if image_data else None,
         }
 

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from users.models import CustomUser, Supplier
@@ -18,6 +19,24 @@ SOCIAL_KEYWORDS = (
     "t.co", "lnkd.in",
 )
 SEARCH_ENGINE_KEYWORDS = ("google", "bing", "yahoo", "duckduckgo", "ecosia", "baidu", "yandex")
+
+
+def normalize_phone_number(value):
+    """Return a stable digits-only phone value for customer-history matching."""
+    digits = "".join(character for character in str(value or "") if character.isdigit())
+    if not digits:
+        return None
+
+    # Convert an international dialing prefix and common Irish local formats
+    # to the same representation produced by the booking form (+353...).
+    if digits.startswith("00"):
+        digits = digits[2:]
+    if digits.startswith("3530"):
+        digits = f"353{digits[4:]}"
+    elif digits.startswith("0"):
+        digits = f"353{digits[1:]}"
+
+    return digits or None
 
 
 def classify_source(utm_source=None, utm_medium=None, gclid=None, fbclid=None, referrer_url=None):
@@ -56,6 +75,10 @@ def classify_source(utm_source=None, utm_medium=None, gclid=None, fbclid=None, r
 
 
 class Booking(models.Model):
+    class CustomerExperience(models.TextChoices):
+        GOOD = 'good', 'Good'
+        BAD = 'bad', 'Bad'
+
     booking_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
@@ -78,7 +101,23 @@ class Booking(models.Model):
     last_name = models.CharField(max_length=100)
     email = models.EmailField()
     contact_no = models.CharField(max_length=20, blank=True, null=True)
+    contact_no_normalized = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        db_index=True,
+        editable=False,
+    )
     total_passengers = models.PositiveIntegerField(blank=True, null=True)
+
+    # Internal staff review used to brief drivers on returning customers.
+    customer_experience = models.CharField(
+        max_length=10,
+        choices=CustomerExperience.choices,
+        blank=True,
+        null=True,
+    )
+    customer_experience_details = models.TextField(blank=True, null=True)
 
     # Timing and status
     departure_time = models.DateTimeField()
@@ -150,7 +189,46 @@ class Booking(models.Model):
         if self.supplier and self.supplier.use_custom_booking_ids and not self.booking_id:
             raise ValidationError({'booking_id': 'Custom booking ID is required for this supplier.'})
 
+    def get_previous_customer_experience(self):
+        """Return the latest reviewed, already-ended booking for this customer."""
+        if not self.departure_time:
+            return None
+
+        identity_query = Q()
+        if self.user_id:
+            identity_query |= Q(user_id=self.user_id)
+
+        email = (self.email or '').strip()
+        if email:
+            identity_query |= Q(email__iexact=email)
+
+        normalized_phone = self.contact_no_normalized or normalize_phone_number(self.contact_no)
+        if normalized_phone:
+            identity_query |= Q(contact_no_normalized=normalized_phone)
+
+        if not identity_query:
+            return None
+
+        return (
+            Booking.objects
+            .filter(
+                identity_query,
+                customer_experience__in=self.CustomerExperience.values,
+                return_time__lt=self.departure_time,
+            )
+            .exclude(pk=self.pk)
+            .order_by('-return_time', '-created_at', '-pk')
+            .first()
+        )
+
     def save(self, *args, **kwargs):
+        self.contact_no_normalized = normalize_phone_number(self.contact_no)
+        if kwargs.get("update_fields") is not None:
+            update_fields = set(kwargs["update_fields"])
+            if "contact_no" in update_fields:
+                update_fields.add("contact_no_normalized")
+                kwargs["update_fields"] = list(update_fields)
+
         if not self.pk:
             if self.supplier:
                 if self.supplier.use_custom_booking_ids:

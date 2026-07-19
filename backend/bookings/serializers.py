@@ -30,6 +30,9 @@ class BookingSerializer(serializers.ModelSerializer):
             'booking_id': {'read_only': True},
             'discounted_price': {'required': False, 'allow_null': True},
             'status': {'required': False},
+            'contact_no_normalized': {'read_only': True},
+            'customer_experience': {'read_only': True},
+            'customer_experience_details': {'read_only': True},
             'supplier_extended_amount': {'read_only': True},
             'supplier_commission_percentage': {'read_only': True},
             'source_channel': {'read_only': True},
@@ -40,6 +43,9 @@ class BookingSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         ret.pop('supplier_extended_amount', None)
         ret.pop('supplier_commission_percentage', None)
+        ret.pop('contact_no_normalized', None)
+        ret.pop('customer_experience', None)
+        ret.pop('customer_experience_details', None)
         # Replace add_ons (ids) with add_ons_detail (objects) for GET
         ret['add_ons'] = AddOnSerializer(instance.add_ons.all(), many=True).data
         return ret
