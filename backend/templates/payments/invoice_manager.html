@@ -56,28 +56,21 @@
         <tr><td>Created: {{ booking.created_at|date:"F j, Y \a\t H:i" }}</td></tr>
         <tr><td>Car Mileage: </td></tr>
         <tr><td>Addons: {{ add_ons|join:", " }}</td></tr>
-    </table>
-
-    <!-- Previous Customer Experience -->
-    <table>
-        <tr>
-            <td class="section-title"><strong>Previous Customer Experience</strong></td>
-        </tr>
-        {% if previous_experience %}
         <tr>
             <td>
-                Rating:
-                <span class="{% if previous_experience.customer_experience == 'good' %}experience-good{% else %}experience-bad{% endif %}">
-                    {{ previous_experience.get_customer_experience_display }}
-                </span><br>
-                Previous Booking: {{ previous_experience.booking_id }}<br>
-                Trip Ended: {{ previous_experience.return_time|date:"F j, Y H:i" }}<br>
-                Details: {{ previous_experience.customer_experience_details|default:"No additional details." }}
+                <strong>Previous Customer Experience:</strong>
+                {% if previous_experience %}
+                    <span class="{% if previous_experience.customer_experience == 'good' %}experience-good{% else %}experience-bad{% endif %}">
+                        {{ previous_experience.get_customer_experience_display }}
+                    </span>
+                    {% if previous_experience.customer_experience_details %}
+                        - {{ previous_experience.customer_experience_details|truncatechars:120 }}
+                    {% endif %}
+                {% else %}
+                    No prior reviewed experience.
+                {% endif %}
             </td>
         </tr>
-        {% else %}
-        <tr><td>No prior reviewed experience.</td></tr>
-        {% endif %}
     </table>
 
     <!-- Valuables Table -->

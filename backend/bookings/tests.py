@@ -437,7 +437,7 @@ class CustomerExperienceHistoryTests(TestCase):
 
         self.assertIn('Previous Customer Experience', html)
         self.assertIn('Friendly returning customer', html)
-        self.assertIn(previous.booking_id, html)
+        self.assertNotIn('Previous Booking:', html)
 
         no_history = self.booking(
             departure_time=self.current_departure,
