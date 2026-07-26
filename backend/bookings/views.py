@@ -236,7 +236,7 @@ class ManagerBookingStatusUpdate(APIView):
         booking = get_object_or_404(Booking, id=pk)
         new_status = request.data.get('status')
 
-        allowed_statuses = ['Completed', 'Cancelled', 'No Show']
+        allowed_statuses = ['Completed', 'Cancelled', 'No Show', 'Missed Pickup']
         if new_status not in allowed_statuses:
             return Response(
                 {'error': f"Invalid status. Allowed: {', '.join(allowed_statuses)}"},

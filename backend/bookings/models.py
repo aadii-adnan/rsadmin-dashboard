@@ -11,7 +11,8 @@ from django.utils import timezone
 
 # --- Marketing attribution helpers ---------------------------------------
 # Keyword lists kept as module constants so the SEO team can extend them later.
-PAID_SEARCH_SOURCES = ("google", "bing")
+GOOGLE_PAID_SEARCH_SOURCES = ("google", "googleads", "google-ads", "adwords")
+MICROSOFT_PAID_SEARCH_SOURCES = ("bing", "microsoft", "microsoftads", "microsoft-ads")
 PAID_MEDIUMS = ("cpc", "ppc", "paid", "paidsearch", "paid-search")
 SOCIAL_KEYWORDS = (
     "facebook", "fb", "instagram", "ig", "twitter", "x.com", "linkedin",
@@ -39,7 +40,17 @@ def normalize_phone_number(value):
     return digits or None
 
 
-def classify_source(utm_source=None, utm_medium=None, gclid=None, fbclid=None, referrer_url=None):
+def classify_source(
+    utm_source=None,
+    utm_medium=None,
+    gclid=None,
+    gbraid=None,
+    wbraid=None,
+    gad_source=None,
+    msclkid=None,
+    fbclid=None,
+    referrer_url=None,
+):
     """Derive a clean channel label from raw attribution data (first-touch)."""
     src = (utm_source or "").lower()
     medium = (utm_medium or "").lower()
@@ -52,8 +63,21 @@ def classify_source(utm_source=None, utm_medium=None, gclid=None, fbclid=None, r
             referrer_host = ""
 
     # Google Ads / paid search
-    if gclid or (any(k in src for k in PAID_SEARCH_SOURCES) and medium in PAID_MEDIUMS):
+    if (
+        gclid
+        or gbraid
+        or wbraid
+        or gad_source
+        or (any(k in src for k in GOOGLE_PAID_SEARCH_SOURCES) and medium in PAID_MEDIUMS)
+    ):
         return "Google Ads"
+
+    # Microsoft Advertising / Bing paid search
+    if msclkid or (
+        any(k in src for k in MICROSOFT_PAID_SEARCH_SOURCES)
+        and medium in PAID_MEDIUMS
+    ):
+        return "Microsoft Ads"
 
     # Social media
     if fbclid or any(k in src for k in SOCIAL_KEYWORDS) or any(k in referrer_host for k in SOCIAL_KEYWORDS):
@@ -171,11 +195,15 @@ class Booking(models.Model):
     utm_term = models.CharField(max_length=255, blank=True, null=True)
     utm_content = models.CharField(max_length=255, blank=True, null=True)
     gclid = models.CharField(max_length=255, blank=True, null=True, help_text="Google Ads click id")
+    gbraid = models.CharField(max_length=255, blank=True, null=True, help_text="Google Ads aggregate app click id")
+    wbraid = models.CharField(max_length=255, blank=True, null=True, help_text="Google Ads aggregate web click id")
+    gad_source = models.CharField(max_length=255, blank=True, null=True, help_text="Google Ads aggregate source parameter")
+    msclkid = models.CharField(max_length=255, blank=True, null=True, help_text="Microsoft Ads click id")
     fbclid = models.CharField(max_length=255, blank=True, null=True, help_text="Facebook click id")
     referrer_url = models.URLField(max_length=500, blank=True, null=True)
     source_channel = models.CharField(
         max_length=30, blank=True, null=True,
-        help_text="Derived marketing channel (e.g. Google Ads, Social Media, Organic Search, Referral, Direct)."
+        help_text="Derived marketing channel (e.g. Google Ads, Microsoft Ads, Social Media, Organic Search, Referral, Direct)."
     )
 
     @staticmethod
@@ -257,6 +285,10 @@ class Booking(models.Model):
                 utm_source=self.utm_source,
                 utm_medium=self.utm_medium,
                 gclid=self.gclid,
+                gbraid=self.gbraid,
+                wbraid=self.wbraid,
+                gad_source=self.gad_source,
+                msclkid=self.msclkid,
                 fbclid=self.fbclid,
                 referrer_url=self.referrer_url,
             )

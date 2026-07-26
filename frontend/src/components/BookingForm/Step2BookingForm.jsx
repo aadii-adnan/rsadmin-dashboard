@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { useBooking } from "../../context/BookingContext";
+import { clearAttribution, getAttribution } from "../../utils/attribution";
 import 'react-international-phone/style.css';
 import PopupDialog from "../Utility/PopupDialog";
 
@@ -113,6 +114,7 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
             };
 
             let response, data;
+            const isNewBooking = !formData.booking_id;
             if (formData.booking_id) {
               // Update existing booking
               response = await fetch(
@@ -124,16 +126,19 @@ const Step2BookingForm = ({formData, contactNo,  nextButtonStyle, serviceDetails
                 }
               );
             } else {
-              // Create new booking
+              // Create new booking with the same attribution data as the active flow.
               response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookingPayload),
+                body: JSON.stringify({ ...bookingPayload, ...getAttribution() }),
               });
             }
             data = await response.json();
 
             if (response.ok) {
+                if (isNewBooking) {
+                  clearAttribution();
+                }
                 setFormData((prev) => ({
                     ...prev,
                     booking_id: data.id,

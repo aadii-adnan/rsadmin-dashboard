@@ -15,6 +15,7 @@ const statusColors = {
   'Pending': 'gray',
   'Started': "#3552b1",
   'No Show': '#6f42c1',
+  'Missed Pickup': '#dc3545',
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;

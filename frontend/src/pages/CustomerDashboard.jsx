@@ -46,6 +46,7 @@ const statusColors = {
     'Pending': '#6b7280',
     'Started': THEME_DARK_BLUE,
     'No Show': '#6f42c1',
+    'Missed Pickup': THEME_DANGER,
 };
 
 const CustomerDashboard = () => {

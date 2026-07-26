@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PopupDialog from "../Utility/PopupDialog";
 import { useBooking } from "../../context/BookingContext";
-import { getAttribution } from "../../utils/attribution";
+import { clearAttribution, getAttribution } from "../../utils/attribution";
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 
@@ -84,6 +84,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
       };
 
       let response, data;
+      const isNewBooking = !formData.booking_id;
       if (formData.booking_id) {
         // Update existing booking
         response = await fetch(
@@ -105,6 +106,9 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
       data = await response.json();
 
       if (response.ok) {
+        if (isNewBooking) {
+          clearAttribution();
+        }
         setFormData((prev) => ({
           ...prev,
           booking_id: data.id,

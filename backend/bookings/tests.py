@@ -16,7 +16,7 @@ from services.models import AddOn, Service
 from users.models import Supplier
 
 from .admin import BookingAdmin
-from .models import Booking, normalize_phone_number
+from .models import Booking, classify_source, normalize_phone_number
 from .booking_rules import get_cancellation_policy, validate_reschedule
 from .serializers import BookingSerializer, SupplierBookingSerializer
 
@@ -25,6 +25,35 @@ class SupplierTokenUrlTests(SimpleTestCase):
     def test_documented_supplier_token_routes_exist(self):
         self.assertIs(resolve('/api/token/').func.view_class, TokenObtainPairView)
         self.assertIs(resolve('/api/token/refresh/').func.view_class, TokenRefreshView)
+
+
+class MarketingAttributionClassificationTests(SimpleTestCase):
+    def test_google_click_identifiers_are_classified_as_google_ads(self):
+        for field in ('gclid', 'gbraid', 'wbraid', 'gad_source'):
+            with self.subTest(field=field):
+                self.assertEqual(classify_source(**{field: 'test-value'}), 'Google Ads')
+
+    def test_google_paid_utm_is_classified_as_google_ads(self):
+        self.assertEqual(
+            classify_source(utm_source='google', utm_medium='cpc'),
+            'Google Ads',
+        )
+
+    def test_microsoft_click_id_is_classified_as_microsoft_ads(self):
+        self.assertEqual(classify_source(msclkid='test-value'), 'Microsoft Ads')
+
+    def test_bing_paid_utm_is_not_classified_as_google_ads(self):
+        self.assertEqual(
+            classify_source(utm_source='bing', utm_medium='cpc'),
+            'Microsoft Ads',
+        )
+
+    def test_existing_social_and_organic_classification_is_preserved(self):
+        self.assertEqual(classify_source(fbclid='test-value'), 'Social Media')
+        self.assertEqual(
+            classify_source(referrer_url='https://www.google.com/search?q=parking'),
+            'Organic Search',
+        )
 
 
 class SupplierBookingSerializerTests(TestCase):

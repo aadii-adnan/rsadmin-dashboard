@@ -463,6 +463,7 @@ class BookingAdmin(admin.ModelAdmin):
             'pending': 'gray',
             'started': "#3552b1",
             'no show': '#6f42c1',
+            'missed pickup': '#dc3545',
         }
         status_html = ''
 
@@ -674,7 +675,8 @@ class BookingAdmin(admin.ModelAdmin):
                     'source_channel',
                     ('utm_source', 'utm_medium'),
                     ('utm_campaign', 'utm_term', 'utm_content'),
-                    ('gclid', 'fbclid'),
+                    ('gclid', 'gbraid', 'wbraid'),
+                    ('gad_source', 'msclkid', 'fbclid'),
                     'referrer_url',
                 )
             }))
@@ -737,7 +739,8 @@ class BookingAdmin(admin.ModelAdmin):
             base = base + ('created_at_field', 'booking_id')
             base = base + (
                 'source_channel', 'utm_source', 'utm_medium', 'utm_campaign',
-                'utm_term', 'utm_content', 'gclid', 'fbclid', 'referrer_url',
+                'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid',
+                'gad_source', 'msclkid', 'fbclid', 'referrer_url',
             )
         if getattr(request.user, 'is_supplier', False):
             base = base + (
