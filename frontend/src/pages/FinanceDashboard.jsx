@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { getBookingsSummary, getOrdersCount, getFinancialOverview, getMonthlyEarnings, getBookingsOverTime, getSupplierFinanceDetail, downloadSupplierInvoice, queueEmailDeliverabilityTest } from "../components/FinanceDashboard/APIHelper";
-import { FaTrash, FaEdit } from "react-icons/fa";
+import { FaTrash, FaEdit, FaExternalLinkAlt, FaPaperPlane, FaShieldAlt } from "react-icons/fa";
 import '../FinanceDashboard.css';
 import customFetch from "../auth/fetch";
 import { LineChart, Line, AreaChart, Area, CartesianGrid } from "recharts";
@@ -352,75 +352,6 @@ function FinancialDashboard() {
             {expenseAlert.msg}
           </Alert>
         )}
-        <Row>
-          <Col md={12}>
-            <Card className="mb-4">
-              <Card.Body>
-                <Card.Title>Email Deliverability Test</Card.Title>
-                <div className="text-muted mb-3" style={helperTextStyle}>
-                  Send the current live promotional copy through its production sender to the 15 GMass seed inboxes.
-                </div>
-                {deliverabilityAlert && (
-                  <Alert
-                    variant={deliverabilityAlert.type}
-                    onClose={() => setDeliverabilityAlert(null)}
-                    dismissible
-                  >
-                    {deliverabilityAlert.msg}
-                    {deliverabilityAlert.type === "success" && (
-                      <>
-                        {" "}
-                        <Alert.Link
-                          href="https://www.gmass.co/inbox"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open GMass results
-                        </Alert.Link>
-                      </>
-                    )}
-                  </Alert>
-                )}
-                <Row className="align-items-end g-3">
-                  <Col lg={5}>
-                    <Form.Group>
-                      <Form.Label>Campaign</Form.Label>
-                      <Form.Select
-                        value={deliverabilityCampaign}
-                        onChange={(event) => {
-                          setDeliverabilityCampaign(event.target.value);
-                          setDeliverabilityAlert(null);
-                        }}
-                        disabled={deliverabilityLoading}
-                      >
-                        {Object.entries(DELIVERABILITY_CAMPAIGNS).map(([value, campaign]) => (
-                          <option key={value} value={value}>{campaign.label}</option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                  <Col lg={5}>
-                    <div style={helperTextStyle}>
-                      <div><strong>Sender:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].sender}</div>
-                      <div><strong>Subject:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].subject}</div>
-                      <div><strong>Recipients:</strong> 15 individual test emails</div>
-                    </div>
-                  </Col>
-                  <Col lg={2}>
-                    <Button
-                      variant="warning"
-                      className="w-100"
-                      onClick={() => setShowDeliverabilityModal(true)}
-                      disabled={deliverabilityLoading}
-                    >
-                      {deliverabilityLoading ? "Queueing..." : "Send GMass Test"}
-                    </Button>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
       <Row>
         <Col md={6}>
           <Card className="mb-4 text-center">
@@ -953,10 +884,132 @@ function FinancialDashboard() {
           </Row>
         )}
 
+        {/* Temporary email deliverability utility */}
+        <Row className="mt-3">
+          <Col md={12}>
+            <Card className="deliverability-card mb-4">
+              <Card.Body className="p-0">
+                <div className="deliverability-header">
+                  <div className="deliverability-heading">
+                    <div className="deliverability-icon" aria-hidden="true">
+                      <FaShieldAlt />
+                    </div>
+                    <div>
+                      <div className="deliverability-kicker">Admin utility</div>
+                      <h2>Email Deliverability Test</h2>
+                      <p>
+                        Check where the current live campaign lands before sending it to customers.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    className="deliverability-results-link"
+                    href="https://www.gmass.co/inbox"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View GMass results <FaExternalLinkAlt aria-hidden="true" />
+                  </a>
+                </div>
+
+                <div className="deliverability-body">
+                  {deliverabilityAlert && (
+                    <Alert
+                      variant={deliverabilityAlert.type}
+                      onClose={() => setDeliverabilityAlert(null)}
+                      dismissible
+                      className="deliverability-status"
+                    >
+                      {deliverabilityAlert.msg}
+                      {deliverabilityAlert.type === "success" && (
+                        <>
+                          {" "}
+                          <Alert.Link
+                            href="https://www.gmass.co/inbox"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Check placement
+                          </Alert.Link>
+                        </>
+                      )}
+                    </Alert>
+                  )}
+
+                  <Row className="g-4 align-items-stretch">
+                    <Col lg={4}>
+                      <Form.Group className="deliverability-field">
+                        <Form.Label>
+                          <span className="deliverability-step">1</span>
+                          Choose campaign
+                        </Form.Label>
+                        <Form.Select
+                          value={deliverabilityCampaign}
+                          onChange={(event) => {
+                            setDeliverabilityCampaign(event.target.value);
+                            setDeliverabilityAlert(null);
+                          }}
+                          disabled={deliverabilityLoading}
+                        >
+                          {Object.entries(DELIVERABILITY_CAMPAIGNS).map(([value, campaign]) => (
+                            <option key={value} value={value}>{campaign.label}</option>
+                          ))}
+                        </Form.Select>
+                        <Form.Text>
+                          The latest copy saved in Booking Settings will be used.
+                        </Form.Text>
+                      </Form.Group>
+                    </Col>
+
+                    <Col lg={5}>
+                      <div className="deliverability-summary">
+                        <div className="deliverability-summary-title">Test details</div>
+                        <div className="deliverability-meta-row">
+                          <span>Sender</span>
+                          <strong>{DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].sender}</strong>
+                        </div>
+                        <div className="deliverability-meta-row">
+                          <span>Subject</span>
+                          <strong>{DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].subject}</strong>
+                        </div>
+                        <div className="deliverability-meta-row">
+                          <span>Recipients</span>
+                          <strong>15 GMass seed inboxes</strong>
+                        </div>
+                      </div>
+                    </Col>
+
+                    <Col lg={3}>
+                      <div className="deliverability-action">
+                        <div>
+                          <div className="deliverability-step-label">
+                            <span className="deliverability-step">2</span>
+                            Run the test
+                          </div>
+                          <p>Each address receives its own email through the production sender.</p>
+                        </div>
+                        <Button
+                          className="deliverability-send-btn"
+                          onClick={() => setShowDeliverabilityModal(true)}
+                          disabled={deliverabilityLoading}
+                        >
+                          <FaPaperPlane aria-hidden="true" />
+                          {deliverabilityLoading ? "Queueing test..." : "Send 15 test emails"}
+                        </Button>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
         {/* Email Deliverability Confirmation Modal */}
         <Modal
           show={showDeliverabilityModal}
           onHide={() => !deliverabilityLoading && setShowDeliverabilityModal(false)}
+          className="deliverability-modal"
           centered
         >
           <Modal.Header closeButton={!deliverabilityLoading}>
