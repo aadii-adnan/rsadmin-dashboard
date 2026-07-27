@@ -4,6 +4,7 @@ from .views import (
     BookingsSummaryView, OrdersCountByServiceAndAddOnView, MonthlyEarningsTrendView,
     BookingsOverTimeView, ExpenseBreakdownView, ProfitMarginOverTimeView,
     SupplierFinanceDetailView, SupplierInvoicePDFView,
+    EmailDeliverabilityTestView,
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path('charts/profit-margin/', ProfitMarginOverTimeView.as_view(), name='profit-margin'),
     path('supplier/<int:supplier_id>/', SupplierFinanceDetailView.as_view(), name='supplier-finance-detail'),
     path('supplier/<int:supplier_id>/invoice/', SupplierInvoicePDFView.as_view(), name='supplier-invoice-pdf'),
+    path('email-deliverability-test/', EmailDeliverabilityTestView.as_view(), name='email-deliverability-test'),
 ]

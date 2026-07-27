@@ -6,6 +6,124 @@ from django.utils import timezone
 from django.utils.html import escape
 from datetime import timedelta, datetime
 from decouple import config
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+PROMOTIONAL_CAMPAIGNS = {
+    "rs_promotional": {
+        "label": "RS Express regular promotion",
+        "content_field": "promotional_email_content",
+        "fallback_content": "<p>Check out our latest offers at RS Express Parking!</p>",
+        "subject": "Park With Us Again & Save 10%",
+        "sender_name": "RS Express Parking",
+        "sender_email": "hello@rsexpressparking.com",
+        "password_setting": "EMAIL_HOST_PASSWORD",
+    },
+    "rs_pending": {
+        "label": "RS Express pending-booking reminder",
+        "content_field": "pending_bookings_email_content",
+        "fallback_content": "<p>Your booking is still pending at RS Express Parking!</p>",
+        "subject": "Complete Your Booking & Save 10% Today!",
+        "sender_name": "RS Express Parking",
+        "sender_email": "hello@rsexpressparking.com",
+        "password_setting": "EMAIL_HOST_PASSWORD",
+    },
+    "dublin_promotional": {
+        "label": "Dublin regular promotion",
+        "content_field": "dublin_promotional_email_content",
+        "fallback_content": "<p>Check out our latest offers at Dublin Airport Express Parking!</p>",
+        "subject": "Park With Us Again & Save 10%",
+        "sender_name": "Dublin Airport Express Parking",
+        "sender_email": "hello@dublinairportexpressparking.ie",
+        "password_setting": "DUBLIN_EMAIL_HOST_PASSWORD",
+    },
+    "dublin_pending": {
+        "label": "Dublin pending-booking reminder",
+        "content_field": "dublin_pending_bookings_email_content",
+        "fallback_content": "<p>Your booking is still pending at Dublin Airport Express Parking!</p>",
+        "subject": "Complete Your Booking & Save 10% Today!",
+        "sender_name": "Dublin Airport Express Parking",
+        "sender_email": "hello@dublinairportexpressparking.ie",
+        "password_setting": "DUBLIN_EMAIL_HOST_PASSWORD",
+    },
+}
+
+GMASS_TEST_RECIPIENTS = (
+    "ajaygoel999@gmail.com",
+    "test@chromecompete.com",
+    "test@ajaygoel.org",
+    "me@dropboxslideshow.com",
+    "test@wordzen.com",
+    "rajgoel8477@gmail.com",
+    "rajanderson8477@gmail.com",
+    "rajwilson8477@gmail.com",
+    "briansmith8477@gmail.com",
+    "oliviasmith8477@gmail.com",
+    "ashsmith8477@gmail.com",
+    "shellysmith8477@gmail.com",
+    "ajay@madsciencekidz.com",
+    "ajay2@ctopowered.com",
+    "ajay@arena.tec.br",
+)
+
+
+def get_promotional_campaign(campaign, settings_obj, first_name="Customer", current_year=None):
+    """Resolve the exact content and sender settings used by promotional sends."""
+    try:
+        campaign_config = PROMOTIONAL_CAMPAIGNS[campaign]
+    except KeyError as exc:
+        raise ValueError(f"Unknown promotional campaign: {campaign}") from exc
+
+    if settings_obj:
+        content = getattr(settings_obj, campaign_config["content_field"])
+    else:
+        content = campaign_config["fallback_content"]
+
+    year = current_year or datetime.now().year
+    personalized_content = (
+        content
+        .replace("{{first_name}}", first_name or "Customer")
+        .replace("{{current_year}}", str(year))
+    )
+    sender_email = campaign_config["sender_email"]
+
+    return {
+        **campaign_config,
+        "campaign": campaign,
+        "html_content": personalized_content,
+        "from_email": f'{campaign_config["sender_name"]} <{sender_email}>',
+    }
+
+
+def get_promotional_email_connection(campaign_details):
+    return get_connection(
+        host=config("EMAIL_HOST"),
+        port=config("EMAIL_PORT", cast=int),
+        username=campaign_details["sender_email"],
+        password=config(campaign_details["password_setting"]),
+        use_tls=config("EMAIL_USE_TLS", cast=bool),
+    )
+
+
+def send_promotional_message(recipient, campaign, settings_obj, first_name="Customer", current_year=None):
+    campaign_details = get_promotional_campaign(
+        campaign,
+        settings_obj,
+        first_name=first_name,
+        current_year=current_year,
+    )
+    msg = EmailMultiAlternatives(
+        subject=campaign_details["subject"],
+        body="This email requires an HTML-compatible email client.",
+        from_email=campaign_details["from_email"],
+        to=[recipient],
+        connection=get_promotional_email_connection(campaign_details),
+    )
+    msg.attach_alternative(campaign_details["html_content"], "text/html")
+    msg.send()
+    return campaign_details
 
 @shared_task
 def process_bookings_for_completion():
@@ -211,23 +329,15 @@ def send_promotional_emails():
     Send promotional emails to users whose bookings are not confirmed, started, or pending.
     Send a separate email to users with pending bookings.
     """
-    from core.models import BookingSettings
     unsubscribed_emails = set(
         e.strip().lower() for e in UnsubscribedEmail.objects.values_list('email', flat=True) if e
     )
     settings_obj = BookingSettings.objects.first()
-    promo_content = settings_obj.promotional_email_content if settings_obj else "<p>Check out our latest offers at RS Express Parking!</p>"
-    pending_content = settings_obj.pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at RS Express Parking!</p>"
-    dublin_promo_content = settings_obj.dublin_promotional_email_content if settings_obj else "<p>Check out our latest offers at Dublin Airport Express Parking!</p>"
-    dublin_pending_content = settings_obj.dublin_pending_bookings_email_content if settings_obj else "<p>Your booking is still pending at Dublin Airport Express Parking!</p>"
 
     # Get all bookings by status (exclude supplier bookings)
     all_bookings = Booking.objects.filter(supplier__isnull=True)
     promo_bookings = all_bookings.exclude(status__name__in=["Confirmed", "Started", "Pending"])
     pending_bookings = all_bookings.filter(status__name="Pending")
-
-    subject_promo = "Park With Us Again & Save 10%"
-    subject_pending = "Complete Your Booking & Save 10% Today!"
 
     current_year = datetime.now().year
     emails_sent = set()
@@ -243,48 +353,18 @@ def send_promotional_emails():
         if email_norm in emails_sent or email_norm in unsubscribed_emails:
             continue
 
-        if website == "dublinairportparking":
-            personalized_content = (
-                dublin_promo_content
-                .replace("{{first_name}}", first_name)
-                .replace("{{current_year}}", str(current_year))
-            )
-            custom_email = "hello@dublinairportexpressparking.ie"
-            from_email = f"Dublin Airport Express Parking <{custom_email}>"
-            subject = subject_promo
-            connection = get_connection(
-                host=config('EMAIL_HOST'),
-                port=config('EMAIL_PORT', cast=int),
-                username=custom_email,
-                password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
-                use_tls=config('EMAIL_USE_TLS', cast=bool)
-            )
-        else:
-            personalized_content = (
-                promo_content
-                .replace("{{first_name}}", first_name)
-                .replace("{{current_year}}", str(current_year))
-            )
-            custom_email = "hello@rsexpressparking.com"
-            from_email = f"RS Express Parking <{custom_email}>"
-            subject = subject_promo
-            connection = get_connection(
-                host=config('EMAIL_HOST'),
-                port=config('EMAIL_PORT', cast=int),
-                username=custom_email,
-                password=config('EMAIL_HOST_PASSWORD'),
-                use_tls=config('EMAIL_USE_TLS', cast=bool)
-            )
-
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body="This email requires an HTML-compatible email client.",
-            from_email=from_email,
-            to=[email],
-            connection=connection
+        campaign = (
+            "dublin_promotional"
+            if website == "dublinairportparking"
+            else "rs_promotional"
         )
-        msg.attach_alternative(personalized_content, "text/html")
-        msg.send()
+        send_promotional_message(
+            email,
+            campaign,
+            settings_obj,
+            first_name=first_name,
+            current_year=current_year,
+        )
         emails_sent.add(email_norm)
 
     # Send pending booking emails
@@ -305,49 +385,63 @@ def send_promotional_emails():
         ).exclude(id=booking.id).exists():
             continue  # Skip sending email for this pending booking
 
-        if website == "dublinairportparking":
-            personalized_content = (
-                dublin_pending_content
-                .replace("{{first_name}}", first_name)
-                .replace("{{current_year}}", str(current_year))
+        campaign = (
+            "dublin_pending"
+            if website == "dublinairportparking"
+            else "rs_pending"
+        )
+        send_promotional_message(
+            email,
+            campaign,
+            settings_obj,
+            first_name=first_name,
+            current_year=current_year,
+        )
+        emails_sent.add(email_norm)
+
+
+@shared_task
+def send_promotional_deliverability_test(campaign):
+    """Send one live promotional variant to every GMass seed inbox."""
+    if campaign not in PROMOTIONAL_CAMPAIGNS:
+        raise ValueError(f"Unknown promotional campaign: {campaign}")
+
+    settings_obj = BookingSettings.objects.first()
+    sent = 0
+    failures = []
+
+    logger.info(
+        "Starting GMass deliverability test for %s (%d recipients)",
+        campaign,
+        len(GMASS_TEST_RECIPIENTS),
+    )
+
+    for recipient in GMASS_TEST_RECIPIENTS:
+        try:
+            send_promotional_message(
+                recipient,
+                campaign,
+                settings_obj,
+                first_name="Customer",
             )
-            custom_email = "hello@dublinairportexpressparking.ie"
-            from_email = f"Dublin Airport Express Parking <{custom_email}>"
-            subject = subject_pending
-            connection = get_connection(
-                host=config('EMAIL_HOST'),
-                port=config('EMAIL_PORT', cast=int),
-                username=custom_email,
-                password=config('DUBLIN_EMAIL_HOST_PASSWORD'),
-                use_tls=config('EMAIL_USE_TLS', cast=bool)
-            )
-        else:
-            personalized_content = (
-                pending_content
-                .replace("{{first_name}}", first_name)
-                .replace("{{current_year}}", str(current_year))
-            )
-            custom_email = "hello@rsexpressparking.com"
-            from_email = f"RS Express Parking <{custom_email}>"
-            subject = subject_pending
-            connection = get_connection(
-                host=config('EMAIL_HOST'),
-                port=config('EMAIL_PORT', cast=int),
-                username=custom_email,
-                password=config('EMAIL_HOST_PASSWORD'),
-                use_tls=config('EMAIL_USE_TLS', cast=bool)
+            sent += 1
+        except Exception:
+            failures.append(recipient)
+            logger.exception(
+                "GMass deliverability test failed for campaign %s and recipient %s",
+                campaign,
+                recipient,
             )
 
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body="This email requires an HTML-compatible email client.",
-            from_email=from_email,
-            to=[email],
-            connection=connection
-        )
-        msg.attach_alternative(personalized_content, "text/html")
-        msg.send()
-        emails_sent.add(email_norm)
+    result = {
+        "campaign": campaign,
+        "recipient_count": len(GMASS_TEST_RECIPIENTS),
+        "sent": sent,
+        "failed": len(failures),
+        "failed_recipients": failures,
+    }
+    logger.info("Finished GMass deliverability test: %s", result)
+    return result
 
 
 @shared_task

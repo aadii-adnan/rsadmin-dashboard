@@ -27,6 +27,11 @@ from django.conf import settings
 from io import BytesIO
 import base64
 import calendar as cal_module
+from bookings.tasks import (
+    GMASS_TEST_RECIPIENTS,
+    PROMOTIONAL_CAMPAIGNS,
+    send_promotional_deliverability_test,
+)
 
 @login_required
 def finance_jwt_login(request):
@@ -57,7 +62,39 @@ class IsSuperAdminNotManager(BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return user.is_authenticated and user.is_superuser and not getattr(user, 'is_manager', False)
-    
+
+
+class EmailDeliverabilityTestView(APIView):
+    permission_classes = [IsSuperAdminNotManager]
+
+    def post(self, request):
+        campaign = request.data.get("campaign")
+        campaign_config = PROMOTIONAL_CAMPAIGNS.get(campaign)
+        if not campaign_config:
+            return Response(
+                {
+                    "error": "Invalid campaign.",
+                    "allowed_campaigns": list(PROMOTIONAL_CAMPAIGNS),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        task = send_promotional_deliverability_test.delay(campaign)
+        sender_email = campaign_config["sender_email"]
+        return Response(
+            {
+                "message": "Deliverability test queued.",
+                "task_id": str(task.id),
+                "campaign": campaign,
+                "label": campaign_config["label"],
+                "sender": f'{campaign_config["sender_name"]} <{sender_email}>',
+                "subject": campaign_config["subject"],
+                "recipient_count": len(GMASS_TEST_RECIPIENTS),
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
 def calculate_payment_earning(payment, booking_status):
     """
     Returns the earning for a single payment, considering cancellation fee.

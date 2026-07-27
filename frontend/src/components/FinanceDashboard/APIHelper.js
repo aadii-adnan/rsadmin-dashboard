@@ -85,3 +85,19 @@ export async function downloadSupplierInvoice(supplierId, month, year, supplierN
   document.body.removeChild(a);
   window.URL.revokeObjectURL(objectUrl);
 }
+
+export async function queueEmailDeliverabilityTest(campaign) {
+  const res = await customFetch(
+    import.meta.env.VITE_API_BASE_URL + API_BASE + "email-deliverability-test/",
+    {
+      method: "POST",
+      body: { campaign },
+      useFinanceJwt: true,
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || "Failed to queue deliverability test");
+  }
+  return data;
+}

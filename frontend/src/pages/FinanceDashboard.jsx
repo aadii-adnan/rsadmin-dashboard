@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { getBookingsSummary, getOrdersCount, getFinancialOverview, addExpense, getMonthlyEarnings, getBookingsOverTime, getSupplierFinanceDetail, downloadSupplierInvoice } from "../components/FinanceDashboard/APIHelper";
+import { getBookingsSummary, getOrdersCount, getFinancialOverview, getMonthlyEarnings, getBookingsOverTime, getSupplierFinanceDetail, downloadSupplierInvoice, queueEmailDeliverabilityTest } from "../components/FinanceDashboard/APIHelper";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import '../FinanceDashboard.css';
 import customFetch from "../auth/fetch";
@@ -10,6 +10,29 @@ import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const COLORS = ["#007bff", "#28a745", "#dc3545", "#ffc107", "#fd7e14", "#6f42c1"];
+
+const DELIVERABILITY_CAMPAIGNS = {
+  rs_promotional: {
+    label: "RS Express regular promotion",
+    sender: "RS Express Parking <hello@rsexpressparking.com>",
+    subject: "Park With Us Again & Save 10%",
+  },
+  rs_pending: {
+    label: "RS Express pending-booking reminder",
+    sender: "RS Express Parking <hello@rsexpressparking.com>",
+    subject: "Complete Your Booking & Save 10% Today!",
+  },
+  dublin_promotional: {
+    label: "Dublin regular promotion",
+    sender: "Dublin Airport Express Parking <hello@dublinairportexpressparking.ie>",
+    subject: "Park With Us Again & Save 10%",
+  },
+  dublin_pending: {
+    label: "Dublin pending-booking reminder",
+    sender: "Dublin Airport Express Parking <hello@dublinairportexpressparking.ie>",
+    subject: "Complete Your Booking & Save 10% Today!",
+  },
+};
 
 function useFinanceJwtFromUrl() {
   useEffect(() => {
@@ -62,6 +85,10 @@ function FinancialDashboard() {
   });
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [invoiceError, setInvoiceError] = useState(null);
+  const [deliverabilityCampaign, setDeliverabilityCampaign] = useState("rs_promotional");
+  const [showDeliverabilityModal, setShowDeliverabilityModal] = useState(false);
+  const [deliverabilityLoading, setDeliverabilityLoading] = useState(false);
+  const [deliverabilityAlert, setDeliverabilityAlert] = useState(null);
 
   useEffect(() => {
     if (!localStorage.getItem('finance_jwt')) {
@@ -74,7 +101,7 @@ function FinancialDashboard() {
       try {
         setMonthlyEarnings(await getMonthlyEarnings());
         setBookingsOverTime(await getBookingsOverTime());
-      } catch (e) {
+      } catch {
         // handle error
       }
     };
@@ -226,10 +253,30 @@ function FinancialDashboard() {
     try {
       await downloadSupplierInvoice(invoiceSupplier.supplier_id, month, year, invoiceSupplier.supplier_name);
       setShowInvoiceModal(false);
-    } catch (e) {
+    } catch {
       setInvoiceError("Failed to generate invoice. Please try again.");
     } finally {
       setInvoiceLoading(false);
+    }
+  };
+
+  const handleQueueDeliverabilityTest = async () => {
+    setDeliverabilityLoading(true);
+    setDeliverabilityAlert(null);
+    try {
+      const result = await queueEmailDeliverabilityTest(deliverabilityCampaign);
+      setShowDeliverabilityModal(false);
+      setDeliverabilityAlert({
+        type: "success",
+        msg: `${result.label} was queued for ${result.recipient_count} GMass inboxes. Task: ${result.task_id}`,
+      });
+    } catch (error) {
+      setDeliverabilityAlert({
+        type: "danger",
+        msg: error.message || "Failed to queue the deliverability test.",
+      });
+    } finally {
+      setDeliverabilityLoading(false);
     }
   };
 
@@ -305,6 +352,75 @@ function FinancialDashboard() {
             {expenseAlert.msg}
           </Alert>
         )}
+        <Row>
+          <Col md={12}>
+            <Card className="mb-4">
+              <Card.Body>
+                <Card.Title>Email Deliverability Test</Card.Title>
+                <div className="text-muted mb-3" style={helperTextStyle}>
+                  Send the current live promotional copy through its production sender to the 15 GMass seed inboxes.
+                </div>
+                {deliverabilityAlert && (
+                  <Alert
+                    variant={deliverabilityAlert.type}
+                    onClose={() => setDeliverabilityAlert(null)}
+                    dismissible
+                  >
+                    {deliverabilityAlert.msg}
+                    {deliverabilityAlert.type === "success" && (
+                      <>
+                        {" "}
+                        <Alert.Link
+                          href="https://www.gmass.co/inbox"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open GMass results
+                        </Alert.Link>
+                      </>
+                    )}
+                  </Alert>
+                )}
+                <Row className="align-items-end g-3">
+                  <Col lg={5}>
+                    <Form.Group>
+                      <Form.Label>Campaign</Form.Label>
+                      <Form.Select
+                        value={deliverabilityCampaign}
+                        onChange={(event) => {
+                          setDeliverabilityCampaign(event.target.value);
+                          setDeliverabilityAlert(null);
+                        }}
+                        disabled={deliverabilityLoading}
+                      >
+                        {Object.entries(DELIVERABILITY_CAMPAIGNS).map(([value, campaign]) => (
+                          <option key={value} value={value}>{campaign.label}</option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col lg={5}>
+                    <div style={helperTextStyle}>
+                      <div><strong>Sender:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].sender}</div>
+                      <div><strong>Subject:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].subject}</div>
+                      <div><strong>Recipients:</strong> 15 individual test emails</div>
+                    </div>
+                  </Col>
+                  <Col lg={2}>
+                    <Button
+                      variant="warning"
+                      className="w-100"
+                      onClick={() => setShowDeliverabilityModal(true)}
+                      disabled={deliverabilityLoading}
+                    >
+                      {deliverabilityLoading ? "Queueing..." : "Send GMass Test"}
+                    </Button>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       <Row>
         <Col md={6}>
           <Card className="mb-4 text-center">
@@ -836,6 +952,46 @@ function FinancialDashboard() {
             </Col>
           </Row>
         )}
+
+        {/* Email Deliverability Confirmation Modal */}
+        <Modal
+          show={showDeliverabilityModal}
+          onHide={() => !deliverabilityLoading && setShowDeliverabilityModal(false)}
+          centered
+        >
+          <Modal.Header closeButton={!deliverabilityLoading}>
+            <Modal.Title>Confirm Deliverability Test</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Alert variant="warning">
+              This will send 15 real external emails using the production SMTP account.
+            </Alert>
+            <div><strong>Campaign:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].label}</div>
+            <div><strong>Sender:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].sender}</div>
+            <div><strong>Subject:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].subject}</div>
+            {deliverabilityAlert?.type === "danger" && (
+              <Alert variant="danger" className="mt-3 mb-0">
+                {deliverabilityAlert.msg}
+              </Alert>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeliverabilityModal(false)}
+              disabled={deliverabilityLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="warning"
+              onClick={handleQueueDeliverabilityTest}
+              disabled={deliverabilityLoading}
+            >
+              {deliverabilityLoading ? "Queueing..." : "Send 15 Test Emails"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
         {/* Supplier Invoice Download Modal */}
         <Modal show={showInvoiceModal} onHide={() => setShowInvoiceModal(false)}>
