@@ -1027,11 +1027,11 @@ body .home-banner {
   }
 }
 
-/* Optional: Add a festive border color to the active input for detail */
-#book input:focus, 
+/* Keep booking form focus states aligned with the core brand palette. */
+#book input:focus,
 #book select:focus {
-    border-color: #c62828 !important; /* Christmas Red focus border */
-    box-shadow: 0 0 5px rgba(198, 40, 40, 0.3) !important;
+    border-color: #2890CD !important;
+    box-shadow: 0 0 0 3px rgba(40, 144, 205, 0.2) !important;
 }
 
 /* Add to your main CSS file */

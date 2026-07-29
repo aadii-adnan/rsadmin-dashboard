@@ -1300,11 +1300,11 @@ pre {
 a {
     background-color: transparent;
     text-decoration: none;
-    color: #c36
+    color: #2890CD
 }
 
 a:active,a:hover {
-    color: #336
+    color: #010659
 }
 
 a:not([href]):not([tabindex]),a:not([href]):not([tabindex]):focus,a:not([href]):not([tabindex]):hover {
@@ -1453,7 +1453,7 @@ button,select {
 [type=button],[type=submit],button {
     display: inline-block;
     font-weight: 400;
-    color: #c36;
+    color: #010659;
     text-align: center;
     white-space: nowrap;
     -webkit-user-select: none;

@@ -751,7 +751,7 @@ button.btn {
   border-color: #b42318;
 }
 
-.irish-date-trigger {
+.irish-date-picker .irish-date-trigger {
   position: absolute;
   top: 50%;
   right: 5px;
@@ -759,12 +759,21 @@ button.btn {
   min-height: 32px;
   padding: 5px 8px;
   transform: translateY(-50%);
-  border: 0;
+  appearance: none;
+  border: 1px solid rgba(40, 144, 205, 0.24);
   border-radius: 4px;
   background: #eef6fb;
   color: #010659;
   font-size: 12px;
   font-weight: 700;
+}
+
+.irish-date-picker .irish-date-trigger:hover,
+.irish-date-picker .irish-date-trigger:focus-visible {
+  border-color: #2890cd;
+  background: #2890cd;
+  color: #fff;
+  outline: none;
 }
 
 .irish-date-error {
@@ -846,7 +855,17 @@ button.btn {
 
 .irish-date-popover .rdp-day_button {
   margin: auto;
+  border-color: transparent;
+  background: transparent;
   color: #1f2937;
+}
+
+.irish-date-popover .rdp-day_button:hover:not(:disabled),
+.irish-date-popover .rdp-day_button:focus-visible {
+  border-color: #2890cd;
+  background: #eef6fb;
+  color: #010659;
+  outline: none;
 }
 
 .irish-date-popover .rdp-selected .rdp-day_button {
@@ -865,6 +884,24 @@ button.btn {
 .irish-date-popover .rdp-chevron {
   width: 18px;
   height: 18px;
+  fill: #010659;
+}
+
+.irish-date-popover .rdp-button_previous,
+.irish-date-popover .rdp-button_next {
+  border-color: transparent;
+  background: transparent;
+  color: #010659;
+}
+
+.irish-date-popover .rdp-button_previous:hover,
+.irish-date-popover .rdp-button_previous:focus-visible,
+.irish-date-popover .rdp-button_next:hover,
+.irish-date-popover .rdp-button_next:focus-visible {
+  border-color: rgba(40, 144, 205, 0.24);
+  background: #eef6fb;
+  color: #010659;
+  outline: none;
 }
 
 @media (max-width: 576px) {
