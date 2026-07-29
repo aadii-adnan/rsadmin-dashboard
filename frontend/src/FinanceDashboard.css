@@ -17,6 +17,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+.finance-modal {
+  --finance-navy: var(--primary-dark, #010659);
+  --finance-blue: #1769aa;
+  --finance-sky: var(--primary-light, #2890cd);
+  --finance-ink: #172033;
+  --finance-muted: #687586;
+  --finance-border: #dfe6ee;
+  --finance-canvas: #f4f7fa;
+  --finance-surface: #ffffff;
+  --finance-positive: #16815d;
+  --finance-negative: #c3424f;
+  --finance-warning: #b67616;
+  color: var(--finance-ink);
+  font-family: "Urbanist", sans-serif;
+}
+
 .finance-shell {
   width: min(100%, 1520px);
   margin: 0 auto;
@@ -181,7 +197,7 @@
   padding-inline: 18px !important;
   border: 0 !important;
   border-radius: 9px !important;
-  background: var(--finance-navy) !important;
+  background: var(--finance-navy, #010659) !important;
   color: #fff !important;
   font-weight: 700 !important;
   box-shadow: 0 6px 16px rgba(1, 6, 89, 0.16);
@@ -189,8 +205,28 @@
 
 .finance-primary-btn:hover,
 .finance-primary-btn:focus-visible {
-  background: var(--finance-blue) !important;
+  background: var(--finance-blue, #1769aa) !important;
   box-shadow: 0 8px 20px rgba(23, 105, 170, 0.22);
+}
+
+.finance-secondary-btn {
+  display: inline-flex !important;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 18px !important;
+  border: 1px solid #ced8e3 !important;
+  border-radius: 9px !important;
+  background: #f4f7fa !important;
+  color: #172033 !important;
+  font-weight: 700 !important;
+}
+
+.finance-secondary-btn:hover,
+.finance-secondary-btn:focus-visible {
+  border-color: #aebdcb !important;
+  background: #e7edf3 !important;
+  color: #010659 !important;
 }
 
 .finance-tabs-wrap {
@@ -573,6 +609,11 @@
   white-space: nowrap;
 }
 
+.finance-table .finance-supplier-actions {
+  min-width: 112px;
+  text-align: center;
+}
+
 .finance-table .is-positive {
   color: var(--finance-positive);
   font-weight: 700;
@@ -603,16 +644,35 @@
 }
 
 .finance-icon-btn {
-  display: inline-grid;
+  display: inline-flex;
   width: 34px;
   height: 34px;
   margin-left: 5px;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   border: 1px solid #cad6e1;
   border-radius: 8px;
   background: #fff;
   color: var(--finance-blue);
+  line-height: 1;
   transition: 0.16s ease;
+}
+
+.finance-icon-btn svg {
+  display: block;
+}
+
+.finance-action-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  vertical-align: middle;
+}
+
+.finance-action-group .finance-icon-btn {
+  margin-left: 0;
 }
 
 .finance-icon-btn:hover {

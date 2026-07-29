@@ -792,7 +792,7 @@ function FinanceDashboard() {
               <th className="numeric">Supplier share</th>
               <th className="numeric">Our share</th>
               <th className="numeric">Commission</th>
-              <th className="actions">Actions</th>
+              <th className="actions finance-supplier-actions">Actions</th>
             </tr></thead>
             <tbody>
               {suppliers.map((supplier) => (
@@ -805,19 +805,21 @@ function FinanceDashboard() {
                   <td className="numeric">{formatCurrency(supplier.supplier_share)}</td>
                   <td className="numeric is-positive">{formatCurrency(supplier.our_share)}</td>
                   <td className="numeric">{supplier.commission_percentage.toFixed(2)}%</td>
-                  <td className="actions">
-                    <button
-                      type="button"
-                      className="finance-icon-btn"
-                      onClick={() => openSupplierDetail(supplier.supplier_id)}
-                      aria-label={`View ${supplier.supplier_name} details`}
-                    ><FaEye /></button>
-                    <button
-                      type="button"
-                      className="finance-icon-btn"
-                      onClick={() => openInvoice(supplier)}
-                      aria-label={`Download ${supplier.supplier_name} invoice`}
-                    ><FaFileInvoice /></button>
+                  <td className="actions finance-supplier-actions">
+                    <span className="finance-action-group">
+                      <button
+                        type="button"
+                        className="finance-icon-btn"
+                        onClick={() => openSupplierDetail(supplier.supplier_id)}
+                        aria-label={`View ${supplier.supplier_name} details`}
+                      ><FaEye /></button>
+                      <button
+                        type="button"
+                        className="finance-icon-btn"
+                        onClick={() => openInvoice(supplier)}
+                        aria-label={`Download ${supplier.supplier_name} invoice`}
+                      ><FaFileInvoice /></button>
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -1054,7 +1056,7 @@ function FinanceDashboard() {
         </div>
       </main>
 
-      <Modal show={showExpenseModal} onHide={() => !expenseSaving && setShowExpenseModal(false)} centered>
+      <Modal className="finance-modal" show={showExpenseModal} onHide={() => !expenseSaving && setShowExpenseModal(false)} centered>
         <Form onSubmit={submitExpense}>
           <Modal.Header closeButton={!expenseSaving}>
             <Modal.Title>{editingExpense ? "Edit expense" : "Add expense"}</Modal.Title>
@@ -1133,7 +1135,7 @@ function FinanceDashboard() {
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="light" onClick={() => setShowExpenseModal(false)} disabled={expenseSaving}>Cancel</Button>
+            <Button className="finance-secondary-btn" onClick={() => setShowExpenseModal(false)} disabled={expenseSaving}>Cancel</Button>
             <Button type="submit" className="finance-primary-btn" disabled={expenseSaving}>
               {expenseSaving ? "Saving…" : editingExpense ? "Save changes" : "Add expense"}
             </Button>
@@ -1141,20 +1143,20 @@ function FinanceDashboard() {
         </Form>
       </Modal>
 
-      <Modal show={Boolean(expenseToDelete)} onHide={() => !expenseDeleting && setExpenseToDelete(null)} centered>
+      <Modal className="finance-modal" show={Boolean(expenseToDelete)} onHide={() => !expenseDeleting && setExpenseToDelete(null)} centered>
         <Modal.Header closeButton={!expenseDeleting}><Modal.Title>Delete expense?</Modal.Title></Modal.Header>
         <Modal.Body>
           This permanently removes <strong>{expenseToDelete?.name}</strong>. Existing finance totals will update immediately.
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="light" onClick={() => setExpenseToDelete(null)} disabled={expenseDeleting}>Cancel</Button>
+          <Button className="finance-secondary-btn" onClick={() => setExpenseToDelete(null)} disabled={expenseDeleting}>Cancel</Button>
           <Button variant="danger" onClick={confirmDeleteExpense} disabled={expenseDeleting}>
             {expenseDeleting ? "Deleting…" : "Delete expense"}
           </Button>
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showSupplierModal} onHide={() => setShowSupplierModal(false)} size="xl" centered>
+      <Modal className="finance-modal" show={showSupplierModal} onHide={() => setShowSupplierModal(false)} size="xl" centered>
         <Modal.Header closeButton><Modal.Title>{supplierDetail?.supplier_name || "Supplier details"}</Modal.Title></Modal.Header>
         <Modal.Body>
           <PanelState loading={supplierDetailLoading} error={supplierDetailError}>
@@ -1195,10 +1197,10 @@ function FinanceDashboard() {
             )}
           </PanelState>
         </Modal.Body>
-        <Modal.Footer><Button variant="light" onClick={() => setShowSupplierModal(false)}>Close</Button></Modal.Footer>
+        <Modal.Footer><Button className="finance-secondary-btn" onClick={() => setShowSupplierModal(false)}>Close</Button></Modal.Footer>
       </Modal>
 
-      <Modal show={showInvoiceModal} onHide={() => !invoiceLoading && setShowInvoiceModal(false)} centered>
+      <Modal className="finance-modal" show={showInvoiceModal} onHide={() => !invoiceLoading && setShowInvoiceModal(false)} centered>
         <Modal.Header closeButton={!invoiceLoading}>
           <Modal.Title>Download invoice — {invoiceSupplier?.supplier_name}</Modal.Title>
         </Modal.Header>
@@ -1213,7 +1215,7 @@ function FinanceDashboard() {
           {invoiceError && <Alert variant="danger">{invoiceError}</Alert>}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="light" onClick={() => setShowInvoiceModal(false)} disabled={invoiceLoading}>Cancel</Button>
+          <Button className="finance-secondary-btn" onClick={() => setShowInvoiceModal(false)} disabled={invoiceLoading}>Cancel</Button>
           <Button className="finance-primary-btn" onClick={downloadInvoice} disabled={invoiceLoading || !invoicePeriod}>
             {invoiceLoading ? "Generating…" : "Download PDF"}
           </Button>
@@ -1221,6 +1223,7 @@ function FinanceDashboard() {
       </Modal>
 
       <Modal
+        className="finance-modal"
         show={showDeliverabilityModal}
         onHide={() => !deliverabilityLoading && setShowDeliverabilityModal(false)}
         centered
@@ -1235,7 +1238,7 @@ function FinanceDashboard() {
           </dl>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="light" onClick={() => setShowDeliverabilityModal(false)} disabled={deliverabilityLoading}>Cancel</Button>
+          <Button className="finance-secondary-btn" onClick={() => setShowDeliverabilityModal(false)} disabled={deliverabilityLoading}>Cancel</Button>
           <Button variant="warning" onClick={sendDeliverabilityTest} disabled={deliverabilityLoading}>
             {deliverabilityLoading ? "Queueing…" : "Send 15 test emails"}
           </Button>
