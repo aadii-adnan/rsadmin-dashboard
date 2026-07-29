@@ -94,6 +94,8 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
         <img
           src={imageSrc}
           alt={service.name}
+          width="640"
+          height="420"
           style={{
             width: '100%',
             height: '210px',

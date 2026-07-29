@@ -52,6 +52,31 @@
   box-shadow: 0 8px 20px rgba(39, 62, 143, 0.08);
 }
 
+.faq-section .faq-items {
+  min-height: 432px;
+}
+
+.faq-section .faq-skeleton-card {
+  height: 56px;
+  padding: 20px 24px;
+}
+
+.faq-section .faq-skeleton-card span {
+  display: block;
+  width: min(72%, 520px);
+  height: 16px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #edf1f5 25%, #f8fafc 50%, #edf1f5 75%);
+  background-size: 200% 100%;
+  animation: faq-skeleton-shimmer 1.4s infinite;
+}
+
+@keyframes faq-skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 .faq-section .faq-header {
   width: 100%;
   text-align: left;

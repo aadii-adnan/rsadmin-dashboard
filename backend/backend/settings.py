@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from corsheaders.defaults import default_headers
 import stripe
 import os
 import re
@@ -203,7 +204,13 @@ CORS_ALLOWED_ORIGINS  = [
     'https://www.dublinairportexpressparking.ie',
     'http://localhost:3000',
     'http://localhost:5173',
+    'http://127.0.0.1:5173',
 ]
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    'idempotency-key',
+)
 
 AUTH_USER_MODEL = 'users.CustomUser'
 

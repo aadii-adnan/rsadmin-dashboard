@@ -6,9 +6,9 @@ import { useAuth } from "./auth/AuthContext";
 import CookieBanner from "./components/Utility/CookieBanner";
 import avatar from "./assets/avatar.png";
 import { captureAttribution } from "./utils/attribution";
-import "react-toastify/dist/ReactToastify.css";
+import Home from "./pages/Home";
+import VoucherToast from "./components/Utility/VoucherToast";
 
-const Home = lazy(() => import("./pages/Home"));
 const Services = lazy(() => import("./pages/Services"));
 const BookingForm = lazy(() => import("./pages/BookingForm"));
 const BlogList = lazy(() => import("./pages/BlogList"));
@@ -36,7 +36,10 @@ const FloatingWhatsApp = lazy(() =>
 
 function RouteFallback({ label = "Loading page..." }) {
   return (
-    <div className="d-flex align-items-center justify-content-center py-5">
+    <div
+      className="d-flex align-items-center justify-content-center py-5"
+      style={{ minHeight: "calc(100svh - 180px)" }}
+    >
       <div className="text-muted">{label}</div>
     </div>
   );
@@ -96,6 +99,7 @@ function App() {
   return (
     <>
       <CookieBanner />
+      {!hideHeaderFooter && <VoucherToast />}
       {!hideHeaderFooter && <Header />}   
       <Suspense fallback={<RouteFallback />}>
         <Routes>

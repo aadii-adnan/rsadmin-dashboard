@@ -1,22 +1,24 @@
 from datetime import datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
 from types import SimpleNamespace
+import uuid
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.test import SimpleTestCase, TestCase
-from django.test.client import RequestFactory
+from django.test import SimpleTestCase, TestCase, TransactionTestCase
+from django.test.client import Client, RequestFactory
 from django.template.loader import render_to_string
 from django.urls import resolve
 from django.utils.html import strip_tags
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.test import APIClient
 
 from core.models import Status
 from services.models import AddOn, Service
 from users.models import Supplier
 
 from .admin import BookingAdmin
-from .models import Booking, classify_source, normalize_phone_number
+from .models import Booking, BookingUser, classify_source, normalize_phone_number
 from .booking_rules import get_cancellation_policy, validate_reschedule
 from .serializers import BookingSerializer, SupplierBookingSerializer
 
@@ -25,6 +27,204 @@ class SupplierTokenUrlTests(SimpleTestCase):
     def test_documented_supplier_token_routes_exist(self):
         self.assertIs(resolve('/api/token/').func.view_class, TokenObtainPairView)
         self.assertIs(resolve('/api/token/refresh/').func.view_class, TokenRefreshView)
+
+
+class CorsIdempotencyHeaderTests(SimpleTestCase):
+    def test_local_booking_preflight_allows_idempotency_header(self):
+        response = Client().options(
+            '/api/bookings/booking-user/',
+            HTTP_ORIGIN='http://localhost:5173',
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS='content-type,idempotency-key',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Access-Control-Allow-Origin'],
+            'http://localhost:5173',
+        )
+        self.assertIn(
+            'idempotency-key',
+            response['Access-Control-Allow-Headers'].lower(),
+        )
+
+
+class BookingIdempotencyTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.pending_status = Status.objects.create(name='Pending', type='booking')
+        self.service = Service.objects.create(
+            name='Idempotent Meet and Greet',
+            description='Short description',
+            long_description='Long description',
+            base_price=Decimal('50.00'),
+            per_day_price=Decimal('10.00'),
+            enabled=True,
+            website='rsexpressparking',
+        )
+        self.journey_key = uuid.uuid4()
+        self.lead_payload = {
+            'first_name': 'Alison',
+            'last_name': 'OKane',
+            'email': 'alison@example.com',
+            'contact_no': '+353871234567',
+        }
+
+    def booking_payload(self, booking_user_id=None, **overrides):
+        data = {
+            'service': self.service.id,
+            'booking_user': booking_user_id,
+            'first_name': 'Alison',
+            'last_name': 'OKane',
+            'email': 'alison@example.com',
+            'contact_no': '+353871234567',
+            'total_passengers': 2,
+            'car_registration_no': '261-D-1234',
+            'car_model': 'Corolla',
+            'car_colour': 'Silver',
+            'car_manufacturer': 'Toyota',
+            'departure_terminal': '1',
+            'return_terminal': '2',
+            'departure_flight_number': 'EI123',
+            'return_flight_number': 'EI456',
+            'departure_time': '2026-08-15T05:00:00Z',
+            'return_time': '2026-08-20T17:00:00Z',
+            'total_price': '120.00',
+            'discounted_price': '120.00',
+            'add_ons': [],
+            'website': 'rsexpressparking',
+        }
+        data.update(overrides)
+        return data
+
+    def test_lead_replay_updates_one_row(self):
+        first = self.client.post(
+            '/api/bookings/booking-user/',
+            self.lead_payload,
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(self.journey_key),
+        )
+        second = self.client.post(
+            '/api/bookings/booking-user/',
+            {**self.lead_payload, 'last_name': "O'Kane"},
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(self.journey_key),
+        )
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(first.data['id'], second.data['id'])
+        self.assertEqual(BookingUser.objects.count(), 1)
+        self.assertEqual(BookingUser.objects.get().last_name, "O'Kane")
+
+    def test_booking_replay_returns_original_and_links_lead(self):
+        lead = self.client.post(
+            '/api/bookings/booking-user/',
+            self.lead_payload,
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(self.journey_key),
+        )
+        payload = self.booking_payload(lead.data['id'])
+
+        first = self.client.post(
+            '/api/bookings/',
+            payload,
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(self.journey_key),
+        )
+        second = self.client.post(
+            '/api/bookings/',
+            payload,
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(self.journey_key),
+        )
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(first.data['id'], second.data['id'])
+        self.assertEqual(Booking.objects.count(), 1)
+        self.assertEqual(Booking.objects.get().booking_user_id, lead.data['id'])
+
+    def test_key_reuse_with_different_booking_returns_conflict(self):
+        payload = self.booking_payload()
+        first = self.client.post(
+            '/api/bookings/',
+            payload,
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(self.journey_key),
+        )
+        conflict = self.client.post(
+            '/api/bookings/',
+            {**payload, 'car_model': 'Yaris'},
+            format='json',
+            HTTP_IDEMPOTENCY_KEY=str(self.journey_key),
+        )
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(conflict.status_code, 409)
+        self.assertEqual(Booking.objects.count(), 1)
+
+    def test_legacy_requests_without_key_remain_compatible(self):
+        first = self.client.post('/api/bookings/', self.booking_payload(), format='json')
+        second = self.client.post('/api/bookings/', self.booking_payload(), format='json')
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 201)
+        self.assertEqual(Booking.objects.count(), 2)
+
+
+class ConcurrentBookingIdempotencyTests(TransactionTestCase):
+    reset_sequences = True
+
+    def setUp(self):
+        self.pending_status = Status.objects.create(name='Pending', type='booking')
+        self.service = Service.objects.create(
+            name='Concurrent Meet and Greet',
+            description='Short description',
+            long_description='Long description',
+            base_price=Decimal('50.00'),
+            per_day_price=Decimal('10.00'),
+            enabled=True,
+            website='rsexpressparking',
+        )
+
+    def test_concurrent_replays_create_one_booking(self):
+        from concurrent.futures import ThreadPoolExecutor
+
+        key = str(uuid.uuid4())
+        payload = {
+            'service': self.service.id,
+            'first_name': 'Rapid',
+            'last_name': 'Tap',
+            'email': 'rapid@example.com',
+            'contact_no': '+353871111111',
+            'total_passengers': 1,
+            'car_registration_no': '261-D-9999',
+            'car_model': 'Golf',
+            'car_colour': 'Black',
+            'car_manufacturer': 'Volkswagen',
+            'departure_terminal': '1',
+            'return_terminal': '1',
+            'departure_time': '2026-09-01T05:00:00Z',
+            'return_time': '2026-09-05T17:00:00Z',
+            'total_price': '100.00',
+            'discounted_price': '100.00',
+            'add_ons': [],
+            'website': 'rsexpressparking',
+        }
+
+        def submit():
+            return APIClient().post(
+                '/api/bookings/',
+                payload,
+                format='json',
+                HTTP_IDEMPOTENCY_KEY=key,
+            ).status_code
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            statuses = list(executor.map(lambda _: submit(), range(2)))
+
+        self.assertEqual(sorted(statuses), [200, 201])
+        self.assertEqual(Booking.objects.count(), 1)
 
 
 class MarketingAttributionClassificationTests(SimpleTestCase):

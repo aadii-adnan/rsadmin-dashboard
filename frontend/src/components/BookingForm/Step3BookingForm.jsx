@@ -146,7 +146,7 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
                   <div id="cardDesign" className="position-relative shadow p-4">
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="fs-4"><strong>€{discountedPrice > 0 ? discountedPrice.toFixed(2) : totalPrice.toFixed(2)}</strong></div>
-                      <img src={wifi} alt="Wifi Svg" width="60px" style={{ transform: "rotate(90deg)", filter: "invert(1)" }} />
+                      <img src={wifi} alt="Contactless payment" width="60" height="40" style={{ transform: "rotate(90deg)", filter: "invert(1)" }} />
                     </div>
                     <div className="mt-4 fs-3">**** **** **** ****</div>
                     <div>
@@ -154,7 +154,7 @@ const Step3BookingForm = ({ formData, totalPrice, discountedPrice,  goNext, hand
                     </div>
                     <div className="mt-3 d-flex justify-content-between align-items-center">
                       <div className="text-warning fs-5"><strong>XXXX X X</strong></div>
-                      <img src={masterCardLogo} alt="Card Logo" style={{ width: "60px", height: "60px" }} />
+                      <img src={masterCardLogo} alt="Card Logo" width="60" height="60" style={{ width: "60px", height: "60px" }} />
                     </div>
                   </div>
 

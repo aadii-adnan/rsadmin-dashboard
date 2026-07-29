@@ -244,6 +244,12 @@ function BlogDetail() {
 
     const doc = new DOMParser().parseFromString(post.content, "text/html");
     const h2Elements = Array.from(doc.querySelectorAll("h2"));
+    Array.from(doc.querySelectorAll("img")).forEach((image) => {
+      if (!image.getAttribute("width")) image.setAttribute("width", "1600");
+      if (!image.getAttribute("height")) image.setAttribute("height", "900");
+      if (!image.getAttribute("loading")) image.setAttribute("loading", "lazy");
+      if (!image.getAttribute("decoding")) image.setAttribute("decoding", "async");
+    });
     const headings = h2Elements.map((el, idx) => {
       const text = el.textContent.trim();
       const id = `toc-${idx}-${text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50)}`;
@@ -321,8 +327,8 @@ function BlogDetail() {
   const featuredImageSrc = featuredImage?.src || post.featured_image || "";
   const featuredImageSrcSet = featuredImage?.srcset || undefined;
   const featuredImageSizes = featuredImage?.sizes || "(max-width: 992px) 100vw, 50vw";
-  const featuredImageWidth = featuredImage?.width || undefined;
-  const featuredImageHeight = featuredImage?.height || undefined;
+  const featuredImageWidth = featuredImage?.width || 1200;
+  const featuredImageHeight = featuredImage?.height || 675;
 
   /* ── Dynamic Robots Meta ── */
   const robotsParts = [];
@@ -490,7 +496,7 @@ function BlogDetail() {
               <div className="summarize-ai" aria-label="Summarize this article with AI">
                 <span className="summarize-ai-label">Summarize with AI:</span>
                 <div className="summarize-ai-buttons">
-                  {aiProviders.map(({ name, Icon, url }) => (
+                  {aiProviders.map(({ name, url }) => (
                     <a
                       key={name}
                       href={url}
@@ -612,8 +618,8 @@ function BlogDetail() {
                           src={rPost.featured_image_responsive?.src || rPost.featured_image}
                           srcSet={rPost.featured_image_responsive?.srcset || undefined}
                           sizes={rPost.featured_image_responsive?.sizes || "(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"}
-                          width={rPost.featured_image_responsive?.width || undefined}
-                          height={rPost.featured_image_responsive?.height || undefined}
+                          width={rPost.featured_image_responsive?.width || 640}
+                          height={rPost.featured_image_responsive?.height || 360}
                           alt={rPost.title} 
                           className="related-blog-img" 
                           loading="lazy" 

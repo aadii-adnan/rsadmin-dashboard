@@ -11,6 +11,7 @@ class Payment(models.Model):
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, limit_choices_to={'type': 'payment'})
     status_message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    client_request_id = models.UUIDField(unique=True, null=True, blank=True, editable=False)
 
     def __str__(self):
         return f"Payment for {self.booking} - {self.status}"

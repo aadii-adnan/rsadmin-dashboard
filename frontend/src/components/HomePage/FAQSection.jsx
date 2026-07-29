@@ -24,9 +24,12 @@ const FAQSection = ({ faqs, loading, isBlog = false }) => {
         {/* FAQ List */}
         <div className="faq-container-width mx-auto">
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status"></div>
-              <p className="mt-3 text-muted">Loading answers...</p>
+            <div className="faq-items faq-loading-items" aria-label="Loading answers">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div className="faq-card faq-skeleton-card" aria-hidden="true" key={index}>
+                  <span />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="faq-items">

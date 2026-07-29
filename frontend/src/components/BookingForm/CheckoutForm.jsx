@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { createPaymentIntent, verifyPaymentAmount, checkPaymentStatus } from '../../services/paymentService';
 import PaymentStatus from './PaymentStatus';
@@ -15,6 +15,8 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState(null);
   const [paymentId, setPaymentId] = useState(null);
+  const submissionLockRef = useRef(false);
+  const paymentAttemptIdRef = useRef(null);
   const navigate = useNavigate();
   
   // Add payment recovery state
@@ -132,9 +134,10 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
     return await stripe.confirmCardPayment(clientSecret, paymentMethod);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async () => {
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
     resetPaymentState();
-    if (processing) return; // Prevent double submit
     setProcessing(true);
   
     const timeout = setTimeout(handlePaymentTimeout, PAYMENT_TIMEOUT);
@@ -149,14 +152,28 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
       let bookingId = formData.booking_id;
   
       // --- Create Payment Intent and check response manually ---
+      paymentAttemptIdRef.current ||= window.crypto.randomUUID();
       const paymentIntentResponse = await createPaymentIntent(
         formData.booking_id,
         formData.isRescheduleExtra ? formData.total_price.toFixed(2) : null,
         formData.isRescheduleExtra || false,
         bonusUsed || 0,
-        rescheduleNewTimes
+        rescheduleNewTimes,
+        paymentAttemptIdRef.current,
       );
       if (!paymentIntentResponse?.clientSecret) {
+        if (paymentIntentResponse?.code === "already_paid") {
+          paymentAttemptIdRef.current = null;
+          localStorage.setItem("payment_status", "succeeded");
+          navigate("/thank-you");
+          return;
+        }
+        if (
+          paymentIntentResponse?._httpStatus >= 400 &&
+          paymentIntentResponse?._httpStatus < 500
+        ) {
+          paymentAttemptIdRef.current = null;
+        }
         
         if (
           paymentIntentResponse?.error?.includes("Duplicate entry") &&
@@ -178,7 +195,7 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
         }
   
         // Other API errors
-        throw new Error(error?.error || "Failed to create payment intent.");
+        throw new Error(paymentIntentResponse?.error || "Failed to create payment intent.");
       }
       localPaymentId = paymentIntentResponse?.payment_id;
       setPaymentId(localPaymentId);
@@ -212,21 +229,30 @@ const CheckoutForm = ({ formData, goNext, labelStyle, nextButtonStyle, bonusUsed
       }
   
       if (result?.error) {
+        paymentAttemptIdRef.current = null;
         throw result.error;
       }
   
       if (result.paymentIntent.status === "succeeded") {
+        paymentAttemptIdRef.current = null;
         setMessage("Payment processed. Confirming your booking...");
         await pollPaymentStatus(bookingId);
       }
     } catch (err) {
       console.error("Payment error:", err);
       setError(err.message || "Payment failed. Please try again.");
-      if(localPaymentId)
-      await updatePaymentStatus(localPaymentId, "Failed", err.message);
+      if (localPaymentId) {
+        try {
+          await updatePaymentStatus(localPaymentId, "Failed", err.message);
+          paymentAttemptIdRef.current = null;
+        } catch (statusError) {
+          console.error("Could not confirm failed payment status:", statusError);
+        }
+      }
     } finally {
       setProcessing(false);
-      clearTimeout(paymentTimeout);
+      submissionLockRef.current = false;
+      clearTimeout(timeout);
     }
   };
   

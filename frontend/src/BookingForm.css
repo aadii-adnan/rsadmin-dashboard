@@ -715,3 +715,167 @@ button.btn {
         width: 90%;
     }
 }
+.irish-date-picker {
+  position: relative;
+  width: 100%;
+}
+
+.irish-date-picker > label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 500;
+}
+
+.irish-date-input-wrap {
+  position: relative;
+}
+
+.irish-date-input-wrap input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 92px 10px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+.irish-date-input-wrap input:focus {
+  border-color: #2890cd;
+  outline: 2px solid rgba(40, 144, 205, 0.2);
+}
+
+.irish-date-input-wrap input[aria-invalid="true"] {
+  border-color: #b42318;
+}
+
+.irish-date-trigger {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  min-width: 76px;
+  min-height: 32px;
+  padding: 5px 8px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 4px;
+  background: #eef6fb;
+  color: #010659;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.irish-date-error {
+  margin-top: 5px;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.irish-date-popover {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid #d7dde5;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 35px rgba(1, 6, 89, 0.22);
+  color: #1f2937;
+}
+
+.irish-date-popover .rdp-root {
+  --rdp-accent-color: #010659;
+  --rdp-accent-background-color: #eaf5fb;
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+  --rdp-nav_button-height: 32px;
+  --rdp-nav_button-width: 32px;
+  --rdp-nav-height: 38px;
+  --rdp-weekday-padding: 5px 0;
+  margin: 0;
+  background: #fff;
+  font-size: 14px;
+}
+
+/* ContactUs.css contains site-wide table rules. Reset them inside DayPicker so
+   each calendar cell stays compact and cannot overflow the solid popover. */
+.irish-date-popover .rdp-months,
+.irish-date-popover .rdp-month {
+  width: max-content;
+  max-width: 100%;
+}
+
+.irish-date-popover .rdp-month_grid {
+  width: auto;
+  margin: 0;
+  border: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #fff;
+  font-size: 14px;
+}
+
+.irish-date-popover .rdp-month_grid th,
+.irish-date-popover .rdp-month_grid td {
+  width: var(--rdp-day-width);
+  min-width: var(--rdp-day-width);
+  height: var(--rdp-day-height);
+  padding: 0;
+  border: 0;
+  background: #fff;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.irish-date-popover .rdp-month_grid tbody > tr:nth-child(odd) > td,
+.irish-date-popover .rdp-month_grid tbody > tr:nth-child(odd) > th,
+.irish-date-popover .rdp-month_grid tbody tr:hover > td,
+.irish-date-popover .rdp-month_grid tbody tr:hover > th {
+  background: #fff;
+}
+
+.irish-date-popover .rdp-day_button {
+  margin: auto;
+  color: #1f2937;
+}
+
+.irish-date-popover .rdp-selected .rdp-day_button {
+  background: #010659;
+  color: #fff;
+}
+
+.irish-date-popover .rdp-disabled .rdp-day_button {
+  color: #9ca3af;
+}
+
+.irish-date-popover .rdp-caption_label {
+  font-size: 16px;
+}
+
+.irish-date-popover .rdp-chevron {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 576px) {
+  .irish-date-popover {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 282px;
+    max-width: calc(100vw - 24px);
+    padding: 12px 10px;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+  }
+}

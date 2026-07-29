@@ -7,10 +7,9 @@ from .models import Expense, SupplierInvoice
 from users.models import Supplier
 from datetime import datetime, timedelta, time
 from django.db.models import Sum
-from django.utils.dateparse import parse_date
 from .serializers import ExpenseSerializer
 from django.shortcuts import get_object_or_404
-from rest_framework import status, permissions
+from rest_framework import status
 from core.models import Status
 from services.models import Service, AddOn
 from decimal import Decimal
@@ -36,7 +35,11 @@ from bookings.tasks import (
 @login_required
 def finance_jwt_login(request):
     user = request.user
-    if not (user.is_superuser and not getattr(user, 'is_manager', False)):
+    if not (
+        user.is_superuser
+        and not getattr(user, 'is_manager', False)
+        and not getattr(user, 'is_supplier', False)
+    ):
         return HttpResponseRedirect('/admin/login/?next=/admin-dashboard/finance/')
     refresh = RefreshToken.for_user(user)
     access = str(refresh.access_token)
@@ -61,7 +64,12 @@ def count_overlapping_months(start1, end1, start2, end2):
 class IsSuperAdminNotManager(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        return user.is_authenticated and user.is_superuser and not getattr(user, 'is_manager', False)
+        return (
+            user.is_authenticated
+            and user.is_superuser
+            and not getattr(user, 'is_manager', False)
+            and not getattr(user, 'is_supplier', False)
+        )
 
 
 class EmailDeliverabilityTestView(APIView):
@@ -192,67 +200,277 @@ def should_count_supplier_commission_status(status_name):
 
 SUPPLIER_EARNING_STATUSES = ("Cancelled", "Started", "Completed", "No Show")
 
+FINANCE_WEBSITES = {"rsexpressparking", "dublinairportparking"}
+
+
+def _month_start(value, field_name):
+    try:
+        return datetime.strptime(value, "%Y-%m").date().replace(day=1)
+    except (TypeError, ValueError):
+        raise ValueError(f"{field_name} must use YYYY-MM format.")
+
+
+def _month_end(value):
+    return value + relativedelta(months=1) - timedelta(days=1)
+
+
+def resolve_finance_period(query_params, booking_queryset=None):
+    """Resolve canonical and legacy dashboard period parameters."""
+    period_type = query_params.get("period_type")
+    legacy_all = query_params.get("all") == "true"
+    legacy_month = query_params.get("month")
+    year_value = query_params.get("year")
+    start_value = query_params.get("start_month") or legacy_month
+    end_value = query_params.get("end_month") or start_value
+
+    if not period_type:
+        if legacy_all:
+            period_type = "all"
+        elif year_value:
+            period_type = "year"
+        elif start_value:
+            period_type = "range"
+        else:
+            period_type = "range"
+            start_value = timezone.localdate().strftime("%Y-%m")
+            end_value = start_value
+
+    if period_type == "all":
+        queryset = booking_queryset if booking_queryset is not None else Booking.objects.all()
+        first_booking = queryset.order_by("created_at").first()
+        last_booking = queryset.order_by("-created_at").first()
+        if not first_booking or not last_booking:
+            raise ValueError("No bookings found.")
+        return (
+            first_booking.created_at.date(),
+            last_booking.created_at.date(),
+            "All time",
+            "all",
+        )
+
+    if period_type == "year":
+        try:
+            selected_year = int(year_value)
+        except (TypeError, ValueError):
+            raise ValueError("year must be a four-digit year.")
+        if selected_year < 2000 or selected_year > 2100:
+            raise ValueError("year must be between 2000 and 2100.")
+        return (
+            date(selected_year, 1, 1),
+            date(selected_year, 12, 31),
+            str(selected_year),
+            "year",
+        )
+
+    if period_type != "range":
+        raise ValueError("period_type must be range, year, or all.")
+
+    start_date = _month_start(start_value, "start_month")
+    end_month = _month_start(end_value, "end_month")
+    if start_date > end_month:
+        raise ValueError("start_month cannot be after end_month.")
+    end_date = _month_end(end_month)
+    label = (
+        start_date.strftime("%B %Y")
+        if start_date == end_month
+        else f"{start_date.strftime('%b %Y')} – {end_month.strftime('%b %Y')}"
+    )
+    return start_date, end_date, label, "range"
+
+
+def resolve_finance_website(query_params):
+    website = (query_params.get("website") or "all").lower()
+    if website != "all" and website not in FINANCE_WEBSITES:
+        raise ValueError("website must be all, rsexpressparking, or dublinairportparking.")
+    return website
+
+
+def finance_booking_queryset(start_date, end_date, website, include_all_statuses=False):
+    start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+    end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
+    queryset = Booking.objects.filter(
+        created_at__gte=start_datetime,
+        created_at__lte=end_datetime,
+    )
+    if not include_all_statuses:
+        queryset = queryset.exclude(status__name__in=["Pending", "Payment Failed"])
+    if website != "all":
+        queryset = queryset.filter(website__iexact=website)
+    return queryset.select_related("service", "status", "supplier").prefetch_related("add_ons")
+
+
+def finance_expense_snapshot(start_date, end_date, website):
+    expense_filter = {}
+    if website != "all":
+        expense_filter["website__in"] = [website, "both"]
+
+    fixed_expenses = Expense.objects.filter(
+        recurring=False,
+        for_month__gte=start_date,
+        for_month__lte=end_date,
+        **expense_filter,
+    )
+    recurring_expenses = Expense.objects.filter(
+        recurring=True,
+        **expense_filter,
+    ).filter(
+        Q(recurring_start_month__lte=end_date) | Q(recurring_start_month__isnull=True),
+        Q(recurring_end_month__gte=start_date) | Q(recurring_end_month__isnull=True),
+    )
+    recurring_total = Decimal("0.00")
+    for expense in recurring_expenses:
+        months = count_overlapping_months(
+            start_date,
+            end_date,
+            expense.recurring_start_month or start_date,
+            expense.recurring_end_month or end_date,
+        )
+        recurring_total += expense.amount * Decimal(months)
+    return fixed_expenses, recurring_expenses, sum(
+        (expense.amount for expense in fixed_expenses),
+        Decimal("0.00"),
+    ) + recurring_total
+
+
+def finance_metric_snapshot(start_date, end_date, website):
+    bookings = finance_booking_queryset(start_date, end_date, website)
+    balance = sum((get_booking_balance_amount(booking) for booking in bookings), Decimal("0.00"))
+    earnings = sum(
+        (
+            get_booking_net_earning(booking)
+            for booking in bookings
+            if should_count_booking_for_earnings(booking)
+        ),
+        Decimal("0.00"),
+    )
+    _, _, expenses = finance_expense_snapshot(start_date, end_date, website)
+    return {
+        "balance": balance,
+        "earnings": earnings,
+        "expenses": expenses,
+        "profit_or_loss": earnings - expenses,
+    }
+
+
+def previous_finance_period(start_date, end_date, period_type):
+    if period_type == "all":
+        return None
+    months = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1
+    previous_end = start_date - timedelta(days=1)
+    previous_start = start_date - relativedelta(months=months)
+    return previous_start, previous_end
+
+
+def finance_comparison(current, previous):
+    comparison = {}
+    for key, current_value in current.items():
+        previous_value = previous[key]
+        delta = current_value - previous_value
+        percent = (
+            (delta / abs(previous_value)) * Decimal("100")
+            if previous_value != 0
+            else None
+        )
+        comparison[key] = {
+            "previous": float(previous_value),
+            "delta": float(delta),
+            "percent": round(float(percent), 2) if percent is not None else None,
+        }
+    return comparison
+
+
+def finance_trend(start_date, end_date, website):
+    points = []
+    is_single_month = start_date.year == end_date.year and start_date.month == end_date.month
+    bookings = list(finance_booking_queryset(start_date, end_date, website))
+
+    def booking_values(period_bookings):
+        balance = sum(
+            (get_booking_balance_amount(booking) for booking in period_bookings),
+            Decimal("0.00"),
+        )
+        earnings = sum(
+            (
+                get_booking_net_earning(booking)
+                for booking in period_bookings
+                if should_count_booking_for_earnings(booking)
+            ),
+            Decimal("0.00"),
+        )
+        return balance, earnings
+
+    if is_single_month:
+        _, _, period_expenses = finance_expense_snapshot(start_date, end_date, website)
+        day_count = (end_date - start_date).days + 1
+        daily_expense = (period_expenses / Decimal(day_count)).quantize(Decimal("0.01"))
+        allocated_expenses = Decimal("0.00")
+        cursor = start_date
+        while cursor <= end_date:
+            daily_bookings = [
+                booking
+                for booking in bookings
+                if timezone.localtime(booking.created_at).date() == cursor
+            ]
+            balance, earnings = booking_values(daily_bookings)
+            expense_for_day = (
+                period_expenses - allocated_expenses
+                if cursor == end_date
+                else daily_expense
+            )
+            allocated_expenses += expense_for_day
+            points.append({
+                "period": cursor.isoformat(),
+                "balance": round(float(balance), 2),
+                "earnings": round(float(earnings), 2),
+                "expenses": round(float(expense_for_day), 2),
+                "profit_or_loss": round(float(earnings - expense_for_day), 2),
+            })
+            cursor += timedelta(days=1)
+        return points
+
+    cursor = start_date.replace(day=1)
+    while cursor <= end_date:
+        bucket_start = max(cursor, start_date)
+        bucket_end = min(_month_end(cursor), end_date)
+        bucket_bookings = [
+            booking
+            for booking in bookings
+            if bucket_start <= timezone.localtime(booking.created_at).date() <= bucket_end
+        ]
+        balance, earnings = booking_values(bucket_bookings)
+        _, _, expenses = finance_expense_snapshot(bucket_start, bucket_end, website)
+        points.append({
+            "period": cursor.strftime("%Y-%m"),
+            "balance": round(float(balance), 2),
+            "earnings": round(float(earnings), 2),
+            "expenses": round(float(expenses), 2),
+            "profit_or_loss": round(float(earnings - expenses), 2),
+        })
+        cursor += relativedelta(months=1)
+    return points
+
 class AdminFinancialOverview(APIView):
     permission_classes = [IsSuperAdminNotManager]
 
     def get(self, request):
-        month_str = request.query_params.get('month')
-        end_month_str = request.query_params.get('end_month')
-        year_str = request.query_params.get('year')
-        all_time = request.query_params.get('all')
-        website = request.query_params.get('website')
-
-        if not month_str and not year_str and not all_time:
-            return Response({'error': 'Month, year, or all is required.'}, status=400)
-
         try:
-            if all_time == "true":
-                first_booking = Booking.objects.order_by('created_at').first()
-                last_booking = Booking.objects.order_by('-created_at').first()
-                if not first_booking or not last_booking:
-                    return Response({'error': 'No bookings found.'}, status=404)
-                start_date = first_booking.created_at.date()
-                end_date = last_booking.created_at.date()
-                period_label = "All Time"
-            elif year_str:
-                year = int(year_str)
-                start_date = datetime(year, 1, 1).date()
-                end_date = datetime(year, 12, 31).date()
-                period_label = str(year)
-            elif month_str and end_month_str:
-                start_date = parse_date(f"{month_str}-01")
-                end_date = parse_date(f"{end_month_str}-01")
-                if not start_date or not end_date:
-                    return Response({'error': 'Invalid month format.'}, status=400)
-                # Set end_date to last day of end_month
-                if end_date.month == 12:
-                    end_date = end_date.replace(year=end_date.year+1, month=1, day=1) - timedelta(days=1)
-                else:
-                    end_date = end_date.replace(month=end_date.month+1, day=1) - timedelta(days=1)
-                period_label = f"{month_str} to {end_month_str}"
-            else:
-                start_date = parse_date(f"{month_str}-01")
-                if not start_date:
-                    return Response({'error': 'Invalid month format.'}, status=400)
-                if start_date.month == 12:
-                    end_date = start_date.replace(year=start_date.year+1, month=1, day=1) - timedelta(days=1)
-                else:
-                    end_date = start_date.replace(month=start_date.month+1, day=1) - timedelta(days=1)
-                period_label = month_str
+            start_date, end_date, period_label, period_type = resolve_finance_period(
+                request.query_params
+            )
+            website = resolve_finance_website(request.query_params)
+            all_time = "true" if period_type == "all" else None
+            year_str = str(start_date.year) if period_type == "year" else None
+            year = start_date.year
 
             start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
             end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 
             # Get all relevant bookings in this period
-            bookings_in_period = Booking.objects.filter(
-                created_at__gte=start_datetime,
-                created_at__lte=end_datetime
-            ).exclude(
-                status__name__in=["Pending", "Payment Failed"]
-            ).select_related('service', 'status', 'supplier').prefetch_related('add_ons')
-
-            if website and website.lower() != "all":
-                bookings_in_period = bookings_in_period.filter(website__iexact=website)
+            bookings_in_period = finance_booking_queryset(
+                start_date,
+                end_date,
+                website,
+            )
 
             supplier_summary_bookings = Booking.objects.filter(
                 supplier__isnull=False,
@@ -342,9 +560,9 @@ class AdminFinancialOverview(APIView):
                 service_details.append({
                     "service_id": service.id,
                     "service_name": service.name,
-                    "completed_orders": service_bookings.exclude(
-                status__name__in=["Pending", "Payment Failed"]
-                    ).count(),
+                    "eligible_orders": service_bookings.count(),
+                    # Retained for compatibility with the previous dashboard.
+                    "completed_orders": service_bookings.count(),
                     "cancelled_orders": cancelled_orders,
                     "completed_earning": float(completed_earning),
                     "cancelled_earning": float(cancelled_earning),
@@ -396,15 +614,75 @@ class AdminFinancialOverview(APIView):
                 })
             source_details.sort(key=lambda s: s["total_orders"], reverse=True)
 
+            current_metrics = {
+                "balance": total_balance,
+                "earnings": total_earnings,
+                "expenses": total_expenses,
+                "profit_or_loss": profit,
+            }
+            prior_dates = previous_finance_period(start_date, end_date, period_type)
+            comparison_dates = None
+            comparison = None
+            if prior_dates:
+                prior_start, prior_end = prior_dates
+                previous_metrics = finance_metric_snapshot(prior_start, prior_end, website)
+                comparison = finance_comparison(current_metrics, previous_metrics)
+                comparison_dates = {
+                    "start_date": prior_start.isoformat(),
+                    "end_date": prior_end.isoformat(),
+                }
+
+            def serialize_expense(expense, months_counted=1):
+                return {
+                    "id": expense.id,
+                    "name": expense.name,
+                    "amount": float(expense.amount),
+                    "recurring": expense.recurring,
+                    "for_month": expense.for_month.isoformat() if expense.for_month else None,
+                    "recurring_start_month": (
+                        expense.recurring_start_month.isoformat()
+                        if expense.recurring_start_month
+                        else None
+                    ),
+                    "recurring_end_month": (
+                        expense.recurring_end_month.isoformat()
+                        if expense.recurring_end_month
+                        else None
+                    ),
+                    "website": expense.website,
+                    "months_counted": months_counted,
+                    "total": float(expense.amount * Decimal(months_counted)),
+                }
+
             return Response({
                 'period': period_label,
                 'balance': float(total_balance),
                 'earnings': float(total_earnings),
                 'expenses': float(total_expenses),
                 'profit_or_loss': float(profit),
+                'scope': {
+                    'period_type': period_type,
+                    'start_date': start_date.isoformat(),
+                    'end_date': end_date.isoformat(),
+                    'website': website,
+                    'comparison': comparison_dates,
+                },
+                'comparison': comparison,
+                'trend': finance_trend(start_date, end_date, website),
                 'details': {
-                    'fixed_expenses': [{ 'id': e.id, 'name': e.name, 'amount': float(e.amount) } for e in fixed_expenses],
-                    'recurring_expenses': [{ 'id': e.id, 'name': e.name, 'amount': float(e.amount), 'months_counted': count_overlapping_months(start_date, end_date, e.recurring_start_month or start_date, e.recurring_end_month or end_date), 'total': float(e.amount) * count_overlapping_months(start_date, end_date, e.recurring_start_month or start_date, e.recurring_end_month or end_date)} for e in recurring_expenses],
+                    'fixed_expenses': [serialize_expense(e) for e in fixed_expenses],
+                    'recurring_expenses': [
+                        serialize_expense(
+                            e,
+                            count_overlapping_months(
+                                start_date,
+                                end_date,
+                                e.recurring_start_month or start_date,
+                                e.recurring_end_month or end_date,
+                            ),
+                        )
+                        for e in recurring_expenses
+                    ],
                     'service_details': service_details,
                     'addon_details': addon_details,
                     'source_details': source_details,
@@ -413,6 +691,8 @@ class AdminFinancialOverview(APIView):
                 'supplier_summary': self._build_supplier_summary(supplier_summary_bookings),
             })
 
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
@@ -510,45 +790,59 @@ class DeleteExpenseView(APIView):
 
 
 class BookingsSummaryView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsSuperAdminNotManager]
 
     def get(self, request):
-        # Get all statuses
-        statuses = Status.objects.filter(type='booking')
-        summary = {}
-        for status in statuses:
-            count = Booking.objects.filter(status=status).count()
-            summary[status.name] = count
-        return Response(summary)
+        try:
+            start_date, end_date, _, _ = resolve_finance_period(request.query_params)
+            website = resolve_finance_website(request.query_params)
+            bookings = finance_booking_queryset(
+                start_date,
+                end_date,
+                website,
+                include_all_statuses=True,
+            )
+            statuses = Status.objects.filter(type='booking')
+            return Response({
+                status.name: bookings.filter(status=status).count()
+                for status in statuses
+            })
+        except ValueError as error:
+            return Response({"error": str(error)}, status=400)
     
 class OrdersCountByServiceAndAddOnView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsSuperAdminNotManager]
 
     def get(self, request):
-        # Count bookings for each service
-        service_counts = []
-        for service in Service.objects.all():
-            count = Booking.objects.filter(service=service).count()
-            service_counts.append({
-                "service_id": service.id,
-                "service_name": service.name,
-                "orders_count": count
+        try:
+            start_date, end_date, _, _ = resolve_finance_period(request.query_params)
+            website = resolve_finance_website(request.query_params)
+            bookings = finance_booking_queryset(
+                start_date,
+                end_date,
+                website,
+                include_all_statuses=True,
+            )
+            return Response({
+                "services": [
+                    {
+                        "service_id": service.id,
+                        "service_name": service.name,
+                        "orders_count": bookings.filter(service=service).count(),
+                    }
+                    for service in Service.objects.all()
+                ],
+                "addons": [
+                    {
+                        "addon_id": addon.id,
+                        "addon_name": addon.name,
+                        "orders_count": bookings.filter(add_ons=addon).count(),
+                    }
+                    for addon in AddOn.objects.all()
+                ],
             })
-
-        # Count bookings for each add-on
-        addon_counts = []
-        for addon in AddOn.objects.all():
-            count = Booking.objects.filter(add_ons=addon).count()
-            addon_counts.append({
-                "addon_id": addon.id,
-                "addon_name": addon.name,
-                "orders_count": count
-            })
-
-        return Response({
-            "services": service_counts,
-            "addons": addon_counts
-        })
+        except ValueError as error:
+            return Response({"error": str(error)}, status=400)
     
 
 class MonthlyEarningsTrendView(APIView):
@@ -592,24 +886,51 @@ class BookingsOverTimeView(APIView):
     permission_classes = [IsSuperAdminNotManager]
 
     def get(self, request):
-        # Last 30 days
-        today = timezone.localdate()
-        data = []
-        for i in range(29, -1, -1):
-            day = today - timedelta(days=i)
-            start_dt = timezone.make_aware(datetime.combine(day, time.min))
-            end_dt = timezone.make_aware(datetime.combine(day + timedelta(days=1), time.min))
-            count = Booking.objects.exclude(
-                status__name__in=["Payment Failed", "Pending"]
-            ).filter(
-                created_at__gte=start_dt,
-                created_at__lt=end_dt
-            ).count()
-            data.append({
-                "date": day.strftime("%Y-%m-%d"),
-                "bookings": count
-            })
-        return Response(data)
+        try:
+            start_date, end_date, _, _ = resolve_finance_period(request.query_params)
+            website = resolve_finance_website(request.query_params)
+            bookings = finance_booking_queryset(start_date, end_date, website)
+            data = []
+            is_single_month = (
+                start_date.year == end_date.year
+                and start_date.month == end_date.month
+            )
+
+            if is_single_month:
+                cursor = start_date
+                while cursor <= end_date:
+                    next_day = cursor + timedelta(days=1)
+                    start_dt = timezone.make_aware(datetime.combine(cursor, time.min))
+                    end_dt = timezone.make_aware(datetime.combine(next_day, time.min))
+                    data.append({
+                        "date": cursor.isoformat(),
+                        "bookings": bookings.filter(
+                            created_at__gte=start_dt,
+                            created_at__lt=end_dt,
+                        ).count(),
+                    })
+                    cursor = next_day
+            else:
+                cursor = start_date.replace(day=1)
+                while cursor <= end_date:
+                    bucket_start = max(cursor, start_date)
+                    bucket_end = min(_month_end(cursor), end_date)
+                    start_dt = timezone.make_aware(datetime.combine(bucket_start, time.min))
+                    end_dt = timezone.make_aware(
+                        datetime.combine(bucket_end, datetime.max.time())
+                    )
+                    data.append({
+                        "date": cursor.strftime("%Y-%m"),
+                        "bookings": bookings.filter(
+                            created_at__gte=start_dt,
+                            created_at__lte=end_dt,
+                        ).count(),
+                    })
+                    cursor += relativedelta(months=1)
+
+            return Response(data)
+        except ValueError as error:
+            return Response({"error": str(error)}, status=400)
 
 class ExpenseBreakdownView(APIView):
     permission_classes = [IsSuperAdminNotManager]
@@ -678,42 +999,14 @@ class SupplierFinanceDetailView(APIView):
         from django.shortcuts import get_object_or_404 as get_or_404
         supplier = get_or_404(Supplier, id=supplier_id)
 
-        month_str = request.query_params.get('month')
-        end_month_str = request.query_params.get('end_month')
-        year_str = request.query_params.get('year')
-        all_time = request.query_params.get('all')
-
         try:
-            if all_time == "true":
-                first_booking = Booking.objects.filter(supplier=supplier).order_by('created_at').first()
-                last_booking = Booking.objects.filter(supplier=supplier).order_by('-created_at').first()
-                if not first_booking or not last_booking:
-                    return Response({'error': 'No bookings found for this supplier.'}, status=404)
-                start_date = first_booking.created_at.date()
-                end_date = last_booking.created_at.date()
-            elif year_str:
-                year = int(year_str)
-                start_date = datetime(year, 1, 1).date()
-                end_date = datetime(year, 12, 31).date()
-            elif month_str and end_month_str:
-                start_date = parse_date(f"{month_str}-01")
-                end_date = parse_date(f"{end_month_str}-01")
-                if not start_date or not end_date:
-                    return Response({'error': 'Invalid month format.'}, status=400)
-                if end_date.month == 12:
-                    end_date = end_date.replace(year=end_date.year + 1, month=1, day=1) - timedelta(days=1)
-                else:
-                    end_date = end_date.replace(month=end_date.month + 1, day=1) - timedelta(days=1)
-            elif month_str:
-                start_date = parse_date(f"{month_str}-01")
-                if not start_date:
-                    return Response({'error': 'Invalid month format.'}, status=400)
-                if start_date.month == 12:
-                    end_date = start_date.replace(year=start_date.year + 1, month=1, day=1) - timedelta(days=1)
-                else:
-                    end_date = start_date.replace(month=start_date.month + 1, day=1) - timedelta(days=1)
-            else:
-                return Response({'error': 'Month, year, or all parameter is required.'}, status=400)
+            supplier_bookings = Booking.objects.filter(supplier=supplier)
+            start_date, end_date, _, period_type = resolve_finance_period(
+                request.query_params,
+                booking_queryset=supplier_bookings,
+            )
+            website = resolve_finance_website(request.query_params)
+            all_time = period_type == "all"
 
             start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
             end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
@@ -722,11 +1015,13 @@ class SupplierFinanceDetailView(APIView):
                 supplier=supplier,
                 status__name__in=SUPPLIER_EARNING_STATUSES,
             )
-            if all_time != "true":
+            if not all_time:
                 bookings = bookings.filter(
                     departure_time__gte=start_datetime,
                     departure_time__lte=end_datetime,
                 )
+            if website != "all":
+                bookings = bookings.filter(website__iexact=website)
             bookings = bookings.select_related(
                 'status', 'service'
             ).prefetch_related('add_ons').order_by('departure_time')
@@ -779,6 +1074,8 @@ class SupplierFinanceDetailView(APIView):
                 'bookings': bookings_list,
             })
 
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 

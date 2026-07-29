@@ -12,6 +12,7 @@ const MIN_DETAIL_REQUEST_REDUCTION_PCT = 20;
 const HOME_MAX_LCP_MS = 4000;
 const HOME_MAX_FCP_MS = 2500;
 const HOME_MAX_TBT_MS = 300;
+const HOME_MAX_CLS = 0.1;
 const HOME_MAX_TOTAL_BYTES = 2_500_000;
 const HOME_MAX_REQUEST_COUNT = 70;
 
@@ -275,6 +276,7 @@ async function main() {
       const homeAfterFcp = normalizeNumber(homepageAfter?.audits?.["first-contentful-paint"]?.numericValue);
       const homeAfterLcp = normalizeNumber(homepageAfter?.audits?.["largest-contentful-paint"]?.numericValue);
       const homeAfterTbt = normalizeNumber(homepageAfter?.audits?.["total-blocking-time"]?.numericValue);
+      const homeAfterCls = normalizeNumber(homepageAfter?.audits?.["cumulative-layout-shift"]?.numericValue);
       const homeAfterBytes = normalizeNumber(homepageAfter?.audits?.["total-byte-weight"]?.numericValue);
       const homeAfterRequests = normalizeNumber(homepageAfter?.audits?.["network-requests"]?.details?.items?.length);
 
@@ -282,6 +284,7 @@ async function main() {
         checkAtMost("homepage FCP ms", homeAfterFcp, HOME_MAX_FCP_MS),
         checkAtMost("homepage LCP ms", homeAfterLcp, HOME_MAX_LCP_MS),
         checkAtMost("homepage TBT ms", homeAfterTbt, HOME_MAX_TBT_MS),
+        checkAtMost("homepage CLS", homeAfterCls, HOME_MAX_CLS),
         checkAtMost("homepage transferred bytes", homeAfterBytes, HOME_MAX_TOTAL_BYTES),
         checkAtMost("homepage request count", homeAfterRequests, HOME_MAX_REQUEST_COUNT),
       );

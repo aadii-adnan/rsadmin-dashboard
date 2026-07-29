@@ -22,8 +22,11 @@ from datetime import timedelta
 from decouple import config
 from payments.views import calculate_parking_days  # Make sure this import is at the top
 from django.db.models import Q
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from decimal import Decimal
+import hashlib
+import json
+import uuid
 from .booking_rules import (
     CANCELLATION_FEE,
     compute_reschedule_pricing,
@@ -36,6 +39,46 @@ from .tasks import send_reschedule_email_task, send_cancellation_email_task
 import logging
 
 logger = logging.getLogger(__name__)
+
+BOOKING_FINGERPRINT_FIELDS = (
+    'service', 'user', 'booking_user',
+    'car_registration_no', 'car_model', 'car_colour', 'car_manufacturer',
+    'departure_terminal', 'return_terminal',
+    'departure_flight_number', 'return_flight_number',
+    'first_name', 'last_name', 'email', 'contact_no', 'total_passengers',
+    'departure_time', 'return_time',
+    'total_price', 'coupon', 'discounted_price', 'website', 'add_ons',
+)
+
+
+def parse_idempotency_key(request):
+    raw_key = (request.headers.get('Idempotency-Key') or '').strip()
+    if not raw_key:
+        return None, None
+    try:
+        return uuid.UUID(raw_key), None
+    except (ValueError, AttributeError):
+        return None, Response(
+            {'error': 'Idempotency-Key must be a valid UUID.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+def booking_submission_fingerprint(data):
+    material = {field: data.get(field) for field in BOOKING_FINGERPRINT_FIELDS}
+    if isinstance(material.get('add_ons'), (list, tuple)):
+        material['add_ons'] = sorted(str(value) for value in material['add_ons'])
+    canonical = json.dumps(material, sort_keys=True, separators=(',', ':'), default=str)
+    return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
+
+
+def replay_booking_response(booking, fingerprint):
+    if booking.submission_fingerprint != fingerprint:
+        return Response(
+            {'error': 'This Idempotency-Key was already used for different booking details.'},
+            status=status.HTTP_409_CONFLICT,
+        )
+    return Response(BookingSerializer(booking).data, status=status.HTTP_200_OK)
 
 
 class BookingListCreate(APIView):
@@ -55,6 +98,16 @@ class BookingListCreate(APIView):
 
     def post(self, request):
         data = request.data
+        submission_key, key_error = parse_idempotency_key(request)
+        if key_error:
+            return key_error
+        fingerprint = booking_submission_fingerprint(data) if submission_key else None
+
+        if submission_key:
+            existing = Booking.objects.filter(submission_key=submission_key).first()
+            if existing:
+                return replay_booking_response(existing, fingerprint)
+
         coupon_id = data.get('coupon')  # Assuming the coupon ID is sent in the request
 
         # Check if a coupon is provided
@@ -86,11 +139,31 @@ class BookingListCreate(APIView):
         serializer = BookingSerializer(data=data)
         if serializer.is_valid():
             try:
+                booking_user = serializer.validated_data.get('booking_user')
+                if (
+                    submission_key
+                    and booking_user
+                    and booking_user.journey_key != submission_key
+                ):
+                    return Response(
+                        {'error': 'The booking lead does not belong to this booking journey.'},
+                        status=status.HTTP_409_CONFLICT,
+                    )
                 status_obj = Status.objects.get(name='Pending', type='booking')
-                # Save booking with status
-                booking = serializer.save(status=status_obj)
+                with transaction.atomic():
+                    booking = serializer.save(
+                        status=status_obj,
+                        submission_key=submission_key,
+                        submission_fingerprint=fingerprint,
+                    )
                 response_serializer = BookingSerializer(booking)
                 return Response(response_serializer.data, status=201)
+            except IntegrityError:
+                if submission_key:
+                    existing = Booking.objects.filter(submission_key=submission_key).first()
+                    if existing:
+                        return replay_booking_response(existing, fingerprint)
+                raise
             except Status.DoesNotExist:
                 return Response(
                     {'error': 'System configuration error: Pending status not found'}, 
@@ -306,10 +379,34 @@ class UpdatePaymentStatusView(APIView):
 class BookingUserCreateView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
+        journey_key, key_error = parse_idempotency_key(request)
+        if key_error:
+            return key_error
+
+        if journey_key:
+            existing = BookingUser.objects.filter(journey_key=journey_key).first()
+            if existing:
+                serializer = BookingUserSerializer(existing, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = BookingUserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
+            try:
+                with transaction.atomic():
+                    serializer.save(journey_key=journey_key)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except IntegrityError:
+                if journey_key:
+                    existing = BookingUser.objects.filter(journey_key=journey_key).first()
+                    if existing:
+                        return Response(
+                            BookingUserSerializer(existing).data,
+                            status=status.HTTP_200_OK,
+                        )
+                raise
         return Response(serializer.errors, status=400)
 
 class BookingUserStatusUpdateView(APIView):

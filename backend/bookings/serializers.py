@@ -36,6 +36,8 @@ class BookingSerializer(serializers.ModelSerializer):
             'supplier_extended_amount': {'read_only': True},
             'supplier_commission_percentage': {'read_only': True},
             'source_channel': {'read_only': True},
+            'submission_key': {'read_only': True},
+            'submission_fingerprint': {'read_only': True},
         }
 
     def to_representation(self, instance):
@@ -46,6 +48,8 @@ class BookingSerializer(serializers.ModelSerializer):
         ret.pop('contact_no_normalized', None)
         ret.pop('customer_experience', None)
         ret.pop('customer_experience_details', None)
+        ret.pop('submission_key', None)
+        ret.pop('submission_fingerprint', None)
         # Replace add_ons (ids) with add_ons_detail (objects) for GET
         ret['add_ons'] = AddOnSerializer(instance.add_ons.all(), many=True).data
         return ret
@@ -86,6 +90,14 @@ class BookingUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookingUser
         fields = '__all__'
+        extra_kwargs = {
+            'journey_key': {'read_only': True},
+        }
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret.pop('journey_key', None)
+        return ret
 
 
 class SupplierBookingSerializer(serializers.ModelSerializer):

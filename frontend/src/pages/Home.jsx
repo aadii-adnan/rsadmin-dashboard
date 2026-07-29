@@ -135,6 +135,7 @@ const Home = () => {
             bookingDetails: null,
             paymentDetails: null,
             carFlightDetails: null,
+            bookingJourneyId: null,
           }));}
         else{
             setBookingData(() => ({
@@ -144,6 +145,7 @@ const Home = () => {
             carFlightDetails: null,
             userDetails: null,
             selectedOption: null,
+            bookingJourneyId: null,
           }));
         }
         localStorage.removeItem("payment_status");
@@ -352,7 +354,7 @@ const Home = () => {
                     className="banner-video banner-poster-img"
                     width="1920"
                     height="1080"
-                    fetchpriority="high"
+                    fetchPriority="high"
                     decoding="sync"
                 />
             )}
@@ -595,7 +597,7 @@ const Home = () => {
             </section>     
 
             {/* VIDEO TESTIMONIALS SECTION */}
-            <React.Suspense fallback={<div style={{minHeight: '300px'}} />}>
+            <React.Suspense fallback={<div className="video-section-placeholder" aria-hidden="true" />}>
                 <VideoTestimonialSection 
                     testimonials={[
                         {
@@ -616,7 +618,7 @@ const Home = () => {
                 />
             </React.Suspense>
 
-            <React.Suspense fallback={<div style={{minHeight: '400px'}} />}>
+            <React.Suspense fallback={<div className="faq-section-placeholder" aria-hidden="true" />}>
                 <FAQSection faqs={faqs} loading={faqsLoading}/>
             </React.Suspense>
 

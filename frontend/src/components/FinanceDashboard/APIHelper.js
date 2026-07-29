@@ -1,103 +1,89 @@
-import customFetch from "../../auth/fetch";
+import customFetch from "../../auth/fetch.js";
 
-const API_BASE = "/finance/";
+const getApiBase = () => `${import.meta.env?.VITE_API_BASE_URL || ""}/finance`;
 
-export const getBookingsSummary = async () => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + API_BASE + "dashboard/bookings-summary/", { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch bookings summary");
-  return res.json();
-};
+export function buildFinanceParams(filters = {}) {
+  const params = new URLSearchParams();
+  const periodType = filters.periodType || "range";
+  params.set("period_type", periodType);
+  params.set("website", filters.website || "all");
 
-export const getOrdersCount = async () => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + API_BASE + "dashboard/orders-count/", { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch orders count");
-  return res.json();
-};
+  if (periodType === "range") {
+    params.set("start_month", filters.startMonth);
+    params.set("end_month", filters.endMonth || filters.startMonth);
+  } else if (periodType === "year") {
+    params.set("year", filters.year);
+  }
 
-export async function getFinancialOverview(month, year, all, end_month, website) {
-  let url = `${import.meta.env.VITE_API_BASE_URL}/finance/overview/?`;
-  if (all) url += "all=true&";
-  if (year) url += `year=${year}&`;
-  if (month) url += `month=${month}&`;
-  if (end_month) url += `end_month=${end_month}&`;
-  if (website && website !== "all") url += `website=${website}&`;
-  return customFetch(url, { useFinanceJwt: true }).then(res => res.json());
+  return params;
 }
 
-export const addExpense = async (data) => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + API_BASE + "add-expense/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: data,
-    useFinanceJwt: true
+async function requestJson(path, { signal, ...options } = {}) {
+  const response = await customFetch(`${getApiBase()}${path}`, {
+    ...options,
+    signal,
+    useFinanceJwt: true,
   });
-  if (!res.ok) throw new Error("Failed to add expense");
-  return res.json();
-};
-
-export const getMonthlyEarnings = async () => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + "/finance/charts/monthly-earnings/", { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch monthly earnings");
-  return res.json();
-};
-
-export const getBookingsOverTime = async () => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + "/finance/charts/bookings-over-time/", { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch bookings over time");
-  return res.json();
-};
-
-export const getExpenseBreakdown = async () => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + "/finance/charts/expense-breakdown/", { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch expense breakdown");
-  return res.json();
-};
-
-export const getProfitMargin = async () => {
-  const res = await customFetch(import.meta.env.VITE_API_BASE_URL + "/finance/charts/profit-margin/", { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch profit margin");
-  return res.json();
-};
-
-export async function getSupplierFinanceDetail(supplierId, month, endMonth, year, all, website) {
-  let url = `${import.meta.env.VITE_API_BASE_URL}/finance/supplier/${supplierId}/?`;
-  if (all) url += "all=true&";
-  if (year) url += `year=${year}&`;
-  if (month) url += `month=${month}&`;
-  if (endMonth) url += `end_month=${endMonth}&`;
-  if (website && website !== "all") url += `website=${website}&`;
-  const res = await customFetch(url, { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to fetch supplier finance detail");
-  return res.json();
-}
-
-export async function downloadSupplierInvoice(supplierId, month, year, supplierName) {
-  const url = `${import.meta.env.VITE_API_BASE_URL}/finance/supplier/${supplierId}/invoice/?month=${month}&year=${year}`;
-  const res = await customFetch(url, { useFinanceJwt: true });
-  if (!res.ok) throw new Error("Failed to generate invoice");
-  const blob = await res.blob();
-  const objectUrl = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = objectUrl;
-  a.download = `invoice-${supplierName}-${year}-${String(month).padStart(2, "0")}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  window.URL.revokeObjectURL(objectUrl);
-}
-
-export async function queueEmailDeliverabilityTest(campaign) {
-  const res = await customFetch(
-    import.meta.env.VITE_API_BASE_URL + API_BASE + "email-deliverability-test/",
-    {
-      method: "POST",
-      body: { campaign },
-      useFinanceJwt: true,
-    }
-  );
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || "Failed to queue deliverability test");
+  if (!response) {
+    throw new Error("Your session has expired.");
+  }
+  const data = await response.json();
+  if (!response.ok) {
+    const detail =
+      data.error ||
+      data.detail ||
+      Object.values(data).flat().filter(Boolean).join(" ") ||
+      "The finance data could not be loaded.";
+    throw new Error(detail);
   }
   return data;
 }
+
+export const getFinancialOverview = (filters, signal) =>
+  requestJson(`/overview/?${buildFinanceParams(filters)}`, { signal });
+
+export const getBookingsSummary = (filters, signal) =>
+  requestJson(`/dashboard/bookings-summary/?${buildFinanceParams(filters)}`, { signal });
+
+export const getOrdersCount = (filters, signal) =>
+  requestJson(`/dashboard/orders-count/?${buildFinanceParams(filters)}`, { signal });
+
+export const getBookingsOverTime = (filters, signal) =>
+  requestJson(`/charts/bookings-over-time/?${buildFinanceParams(filters)}`, { signal });
+
+export const saveExpense = (expenseId, data) =>
+  requestJson(expenseId ? `/expense/${expenseId}/update/` : "/add-expense/", {
+    method: expenseId ? "PUT" : "POST",
+    body: data,
+  });
+
+export const deleteExpense = (expenseId) =>
+  requestJson(`/expense/${expenseId}/delete/`, { method: "DELETE" });
+
+export const getSupplierFinanceDetail = (supplierId, filters, signal) =>
+  requestJson(`/supplier/${supplierId}/?${buildFinanceParams(filters)}`, { signal });
+
+export async function downloadSupplierInvoice(supplierId, month, year, supplierName) {
+  const response = await customFetch(
+    `${getApiBase()}/supplier/${supplierId}/invoice/?month=${month}&year=${year}`,
+    { useFinanceJwt: true },
+  );
+  if (!response?.ok) {
+    throw new Error("Failed to generate invoice.");
+  }
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = `invoice-${supplierName}-${year}-${String(month).padStart(2, "0")}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(objectUrl);
+}
+
+export const queueEmailDeliverabilityTest = (campaign) =>
+  requestJson("/email-deliverability-test/", {
+    method: "POST",
+    body: { campaign },
+  });

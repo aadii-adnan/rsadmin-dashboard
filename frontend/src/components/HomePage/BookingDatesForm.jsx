@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
 import { DateTime } from "luxon";
 import "../../BookingForm.css";
+import IrishDatePicker from "./IrishDatePicker";
+import { getDublinTodayIso } from "../../utils/irishDate";
 
 const BookingDatesForm = () => {
   const { setBookingData } = useBooking();
@@ -54,10 +56,20 @@ const BookingDatesForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [name]: value,
+      };
+      if (
+        name === "parkingFromDate" &&
+        prev.carCollectionDate &&
+        (!value || prev.carCollectionDate < value)
+      ) {
+        next.carCollectionDate = "";
+      }
+      return next;
+    });
   };
 
   function calculateParkingDays({ parkingFromDate, parkingFromTime, carCollectionDate, carCollectionTime }) {
@@ -186,6 +198,7 @@ const BookingDatesForm = () => {
   
     setBookingData((prev) => ({
       ...prev,
+      bookingJourneyId: prev.bookingJourneyId || window.crypto.randomUUID(),
       bookingDates: formData,
       paymentDetails: paymentDetails,
     }));
@@ -203,7 +216,7 @@ const BookingDatesForm = () => {
     }, []);
   
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getDublinTodayIso();
 
   return (
     <div id="book" className="form-column" style={{ 
@@ -263,8 +276,16 @@ const BookingDatesForm = () => {
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Parking From Date */}
           <div className="form-date">
-            <label htmlFor="parkingFromDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>Drop-off Date:</label>
-            <input type="date" id="parkingFromDate" name="parkingFromDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.parkingFromDate} min={today} required/>
+            <IrishDatePicker
+              id="parkingFromDate"
+              name="parkingFromDate"
+              label="Drop-off Date"
+              value={formData.parkingFromDate}
+              minimum={today}
+              onChange={handleChange}
+              analyticsId="booking-dropoff-date"
+              required
+            />
           </div>
 
           {/* Parking From Time */}
@@ -299,8 +320,16 @@ const BookingDatesForm = () => {
         <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
           {/* Car Collection Date */}
           <div className="form-date">
-            <label htmlFor="carCollectionDate" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>Pickup Date:</label>
-            <input type="date" id="carCollectionDate" name="carCollectionDate" onFocus={(e) => e.target.showPicker()} style={{   width: "100%",   padding: "10px",   borderRadius: "5px",   border: "1px solid #ccc",   fontSize: "14px", }} onChange={handleChange} value={formData.carCollectionDate} min={formData.parkingFromDate || today} required/>
+            <IrishDatePicker
+              id="carCollectionDate"
+              name="carCollectionDate"
+              label="Pickup Date"
+              value={formData.carCollectionDate}
+              minimum={formData.parkingFromDate || today}
+              onChange={handleChange}
+              analyticsId="booking-pickup-date"
+              required
+            />
           </div>
 
           {/* Car Collection Time */}

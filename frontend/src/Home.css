@@ -744,18 +744,64 @@ body .home-banner {
 }
 
 .styles-module_whatsappButton__tVits {
-  left: 2rem !important;
+  left: max(1rem, env(safe-area-inset-left)) !important;
+  bottom: max(1rem, env(safe-area-inset-bottom)) !important;
   position: fixed !important;
   z-index: 9999;
   right: unset !important;
 }
 
 .styles-module_whatsappChatBox__MdQ5U {
-  left: 2rem !important;
+  left: max(1rem, env(safe-area-inset-left)) !important;
+  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 64px) !important;
   transform-origin: left bottom !important;
   position: fixed !important;
   z-index: 9999;
   right: unset !important;
+}
+
+.voucher-toast {
+  position: fixed;
+  z-index: 10000;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 12px 14px;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  background: #010659;
+  box-shadow: 0 8px 24px rgba(1, 6, 89, 0.25);
+  color: #fff;
+  font-size: 15px;
+}
+
+.voucher-toast button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.video-section-placeholder {
+  min-height: 520px;
+  background: #010659;
+}
+
+.faq-section-placeholder {
+  min-height: 720px;
+  background: #fff;
 }
 
 

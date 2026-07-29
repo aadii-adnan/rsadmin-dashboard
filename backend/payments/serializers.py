@@ -6,6 +6,11 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = '__all__'
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret.pop('client_request_id', None)
+        return ret
+
 
 class CreditTransactionSerializer(serializers.ModelSerializer):
     booking_reference = serializers.CharField(source='booking.booking_id', read_only=True, default=None)

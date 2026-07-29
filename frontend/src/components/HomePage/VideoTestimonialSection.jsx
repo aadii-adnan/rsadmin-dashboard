@@ -66,6 +66,8 @@ const VideoCard = ({ videoUrl, thumbnailUrl, title }) => {
                         className="video-thumbnail"
                         loading="lazy"
                         decoding="async"
+                        width="640"
+                        height="360"
                     />
                     <div className="play-button-overlay">
                         <div className="play-button">

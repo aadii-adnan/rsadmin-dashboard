@@ -196,6 +196,11 @@
   margin: 1.5rem 0;
 }
 
+.blog-content img {
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+}
+
 /* Wrapper that gives wide tables a horizontal scrollbar on small screens.
    WordPress-exported tables already ship inside <div style="overflow-x:auto">. */
 .blog-content table {

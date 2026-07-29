@@ -32,11 +32,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from datetime import timezone as tz, timedelta, time
 from django.utils import timezone
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
 from decimal import Decimal
 import pytz
 import logging
+import uuid
 from users.views import _resolve_website
 
 logger = logging.getLogger(__name__)
@@ -532,6 +533,43 @@ class CreateStripePaymentIntent(APIView):
         user = booking.user  # adjust if your Booking model uses a different field
 
         try:
+            raw_request_id = (request.headers.get('Idempotency-Key') or '').strip()
+            client_request_id = None
+            if raw_request_id:
+                try:
+                    client_request_id = uuid.UUID(raw_request_id)
+                except ValueError:
+                    return Response(
+                        {'error': 'Idempotency-Key must be a valid UUID.'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            if client_request_id:
+                existing_payment = Payment.objects.filter(
+                    client_request_id=client_request_id,
+                ).first()
+                if existing_payment:
+                    if existing_payment.booking_id != booking.id:
+                        return Response(
+                            {'error': 'This Idempotency-Key belongs to another booking.'},
+                            status=status.HTTP_409_CONFLICT,
+                        )
+                    existing_intent = stripe.PaymentIntent.retrieve(
+                        existing_payment.stripe_payment_intent
+                    )
+                    return Response({
+                        'clientSecret': existing_intent['client_secret'],
+                        'amount': existing_payment.amount,
+                        'payment_id': existing_payment.id,
+                        'replayed': True,
+                    })
+
+            if booking.payments.filter(status__name__iexact='Succeeded').exists():
+                return Response(
+                    {'error': 'This booking has already been paid.', 'code': 'already_paid'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
             is_reschedule_extra = request.data.get("is_reschedule_extra", False)
             try:
                 bonus_points_used = Decimal(str(request.data.get("bonus_points_used", 0)))
@@ -551,7 +589,10 @@ class CreateStripePaymentIntent(APIView):
                     )
                 bonus_points_used = min(bonus_points_used, request.user.bonus_points or Decimal('0.00'))
 
-            customer = stripe.Customer.create(email=booking.email)
+            customer_kwargs = {'email': booking.email}
+            if client_request_id:
+                customer_kwargs['idempotency_key'] = f'customer:{booking.id}:{client_request_id}'
+            customer = stripe.Customer.create(**customer_kwargs)
             amount_to_charge = float(booking.discounted_price if booking.discounted_price > 0 else booking.total_price)
             extra_metadata = {}
 
@@ -602,7 +643,7 @@ class CreateStripePaymentIntent(APIView):
                 amount_to_charge = float(booking.discounted_price if booking.discounted_price > 0 else booking.total_price)
 
             # Create PaymentIntent
-            intent = stripe.PaymentIntent.create(
+            intent_kwargs = dict(
                 amount=int(round(amount_to_charge * 100)),  # in cents
                 currency='eur',
                 customer=customer.id,
@@ -613,6 +654,9 @@ class CreateStripePaymentIntent(APIView):
                     **extra_metadata,
                 },
             )
+            if client_request_id:
+                intent_kwargs['idempotency_key'] = f'payment:{booking.id}:{client_request_id}'
+            intent = stripe.PaymentIntent.create(**intent_kwargs)
 
             status_name = 'Pending'
             status_obj = get_object_or_404(Status, name=status_name, type='payment')
@@ -623,7 +667,8 @@ class CreateStripePaymentIntent(APIView):
                 stripe_payment_intent=intent['id'],
                 stripe_customer_id=customer.id,
                 amount=amount_to_charge,
-                status=status_obj
+                status=status_obj,
+                client_request_id=client_request_id,
             )
 
             # Store bonus points used in booking or payment if you want to track it
@@ -636,6 +681,23 @@ class CreateStripePaymentIntent(APIView):
                 'payment_id': payment.id,
             })
 
+        except IntegrityError:
+            if client_request_id:
+                existing_payment = Payment.objects.filter(
+                    client_request_id=client_request_id,
+                    booking=booking,
+                ).first()
+                if existing_payment:
+                    existing_intent = stripe.PaymentIntent.retrieve(
+                        existing_payment.stripe_payment_intent
+                    )
+                    return Response({
+                        'clientSecret': existing_intent['client_secret'],
+                        'amount': existing_payment.amount,
+                        'payment_id': existing_payment.id,
+                        'replayed': True,
+                    })
+            raise
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         

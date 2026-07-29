@@ -150,7 +150,7 @@ const PayPopup = ({
                     {extraAmount ? ` € ${extraAmount} (Extra Days)` : `€ ${booking.discounted_price > 0 ? Number(booking.discounted_price).toFixed(2) : Number(booking.total_price).toFixed(2)}`}
                   </strong>
                 </div>
-                <img src={wifi} alt="Wifi Svg" width="50px" style={{ transform: "rotate(90deg)", filter: "invert(1)" }} />
+                <img src={wifi} alt="Contactless payment" width="50" height="33" style={{ transform: "rotate(90deg)", filter: "invert(1)" }} />
               </div>
               <div className="mt-4 fs-3">**** **** **** ****</div>
               <div>
@@ -158,7 +158,7 @@ const PayPopup = ({
               </div>
               <div className="mt-3 d-flex justify-content-between align-items-center">
                 <div className="text-warning fs-5"><strong>XXXX X X</strong></div>
-                <img src={masterCardLogo} alt="Card Logo" style={{ width: "50px", height: "50px" }} />
+                <img src={masterCardLogo} alt="Card Logo" width="50" height="50" style={{ width: "50px", height: "50px" }} />
               </div>
             </div>
             {/* Pay with account credits when the balance covers the amount */}

@@ -105,6 +105,13 @@ class Booking(models.Model):
 
     booking_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    booking_user = models.OneToOneField(
+        'BookingUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='booking',
+    )
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     add_ons = models.ManyToManyField(AddOn, blank=True)
 
@@ -204,6 +211,13 @@ class Booking(models.Model):
     source_channel = models.CharField(
         max_length=30, blank=True, null=True,
         help_text="Derived marketing channel (e.g. Google Ads, Microsoft Ads, Social Media, Organic Search, Referral, Direct)."
+    )
+    submission_key = models.UUIDField(unique=True, null=True, blank=True, editable=False)
+    submission_fingerprint = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        editable=False,
     )
 
     @staticmethod
@@ -308,6 +322,7 @@ class BookingUser(models.Model):
     contact_no = models.CharField(max_length=20, blank=True, null=True)
     booking_completion_status = models.BooleanField(default=False)  # False = not completed, True = completed
     created_at = models.DateTimeField(auto_now_add=True)
+    journey_key = models.UUIDField(unique=True, null=True, blank=True, editable=False)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name or ''} - {self.email}"

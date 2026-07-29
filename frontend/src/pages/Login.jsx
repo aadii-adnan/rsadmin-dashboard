@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import PopupDialog from "../components/Utility/PopupDialog";
-import parkingImg from "../assets/parking.webp";
 import bannerImg from "../assets/banner-img1.webp";
 
 const Login = () => {
@@ -119,7 +118,7 @@ const Login = () => {
               padding: 6,
               boxShadow: "0 2px 12px rgba(40,144,205,0.10)",
             }}>
-              <img src="/images/icon.webp" alt="RS Express Parking" style={{
+              <img src="/images/icon.webp" alt="RS Express Parking" width="100" height="100" style={{
                 width: 100,
                 height: 100,
                 borderRadius: "50%",

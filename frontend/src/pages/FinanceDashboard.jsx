@@ -1,15 +1,63 @@
-import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { getBookingsSummary, getOrdersCount, getFinancialOverview, getMonthlyEarnings, getBookingsOverTime, getSupplierFinanceDetail, downloadSupplierInvoice, queueEmailDeliverabilityTest } from "../components/FinanceDashboard/APIHelper";
-import { FaTrash, FaEdit, FaExternalLinkAlt, FaPaperPlane, FaShieldAlt } from "react-icons/fa";
-import '../FinanceDashboard.css';
-import customFetch from "../auth/fetch";
-import { LineChart, Line, AreaChart, Area, CartesianGrid } from "recharts";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Button, Form, Modal, Spinner } from "react-bootstrap";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Legend,
+  Line,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  FaBalanceScale,
+  FaChartLine,
+  FaEdit,
+  FaEuroSign,
+  FaExternalLinkAlt,
+  FaEye,
+  FaFileInvoice,
+  FaPaperPlane,
+  FaPlus,
+  FaReceipt,
+  FaShieldAlt,
+  FaTrash,
+} from "react-icons/fa";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { useNavigate } from "react-router-dom";
-
-const COLORS = ["#007bff", "#28a745", "#dc3545", "#ffc107", "#fd7e14", "#6f42c1"];
+import {
+  deleteExpense,
+  downloadSupplierInvoice,
+  getBookingsOverTime,
+  getBookingsSummary,
+  getFinancialOverview,
+  getOrdersCount,
+  getSupplierFinanceDetail,
+  queueEmailDeliverabilityTest,
+  saveExpense,
+} from "../components/FinanceDashboard/APIHelper";
+import {
+  FINANCE_TABS,
+  FinanceChartTooltip,
+  FinanceFilters,
+  FinanceTabs,
+  MetricCard,
+  PanelState,
+  SectionHeading,
+  TableEmptyRow,
+  formatCurrency,
+  formatDate,
+  formatNumber,
+} from "../components/FinanceDashboard/FinanceDashboardUI";
+import "../FinanceDashboard.css";
 
 const DELIVERABILITY_CAMPAIGNS = {
   rs_promotional: {
@@ -34,233 +82,331 @@ const DELIVERABILITY_CAMPAIGNS = {
   },
 };
 
+const CHART_COLORS = ["#1769aa", "#37a0d4", "#72b6a1", "#e7a83e", "#8b6fc0", "#d66b6b"];
+const VALID_TABS = new Set(FINANCE_TABS.map((tab) => tab.id));
+const VALID_WEBSITES = new Set(["all", "rsexpressparking", "dublinairportparking"]);
+const VALID_PERIODS = new Set(["range", "year", "all"]);
+
+function currentMonth() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function readFilters(params) {
+  const fallbackMonth = currentMonth();
+  const periodType = VALID_PERIODS.has(params.get("period_type"))
+    ? params.get("period_type")
+    : "range";
+  const website = VALID_WEBSITES.has(params.get("website"))
+    ? params.get("website")
+    : "all";
+  const startMonth = /^\d{4}-\d{2}$/.test(params.get("start_month") || "")
+    ? params.get("start_month")
+    : fallbackMonth;
+  const endMonth = /^\d{4}-\d{2}$/.test(params.get("end_month") || "")
+    ? params.get("end_month")
+    : startMonth;
+  const year = /^\d{4}$/.test(params.get("year") || "")
+    ? params.get("year")
+    : String(new Date().getFullYear());
+  return { periodType, website, startMonth, endMonth, year };
+}
+
 function useFinanceJwtFromUrl() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const access = params.get('access');
-    const refresh = params.get('refresh');
-    if (access && refresh) {
-      localStorage.setItem('finance_jwt', access);
-      localStorage.setItem('finance_jwt_refresh', refresh);
-      // Remove tokens from URL for cleanliness
-      window.history.replaceState({}, document.title, "/finance-dashboard/");
-    }
+    const access = params.get("access");
+    const refresh = params.get("refresh");
+    if (!access || !refresh) return;
+
+    localStorage.setItem("finance_jwt", access);
+    localStorage.setItem("finance_jwt_refresh", refresh);
+    params.delete("access");
+    params.delete("refresh");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      document.title,
+      `${window.location.pathname}${query ? `?${query}` : ""}`,
+    );
   }, []);
 }
 
-function FinancialDashboard() {
-  useFinanceJwtFromUrl(); // Custom hook to handle JWT from URL
+function compactCurrency(value) {
+  return new Intl.NumberFormat("en-IE", {
+    style: "currency",
+    currency: "EUR",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
 
-  const getCurrentMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+function emptyExpense(filters) {
+  return {
+    name: "",
+    amount: "",
+    recurring: false,
+    for_month: filters.startMonth || currentMonth(),
+    recurring_start_month: filters.startMonth || currentMonth(),
+    recurring_end_month: "",
+    website: filters.website === "all" ? "both" : filters.website,
   };
+}
 
-  const { user, loading } = useAuth(); // assumes user object has is_superuser and is_manager
+function FinanceDashboard() {
+  useFinanceJwtFromUrl();
   const navigate = useNavigate();
-  const [bookingsSummary, setBookingsSummary] = useState({});
-  const [ordersCount, setOrdersCount] = useState({ services: [], addons: [] });
+  const { loading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filters = useMemo(() => readFilters(searchParams), [searchParams]);
+  const activeTab = VALID_TABS.has(searchParams.get("tab"))
+    ? searchParams.get("tab")
+    : "overview";
+
+  const [draftFilters, setDraftFilters] = useState(filters);
+  const [filterError, setFilterError] = useState("");
   const [overview, setOverview] = useState(null);
-  const [startMonth, setStartMonth] = useState(getCurrentMonth());
-  const [endMonth, setEndMonth] = useState(getCurrentMonth());
-  const [year, setYear] = useState(""); // NEW: year filter state
+  const [overviewLoading, setOverviewLoading] = useState(true);
+  const [overviewError, setOverviewError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [notice, setNotice] = useState(null);
+
+  const [operations, setOperations] = useState({
+    summary: {},
+    orders: { services: [], addons: [] },
+    timeline: [],
+  });
+  const [operationsLoading, setOperationsLoading] = useState(false);
+  const [operationsError, setOperationsError] = useState("");
+  const [operationsRefreshKey, setOperationsRefreshKey] = useState(0);
+
+  const [revenueView, setRevenueView] = useState("services");
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [expenseForm, setExpenseForm] = useState({ name: "", amount: "", recurring: false, for_month: "", recurring_start_month: "", recurring_end_month: "", website: "both", });
-  const [expenseAlert, setExpenseAlert] = useState(null);
   const [editingExpense, setEditingExpense] = useState(null);
-  const [monthlyEarnings, setMonthlyEarnings] = useState([]);
-  const [bookingsOverTime, setBookingsOverTime] = useState([]);
-  const [allTime, setAllTime] = useState(false);
-  const [websiteFilter, setWebsiteFilter] = useState("all");
+  const [expenseForm, setExpenseForm] = useState(() => emptyExpense(filters));
+  const [expenseSaving, setExpenseSaving] = useState(false);
+  const [expenseFormError, setExpenseFormError] = useState("");
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [expenseDeleting, setExpenseDeleting] = useState(false);
+
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [supplierDetail, setSupplierDetail] = useState(null);
   const [supplierDetailLoading, setSupplierDetailLoading] = useState(false);
+  const [supplierDetailError, setSupplierDetailError] = useState("");
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceSupplier, setInvoiceSupplier] = useState(null);
-  const [invoicePeriod, setInvoicePeriod] = useState(() => {
-    const now = new Date();
-    const m = now.getMonth() === 0 ? 12 : now.getMonth();
-    const y = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-    return `${y}-${String(m).padStart(2, "0")}`;
-  });
+  const [invoicePeriod, setInvoicePeriod] = useState(() => currentMonth());
   const [invoiceLoading, setInvoiceLoading] = useState(false);
-  const [invoiceError, setInvoiceError] = useState(null);
+  const [invoiceError, setInvoiceError] = useState("");
+
   const [deliverabilityCampaign, setDeliverabilityCampaign] = useState("rs_promotional");
   const [showDeliverabilityModal, setShowDeliverabilityModal] = useState(false);
   const [deliverabilityLoading, setDeliverabilityLoading] = useState(false);
   const [deliverabilityAlert, setDeliverabilityAlert] = useState(null);
 
+  useEffect(() => setDraftFilters(filters), [filters]);
+
   useEffect(() => {
-    if (!localStorage.getItem('finance_jwt')) {
+    if (!authLoading && !localStorage.getItem("finance_jwt")) {
       navigate("/unauthorized", { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [authLoading, navigate]);
+
+  const loadOverview = useCallback((signal) => {
+    setOverviewLoading(true);
+    setOverviewError("");
+    setOverview(null);
+    return getFinancialOverview(filters, signal)
+      .then(setOverview)
+      .catch((error) => {
+        if (error.name !== "AbortError") setOverviewError(error.message);
+      })
+      .finally(() => {
+        if (!signal?.aborted) setOverviewLoading(false);
+      });
+  }, [filters]);
 
   useEffect(() => {
-    const fetchCharts = async () => {
-      try {
-        setMonthlyEarnings(await getMonthlyEarnings());
-        setBookingsOverTime(await getBookingsOverTime());
-      } catch {
-        // handle error
-      }
-    };
-    fetchCharts();
-  }, []);
+    const controller = new AbortController();
+    loadOverview(controller.signal);
+    return () => controller.abort();
+  }, [loadOverview, refreshKey]);
+
+  const loadOperations = useCallback((signal) => {
+    setOperationsLoading(true);
+    setOperationsError("");
+    setOperations({ summary: {}, orders: { services: [], addons: [] }, timeline: [] });
+    return Promise.all([
+      getBookingsSummary(filters, signal),
+      getOrdersCount(filters, signal),
+      getBookingsOverTime(filters, signal),
+    ])
+      .then(([summary, orders, timeline]) => setOperations({ summary, orders, timeline }))
+      .catch((error) => {
+        if (error.name !== "AbortError") setOperationsError(error.message);
+      })
+      .finally(() => {
+        if (!signal?.aborted) setOperationsLoading(false);
+      });
+  }, [filters]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const bookingsRes = await getBookingsSummary();
-        setBookingsSummary(bookingsRes);
+    if (activeTab !== "operations") return undefined;
+    const controller = new AbortController();
+    loadOperations(controller.signal);
+    return () => controller.abort();
+  }, [activeTab, loadOperations, operationsRefreshKey]);
 
-        const ordersRes = await getOrdersCount();
-        setOrdersCount(ordersRes);
-
-        let overviewRes;
-        if (allTime) {
-          overviewRes = await getFinancialOverview(undefined, undefined, true, undefined, websiteFilter);
-        } else if (year) {
-          overviewRes = await getFinancialOverview(undefined, year, false, undefined, websiteFilter);
-        } else if (startMonth && endMonth) {
-          overviewRes = await getFinancialOverview(startMonth, undefined, false, endMonth, websiteFilter);
-        } else if (startMonth) {
-          overviewRes = await getFinancialOverview(startMonth, undefined, false, undefined, websiteFilter);
-        } else {
-          overviewRes = await getFinancialOverview(undefined, undefined, false, undefined, websiteFilter);
-        }
-        setOverview(overviewRes);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    };
-
-    fetchData();
-  }, [startMonth, endMonth, year, allTime, expenseAlert, websiteFilter]);
-
-  // Chart data
-  const bookingsStatusData = Object.entries(bookingsSummary || {})
-  .map(([status, count]) => ({
-    status,
-    count
-  }));
-  const serviceEarningsData = (ordersCount.services || []).map((s, idx) => ({
-    name: s.service_name,
-    value: s.orders_count,
-    color: COLORS[idx % COLORS.length]
-  }));
-
-  // Build a legend mapping
-  const serviceColorLegend = serviceEarningsData.map(s => ({
-    name: s.name,
-    color: s.color
-  }));
-
-  const formatMonthLabel = (value) => {
-    if (!value) return "";
-    const [monthYear, monthNumber] = value.split("-").map(Number);
-    if (!monthYear || !monthNumber) return value;
-    return new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      year: "numeric",
-    }).format(new Date(monthYear, monthNumber - 1, 1));
+  const changeTab = (tab) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", tab);
+    setSearchParams(next, { replace: true });
   };
 
-  const selectedPeriodLabel = allTime
-    ? "Showing finance totals for all time."
-    : year
-      ? `Showing finance totals for ${year}.`
-      : startMonth && endMonth
-        ? startMonth === endMonth
-          ? `Showing finance totals for ${formatMonthLabel(startMonth)}.`
-          : `Showing finance totals for ${formatMonthLabel(startMonth)} to ${formatMonthLabel(endMonth)}.`
-        : startMonth
-          ? `Showing finance totals for ${formatMonthLabel(startMonth)}.`
-          : "Select a month, range, year, or all time to view finance totals.";
+  const applyFilters = (event) => {
+    event.preventDefault();
+    setFilterError("");
+    if (
+      draftFilters.periodType === "range" &&
+      (!draftFilters.startMonth || !draftFilters.endMonth)
+    ) {
+      setFilterError("Choose both a start and end month.");
+      return;
+    }
+    if (
+      draftFilters.periodType === "range" &&
+      draftFilters.startMonth > draftFilters.endMonth
+    ) {
+      setFilterError("The start month cannot be after the end month.");
+      return;
+    }
 
-  const supplierEarningsHelp = "Shows supplier/vendor bookings with departure dates in the selected period. Includes Cancelled, Started, Completed, and No Show bookings only. Confirmed bookings are not included.";
-  const helperTextStyle = { fontSize: 13, lineHeight: 1.35 };
+    const next = new URLSearchParams();
+    next.set("tab", activeTab);
+    next.set("website", draftFilters.website);
+    next.set("period_type", draftFilters.periodType);
+    if (draftFilters.periodType === "range") {
+      next.set("start_month", draftFilters.startMonth);
+      next.set("end_month", draftFilters.endMonth);
+    } else if (draftFilters.periodType === "year") {
+      next.set("year", draftFilters.year);
+    }
+    setSearchParams(next, { replace: true });
+  };
 
-  // Expense form handlers
-
-  // Expense update handler
-  const handleEditExpense = (expense) => {
-    setEditingExpense(expense);
-    setExpenseForm({
-      name: expense.name,
-      amount: expense.amount,
-      recurring: expense.recurring,
-      for_month: expense.for_month ? expense.for_month.slice(0, 7) : "",
-      recurring_start_month: expense.recurring_start_month ? expense.recurring_start_month.slice(0, 7) : "",
-      recurring_end_month: expense.recurring_end_month ? expense.recurring_end_month.slice(0, 7) : "",
-      website: expense.website || "both",
-    });
+  const openAddExpense = () => {
+    setEditingExpense(null);
+    setExpenseForm(emptyExpense(filters));
+    setExpenseFormError("");
     setShowExpenseModal(true);
   };
 
-  // Expense delete handler
-  const handleDeleteExpense = async (id) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-      try {
-        await customFetch(`${import.meta.env.VITE_API_BASE_URL}/finance/expense/${id}/delete/`, { method: "DELETE", useFinanceJwt: true });
-        setExpenseAlert({ type: "success", msg: "Expense deleted!" });
-      } catch {
-        setExpenseAlert({ type: "danger", msg: "Failed to delete expense." });
-      }
+  const openEditExpense = (expense) => {
+    setEditingExpense(expense);
+    setExpenseForm({
+      name: expense.name || "",
+      amount: expense.amount ?? "",
+      recurring: Boolean(expense.recurring),
+      for_month: expense.for_month?.slice(0, 7) || "",
+      recurring_start_month: expense.recurring_start_month?.slice(0, 7) || "",
+      recurring_end_month: expense.recurring_end_month?.slice(0, 7) || "",
+      website: expense.website || "both",
+    });
+    setExpenseFormError("");
+    setShowExpenseModal(true);
+  };
+
+  const submitExpense = async (event) => {
+    event.preventDefault();
+    setExpenseSaving(true);
+    setExpenseFormError("");
+    const data = {
+      ...expenseForm,
+      amount: Number(expenseForm.amount),
+      for_month: !expenseForm.recurring && expenseForm.for_month
+        ? `${expenseForm.for_month}-01`
+        : null,
+      recurring_start_month: expenseForm.recurring && expenseForm.recurring_start_month
+        ? `${expenseForm.recurring_start_month}-01`
+        : null,
+      recurring_end_month: expenseForm.recurring && expenseForm.recurring_end_month
+        ? `${expenseForm.recurring_end_month}-01`
+        : null,
+    };
+    try {
+      await saveExpense(editingExpense?.id, data);
+      setShowExpenseModal(false);
+      setNotice({
+        type: "success",
+        message: editingExpense ? "Expense updated successfully." : "Expense added successfully.",
+      });
+      setRefreshKey((value) => value + 1);
+    } catch (error) {
+      setExpenseFormError(error.message);
+    } finally {
+      setExpenseSaving(false);
     }
   };
 
-  const handleExpenseChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setExpenseForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value
-    }));
+  const confirmDeleteExpense = async () => {
+    if (!expenseToDelete) return;
+    setExpenseDeleting(true);
+    try {
+      await deleteExpense(expenseToDelete.id);
+      setExpenseToDelete(null);
+      setNotice({ type: "success", message: "Expense deleted successfully." });
+      setRefreshKey((value) => value + 1);
+    } catch (error) {
+      setNotice({ type: "danger", message: error.message });
+      setExpenseToDelete(null);
+    } finally {
+      setExpenseDeleting(false);
+    }
   };
 
-  const handleViewSupplierDetail = async (supplierId) => {
+  const openSupplierDetail = async (supplierId) => {
     setShowSupplierModal(true);
-    setSupplierDetailLoading(true);
     setSupplierDetail(null);
+    setSupplierDetailError("");
+    setSupplierDetailLoading(true);
     try {
-      const data = await getSupplierFinanceDetail(
-        supplierId,
-        startMonth || undefined,
-        endMonth || undefined,
-        year || undefined,
-        allTime || undefined,
-        websiteFilter || undefined
-      );
-      setSupplierDetail(data);
-    } catch (e) {
-      console.error("Failed to load supplier detail", e);
+      setSupplierDetail(await getSupplierFinanceDetail(supplierId, filters));
+    } catch (error) {
+      setSupplierDetailError(error.message);
     } finally {
       setSupplierDetailLoading(false);
     }
   };
 
-  const handleOpenInvoiceModal = (supplier) => {
+  const openInvoice = (supplier) => {
     setInvoiceSupplier(supplier);
-    setInvoiceError(null);
+    setInvoiceError("");
+    if (filters.periodType === "range") setInvoicePeriod(filters.endMonth);
+    else if (filters.periodType === "year") setInvoicePeriod(`${filters.year}-12`);
     setShowInvoiceModal(true);
   };
 
-  const handleDownloadInvoice = async () => {
+  const downloadInvoice = async () => {
     if (!invoiceSupplier || !invoicePeriod) return;
     const [year, month] = invoicePeriod.split("-").map(Number);
     setInvoiceLoading(true);
-    setInvoiceError(null);
+    setInvoiceError("");
     try {
-      await downloadSupplierInvoice(invoiceSupplier.supplier_id, month, year, invoiceSupplier.supplier_name);
+      await downloadSupplierInvoice(
+        invoiceSupplier.supplier_id,
+        month,
+        year,
+        invoiceSupplier.supplier_name,
+      );
       setShowInvoiceModal(false);
-    } catch {
-      setInvoiceError("Failed to generate invoice. Please try again.");
+    } catch (error) {
+      setInvoiceError(error.message);
     } finally {
       setInvoiceLoading(false);
     }
   };
 
-  const handleQueueDeliverabilityTest = async () => {
+  const sendDeliverabilityTest = async () => {
     setDeliverabilityLoading(true);
     setDeliverabilityAlert(null);
     try {
@@ -268,991 +414,835 @@ function FinancialDashboard() {
       setShowDeliverabilityModal(false);
       setDeliverabilityAlert({
         type: "success",
-        msg: `${result.label} was queued for ${result.recipient_count} GMass inboxes. Task: ${result.task_id}`,
+        message: `${result.label} was queued for ${result.recipient_count} GMass inboxes.`,
       });
     } catch (error) {
-      setDeliverabilityAlert({
-        type: "danger",
-        msg: error.message || "Failed to queue the deliverability test.",
-      });
+      setDeliverabilityAlert({ type: "danger", message: error.message });
     } finally {
       setDeliverabilityLoading(false);
     }
   };
 
-  // Expense submit handler (add or update)
-  const handleExpenseSubmit = (e) => {
-    e.preventDefault();
-    let data = { ...expenseForm };
-    if (data.recurring) {
-      data.for_month = null;
-      // Format recurring months as YYYY-MM-01 for backend
-      data.recurring_start_month = data.recurring_start_month ? data.recurring_start_month + "-01" : null;
-      data.recurring_end_month = data.recurring_end_month ? data.recurring_end_month + "-01" : null;
-    } else {
-      data.for_month = data.for_month ? data.for_month + "-01" : null;
-      data.recurring_start_month = null;
-      data.recurring_end_month = null;
-    }
-    const url = editingExpense
-      ? `/finance/expense/${editingExpense.id}/update/`
-      : "/finance/add-expense/";
-    const method = editingExpense ? "PUT" : "POST";
-    customFetch(import.meta.env.VITE_API_BASE_URL + url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: data,
-      useFinanceJwt: true
-    })
-      .then((res) => res.json())
-      .then(() => {
-        setExpenseAlert({ type: "success", msg: editingExpense ? "Expense updated!" : "Expense added!" });
-        setShowExpenseModal(false);
-        setEditingExpense(null);
-        setExpenseForm({
-          name: "",
-          amount: "",
-          recurring: false,
-          for_month: "",
-          recurring_start_month: "",
-          recurring_end_month: ""
-        });
-      })
-      .catch(() => {
-        setExpenseAlert({ type: "danger", msg: "Failed to save expense." });
-      });
-  };
+  const websiteLabel = {
+    all: "All websites",
+    rsexpressparking: "RS Express Parking",
+    dublinairportparking: "Dublin Airport Express Parking",
+  }[filters.website];
+  const comparison = overview?.comparison;
+  const trend = overview?.trend || [];
+  const serviceDetails = overview?.details?.service_details || [];
+  const addonDetails = overview?.details?.addon_details || [];
+  const sourceDetails = overview?.details?.source_details || [];
+  const fixedExpenses = overview?.details?.fixed_expenses || [];
+  const recurringExpenses = overview?.details?.recurring_expenses || [];
+  const suppliers = overview?.supplier_summary?.suppliers || [];
+  const supplierTotals = overview?.supplier_summary?.totals || {};
+  const allExpenses = [...fixedExpenses, ...recurringExpenses];
+  const fixedTotal = fixedExpenses.reduce((sum, expense) => sum + Number(expense.total), 0);
+  const recurringTotal = recurringExpenses.reduce((sum, expense) => sum + Number(expense.total), 0);
+  const parkingValue = overview
+    ? overview.balance - Number(overview.details?.all_addons_total || 0)
+    : 0;
 
-  if (loading) {
-    return <div style={{textAlign: "center", marginTop: "100px"}}>Loading...</div>;
-  }
-
-  return (
-    <div className="finance-dashboard-bg">
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-        <Form.Select
-          style={{ width: 220, maxWidth: "100%" }}
-          value={websiteFilter}
-          onChange={e => setWebsiteFilter(e.target.value)}
-        >
-          <option value="all">All Websites</option>
-          <option value="rsexpressparking">RS Express Parking</option>
-          <option value="dublinairportparking">Dublin Airport Express Parking</option>
-        </Form.Select>
+  const renderOverview = () => (
+    <>
+      <div className="finance-metric-grid">
+        <MetricCard
+          label="Net booking revenue"
+          value={overview?.balance}
+          comparison={comparison?.balance}
+          definition="Booking value after supplier share for bookings created in this period. Pending and payment-failed bookings are excluded."
+          icon={<FaEuroSign />}
+        />
+        <MetricCard
+          label="Realized earnings"
+          value={overview?.earnings}
+          comparison={comparison?.earnings}
+          definition="Earnings from completed, cancelled and no-show bookings, plus started supplier bookings."
+          icon={<FaChartLine />}
+        />
+        <MetricCard
+          label="Total expenses"
+          value={overview?.expenses}
+          comparison={comparison?.expenses}
+          inverse
+          definition="Fixed expenses plus recurring expenses counted for each applicable month."
+          icon={<FaReceipt />}
+        />
+        <MetricCard
+          label="Net profit / loss"
+          value={overview?.profit_or_loss}
+          comparison={comparison?.profit_or_loss}
+          emphasis
+          negative={Number(overview?.profit_or_loss) < 0}
+          definition="Realized earnings minus expenses for the selected period."
+          icon={<FaBalanceScale />}
+        />
       </div>
-      <Container fluid className="py-4">
-        {/* Alert */}
-        {expenseAlert && (
-          <Alert
-            variant={expenseAlert.type}
-            onClose={() => setExpenseAlert(null)}
-            dismissible
-            className="mt-3"
-          >
-            {expenseAlert.msg}
-          </Alert>
-        )}
-      <Row>
-        <Col md={6}>
-          <Card className="mb-4 text-center">
-            <Card.Body>
-              <Card.Title>Total Balance</Card.Title>
-              <div className="text-muted mb-2" style={helperTextStyle}>
-                Bookings created in the selected period, excluding pending and payment failed.
-              </div>
-              <h2 className="text-primary">
-                {overview ? `€${overview.balance.toLocaleString()}` : "--"}
-              </h2>
-              <div className="text-muted mb-2" style={helperTextStyle}>
-                {selectedPeriodLabel}
-              </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "center" }}>
-                <Form.Control
-                  type="month"
-                  value={startMonth}
-                  onChange={e => {
-                    setStartMonth(e.target.value);
-                    setAllTime(false);
-                    setYear("");
-                  }}
-                  style={{ maxWidth: 140 }}
-                  placeholder="Start Month"
-                />
-                <Form.Control
-                  type="month"
-                  value={endMonth}
-                  onChange={e => {
-                    setEndMonth(e.target.value);
-                    setAllTime(false);
-                    setYear("");
-                  }}
-                  style={{ maxWidth: 140 }}
-                  placeholder="End Month"
-                />
-                <Form.Select
-                  value={year}
-                  onChange={e => {
-                    setYear(e.target.value);
-                    setStartMonth("");
-                    setEndMonth("");
-                    setAllTime(false);
-                  }}
-                  style={{ maxWidth: 110 }}
-                >
-                  <option value="">Year</option>
-                  {Array.from({ length: 4 }, (_, i) => {
-                    const y = new Date().getFullYear() - 1 + i;
-                    return (
-                      <option key={y} value={y}>{y}</option>
-                    );
-                  })}
-                </Form.Select>
-                <Button
-                  variant={allTime ? "primary" : "outline-primary"}
-                  onClick={() => {
-                    setAllTime(true);
-                    setStartMonth("");
-                    setEndMonth("");
-                    setYear("");
-                  }}
-                  style={{ minWidth: 90 }}
-                >
-                  All Time
-                </Button>
-              </div>              
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={6}>
-          <Card className="mb-4 text-center">
-            <Card.Body>
-              <Card.Title>Total Expenses</Card.Title>
-              <div className="text-muted mb-2" style={helperTextStyle}>
-                Fixed and recurring expenses counted for the selected period.
-              </div>
-              <h2 className="text-danger">
-                {overview ? `€${overview.expenses.toLocaleString()}` : "--"}
-              </h2>
-              <Button className="admin-btn" onClick={() => setShowExpenseModal(true)}>
-                Add Expense
-              </Button>
-            </Card.Body>
-          </Card>          
-        </Col>        
-      </Row>
 
-      <Row>
-        <Col md={3}>
-          <Card className="mb-4 text-center">
-            <Card.Body>
-              <Card.Title>Total Add-ons Price</Card.Title>
-              <div className="text-muted mb-2" style={helperTextStyle}>
-                Add-ons on non-cancelled bookings in the selected period.
-              </div>
-              <h2 className="text-info">
-                {overview?.details?.all_addons_total !== undefined
-                  ? "€" + Number(overview.details.all_addons_total).toLocaleString()
-                  : "--"}
-              </h2>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="mb-4 text-center">
-            <Card.Body>
-              <Card.Title>Total Parking Price</Card.Title>
-              <div className="text-muted mb-2" style={helperTextStyle}>
-                Total balance minus add-ons.
-              </div>
-              <h2 className="text-primary">
-                {overview && overview.details?.all_addons_total !== undefined
-                  ? "€" + (overview.balance - Number(overview.details.all_addons_total)).toLocaleString()
-                  : "--"}
-              </h2>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="mb-4 text-center">
-            <Card.Body>
-              <Card.Title>Total Earnings</Card.Title>
-              <div className="text-muted mb-2" style={helperTextStyle}>
-                Counted earnings after supplier/vendor rules.
-              </div>
-              <h2 className="text-success">
-                {overview ? `€${overview.earnings.toLocaleString()}` : "--"}
-              </h2>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="mb-4 text-center">
-            <Card.Body>
-              <Card.Title>Profit / Loss</Card.Title>
-              <div className="text-muted mb-2" style={helperTextStyle}>
-                Earnings minus expenses.
-              </div>
-              <h2 className={overview && overview.profit_or_loss >= 0 ? "text-success" : "text-danger"}>
-                {overview ? `€${overview.profit_or_loss.toLocaleString()}` : "--"}
-              </h2>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row>
-        <Card className="mb-4">
-          <Card.Body>
-            <Card.Title>Service Earning Details</Card.Title>
-            <div className="text-muted mb-2" style={helperTextStyle}>
-              Uses bookings created in the selected period.
-            </div>
-            <div style={{ maxHeight: 300, overflowY: "auto" }}>
-              <table className="table table-sm table-bordered">
-                <thead>
-                  <tr>
-                    <th>Service</th>
-                    <th>Successful Orders</th>
-                    <th>Cancelled Orders</th>
-                    <th>Earning (Completed)</th>
-                    <th>Earning (Cancelled)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {overview?.details?.service_details?.map((s) => (
-                    <tr key={s.service_id}>
-                      <td>{s.service_name}</td>
-                      <td>{s.completed_orders}</td>
-                      <td>{s.cancelled_orders}</td>
-                      <td>€{s.completed_earning.toLocaleString()}</td>
-                      <td>€{s.cancelled_earning.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card.Body>
-        </Card>
-      </Row>
-      <Row>
-      <Card className="mb-4">
-        <Card.Body>
-          <Card.Title>Add-on Earning Details</Card.Title>
-          <div className="text-muted mb-2" style={helperTextStyle}>
-            Supplier/vendor add-ons are excluded from our add-on earnings.
+      <section className="finance-card finance-chart-card">
+        <SectionHeading
+          eyebrow="Performance"
+          title="Earnings, expenses and profit"
+          description="Uses the same calculation rules and scope as the headline figures above."
+        />
+        {trend.length ? (
+          <div className="finance-chart" role="img" aria-label="Earnings, expenses and profit trend">
+            <ResponsiveContainer width="100%" height={360}>
+              <ComposedChart data={trend} margin={{ top: 12, right: 12, left: 4, bottom: 4 }}>
+                <CartesianGrid stroke="#e8edf3" vertical={false} />
+                <XAxis dataKey="period" tick={{ fill: "#687586", fontSize: 12 }} />
+                <YAxis tickFormatter={compactCurrency} tick={{ fill: "#687586", fontSize: 12 }} />
+                <Tooltip content={<FinanceChartTooltip />} />
+                <Legend />
+                <Bar dataKey="earnings" name="Earnings" fill="#1769aa" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="expenses" name="Expenses" fill="#d9a441" radius={[5, 5, 0, 0]} />
+                <Line
+                  type="monotone"
+                  dataKey="profit_or_loss"
+                  name="Net profit"
+                  stroke="#16815d"
+                  strokeWidth={3}
+                  dot={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
-          <div style={{ maxHeight: 300, overflowY: "auto" }}>
-            <table className="table table-sm table-bordered">
-              <thead>
-                <tr>
-                  <th>Add-on</th>
-                  <th>Successful Orders</th>
-                  <th>Cancelled Orders</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
+        ) : (
+          <div className="finance-empty-state">No trend data for this period.</div>
+        )}
+      </section>
+
+      <div className="finance-summary-grid">
+        <article className="finance-card finance-summary-card">
+          <span>Revenue excluding booked add-ons</span>
+          <strong>{formatCurrency(parkingValue)}</strong>
+          <small>Net booking revenue minus the booked add-on value.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Booked add-ons value</span>
+          <strong>{formatCurrency(overview?.details?.all_addons_total || 0)}</strong>
+          <small>Non-cancelled add-ons booked during the selected period.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Suppliers active in period</span>
+          <strong>{formatNumber(suppliers.length)}</strong>
+          <small>Supplier settlements use departure date rather than booking-created date.</small>
+        </article>
+      </div>
+    </>
+  );
+
+  const renderRevenue = () => (
+    <>
+      <SectionHeading
+        eyebrow="Revenue detail"
+        title="Understand where revenue comes from"
+        description="Review services, add-ons and first-touch booking sources without losing the selected dashboard scope."
+      />
+      <div className="finance-summary-grid">
+        <article className="finance-card finance-summary-card">
+          <span>Net booking revenue</span>
+          <strong>{formatCurrency(overview?.balance || 0)}</strong>
+          <small>After supplier share.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Realized earnings</span>
+          <strong>{formatCurrency(overview?.earnings || 0)}</strong>
+          <small>Based on eligible realized statuses.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Booked add-ons</span>
+          <strong>{formatCurrency(overview?.details?.all_addons_total || 0)}</strong>
+          <small>Supplier add-ons are excluded from our add-on earnings below.</small>
+        </article>
+      </div>
+
+      <section className="finance-card">
+        <div className="finance-breakdown-tabs" role="tablist" aria-label="Revenue breakdown">
+          {[
+            ["services", "Services"],
+            ["addons", "Add-ons"],
+            ["sources", "Booking sources"],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={revenueView === id}
+              className={revenueView === id ? "is-active" : ""}
+              onClick={() => setRevenueView(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {revenueView === "services" && (
+          <div className="finance-table-wrap">
+            <table className="finance-table">
+              <caption>Service earnings for bookings created in the selected period.</caption>
+              <thead><tr>
+                <th>Service</th>
+                <th className="numeric">Eligible bookings</th>
+                <th className="numeric">Cancelled</th>
+                <th className="numeric">Completed earnings</th>
+                <th className="numeric">Cancelled earnings</th>
+              </tr></thead>
               <tbody>
-                {overview?.details?.addon_details?.map((a) => (
-                  <tr key={a.addon_id}>
-                    <td>{a.addon_name}</td>
-                    <td>{a.completed_orders}</td>
-                    <td>{a.cancelled_orders}</td>
-                    <td>€{a.completed_earning.toLocaleString()}</td>
+                {serviceDetails.map((service) => (
+                  <tr key={service.service_id}>
+                    <td><strong>{service.service_name}</strong></td>
+                    <td className="numeric">{formatNumber(service.eligible_orders ?? service.completed_orders)}</td>
+                    <td className="numeric">{formatNumber(service.cancelled_orders)}</td>
+                    <td className="numeric">{formatCurrency(service.completed_earning)}</td>
+                    <td className="numeric">{formatCurrency(service.cancelled_earning)}</td>
                   </tr>
                 ))}
-                {/* All Add-ons Combined row */}
-                {overview?.details?.addon_details?.length > 0 && (
-                  <tr style={{ fontWeight: "bold", background: "#f8f9fa" }}>
-                    <td>All Add-ons Combined</td>
-                    <td>
-                      {overview.details.addon_details
-                        .reduce((sum, a) => sum + a.completed_orders, 0)
-                        .toLocaleString()}
-                    </td>
-                    <td>
-                      {overview.details.addon_details
-                        .reduce((sum, a) => sum + a.cancelled_orders, 0)
-                        .toLocaleString()}
-                    </td>
-                    <td>
-                      €
-                      {overview.details.addon_details
-                        .reduce((sum, a) => sum + a.completed_earning, 0)
-                        .toLocaleString()}
-                    </td>
-                  </tr>
-                )}
+                {!serviceDetails.length && <TableEmptyRow colSpan={5} />}
               </tbody>
             </table>
           </div>
-        </Card.Body>
-      </Card>
-    </Row>
-
-      <Row>
-        <Card className="mb-4">
-          <Card.Body>
-            <Card.Title>Bookings by Source</Card.Title>
-            <div className="text-muted mb-2" style={helperTextStyle}>
-              Marketing channel of bookings created in the selected period (first-touch attribution).
-            </div>
-            <div style={{ maxHeight: 300, overflowY: "auto" }}>
-              <table className="table table-sm table-bordered">
-                <thead>
-                  <tr>
-                    <th>Source</th>
-                    <th>Bookings</th>
-                    <th>Earning</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {overview?.details?.source_details?.map((s) => (
-                    <tr key={s.source_channel}>
-                      <td>{s.source_channel}</td>
-                      <td>{s.total_orders.toLocaleString()}</td>
-                      <td>€{s.earning.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                  {overview?.details?.source_details?.length > 0 && (
-                    <tr style={{ fontWeight: "bold", background: "#f8f9fa" }}>
-                      <td>All Sources Combined</td>
-                      <td>
-                        {overview.details.source_details
-                          .reduce((sum, s) => sum + s.total_orders, 0)
-                          .toLocaleString()}
-                      </td>
-                      <td>
-                        €
-                        {overview.details.source_details
-                          .reduce((sum, s) => sum + s.earning, 0)
-                          .toLocaleString()}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card.Body>
-        </Card>
-      </Row>
-
-        {/* Expenses Section */}
-        <Row>
-          <Col md={12}>
-            <Card className="mb-4">
-              <Card.Body>
-                <Card.Title>Expenses</Card.Title>
-                <div className="text-muted mb-2" style={helperTextStyle}>
-                  Recurring expenses may be multiplied by the number of months counted.
-                </div>
-                <div style={{ maxHeight: 300, overflowY: "auto" }}>
-                  <table className="table table-sm table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Amount</th>
-                        <th>Type</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(overview?.details?.fixed_expenses || []).map((e) => (
-                        <tr key={e.id}>
-                          <td>{e.name}</td>
-                          <td>€{e.amount.toLocaleString()}</td>
-                          <td>Fixed</td>
-                          <td>
-                            <button type="button" className="admin-btn-edit" onClick={() => handleEditExpense(e)}>
-                              <FaEdit />
-                            </button>
-                            <button type="button" className="admin-btn-danger" onClick={() => handleDeleteExpense(e.id)}>
-                              <FaTrash />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {(overview?.details?.recurring_expenses || []).map((e) => (
-                        <tr key={e.id}>
-                          <td>{e.name}</td>
-                          <td>
-                            €{e.amount.toLocaleString()}
-                            {e.months_counted > 1 ? ` x ${e.months_counted} Month(s)` : ""}
-                          </td>
-                          <td>Recurring</td>
-                          <td>
-                            <button type="button" className="admin-btn-edit" onClick={() => handleEditExpense(e)}>
-                              <FaEdit />
-                            </button>
-                            <button type="button" className="admin-btn-danger" onClick={() => handleDeleteExpense(e.id)}>
-                              <FaTrash />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        <Row>
-          <Col md={8}>
-            <Card className="mb-4">
-              <Card.Body>
-                <Card.Title>Bookings by Status</Card.Title>
-                <div className="text-muted mb-2" style={helperTextStyle}>
-                  Current booking status counts across all bookings.
-                </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={bookingsStatusData}>
-                    <XAxis dataKey="status" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="#007bff" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}>
-            <Card className="mb-4">
-              <Card.Body>
-                <Card.Title>Service Orders</Card.Title>
-                <div className="text-muted mb-2" style={helperTextStyle}>
-                  Service order split across all bookings.
-                </div>
-                <ResponsiveContainer width="100%" height={350}>
-                <div>
-                  <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-                    {serviceColorLegend.map((item, idx) => (
-                      <li key={idx} style={{ display: "flex", alignItems: "center", marginBottom: 0, fontSize: 14 }}>
-                        <span style={{
-                          display: "inline-block",
-                          width: 16,
-                          height: 16,
-                          backgroundColor: item.color,
-                          marginRight: 8,
-                          borderRadius: 3,
-                          border: "1px solid #ccc"
-                        }}></span>
-                        {item.name}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                 <PieChart>
-                  <Pie
-                    data={serviceEarningsData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {serviceEarningsData.map((entry, idx) => (
-                      <Cell key={`cell-${idx}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>   
-
-        <Row>
-          <Col md={6}>
-            <Card className="mb-4 admin-card">
-              <Card.Body>
-                <Card.Title>Monthly Earnings Trend</Card.Title>
-                <div className="text-muted mb-2" style={helperTextStyle}>
-                  Last 12 months; not affected by the selected dashboard period.
-                </div>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={monthlyEarnings}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="earning" stroke="#447e9b" strokeWidth={3} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6}>
-            <Card className="mb-4 admin-card">
-              <Card.Body>
-                <Card.Title>Bookings Over Time (Last 30 Days)</Card.Title>
-                <div className="text-muted mb-2" style={helperTextStyle}>
-                  Last 30 days; not affected by the selected dashboard period.
-                </div>
-                <ResponsiveContainer width="100%" height={250}>
-                  <AreaChart data={bookingsOverTime}>
-                    <defs>
-                      <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#007bff" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#007bff" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="bookings" stroke="#007bff" fillOpacity={1} fill="url(#colorBookings)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
- 
-
-        {/* Supplier/Vendor Earnings Section */}
-        {overview?.supplier_summary?.suppliers?.length > 0 && (
-          <Row>
-            <Col md={12}>
-              <Card className="mb-4">
-                <Card.Body>
-                  <Card.Title>Supplier / Vendor Earnings</Card.Title>
-                  <div className="text-muted mb-2" style={helperTextStyle}>
-                    {supplierEarningsHelp}
-                  </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <table className="table table-sm table-bordered">
-                      <thead>
-                        <tr>
-                          <th>Supplier Name</th>
-                          <th>Prefix</th>
-                          <th>Eligible Bookings</th>
-                          <th>Supplier Revenue Base (€)</th>
-                          <th>Extended Amount (€)</th>
-                          <th>Supplier Share (€)</th>
-                          <th>Our Share (€)</th>
-                          <th>Commission %</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {overview.supplier_summary.suppliers.map((s) => (
-                          <tr key={s.supplier_id}>
-                            <td>{s.supplier_name}</td>
-                            <td>{s.prefix}</td>
-                            <td>{s.total_bookings}</td>
-                            <td>€{s.total_revenue.toLocaleString()}</td>
-                            <td style={{ color: "#0d6efd" }}>€{Number(s.extended_amount || 0).toLocaleString()}</td>
-                            <td style={{ color: "#dc3545" }}>€{s.supplier_share.toLocaleString()}</td>
-                            <td style={{ color: "#28a745" }}>€{s.our_share.toLocaleString()}</td>
-                            <td>{s.commission_percentage}%</td>
-                            <td style={{ whiteSpace: "nowrap" }}>
-                              <Button
-                                size="sm"
-                                variant="outline-primary"
-                                onClick={() => handleViewSupplierDetail(s.supplier_id)}
-                                style={{ marginRight: 6 }}
-                              >
-                                View Details
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline-success"
-                                onClick={() => handleOpenInvoiceModal(s)}
-                              >
-                                Invoice
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                        <tr style={{ fontWeight: "bold", background: "#f8f9fa" }}>
-                          <td colSpan={3}>Totals</td>
-                          <td>€{overview.supplier_summary.totals.total_supplier_revenue.toLocaleString()}</td>
-                          <td style={{ color: "#0d6efd" }}>€{Number(overview.supplier_summary.totals.total_extended_amount || 0).toLocaleString()}</td>
-                          <td style={{ color: "#dc3545" }}>€{overview.supplier_summary.totals.total_given_to_suppliers.toLocaleString()}</td>
-                          <td style={{ color: "#28a745" }}>€{overview.supplier_summary.totals.total_kept_from_suppliers.toLocaleString()}</td>
-                          <td colSpan={2}></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
         )}
 
-        {/* Temporary email deliverability utility */}
-        <Row className="mt-3">
-          <Col md={12}>
-            <Card className="deliverability-card mb-4">
-              <Card.Body className="p-0">
-                <div className="deliverability-header">
-                  <div className="deliverability-heading">
-                    <div className="deliverability-icon" aria-hidden="true">
-                      <FaShieldAlt />
-                    </div>
-                    <div>
-                      <div className="deliverability-kicker">Admin utility</div>
-                      <h2>Email Deliverability Test</h2>
-                      <p>
-                        Check where the current live campaign lands before sending it to customers.
-                      </p>
-                    </div>
-                  </div>
-                  <a
-                    className="deliverability-results-link"
-                    href="https://www.gmass.co/inbox"
-                    target="_blank"
-                    rel="noreferrer"
+        {revenueView === "addons" && (
+          <div className="finance-table-wrap">
+            <table className="finance-table">
+              <caption>Add-on activity; supplier add-on value is excluded from our earnings.</caption>
+              <thead><tr>
+                <th>Add-on</th>
+                <th className="numeric">Eligible orders</th>
+                <th className="numeric">Cancelled</th>
+                <th className="numeric">Our add-on earnings</th>
+              </tr></thead>
+              <tbody>
+                {addonDetails.map((addon) => (
+                  <tr key={addon.addon_id}>
+                    <td><strong>{addon.addon_name}</strong></td>
+                    <td className="numeric">{formatNumber(addon.completed_orders)}</td>
+                    <td className="numeric">{formatNumber(addon.cancelled_orders)}</td>
+                    <td className="numeric">{formatCurrency(addon.completed_earning)}</td>
+                  </tr>
+                ))}
+                {!addonDetails.length && <TableEmptyRow colSpan={4} />}
+              </tbody>
+              {!!addonDetails.length && (
+                <tfoot><tr>
+                  <td>All add-ons</td>
+                  <td className="numeric">{formatNumber(addonDetails.reduce((sum, item) => sum + item.completed_orders, 0))}</td>
+                  <td className="numeric">{formatNumber(addonDetails.reduce((sum, item) => sum + item.cancelled_orders, 0))}</td>
+                  <td className="numeric">{formatCurrency(addonDetails.reduce((sum, item) => sum + item.completed_earning, 0))}</td>
+                </tr></tfoot>
+              )}
+            </table>
+          </div>
+        )}
+
+        {revenueView === "sources" && (
+          <div className="finance-table-wrap">
+            <table className="finance-table">
+              <caption>First-touch marketing source for bookings created in this period.</caption>
+              <thead><tr>
+                <th>Source</th>
+                <th className="numeric">Bookings</th>
+                <th className="numeric">Realized earnings</th>
+              </tr></thead>
+              <tbody>
+                {sourceDetails.map((source) => (
+                  <tr key={source.source_channel}>
+                    <td><strong>{source.source_channel}</strong></td>
+                    <td className="numeric">{formatNumber(source.total_orders)}</td>
+                    <td className="numeric">{formatCurrency(source.earning)}</td>
+                  </tr>
+                ))}
+                {!sourceDetails.length && <TableEmptyRow colSpan={3} />}
+              </tbody>
+              {!!sourceDetails.length && (
+                <tfoot><tr>
+                  <td>All sources</td>
+                  <td className="numeric">{formatNumber(sourceDetails.reduce((sum, item) => sum + item.total_orders, 0))}</td>
+                  <td className="numeric">{formatCurrency(sourceDetails.reduce((sum, item) => sum + item.earning, 0))}</td>
+                </tr></tfoot>
+              )}
+            </table>
+          </div>
+        )}
+      </section>
+    </>
+  );
+
+  const renderExpenses = () => (
+    <>
+      <SectionHeading
+        eyebrow="Expense management"
+        title="Fixed and recurring expenses"
+        description="Recurring amounts are multiplied by the number of applicable months in the selected period."
+        action={
+          <Button className="finance-primary-btn" onClick={openAddExpense}>
+            <FaPlus aria-hidden="true" /> Add expense
+          </Button>
+        }
+      />
+      <div className="finance-summary-grid">
+        <article className="finance-card finance-summary-card">
+          <span>Total expenses</span><strong>{formatCurrency(overview?.expenses || 0)}</strong>
+          <small>All expenses counted in scope.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Fixed expenses</span><strong>{formatCurrency(fixedTotal)}</strong>
+          <small>{formatNumber(fixedExpenses.length)} item(s).</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Recurring expenses</span><strong>{formatCurrency(recurringTotal)}</strong>
+          <small>{formatNumber(recurringExpenses.length)} active item(s).</small>
+        </article>
+      </div>
+      <section className="finance-card">
+        <div className="finance-table-wrap">
+          <table className="finance-table">
+            <caption>Expenses included in the current dashboard scope.</caption>
+            <thead><tr>
+              <th>Expense</th>
+              <th>Website</th>
+              <th>Type</th>
+              <th>Applicable period</th>
+              <th className="numeric">Monthly amount</th>
+              <th className="numeric">Counted total</th>
+              <th className="actions">Actions</th>
+            </tr></thead>
+            <tbody>
+              {allExpenses.map((expense) => (
+                <tr key={expense.id}>
+                  <td><strong>{expense.name}</strong></td>
+                  <td>{{
+                    both: "Both websites",
+                    rsexpressparking: "RS Express",
+                    dublinairportparking: "Dublin Express",
+                  }[expense.website] || expense.website}</td>
+                  <td><span className="finance-type-pill">{expense.recurring ? "Recurring" : "Fixed"}</span></td>
+                  <td>
+                    {expense.recurring
+                      ? `${expense.recurring_start_month?.slice(0, 7) || "Open"} – ${expense.recurring_end_month?.slice(0, 7) || "Ongoing"}`
+                      : expense.for_month?.slice(0, 7) || "—"}
+                  </td>
+                  <td className="numeric">{formatCurrency(expense.amount)}</td>
+                  <td className="numeric">
+                    <strong>{formatCurrency(expense.total)}</strong>
+                    {expense.months_counted > 1 && <small className="table-subline">{expense.months_counted} months</small>}
+                  </td>
+                  <td className="actions">
+                    <button
+                      type="button"
+                      className="finance-icon-btn"
+                      onClick={() => openEditExpense(expense)}
+                      aria-label={`Edit ${expense.name}`}
+                    ><FaEdit /></button>
+                    <button
+                      type="button"
+                      className="finance-icon-btn is-danger"
+                      onClick={() => setExpenseToDelete(expense)}
+                      aria-label={`Delete ${expense.name}`}
+                    ><FaTrash /></button>
+                  </td>
+                </tr>
+              ))}
+              {!allExpenses.length && <TableEmptyRow colSpan={7} message="No expenses apply to this period." />}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
+  );
+
+  const renderSuppliers = () => (
+    <>
+      <SectionHeading
+        eyebrow="Supplier settlements"
+        title="Supplier and vendor earnings"
+        description="This tab uses booking departure dates within the selected period. Eligible statuses are Cancelled, Started, Completed and No Show."
+      />
+      <div className="finance-summary-grid finance-summary-grid-four">
+        <article className="finance-card finance-summary-card">
+          <span>Revenue base</span><strong>{formatCurrency(supplierTotals.total_supplier_revenue || 0)}</strong>
+          <small>Commission calculation base.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Supplier share</span><strong>{formatCurrency(supplierTotals.total_given_to_suppliers || 0)}</strong>
+          <small>Amount allocated to suppliers.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Our share</span><strong>{formatCurrency(supplierTotals.total_kept_from_suppliers || 0)}</strong>
+          <small>Retained share including extensions.</small>
+        </article>
+        <article className="finance-card finance-summary-card">
+          <span>Extended amount</span><strong>{formatCurrency(supplierTotals.total_extended_amount || 0)}</strong>
+          <small>Supplier booking extensions.</small>
+        </article>
+      </div>
+      <section className="finance-card">
+        <div className="finance-table-wrap">
+          <table className="finance-table finance-supplier-table">
+            <caption>Supplier settlements based on departure date.</caption>
+            <thead><tr>
+              <th>Supplier</th>
+              <th>Prefix</th>
+              <th className="numeric">Bookings</th>
+              <th className="numeric">Revenue base</th>
+              <th className="numeric">Extended</th>
+              <th className="numeric">Supplier share</th>
+              <th className="numeric">Our share</th>
+              <th className="numeric">Commission</th>
+              <th className="actions">Actions</th>
+            </tr></thead>
+            <tbody>
+              {suppliers.map((supplier) => (
+                <tr key={supplier.supplier_id}>
+                  <td><strong>{supplier.supplier_name}</strong></td>
+                  <td>{supplier.prefix}</td>
+                  <td className="numeric">{formatNumber(supplier.total_bookings)}</td>
+                  <td className="numeric">{formatCurrency(supplier.total_revenue)}</td>
+                  <td className="numeric">{formatCurrency(supplier.extended_amount || 0)}</td>
+                  <td className="numeric">{formatCurrency(supplier.supplier_share)}</td>
+                  <td className="numeric is-positive">{formatCurrency(supplier.our_share)}</td>
+                  <td className="numeric">{supplier.commission_percentage.toFixed(2)}%</td>
+                  <td className="actions">
+                    <button
+                      type="button"
+                      className="finance-icon-btn"
+                      onClick={() => openSupplierDetail(supplier.supplier_id)}
+                      aria-label={`View ${supplier.supplier_name} details`}
+                    ><FaEye /></button>
+                    <button
+                      type="button"
+                      className="finance-icon-btn"
+                      onClick={() => openInvoice(supplier)}
+                      aria-label={`Download ${supplier.supplier_name} invoice`}
+                    ><FaFileInvoice /></button>
+                  </td>
+                </tr>
+              ))}
+              {!suppliers.length && <TableEmptyRow colSpan={9} message="No supplier settlements for this period." />}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
+  );
+
+  const statusData = Object.entries(operations.summary)
+    .map(([status, count]) => ({ status, count }))
+    .filter((item) => item.count > 0);
+  const serviceOrderData = operations.orders.services.filter((item) => item.orders_count > 0);
+
+  const renderOperations = () => (
+    <>
+      <SectionHeading
+        eyebrow="Operations"
+        title="Booking activity"
+        description="All charts use booking-created date and the same website and period selected above."
+      />
+      <PanelState
+        loading={operationsLoading}
+        error={operationsError}
+        onRetry={() => setOperationsRefreshKey((value) => value + 1)}
+        empty={!operations.timeline.length && !statusData.length && !serviceOrderData.length}
+      >
+        <div className="finance-operations-grid">
+          <section className="finance-card finance-chart-card finance-chart-wide">
+            <SectionHeading title="Bookings over time" description="Pending and payment-failed bookings are excluded." />
+            <div className="finance-chart" role="img" aria-label="Bookings over time">
+              <ResponsiveContainer width="100%" height={310}>
+                <AreaChart data={operations.timeline}>
+                  <defs>
+                    <linearGradient id="financeBookingsFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1769aa" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#1769aa" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#e8edf3" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fill: "#687586", fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fill: "#687586", fontSize: 11 }} />
+                  <Tooltip content={<FinanceChartTooltip currency={false} valueLabel="Bookings" />} />
+                  <Area
+                    type="monotone"
+                    dataKey="bookings"
+                    name="Bookings"
+                    stroke="#1769aa"
+                    strokeWidth={2}
+                    fill="url(#financeBookingsFill)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+          <section className="finance-card finance-chart-card">
+            <SectionHeading title="Bookings by status" description="Current status of bookings created in scope." />
+            <div className="finance-chart" role="img" aria-label="Bookings by status">
+              <ResponsiveContainer width="100%" height={310}>
+                <BarChart data={statusData} layout="vertical" margin={{ left: 12, right: 20 }}>
+                  <CartesianGrid stroke="#e8edf3" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis type="category" dataKey="status" width={95} tick={{ fontSize: 11 }} />
+                  <Tooltip content={<FinanceChartTooltip currency={false} />} />
+                  <Bar dataKey="count" name="Bookings" fill="#1769aa" radius={[0, 5, 5, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+          <section className="finance-card finance-chart-card">
+            <SectionHeading title="Service mix" description="Booking volume by parking service." />
+            <div className="finance-chart" role="img" aria-label="Service mix">
+              <ResponsiveContainer width="100%" height={310}>
+                <PieChart>
+                  <Pie
+                    data={serviceOrderData}
+                    dataKey="orders_count"
+                    nameKey="service_name"
+                    innerRadius={65}
+                    outerRadius={98}
+                    paddingAngle={2}
                   >
-                    View GMass results <FaExternalLinkAlt aria-hidden="true" />
-                  </a>
-                </div>
+                    {serviceOrderData.map((entry, index) => (
+                      <Cell key={entry.service_id} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<FinanceChartTooltip currency={false} />} />
+                  <Legend formatter={(value) => <span className="finance-legend-label">{value}</span>} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        </div>
+      </PanelState>
+    </>
+  );
 
-                <div className="deliverability-body">
-                  {deliverabilityAlert && (
-                    <Alert
-                      variant={deliverabilityAlert.type}
-                      onClose={() => setDeliverabilityAlert(null)}
-                      dismissible
-                      className="deliverability-status"
-                    >
-                      {deliverabilityAlert.msg}
-                      {deliverabilityAlert.type === "success" && (
-                        <>
-                          {" "}
-                          <Alert.Link
-                            href="https://www.gmass.co/inbox"
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Check placement
-                          </Alert.Link>
-                        </>
-                      )}
-                    </Alert>
-                  )}
-
-                  <Row className="g-4 align-items-stretch">
-                    <Col lg={4}>
-                      <Form.Group className="deliverability-field">
-                        <Form.Label>
-                          <span className="deliverability-step">1</span>
-                          Choose campaign
-                        </Form.Label>
-                        <Form.Select
-                          value={deliverabilityCampaign}
-                          onChange={(event) => {
-                            setDeliverabilityCampaign(event.target.value);
-                            setDeliverabilityAlert(null);
-                          }}
-                          disabled={deliverabilityLoading}
-                        >
-                          {Object.entries(DELIVERABILITY_CAMPAIGNS).map(([value, campaign]) => (
-                            <option key={value} value={value}>{campaign.label}</option>
-                          ))}
-                        </Form.Select>
-                        <Form.Text>
-                          The latest copy saved in Booking Settings will be used.
-                        </Form.Text>
-                      </Form.Group>
-                    </Col>
-
-                    <Col lg={5}>
-                      <div className="deliverability-summary">
-                        <div className="deliverability-summary-title">Test details</div>
-                        <div className="deliverability-meta-row">
-                          <span>Sender</span>
-                          <strong>{DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].sender}</strong>
-                        </div>
-                        <div className="deliverability-meta-row">
-                          <span>Subject</span>
-                          <strong>{DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].subject}</strong>
-                        </div>
-                        <div className="deliverability-meta-row">
-                          <span>Recipients</span>
-                          <strong>15 GMass seed inboxes</strong>
-                        </div>
-                      </div>
-                    </Col>
-
-                    <Col lg={3}>
-                      <div className="deliverability-action">
-                        <div>
-                          <div className="deliverability-step-label">
-                            <span className="deliverability-step">2</span>
-                            Run the test
-                          </div>
-                          <p>Each address receives its own email through the production sender.</p>
-                        </div>
-                        <Button
-                          className="deliverability-send-btn"
-                          onClick={() => setShowDeliverabilityModal(true)}
-                          disabled={deliverabilityLoading}
-                        >
-                          <FaPaperPlane aria-hidden="true" />
-                          {deliverabilityLoading ? "Queueing test..." : "Send 15 test emails"}
-                        </Button>
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Email Deliverability Confirmation Modal */}
-        <Modal
-          show={showDeliverabilityModal}
-          onHide={() => !deliverabilityLoading && setShowDeliverabilityModal(false)}
-          className="deliverability-modal"
-          centered
-        >
-          <Modal.Header closeButton={!deliverabilityLoading}>
-            <Modal.Title>Confirm Deliverability Test</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Alert variant="warning">
-              This will send 15 real external emails using the production SMTP account.
+  const renderTools = () => {
+    const campaign = DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign];
+    return (
+      <>
+        <SectionHeading
+          eyebrow="Administration"
+          title="Admin tools"
+          description="Operational utilities are kept separate from the financial overview."
+        />
+        <section className="finance-card finance-tool-card">
+          <div className="finance-tool-header">
+            <div className="finance-tool-heading">
+              <span className="finance-tool-icon" aria-hidden="true"><FaShieldAlt /></span>
+              <div>
+                <span className="finance-eyebrow">Email health</span>
+                <h2>Email deliverability test</h2>
+                <p>Check where the current live campaign lands before sending it to customers.</p>
+              </div>
+            </div>
+            <a href="https://www.gmass.co/inbox" target="_blank" rel="noreferrer">
+              View GMass results <FaExternalLinkAlt aria-hidden="true" />
+            </a>
+          </div>
+          {deliverabilityAlert && (
+            <Alert
+              variant={deliverabilityAlert.type}
+              dismissible
+              onClose={() => setDeliverabilityAlert(null)}
+              className="m-0"
+            >
+              {deliverabilityAlert.message}
             </Alert>
-            <div><strong>Campaign:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].label}</div>
-            <div><strong>Sender:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].sender}</div>
-            <div><strong>Subject:</strong> {DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].subject}</div>
-            {deliverabilityAlert?.type === "danger" && (
-              <Alert variant="danger" className="mt-3 mb-0">
-                {deliverabilityAlert.msg}
-              </Alert>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => setShowDeliverabilityModal(false)}
-              disabled={deliverabilityLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="warning"
-              onClick={handleQueueDeliverabilityTest}
-              disabled={deliverabilityLoading}
-            >
-              {deliverabilityLoading ? "Queueing..." : "Send 15 Test Emails"}
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        {/* Supplier Invoice Download Modal */}
-        <Modal show={showInvoiceModal} onHide={() => setShowInvoiceModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>
-              Download Invoice — {invoiceSupplier?.supplier_name}
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label><strong>Select Month</strong></Form.Label>
-              <Form.Control
-                type="month"
-                value={invoicePeriod}
-                onChange={e => setInvoicePeriod(e.target.value)}
-              />
-              <Form.Text className="text-muted">
-                Invoice covers all Started &amp; Completed bookings in the selected month (add-ons excluded).
-              </Form.Text>
+          )}
+          <div className="finance-tool-body">
+            <Form.Group>
+              <Form.Label>Campaign</Form.Label>
+              <Form.Select
+                value={deliverabilityCampaign}
+                onChange={(event) => {
+                  setDeliverabilityCampaign(event.target.value);
+                  setDeliverabilityAlert(null);
+                }}
+                disabled={deliverabilityLoading}
+              >
+                {Object.entries(DELIVERABILITY_CAMPAIGNS).map(([value, item]) => (
+                  <option key={value} value={value}>{item.label}</option>
+                ))}
+              </Form.Select>
+              <Form.Text>The latest copy saved in Booking Settings will be used.</Form.Text>
             </Form.Group>
-            {invoiceError && (
-              <Alert variant="danger" className="mb-0">{invoiceError}</Alert>
+            <div className="finance-tool-details">
+              <div><span>Sender</span><strong>{campaign.sender}</strong></div>
+              <div><span>Subject</span><strong>{campaign.subject}</strong></div>
+              <div><span>Recipients</span><strong>15 GMass seed inboxes</strong></div>
+            </div>
+            <div className="finance-tool-action">
+              <p>Each address receives its own email through the production sender.</p>
+              <Button
+                className="finance-primary-btn"
+                onClick={() => setShowDeliverabilityModal(true)}
+                disabled={deliverabilityLoading}
+              >
+                <FaPaperPlane aria-hidden="true" />
+                Send 15 test emails
+              </Button>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  };
+
+  const panels = {
+    overview: renderOverview,
+    revenue: renderRevenue,
+    expenses: renderExpenses,
+    suppliers: renderSuppliers,
+    operations: renderOperations,
+    tools: renderTools,
+  };
+
+  if (authLoading) {
+    return <div className="finance-page-loader"><Spinner animation="border" /><span>Opening finance dashboard…</span></div>;
+  }
+
+  return (
+    <div className="finance-dashboard">
+      <main className="finance-shell">
+        <header className="finance-page-header">
+          <div>
+            <span className="finance-eyebrow">Business performance</span>
+            <h1>Finance overview</h1>
+            <p>See profit health first, then move into the detail behind every number.</p>
+          </div>
+          <div className="finance-scope-summary" aria-label="Current dashboard scope">
+            <span>{websiteLabel}</span>
+            <strong>{overview?.period || "Loading period…"}</strong>
+          </div>
+        </header>
+
+        <FinanceFilters
+          draft={draftFilters}
+          onDraftChange={setDraftFilters}
+          onApply={applyFilters}
+          error={filterError}
+          loading={overviewLoading}
+        />
+
+        <FinanceTabs activeTab={activeTab} onChange={changeTab} />
+
+        {notice && (
+          <Alert
+            variant={notice.type}
+            dismissible
+            onClose={() => setNotice(null)}
+            className="finance-notice"
+          >
+            {notice.message}
+          </Alert>
+        )}
+
+        <div
+          id={`finance-panel-${activeTab}`}
+          role="tabpanel"
+          aria-labelledby={`finance-tab-${activeTab}`}
+          className="finance-panel"
+        >
+          <PanelState
+            loading={overviewLoading && !overview}
+            error={overviewError}
+            onRetry={() => setRefreshKey((value) => value + 1)}
+          >
+            {panels[activeTab]()}
+          </PanelState>
+        </div>
+      </main>
+
+      <Modal show={showExpenseModal} onHide={() => !expenseSaving && setShowExpenseModal(false)} centered>
+        <Form onSubmit={submitExpense}>
+          <Modal.Header closeButton={!expenseSaving}>
+            <Modal.Title>{editingExpense ? "Edit expense" : "Add expense"}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="finance-modal-body">
+            {expenseFormError && <Alert variant="danger">{expenseFormError}</Alert>}
+            <Form.Group>
+              <Form.Label>Expense name</Form.Label>
+              <Form.Control
+                value={expenseForm.name}
+                onChange={(event) => setExpenseForm((form) => ({ ...form, name: event.target.value }))}
+                required
+                autoFocus
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Amount (€)</Form.Label>
+              <Form.Control
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={expenseForm.amount}
+                onChange={(event) => setExpenseForm((form) => ({ ...form, amount: event.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Website</Form.Label>
+              <Form.Select
+                value={expenseForm.website}
+                onChange={(event) => setExpenseForm((form) => ({ ...form, website: event.target.value }))}
+              >
+                <option value="both">Both websites</option>
+                <option value="rsexpressparking">RS Express Parking</option>
+                <option value="dublinairportparking">Dublin Airport Express Parking</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Check
+              type="switch"
+              id="expense-recurring"
+              label="Recurring monthly expense"
+              checked={expenseForm.recurring}
+              onChange={(event) => setExpenseForm((form) => ({ ...form, recurring: event.target.checked }))}
+            />
+            {!expenseForm.recurring ? (
+              <Form.Group>
+                <Form.Label>Expense month</Form.Label>
+                <Form.Control
+                  type="month"
+                  value={expenseForm.for_month}
+                  onChange={(event) => setExpenseForm((form) => ({ ...form, for_month: event.target.value }))}
+                  required
+                />
+              </Form.Group>
+            ) : (
+              <div className="finance-modal-grid">
+                <Form.Group>
+                  <Form.Label>Starts</Form.Label>
+                  <Form.Control
+                    type="month"
+                    value={expenseForm.recurring_start_month}
+                    onChange={(event) => setExpenseForm((form) => ({ ...form, recurring_start_month: event.target.value }))}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Ends <span className="text-muted">(optional)</span></Form.Label>
+                  <Form.Control
+                    type="month"
+                    min={expenseForm.recurring_start_month}
+                    value={expenseForm.recurring_end_month}
+                    onChange={(event) => setExpenseForm((form) => ({ ...form, recurring_end_month: event.target.value }))}
+                  />
+                </Form.Group>
+              </div>
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowInvoiceModal(false)} disabled={invoiceLoading}>
-              Cancel
-            </Button>
-            <Button variant="success" onClick={handleDownloadInvoice} disabled={invoiceLoading || !invoicePeriod}>
-              {invoiceLoading ? "Generating…" : "Download PDF"}
+            <Button variant="light" onClick={() => setShowExpenseModal(false)} disabled={expenseSaving}>Cancel</Button>
+            <Button type="submit" className="finance-primary-btn" disabled={expenseSaving}>
+              {expenseSaving ? "Saving…" : editingExpense ? "Save changes" : "Add expense"}
             </Button>
           </Modal.Footer>
-        </Modal>
+        </Form>
+      </Modal>
 
-        {/* Supplier Detail Modal */}
-        <Modal show={showSupplierModal} onHide={() => setShowSupplierModal(false)} size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title>
-              {supplierDetail ? `${supplierDetail.supplier_name} (${supplierDetail.prefix}) — Bookings` : "Supplier Details"}
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {supplierDetailLoading && <div className="text-center py-4">Loading...</div>}
-            {!supplierDetailLoading && supplierDetail && (
+      <Modal show={Boolean(expenseToDelete)} onHide={() => !expenseDeleting && setExpenseToDelete(null)} centered>
+        <Modal.Header closeButton={!expenseDeleting}><Modal.Title>Delete expense?</Modal.Title></Modal.Header>
+        <Modal.Body>
+          This permanently removes <strong>{expenseToDelete?.name}</strong>. Existing finance totals will update immediately.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="light" onClick={() => setExpenseToDelete(null)} disabled={expenseDeleting}>Cancel</Button>
+          <Button variant="danger" onClick={confirmDeleteExpense} disabled={expenseDeleting}>
+            {expenseDeleting ? "Deleting…" : "Delete expense"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showSupplierModal} onHide={() => setShowSupplierModal(false)} size="xl" centered>
+        <Modal.Header closeButton><Modal.Title>{supplierDetail?.supplier_name || "Supplier details"}</Modal.Title></Modal.Header>
+        <Modal.Body>
+          <PanelState loading={supplierDetailLoading} error={supplierDetailError}>
+            {supplierDetail && (
               <>
-                <Row className="mb-3">
-                  <Col md={3}>
-                    <strong>Eligible Bookings:</strong> {supplierDetail.total_bookings}
-                  </Col>
-                  <Col md={3}>
-                    <strong>Revenue Base:</strong> €{supplierDetail.total_revenue.toLocaleString()}
-                  </Col>
-                  <Col md={3}>
-                    <strong>Extended Amount:</strong>{" "}
-                    <span style={{ color: "#0d6efd" }}>€{Number(supplierDetail.total_extended_amount || 0).toLocaleString()}</span>
-                  </Col>
-                  <Col md={3}>
-                    <strong>Supplier Share:</strong>{" "}
-                    <span style={{ color: "#dc3545" }}>€{supplierDetail.supplier_share.toLocaleString()}</span>
-                  </Col>
-                  <Col md={3}>
-                    <strong>Our Share:</strong>{" "}
-                    <span style={{ color: "#28a745" }}>€{supplierDetail.our_share.toLocaleString()}</span>
-                  </Col>
-                </Row>
-                <div className="text-muted mb-2" style={helperTextStyle}>
-                  {supplierEarningsHelp}
+                <div className="finance-modal-metrics">
+                  <div><span>Eligible bookings</span><strong>{formatNumber(supplierDetail.total_bookings)}</strong></div>
+                  <div><span>Revenue base</span><strong>{formatCurrency(supplierDetail.total_revenue)}</strong></div>
+                  <div><span>Supplier share</span><strong>{formatCurrency(supplierDetail.supplier_share)}</strong></div>
+                  <div><span>Our share</span><strong>{formatCurrency(supplierDetail.our_share)}</strong></div>
                 </div>
-                <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                  <table className="table table-sm table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Booking ID</th>
-                        <th>Customer</th>
-                        <th>Departure</th>
-                        <th>Return</th>
-                        <th>Price (€)</th>
-                        <th>Extended Amount (€)</th>
-                        <th>Revenue Base (€)</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
+                <p className="finance-modal-note">Based on departure date and filtered to {websiteLabel}.</p>
+                <div className="finance-table-wrap">
+                  <table className="finance-table">
+                    <thead><tr>
+                      <th>Booking</th><th>Customer</th><th>Departure</th><th>Return</th>
+                      <th className="numeric">Price</th><th className="numeric">Extended</th>
+                      <th className="numeric">Revenue base</th><th>Status</th>
+                    </tr></thead>
                     <tbody>
-                      {supplierDetail.bookings.map((b, idx) => (
-                        <tr key={idx}>
-                          <td>{b.booking_id}</td>
-                          <td>{b.customer_name}</td>
-                          <td>{new Date(b.departure_time).toLocaleString()}</td>
-                          <td>{new Date(b.return_time).toLocaleString()}</td>
-                          <td>€{b.price.toLocaleString()}</td>
-                          <td style={{ color: "#0d6efd" }}>€{Number(b.extended_amount || 0).toLocaleString()}</td>
-                          <td>€{b.earning.toLocaleString()}</td>
-                          <td>{b.status}</td>
+                      {supplierDetail.bookings.map((booking) => (
+                        <tr key={booking.booking_id}>
+                          <td><strong>{booking.booking_id}</strong></td>
+                          <td>{booking.customer_name}</td>
+                          <td>{formatDate(booking.departure_time)}</td>
+                          <td>{formatDate(booking.return_time)}</td>
+                          <td className="numeric">{formatCurrency(booking.price)}</td>
+                          <td className="numeric">{formatCurrency(booking.extended_amount || 0)}</td>
+                          <td className="numeric">{formatCurrency(booking.earning)}</td>
+                          <td><span className="finance-status-pill">{booking.status}</span></td>
                         </tr>
                       ))}
+                      {!supplierDetail.bookings.length && <TableEmptyRow colSpan={8} />}
                     </tbody>
                   </table>
                 </div>
               </>
             )}
-            {!supplierDetailLoading && !supplierDetail && (
-              <div className="text-center text-muted py-4">No data available.</div>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowSupplierModal(false)}>Close</Button>
-          </Modal.Footer>
-        </Modal>
+          </PanelState>
+        </Modal.Body>
+        <Modal.Footer><Button variant="light" onClick={() => setShowSupplierModal(false)}>Close</Button></Modal.Footer>
+      </Modal>
 
-        {/* Expense Modal */}
+      <Modal show={showInvoiceModal} onHide={() => !invoiceLoading && setShowInvoiceModal(false)} centered>
+        <Modal.Header closeButton={!invoiceLoading}>
+          <Modal.Title>Download invoice — {invoiceSupplier?.supplier_name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="finance-modal-body">
+          <Form.Group>
+            <Form.Label>Invoice month</Form.Label>
+            <Form.Control type="month" value={invoicePeriod} onChange={(event) => setInvoicePeriod(event.target.value)} />
+            <Form.Text>
+              Includes eligible Cancelled, Started, Completed and No Show supplier bookings for this invoice month.
+            </Form.Text>
+          </Form.Group>
+          {invoiceError && <Alert variant="danger">{invoiceError}</Alert>}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="light" onClick={() => setShowInvoiceModal(false)} disabled={invoiceLoading}>Cancel</Button>
+          <Button className="finance-primary-btn" onClick={downloadInvoice} disabled={invoiceLoading || !invoicePeriod}>
+            {invoiceLoading ? "Generating…" : "Download PDF"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-        <Modal show={showExpenseModal} onHide={() => { setShowExpenseModal(false); setEditingExpense(null); }}>
-          <Modal.Header closeButton>
-            <Modal.Title>{editingExpense ? "Edit Expense" : "Add Expense"}</Modal.Title>
-          </Modal.Header>
-          <Form onSubmit={handleExpenseSubmit}>
-            <Modal.Body>
-              <Form.Group>
-                <Form.Label>Name</Form.Label>
-                <Form.Control
-                  name="name"
-                  value={expenseForm.name}
-                  onChange={handleExpenseChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Amount</Form.Label>
-                <Form.Control
-                  name="amount"
-                  type="number"
-                  value={expenseForm.amount}
-                  onChange={handleExpenseChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>For Month (YYYY-MM)</Form.Label>
-                <Form.Control
-                  name="for_month"
-                  type="month"
-                  value={expenseForm.for_month}
-                  onChange={handleExpenseChange}
-                  required={!expenseForm.recurring}
-                  disabled={expenseForm.recurring}
-                />
-              </Form.Group>
-              <Form.Group style={{ marginBottom: 16 }}>
-                <Form.Label>Website</Form.Label>
-                <Form.Select
-                  name="website"
-                  value={expenseForm.website}
-                  onChange={handleExpenseChange}
-                  required
-                >
-                  <option value="both">Both Websites</option>
-                  <option value="rsexpressparking">RS Express Parking</option>
-                  <option value="dublinairportparking">Dublin Airport Express Parking</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group>
-                <Form.Check
-                  name="recurring"
-                  label="Recurring"
-                  checked={expenseForm.recurring}
-                  onChange={handleExpenseChange}
-                />
-              </Form.Group>
-              {expenseForm.recurring && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Form.Group>
-                    <Form.Label>Recurring Start Month</Form.Label>
-                    <Form.Control
-                      name="recurring_start_month"
-                      type="month"
-                      value={expenseForm.recurring_start_month || ""}
-                      onChange={handleExpenseChange}
-                      required={expenseForm.recurring}
-                    />
-                  </Form.Group>
-                  <Form.Group>
-                    <Form.Label>Recurring End Month</Form.Label>
-                    <Form.Control
-                      name="recurring_end_month"
-                      type="month"
-                      value={expenseForm.recurring_end_month || ""}
-                      onChange={handleExpenseChange}
-                      required={expenseForm.recurring}
-                    />
-                  </Form.Group>
-                </div>
-              )}
-            </Modal.Body>
-            <Modal.Footer>
-              <button className="admin-btn-outline" onClick={() => { setShowExpenseModal(false); setEditingExpense(null); }}>
-                Cancel
-              </button>
-              <button type="submit" className="admin-btn">
-                {editingExpense ? "Update Expense" : "Add Expense"}
-              </button>
-            </Modal.Footer>
-          </Form>
-        </Modal>
-
-        
-      </Container>
+      <Modal
+        show={showDeliverabilityModal}
+        onHide={() => !deliverabilityLoading && setShowDeliverabilityModal(false)}
+        centered
+      >
+        <Modal.Header closeButton={!deliverabilityLoading}><Modal.Title>Confirm deliverability test</Modal.Title></Modal.Header>
+        <Modal.Body>
+          <Alert variant="warning">This sends 15 real external emails through the production SMTP account.</Alert>
+          <dl className="finance-confirm-list">
+            <div><dt>Campaign</dt><dd>{DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].label}</dd></div>
+            <div><dt>Sender</dt><dd>{DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].sender}</dd></div>
+            <div><dt>Subject</dt><dd>{DELIVERABILITY_CAMPAIGNS[deliverabilityCampaign].subject}</dd></div>
+          </dl>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="light" onClick={() => setShowDeliverabilityModal(false)} disabled={deliverabilityLoading}>Cancel</Button>
+          <Button variant="warning" onClick={sendDeliverabilityTest} disabled={deliverabilityLoading}>
+            {deliverabilityLoading ? "Queueing…" : "Send 15 test emails"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
 
-export default FinancialDashboard;
+export default FinanceDashboard;

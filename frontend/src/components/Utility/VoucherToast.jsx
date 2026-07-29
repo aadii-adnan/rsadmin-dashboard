@@ -1,29 +1,47 @@
-import { useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useEffect, useState } from "react";
+
+const PROMO_SESSION_KEY = "rse_dubrs5_promo_shown";
 
 function VoucherToast() {
-  useEffect(() => {
-    toast.info('💸 Use this PROMO DUBRS5', {
-      position: 'bottom-left',
-      autoClose: false, // stays visible
-      closeOnClick: true,
-      draggable: false,
-      closeButton: false,
-      toastId: 'voucher-toast', // prevent duplicate
-      style: {
-        backgroundColor: '#010659',
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: '16px',
-        padding: '12px',
-        borderRadius: '10px',
-        maxWidth: '300px'
-      }
-    });
-  }, []);
+  const [visible, setVisible] = useState(() => {
+    try {
+      return sessionStorage.getItem(PROMO_SESSION_KEY) !== "1";
+    } catch {
+      return true;
+    }
+  });
 
-  return <ToastContainer />;
+  useEffect(() => {
+    if (!visible) return undefined;
+    try {
+      sessionStorage.setItem(PROMO_SESSION_KEY, "1");
+    } catch {
+      // Session storage can be unavailable in privacy modes.
+    }
+    const timer = window.setTimeout(() => setVisible(false), 10000);
+    return () => window.clearTimeout(timer);
+  }, [visible]);
+
+  if (!visible) return null;
+
+  return (
+    <aside
+      className="voucher-toast"
+      aria-label="Promotional offer"
+      data-clarity-id="dubrs5-promo"
+    >
+      <span>
+        Use promo code <strong>DUBRS5</strong>
+      </span>
+      <button
+        type="button"
+        onClick={() => setVisible(false)}
+        aria-label="Dismiss promotional offer"
+      >
+        ×
+      </button>
+    </aside>
+  );
 }
 
 export default VoucherToast;

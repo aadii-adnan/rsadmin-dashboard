@@ -37,8 +37,8 @@ function BlogCard({ title, slug, featured_image, featured_image_responsive, exce
             src={imageSrc}
             srcSet={imageSrcSet}
             sizes={imageSizes}
-            width={imageWidth}
-            height={imageHeight}
+            width={imageWidth || 640}
+            height={imageHeight || 360}
             className="blog-card-img"
             alt={title}
             loading="lazy"

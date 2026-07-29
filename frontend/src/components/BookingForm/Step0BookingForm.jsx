@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useBooking } from "../../context/BookingContext";
@@ -19,12 +19,13 @@ const Step0BookingForm = ({
   const { login: loginUser } = useAuth();
   const [login, setLogin] = useState(false);
   const [rescheduleOption, setRescheduleOption] = useState(false); // Checkbox state
-  const { bookingData: { userDetails } } = useBooking();
+  const { bookingData: { userDetails, bookingJourneyId } } = useBooking();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [pendingBookingUser, setPendingBookingUser] = useState(false);
+  const submissionLockRef = useRef(false);
 
   const validateFields = (fields) => {
   const errors = [];
@@ -61,6 +62,8 @@ const Step0BookingForm = ({
 
   const handleLoginOrSignup = async (e) => {
     e.preventDefault();
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
     setLoading(true);
 
   const trimmedFormData = {
@@ -76,9 +79,10 @@ const Step0BookingForm = ({
 
   if (errors.length > 0) {
     setError(errors[0]);
-    setIsPopupOpen(true);
-    setLoading(false);
-    return;
+      setIsPopupOpen(true);
+      setLoading(false);
+      submissionLockRef.current = false;
+      return;
   }
 
   try {
@@ -128,11 +132,14 @@ const Step0BookingForm = ({
     }
 
     // 1. Always create BookingUser
-    const bookingUserRes = await fetch(
+      const bookingUserRes = await fetch(
       `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(bookingJourneyId ? { "Idempotency-Key": bookingJourneyId } : {}),
+          },
         body: JSON.stringify(bookingUserBody),
       }
     );
@@ -153,6 +160,8 @@ const Step0BookingForm = ({
     console.error(err);
     alert(err.message || "An unexpected error occurred.");
     setLoading(false);
+  } finally {
+    submissionLockRef.current = false;
   }
 };
 
@@ -176,7 +185,10 @@ useEffect(() => {
             `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                ...(bookingJourneyId ? { "Idempotency-Key": bookingJourneyId } : {}),
+              },
               body: JSON.stringify(bookingUserBody),
             }
           );

@@ -8,7 +8,14 @@ const PAYMENT_ENDPOINTS = {
 
 // newTimes ({ departureTime, returnTime }) is required when isRescheduleExtra:
 // the backend computes the extension charge from the new dates server-side.
-export const createPaymentIntent = async (bookingId, extraAmount = null, isRescheduleExtra = false, bonusPointsUsed = 0, newTimes = null) => {
+export const createPaymentIntent = async (
+  bookingId,
+  extraAmount = null,
+  isRescheduleExtra = false,
+  bonusPointsUsed = 0,
+  newTimes = null,
+  attemptId = null,
+) => {
   const body = {
     amount: extraAmount,
     is_reschedule_extra: isRescheduleExtra,
@@ -27,19 +34,23 @@ export const createPaymentIntent = async (bookingId, extraAmount = null, isResch
     const response = await customFetch(PAYMENT_ENDPOINTS.CREATE_INTENT(bookingId), {
       method: "POST",
       body,
+      headers: attemptId ? { "Idempotency-Key": attemptId } : {},
     });
     if (!response) return {};
-    return response.json();
+    const payload = await response.json();
+    return { ...payload, _httpStatus: response.status };
   }
 
   const response = await fetch(PAYMENT_ENDPOINTS.CREATE_INTENT(bookingId), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(attemptId ? { "Idempotency-Key": attemptId } : {}),
     },
     body: JSON.stringify(body),
   });
-  return response.json();
+  const payload = await response.json();
+  return { ...payload, _httpStatus: response.status };
 };
 
 // Update function signature:

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PopupDialog from "../Utility/PopupDialog";
 import { useBooking } from "../../context/BookingContext";
 import { clearAttribution, getAttribution } from "../../utils/attribution";
@@ -9,6 +9,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
   const [error, setError] = useState(""); // State to store validation error messages
   const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
   const [loading, setLoading] = useState(false); // Loading state while creating the booking
+  const submissionLockRef = useRef(false);
   const {
     bookingData,
     setBookingData,
@@ -72,6 +73,7 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
         ...formData,
         service: serviceDetails.id,
         user: userDetails?.id,
+        booking_user: formData.booking_user_id || null,
         contact_no: contactNo,
         departure_time: parkingFromDate + " " + parkingFromTime,
         return_time: carCollectionDate + " " + carCollectionTime,
@@ -99,7 +101,12 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
         // Create new booking — attach first-touch marketing attribution (create only)
         response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(bookingData.bookingJourneyId
+              ? { "Idempotency-Key": bookingData.bookingJourneyId }
+              : {}),
+          },
           body: JSON.stringify({ ...bookingPayload, ...getAttribution() }),
         });
       }
@@ -146,12 +153,18 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
 
   // Handle Next button click
   const handleNext = async () => {
-    if (!validateInputs()) return;
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
+    if (!validateInputs()) {
+      submissionLockRef.current = false;
+      return;
+    }
     setLoading(true);
     try {
       await handleBooking(); // Creates the booking and advances on success
     } finally {
       setLoading(false);
+      submissionLockRef.current = false;
     }
   };
 
