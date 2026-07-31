@@ -39,7 +39,10 @@ export default defineConfig({
   },
   server: {
     headers: {
-      'Cache-Control': 'public, max-age=31536000',
+      // Never let the browser reuse source or optimized dependency modules
+      // from a previous dev-server run. Mixing cached React and ReactDOM
+      // chunks causes "Invalid hook call" dispatcher failures.
+      'Cache-Control': 'no-store',
     }
   }
 })

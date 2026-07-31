@@ -16,3 +16,4 @@ perf/after2-*.json
 !perf/before-after2-comparison.json
 !perf/before-metrics.json
 !perf/before-media-audit.json
+.DS_Store

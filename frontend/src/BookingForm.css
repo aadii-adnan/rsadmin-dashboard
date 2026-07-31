@@ -860,6 +860,7 @@ button.btn {
   color: #1f2937;
 }
 
+.irish-date-popover .rdp-day_button:focus,
 .irish-date-popover .rdp-day_button:hover:not(:disabled),
 .irish-date-popover .rdp-day_button:focus-visible {
   border-color: #2890cd;
