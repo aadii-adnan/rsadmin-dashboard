@@ -11,6 +11,15 @@
     <!-- Preconnect only for first-render critical origins -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <style>
+      html.tidio-hidden #tidio-chat,
+      html.tidio-hidden #tidio-chat-iframe,
+      html.tidio-hidden iframe[title^="Tidio"] {
+        display: none !important;
+        visibility: hidden !important;
+      }
+    </style>
     
     <!-- Font loading optimized -->
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
@@ -115,6 +124,11 @@
           return getConsentChoice() === 'accepted';
         }
 
+        function isAdminDashboard(pathname) {
+          return pathname.indexOf('/finance-dashboard') === 0 ||
+            pathname.indexOf('/blog-admin') === 0;
+        }
+
         function clearFallbackTimer() {
           if (fallbackTimer) {
             window.clearTimeout(fallbackTimer);
@@ -134,7 +148,7 @@
         }
 
         function loadTidio() {
-          if (tidioLoaded || !hasAcceptedConsent()) {
+          if (tidioLoaded || !hasAcceptedConsent() || isAdminDashboard(window.location.pathname)) {
             return;
           }
 
@@ -150,7 +164,12 @@
         }
 
         function enableInteractionGate() {
-          if (tidioLoaded || interactionHandler || !hasAcceptedConsent()) {
+          if (
+            tidioLoaded ||
+            interactionHandler ||
+            !hasAcceptedConsent() ||
+            isAdminDashboard(window.location.pathname)
+          ) {
             return;
           }
 
@@ -166,12 +185,49 @@
           fallbackTimer = window.setTimeout(loadTidio, 20000);
         }
 
-        if (hasAcceptedConsent()) {
-          enableInteractionGate();
+        function hideTidio() {
+          document.documentElement.classList.add('tidio-hidden');
+          if (window.tidioChatApi) {
+            window.tidioChatApi.hide();
+          }
         }
 
-        window.addEventListener('cookie-consent-accepted', enableInteractionGate, { once: true });
-        window.addEventListener('analytics-consent-granted', enableInteractionGate, { once: true });
+        function showTidio() {
+          document.documentElement.classList.remove('tidio-hidden');
+          if (window.tidioChatApi) {
+            window.tidioChatApi.show();
+          }
+        }
+
+        function updateTidioForPath(pathname) {
+          if (isAdminDashboard(pathname)) {
+            removeInteractionListeners();
+            clearFallbackTimer();
+            hideTidio();
+            return;
+          }
+
+          showTidio();
+          if (hasAcceptedConsent() && !window.tidioChatApi) {
+            enableInteractionGate();
+          }
+        }
+
+        updateTidioForPath(window.location.pathname);
+
+        window.addEventListener('app-route-changed', function (event) {
+          var pathname = event.detail && event.detail.pathname;
+          updateTidioForPath(pathname || window.location.pathname);
+        });
+        document.addEventListener('tidioChat-ready', function () {
+          updateTidioForPath(window.location.pathname);
+        });
+        window.addEventListener('cookie-consent-accepted', function () {
+          updateTidioForPath(window.location.pathname);
+        }, { once: true });
+        window.addEventListener('analytics-consent-granted', function () {
+          updateTidioForPath(window.location.pathname);
+        }, { once: true });
         window.addEventListener('cookie-consent-rejected', function () {
           removeInteractionListeners();
           clearFallbackTimer();

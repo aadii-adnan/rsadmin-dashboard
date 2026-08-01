@@ -360,6 +360,8 @@ class BookingAdmin(admin.ModelAdmin):
     price_display.short_description = 'Total Price'
 
     def source_display(self, obj):
+        if getattr(obj, 'supplier_id', None) is not None:
+            return "Supplier"
         return obj.source_channel or "—"
 
     source_display.short_description = 'Source'
@@ -1315,4 +1317,3 @@ class BookingUserAdmin(admin.ModelAdmin):
             'all': ('admin/css/custom_admin.css','admin/css/clickable_rows.css',)
         }
         js = ('admin/js/print_invoice.js','admin/js/clickable_rows.js')
-

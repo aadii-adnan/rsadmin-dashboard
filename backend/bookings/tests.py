@@ -256,6 +256,21 @@ class MarketingAttributionClassificationTests(SimpleTestCase):
         )
 
 
+class BookingAdminSourceDisplayTests(SimpleTestCase):
+    def setUp(self):
+        self.booking_admin = BookingAdmin(Booking, admin.site)
+
+    def test_supplier_booking_is_displayed_as_supplier(self):
+        booking = SimpleNamespace(supplier_id=1, source_channel='Direct')
+
+        self.assertEqual(self.booking_admin.source_display(booking), 'Supplier')
+
+    def test_direct_booking_keeps_its_marketing_source(self):
+        booking = SimpleNamespace(supplier_id=None, source_channel='Direct')
+
+        self.assertEqual(self.booking_admin.source_display(booking), 'Direct')
+
+
 class SupplierBookingSerializerTests(TestCase):
     def setUp(self):
         self.supplier = Supplier.objects.create(

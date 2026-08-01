@@ -45,41 +45,17 @@ function RouteFallback({ label = "Loading page..." }) {
   );
 }
 
-function Logout() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-
-  logout();
-  navigate("/");
-
-  return null; 
-}
-
-function App() {
-  const location = useLocation();
-  const [showWhatsAppWidget, setShowWhatsAppWidget] = useState(false);
-  const hideHeaderFooter =
-    location.pathname.startsWith("/finance-dashboard") ||
-    location.pathname.startsWith("/blog-admin");
-
-  // Capture first-touch marketing attribution on initial load.
-  useEffect(() => {
-    captureAttribution();
-  }, []);
+function PublicWhatsAppWidget() {
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (hideHeaderFooter) {
-      setShowWhatsAppWidget(false);
-      return undefined;
-    }
-
     let activated = false;
     const activateWidget = () => {
       if (activated) {
         return;
       }
       activated = true;
-      setShowWhatsAppWidget(true);
+      setIsVisible(true);
     };
 
     // Delay non-essential widget loading to keep first paint/LCP paths lighter.
@@ -94,13 +70,61 @@ function App() {
       window.removeEventListener("pointerdown", handleUserIntent);
       window.removeEventListener("scroll", handleUserIntent);
     };
-  }, [hideHeaderFooter, location.pathname]);
+  }, []);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <FloatingWhatsApp
+        phoneNumber="353834896505"
+        accountName="Meet & Greet"
+        chatMessage="Hi! How can we help you?"
+        placeholder="Type your message..."
+        avatar={avatar}
+        statusMessage="Typically replies immediately"
+        allowClickAway={true}
+        notification={true}
+        notificationSound={true}
+      />
+    </Suspense>
+  );
+}
+
+function Logout() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  logout();
+  navigate("/");
+
+  return null;
+}
+
+function App() {
+  const location = useLocation();
+  const isAdminDashboard =
+    location.pathname.startsWith("/finance-dashboard") ||
+    location.pathname.startsWith("/blog-admin");
+
+  // Capture first-touch marketing attribution on initial load.
+  useEffect(() => {
+    captureAttribution();
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("app-route-changed", {
+      detail: { pathname: location.pathname },
+    }));
+  }, [location.pathname]);
   
   return (
     <>
       <CookieBanner />
-      {!hideHeaderFooter && <VoucherToast />}
-      {!hideHeaderFooter && <Header />}   
+      {!isAdminDashboard && <VoucherToast />}
+      {!isAdminDashboard && <Header />}
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* Public Routes */}
@@ -146,22 +170,8 @@ function App() {
           <Route path="*" element={<NotFound404 />} />
         </Routes>
       </Suspense>
-      {!hideHeaderFooter && <Footer />}
-      {!hideHeaderFooter && showWhatsAppWidget ? (
-        <Suspense fallback={null}>
-          <FloatingWhatsApp
-            phoneNumber="353834896505"
-            accountName="Meet & Greet"
-            chatMessage="Hi! How can we help you?"
-            placeholder="Type your message..."
-            avatar={avatar}
-            statusMessage="Typically replies immediately"
-            allowClickAway={true}
-            notification={true}
-            notificationSound={true}
-          />
-        </Suspense>
-      ) : null}
+      {!isAdminDashboard && <Footer />}
+      {!isAdminDashboard && <PublicWhatsAppWidget />}
     </>
   );
 }
