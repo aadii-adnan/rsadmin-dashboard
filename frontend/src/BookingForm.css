@@ -854,10 +854,19 @@ button.btn {
 }
 
 .irish-date-popover .rdp-day_button {
+  display: flex;
+  width: var(--rdp-day_button-width);
+  height: var(--rdp-day_button-height);
+  padding: 0;
   margin: auto;
-  border-color: transparent;
+  appearance: none;
+  border: 2px solid transparent;
+  border-radius: 100%;
   background: transparent;
   color: #1f2937;
+  font: inherit;
+  line-height: 1;
+  white-space: normal;
 }
 
 .irish-date-popover .rdp-day_button:focus,
