@@ -273,10 +273,9 @@ class Booking(models.Model):
 
         if not self.pk:
             if self.supplier:
-                if self.supplier.use_custom_booking_ids:
-                    if not self.booking_id:
+                if not self.booking_id:
+                    if self.supplier.use_custom_booking_ids:
                         raise ValidationError({'booking_id': 'Custom booking ID is required for this supplier.'})
-                else:
                     self.booking_id = self._generate_unique_booking_id(self.supplier.booking_id_prefix)
             elif not self.booking_id:
                 prefix = "DA" if self.website.lower() == "dublinairportparking" else "RS"

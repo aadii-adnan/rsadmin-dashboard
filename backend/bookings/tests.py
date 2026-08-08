@@ -350,6 +350,17 @@ class SupplierBookingSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('booking_id', serializer.errors)
 
+    def test_supplied_booking_id_is_preserved_without_supplier_prefix(self):
+        serializer = SupplierBookingSerializer(
+            data=self.payload(booking_id='JPD-42014'),
+            context={'supplier': self.supplier},
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        booking = serializer.save(supplier=self.supplier, status=self.confirmed_status)
+
+        self.assertEqual(booking.booking_id, 'JPD-42014')
+
     def test_duplicate_custom_booking_id_is_rejected(self):
         self.supplier.use_custom_booking_ids = True
         self.supplier.save(update_fields=['use_custom_booking_ids'])

@@ -167,16 +167,16 @@ class SupplierBookingSerializer(serializers.ModelSerializer):
         if attrs.get('discounted_price') is None:
             attrs['discounted_price'] = attrs['total_price']
 
-        if supplier and supplier.use_custom_booking_ids:
-            if not booking_id or not str(booking_id).strip():
-                raise serializers.ValidationError({
-                    'booking_id': 'This supplier uses custom booking IDs. Please provide booking_id.'
-                })
+        if booking_id and str(booking_id).strip():
             attrs['booking_id'] = str(booking_id).strip()
             if Booking.objects.filter(booking_id=attrs['booking_id']).exists():
                 raise serializers.ValidationError({
                     'booking_id': 'A booking with this booking_id already exists.'
                 })
+        elif supplier and supplier.use_custom_booking_ids:
+            raise serializers.ValidationError({
+                'booking_id': 'This supplier uses custom booking IDs. Please provide booking_id.'
+            })
         else:
             attrs.pop('booking_id', None)
 
