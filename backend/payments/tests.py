@@ -4,7 +4,8 @@ from types import SimpleNamespace
 from unittest.mock import patch
 import uuid
 
-from django.test import TestCase
+from django.core import mail
+from django.test import SimpleTestCase, TestCase, override_settings
 from rest_framework.test import APIClient
 
 from bookings.models import Booking
@@ -12,6 +13,69 @@ from core.models import Status
 from services.models import Service
 
 from .models import Payment
+from .views import send_manager_new_booking_email
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class ManagerNewBookingEmailTests(SimpleTestCase):
+    def setUp(self):
+        self.service = SimpleNamespace(name='Meet and Greet')
+
+    def create_booking(self, supplier=None):
+        return SimpleNamespace(
+            booking_id='ATP-12345',
+            service=self.service,
+            supplier=supplier,
+            first_name='Pay',
+            last_name='Tester',
+            email='pay@example.com',
+            contact_no='+353871234567',
+            total_passengers=1,
+            car_registration_no='261-D-1111',
+            car_model='Corolla',
+            car_colour='Silver',
+            car_manufacturer='Toyota',
+            departure_terminal='1',
+            return_terminal='1',
+            departure_time=datetime(2026, 9, 1, 5, tzinfo=timezone.utc),
+            return_time=datetime(2026, 9, 5, 17, tzinfo=timezone.utc),
+            total_price=Decimal('100.00'),
+            discounted_price=Decimal('100.00'),
+            website='rsexpressparking',
+            add_ons=SimpleNamespace(all=lambda: []),
+        )
+
+    @patch('payments.views.BookingSettings.objects.first', return_value=None)
+    def test_supplier_booking_is_clearly_identified(self, _booking_settings):
+        supplier = SimpleNamespace(
+            name='Airport Travel Partners',
+        )
+        booking = self.create_booking(supplier=supplier)
+
+        send_manager_new_booking_email(booking, b'pdf-content')
+
+        email = mail.outbox[0]
+        html_body = email.alternatives[0][0]
+        self.assertEqual(
+            email.subject,
+            'New Supplier Booking Received – Airport Travel Partners – Meet and Greet',
+        )
+        self.assertIn('received from supplier Airport Travel Partners', email.body)
+        self.assertIn('Supplier: Airport Travel Partners', email.body)
+        self.assertIn('Booking Source: Supplier', email.body)
+        self.assertNotIn('Payment Method: Stripe', email.body)
+        self.assertIn('<strong>Airport Travel Partners</strong>', html_body)
+
+    @patch('payments.views.BookingSettings.objects.first', return_value=None)
+    def test_direct_booking_keeps_standard_manager_email(self, _booking_settings):
+        booking = self.create_booking()
+
+        send_manager_new_booking_email(booking, b'pdf-content')
+
+        email = mail.outbox[0]
+        self.assertEqual(email.subject, 'New Booking Received – Meet and Greet')
+        self.assertIn('Payment Method: Stripe', email.body)
+        self.assertNotIn('New Supplier Booking', email.body)
 
 
 class PaymentIntentIdempotencyTests(TestCase):

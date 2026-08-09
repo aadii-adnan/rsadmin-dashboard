@@ -442,16 +442,47 @@ def send_manager_new_booking_email(booking, pdf_content):
         system_name = "RS Express Parking System"
         connection = None  # Use default
 
+    supplier = booking.supplier
+    if supplier:
+        subject = f"New Supplier Booking Received – {supplier.name} – {booking.service.name}"
+        heading = f"New Supplier Booking Received – {booking.service.name}"
+        html_intro = (
+            f"A new booking has just been received from supplier "
+            f"<strong>{supplier.name}</strong> on {system_name}. Here are the details:"
+        )
+        text_intro = (
+            f"A new booking has just been received from supplier "
+            f"{supplier.name} on {system_name}."
+        )
+        source_html = f"<li><strong>Supplier:</strong> {supplier.name}</li>"
+        source_text = f"Supplier: {supplier.name}\n"
+        payment_heading = "Supplier Booking Details"
+        amount_label = "Booking Value"
+        payment_method_html = "<li><strong>Booking Source:</strong> Supplier</li>"
+        payment_method_text = "Booking Source: Supplier"
+    else:
+        subject = "New Booking Received – " + str(booking.service.name)
+        heading = subject
+        html_intro = f"A new booking has just been made on {system_name}. Here are the details:"
+        text_intro = f"A new booking has just been made on {system_name}."
+        source_html = ""
+        source_text = ""
+        payment_heading = "Payment Details"
+        amount_label = "Total Paid"
+        payment_method_html = "<li><strong>Payment Method:</strong> Stripe</li>"
+        payment_method_text = "Payment Method: Stripe"
+
     html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #0066cc;">New Booking Received – {booking.service.name}</h2>
+        <h2 style="color: #0066cc;">{heading}</h2>
         <p>
-        A new booking has just been made on {system_name}. Here are the details:
+        {html_intro}
         </p>
         <h3 style="color: #444;">🚗 Booking Summary</h3>
         <ul>
         <li><strong>Booking ID:</strong> {booking.booking_id}</li>
+        {source_html}
         <li><strong>Customer Name:</strong> {booking.first_name} {booking.last_name}</li>
         <li><strong>Email:</strong> {booking.email}</li>
         <li><strong>Phone:</strong> {booking.contact_no}</li>
@@ -461,10 +492,10 @@ def send_manager_new_booking_email(booking, pdf_content):
         <li><strong>Service:</strong> {booking.service.name}</li>
         <li><strong>Add-ons:</strong> {', '.join([a.name for a in booking.add_ons.all()])}</li>
         </ul>
-        <h3 style="color: #444;">💳 Payment Details</h3>
+        <h3 style="color: #444;">💳 {payment_heading}</h3>
         <ul>
-        <li><strong>Total Paid:</strong> €{booking.discounted_price or booking.total_price}</li>
-        <li><strong>Payment Method:</strong> Stripe</li>
+        <li><strong>{amount_label}:</strong> €{booking.discounted_price or booking.total_price}</li>
+        {payment_method_html}
         </ul>
         <p>
         Please check the admin panel for more details or to manage this booking.
@@ -478,13 +509,13 @@ def send_manager_new_booking_email(booking, pdf_content):
     """
 
     text_body = f"""
-A new booking has just been made on {system_name}.
+{text_intro}
 
 -----------------------------
 🚗 Booking Summary
 -----------------------------
 Booking ID: {booking.booking_id}
-Customer Name: {booking.first_name} {booking.last_name}
+{source_text}Customer Name: {booking.first_name} {booking.last_name}
 Email: {booking.email}
 Phone: {booking.contact_no}
 Drop-Off Date & Time: {departure_time}
@@ -494,10 +525,10 @@ Service: {booking.service.name}
 Add-ons: {', '.join([a.name for a in booking.add_ons.all()])}
 
 -----------------------------
-💳 Payment Details
+💳 {payment_heading}
 -----------------------------
-Total Paid: €{booking.discounted_price or booking.total_price}
-Payment Method: Stripe
+{amount_label}: €{booking.discounted_price or booking.total_price}
+{payment_method_text}
 
 Please check the admin panel for more details or to manage this booking.
 
@@ -506,7 +537,7 @@ Regards,
 """
 
     email = EmailMultiAlternatives(
-        subject="New Booking Received – " + str(booking.service.name),
+        subject=subject,
         body=text_body,
         from_email=from_email,
         to=manager_emails,
