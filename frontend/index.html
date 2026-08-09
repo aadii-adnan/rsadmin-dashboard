@@ -23,86 +23,90 @@
     
     <!-- Font loading optimized -->
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+
+      var savedConsent = null;
+
+      try {
+        savedConsent = localStorage.getItem('cookieConsent');
+      } catch (error) {}
+
+      /*
+       * Set the initial consent state before GTM loads. Returning accepted users
+       * can start as granted; everyone else starts as denied.
+       */
+      var isAccepted = savedConsent === 'accepted';
+
+      gtag('consent', 'default', {
+        ad_storage: isAccepted ? 'granted' : 'denied',
+        analytics_storage: isAccepted ? 'granted' : 'denied',
+        ad_user_data: isAccepted ? 'granted' : 'denied',
+        ad_personalization: isAccepted ? 'granted' : 'denied',
+      });
+    </script>
+
+    <!-- Load GTM immediately, regardless of consent -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({
+          'gtm.start': new Date().getTime(),
+          event: 'gtm.js',
+        });
+
+        var f = d.getElementsByTagName(s)[0];
+        var j = d.createElement(s);
+        var dl = l !== 'dataLayer' ? '&l=' + l : '';
+
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-WS75DKBQ');
+    </script>
+
+    <script>
+      function grantGoogleConsent() {
+        gtag('consent', 'update', {
+          ad_storage: 'granted',
+          analytics_storage: 'granted',
+          ad_user_data: 'granted',
+          ad_personalization: 'granted',
+        });
+
+        try {
+          localStorage.setItem('cookieConsent', 'accepted');
+        } catch (error) {}
+      }
+
+      function denyGoogleConsent() {
+        gtag('consent', 'update', {
+          ad_storage: 'denied',
+          analytics_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+        });
+
+        try {
+          localStorage.setItem('cookieConsent', 'rejected');
+        } catch (error) {}
+      }
+
+      window.addEventListener('cookie-consent-accepted', function () {
+        grantGoogleConsent();
+      });
+
+      window.addEventListener('cookie-consent-rejected', function () {
+        denyGoogleConsent();
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
 
     <script type="module" src="/src/main.jsx"></script>
-
-    <script>
-      (function () {
-        var CONSENT_KEY = 'cookieConsent';
-        var GTM_ID = 'GTM-WS75DKBQ';
-        var gtmLoaded = false;
-        var fallbackTimer = null;
-
-        function getConsentChoice() {
-          try {
-            return localStorage.getItem(CONSENT_KEY);
-          } catch (error) {
-            return null;
-          }
-        }
-
-        function hasAcceptedConsent() {
-          return getConsentChoice() === 'accepted';
-        }
-
-        function loadGTM() {
-          if (gtmLoaded || !hasAcceptedConsent()) {
-            return;
-          }
-
-          gtmLoaded = true;
-          window.dataLayer = window.dataLayer || [];
-          window.dataLayer.push({
-            'gtm.start': new Date().getTime(),
-            event: 'gtm.js',
-          });
-
-          var script = document.createElement('script');
-          script.async = true;
-          script.src = 'https://www.googletagmanager.com/gtm.js?id=' + GTM_ID;
-          document.head.appendChild(script);
-        }
-
-        function clearFallbackTimer() {
-          if (fallbackTimer) {
-            window.clearTimeout(fallbackTimer);
-            fallbackTimer = null;
-          }
-        }
-
-        function scheduleAfterFirstPaint() {
-          if (gtmLoaded || !hasAcceptedConsent()) {
-            return;
-          }
-
-          clearFallbackTimer();
-          window.requestAnimationFrame(function () {
-            window.requestAnimationFrame(function () {
-              if ('requestIdleCallback' in window) {
-                window.requestIdleCallback(loadGTM, { timeout: 3500 });
-              } else {
-                fallbackTimer = window.setTimeout(loadGTM, 2000);
-              }
-            });
-          });
-        }
-
-        if (hasAcceptedConsent()) {
-          scheduleAfterFirstPaint();
-        }
-
-        window.addEventListener('cookie-consent-accepted', scheduleAfterFirstPaint, { once: true });
-        window.addEventListener('analytics-consent-granted', scheduleAfterFirstPaint, { once: true });
-        window.addEventListener('cookie-consent-rejected', clearFallbackTimer, { once: true });
-
-        window.addEventListener('pagehide', function () {
-          clearFallbackTimer();
-        });
-      })();
-    </script>
 
     <script>
       (function () {

@@ -496,7 +496,7 @@ function BlogDetail() {
               <div className="summarize-ai" aria-label="Summarize this article with AI">
                 <span className="summarize-ai-label">Summarize with AI:</span>
                 <div className="summarize-ai-buttons">
-                  {aiProviders.map(({ name, url }) => (
+                  {aiProviders.map(({ name, Icon, url }) => (
                     <a
                       key={name}
                       href={url}
@@ -505,7 +505,10 @@ function BlogDetail() {
                       className="summarize-ai-btn"
                       title={`Summarize this article with ${name}`}
                     >
-                      <Icon className="summarize-ai-icon" aria-hidden="true" />
+                      {React.createElement(Icon, {
+                        className: "summarize-ai-icon",
+                        "aria-hidden": "true",
+                      })}
                       <span>{name}</span>
                     </a>
                   ))}
