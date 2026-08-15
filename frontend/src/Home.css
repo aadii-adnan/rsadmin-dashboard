@@ -37,7 +37,6 @@ img {
 .text-white { color: var(--white) !important; }
 .text-light-grey { color: #e0e0e0 !important; }
 .text-green { color: var(--success); }
-.text-dark-blue { color: #273E8F; }
 
 /* --- Badge & Button Styles --- */
 .badge-pill {
@@ -80,66 +79,6 @@ img {
     background: var(--primary-light);
 }
 
-/* --- HEADER / ELEMENTOR STYLES (PRESERVED) --- */
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button {
-  background-color: #010659;
-  font-family: Urbanist, Sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-style: normal;
-  text-decoration: none;
-  letter-spacing: 0.5px;
-  fill: #FFFFFF;
-  color: #FFFFFF;
-  border-radius: 30px 30px 30px 30px;
-  padding: 15px 20px;
-}
-
-.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button {
-    background-color: #010659;
-    font-family: Urbanist, Sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-style: normal;
-    text-decoration: none;
-    letter-spacing: .5px;
-    fill: #FFFFFF;
-    color: #FFFFFF;
-    border-radius: 30px 30px 30px 30px;
-    padding: 15px 20px;
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a {
-  color: #010659;
-  font-size: 14px;
-  font-weight: 600;
-}
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger {
-    background-color: #2890CD;
-    float: right;
-    border-radius: 100px;
-    border-style: solid;
-    border-color: #02010100;
-}
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger>.ekit-menu-icon {
-    color: #fff;
-}
-.elementskit-navbar-nav-default .elementskit-navbar-nav>li {
-    position: relative;
-}
-.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button:focus, .elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button:hover {
-    background-color: #2890CD;
-    color: #FFFFFF;
-    border-color: #2890CD;
-}
-
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button:hover, .elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button:focus {
-    background-color: #2890CD;
-    color: #FFFFFF;
-    border-color: #2890CD;
-}
 .elementor-330 .elementor-element.elementor-element-6e66e81e.elementor-view-default .elementor-icon, .elementor-330 .elementor-element .elementor-icon {
     fill: #2890CD;
     color: #2890CD;
@@ -230,17 +169,6 @@ body .home-banner {
   line-height: 1.5;
 }
 
-.swiper-container {
-  height: 100%;
-}
-
-.banner-slide {
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-}
-
 /* --- BOOKING FORM UTILS (PRESERVED) --- */
 .form-date {
     flex: 1;
@@ -248,18 +176,6 @@ body .home-banner {
 .form-time {
   flex: 1 1 0%;
 }
-
-/* --- LOADING SCREEN --- */
-.loading-screen {
-  min-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #e4e9f3 0%, #f0f4f8 100%);
-}
-.loading-logo { width: 80px; margin-bottom: 24px; }
-.loading-text { margin-top: 24px; color: #447e9b; font-weight: 600; font-size: 1.1rem; }
 
 /* --- 2. PROCESS SECTION (Timeline Style) --- */
 .info-sect {
@@ -436,14 +352,6 @@ body .home-banner {
   border-radius: 20px;
 }
 
-.collage-main {
-  width: 85%;
-  height: 350px;
-  object-fit: cover;
-  border-radius: 20px;
-  box-shadow: var(--shadow-md);
-}
-
 .collage-small {
   position: absolute;
   bottom: 10px;
@@ -486,14 +394,6 @@ body .home-banner {
   font-weight: 500;
 }
 
-/* --- 6. REVIEWS SECTION (Modern Grid) --- */
-.review-badges-row {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
 .review-badge {
   background: #fff;
   padding: 10px 25px;
@@ -516,17 +416,6 @@ body .home-banner {
 
 .trustpilot-badge { border-color: #eee; }
 .trustpilot-badge:hover { border-color: #00b67a; }
-
-.badge-text {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  line-height: 1.2;
-}
-
-.source-name { font-weight: 700; font-size: 0.9rem; color: var(--primary-dark); }
-.source-rating { font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 3px; }
-.star-mini { color: #F4B400; font-size: 0.7rem; }
 
 .reviews-grid {
   display: grid;
@@ -560,15 +449,6 @@ body .home-banner {
   gap: 15px;
   margin-bottom: 20px;
   position: relative;
-}
-
-.reviewer-img {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .reviewer-info h4 {
@@ -807,50 +687,6 @@ body .home-banner {
 
 /* --- RESPONSIVE ADJUSTMENTS --- */
 @media (max-width: 1024px) {
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger {
-        float: right;
-        padding: 5px 0;
-        width: 45px;
-        border-radius: 0;
-        border-width: 0;
-    }
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger>.ekit-menu-icon {
-        font-size: 26px;
-    }
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-container {
-      background-color: #010659;
-      max-width: 350px;
-      border-radius: 0 0 0 0;
-      z-index: 15;
-    }
-    .ekit-wid-con:not(.ekit_menu_responsive_mobile) .elementskit-navbar-nav {
-        display: block;
-    }
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a {
-        color: #FFFFFF;
-    }
-    .elementskit-menu-overlay {
-        display: block;
-        position: fixed;
-        z-index: 12;
-        top: 0;
-        left: -100%;    
-        height: 100%;
-        width: 100%;
-        background-color: rgba(51, 51, 51, .5);
-        -webkit-transition: .4s;
-        transition: all .4s ease;
-        opacity: 1;
-        visibility: visible;
-        -webkit-transition: .6s cubic-bezier(.6,.1,.68,.53) .4s;
-        transition: all .6s cubic-bezier(.6,.1,.68,.53) .4s;
-    }
-    .elementor-319 .elementor-element.elementor-element-4e6caee5.elementor-element {
-        --order: 99999;
-    }
-    .elementor-319 .elementor-element.elementor-element-32b2338c img {
-        width: 200px;
-    }
     .banner-content {
       margin-top: 0px;
     }
@@ -873,7 +709,7 @@ body .home-banner {
   .audience-grid { grid-template-columns: 1fr; }
   
   .image-collage { height: auto; margin-bottom: 30px; text-align: center; }
-  .collage-main, .collage-small { position: relative; width: 100%; height: auto; margin-bottom: 10px; right: auto; bottom: auto; }
+  .collage-small { position: relative; width: 100%; height: auto; margin-bottom: 10px; right: auto; bottom: auto; }
   
   .reviews-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -889,7 +725,6 @@ body .home-banner {
   .facility-features { grid-template-columns: 1fr; }
   .reasons-grid { grid-template-columns: 1fr; }
   .reviews-grid { grid-template-columns: 1fr; }
-  .review-badges-row { flex-direction: column; align-items: center; }
   .review-badge { width: 80%; justify-content: center; }
   
   .form-date { flex: 3; }
@@ -906,125 +741,6 @@ body .home-banner {
   .faq-header { padding: 16px; }
   .question-text { font-size: 1rem; }
   .answer-content { padding: 0 16px 20px 16px; }
-}
-
-/* --- CHRISTMAS THEME ADDITIONS --- */
-
-/* 1. Santa Hat Styling */
-.santa-hat-wrapper {
-  position: absolute;
-  top: -35px; /* Adjust to sit on top edge */
-  left: -25px; /* Adjust to hang off left side */
-  width: 90px;
-  height: 90px;
-  z-index: 20;
-  pointer-events: none; /* Let clicks pass through to form */
-  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
-  transform-origin: center top;
-  animation: hatSwing 3s ease-in-out infinite;
-}
-
-.santa-hat-svg {
-  width: 100%;
-  height: 100%;
-}
-
-@keyframes hatSwing {
-  0% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
-  100% { transform: rotate(-5deg); }
-}
-
-/* Mobile Adjustments for Hat */
-@media (max-width: 576px) {
-  .santa-hat-wrapper {
-    width: 60px;
-    height: 60px;
-    top: -25px;
-    left: -15px;
-  }
-}
-
-/* 2. CSS Snowfall Effect (Lightweight) */
-.snow-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 1; /* Behind text, in front of video */
-  pointer-events: none;
-}
-
-.snow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(4px 4px at 10% 10%, rgba(255,255,255,0.8) 50%, transparent),
-    radial-gradient(3px 3px at 20% 30%, rgba(255,255,255,0.7) 50%, transparent),
-    radial-gradient(5px 5px at 40% 70%, rgba(255,255,255,0.6) 50%, transparent),
-    radial-gradient(3px 3px at 60% 40%, rgba(255,255,255,0.8) 50%, transparent),
-    radial-gradient(4px 4px at 80% 10%, rgba(255,255,255,0.7) 50%, transparent),
-    radial-gradient(3px 3px at 90% 80%, rgba(255,255,255,0.6) 50%, transparent);
-  background-size: 500px 500px;
-  animation: snowFall 8s linear infinite;
-  opacity: 0.7;
-}
-
-.snow:nth-child(2) {
-  background-image: 
-    radial-gradient(3px 3px at 15% 15%, rgba(255,255,255,0.8) 50%, transparent),
-    radial-gradient(4px 4px at 35% 55%, rgba(255,255,255,0.7) 50%, transparent),
-    radial-gradient(2px 2px at 65% 25%, rgba(255,255,255,0.6) 50%, transparent),
-    radial-gradient(5px 5px at 85% 65%, rgba(255,255,255,0.8) 50%, transparent);
-  background-size: 400px 400px;
-  animation-duration: 12s;
-  animation-delay: -5s;
-}
-
-@keyframes snowFall {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(500px); }
-}
-/* --- MODERN SANTA HAT STYLES --- */
-
-.modern-santa-hat {
-  position: absolute;
-  top: -35px;     /* Perched on top */
-  right: -25px;    /* Hanging off the left corner */
-  width: 110px;   /* Nice and large visibility */
-  height: 110px;
-  z-index: 20;
-  pointer-events: none; /* Allows clicking input fields underneath */
-  
-  /* The "Float" Animation */
-  animation: floatHat 4s ease-in-out infinite;
-  transform-origin: bottom center;
-}
-
-.hat-svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  /* Rotate slightly to fit the corner angle naturally */
-  transform: rotate(-15deg); 
-}
-
-/* Gentle Floating Animation */
-@keyframes floatHat {
-  0% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-6px) rotate(2deg); /* Moves up and tilts slightly */
-  }
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
 }
 
 /* Keep booking form focus states aligned with the core brand palette. */
@@ -1147,75 +863,6 @@ body .home-banner {
 
 /* Ensure form is positioning context */
 #book { position: relative; }
-
-/* Top-right placement */
-.modern-santa-hat {
-  position: absolute;
-  right: 40px;
-  width: 110px;
-  height: 110px;
-  z-index: 20;
-  pointer-events: none;         /* don’t block form inputs */
-  animation: floatHat 4s ease-in-out infinite;
-}
-
-/* Size the lottie player */
-.modern-santa-hat .dotlottie-anim {
-  display: block;
-  width: 200px;
-  height: 200px;
-}
-
-/* Optional: subtle float animation */
-@keyframes floatHat {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(2deg); }
-}
-
-/* Mobile */
-@media (max-width: 576px) {
-  .modern-santa-hat {
-    display: none;
-  }
-}
-
-/* Top-right placement */
-.modern-santa {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  width: 400px;
-  height: 200px;
-  z-index: 20000;
-  pointer-events: none;         /* don’t block form inputs */
-  animation: floatSanta 4s ease-in-out infinite;
-}
-
-/* Size the lottie player */
-.modern-santa .dotlottie-anim {
-  display: block;
-  width: 200px;
-  height: 200px;
-}
-
-/* Optional: subtle float animation */
-@keyframes floatSanta {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(2deg); }
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .modern-santa {
-    width: 300px;
-    left: -50px;
-  }
-}
-@media (max-width: 576px) {
-  .modern-santa {
-    top: -6vh;
-  }
-}
 
 /* --- TIME FORMAT TOGGLE (Desktop radios / Mobile dropdown) --- */
 .time-format-desktop {

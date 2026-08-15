@@ -139,93 +139,6 @@ p {
     text-align: right
 }
 
-.fieldlabels {
-    color: gray;
-    text-align: left
-}
-
-#progressbar {
-    margin-bottom: 30px;
-    overflow: hidden;
-    color: lightgrey
-}
-
-#progressbar .active {
-    color: #673AB7
-}
-
-#progressbar li {
-    list-style-type: none;
-    font-size: 15px;
-    width: 25%;
-    float: left;
-    position: relative;
-    font-weight: 400
-}
-
-#progressbar #account:before {
-    font-family: FontAwesome;
-    content: "\f13e"
-}
-
-#progressbar #personal:before {
-    font-family: FontAwesome;
-    content: "\f007"
-}
-
-#progressbar #payment:before {
-    font-family: FontAwesome;
-    content: "\f030"
-}
-
-#progressbar #confirm:before {
-    font-family: FontAwesome;
-    content: "\f00c"
-}
-
-#progressbar li:before {
-    width: 50px;
-    height: 50px;
-    line-height: 45px;
-    display: block;
-    font-size: 20px;
-    color: #ffffff;
-    background: lightgray;
-    border-radius: 50%;
-    margin: 0 auto 10px auto;
-    padding: 2px
-}
-
-#progressbar li:after {
-    content: '';
-    width: 100%;
-    height: 2px;
-    background: lightgray;
-    position: absolute;
-    left: 0;
-    top: 25px;
-    z-index: -1
-}
-
-#progressbar li.active:before,
-#progressbar li.active:after {
-    background: #673AB7
-}
-
-.progress {
-    height: 20px
-}
-
-.progress-bar {
-    background-color: #673AB7
-}
-
-.fit-image {
-    width: 100%;
-    object-fit: cover
-}
-
-
 #formWrap {
     z-index:2;
     margin-top:-26px;
@@ -239,20 +152,6 @@ p {
   color:#fff;
   margin:0px 20px 0px 20px;
   z-index:3
-}
-#cardLogo {
-  background:url('/static_files/images/cardLogos.png') no-repeat;
-  width:52px;
-  height:32px;
-  background-size:auto 100%;
-  background-position:-52px
-}
-#visualName {
-  max-width:220px;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  overflow:hidden;
-  display:block;
 }
 button.btn {
   height:64px;
@@ -312,9 +211,6 @@ button.btn {
   position: relative;
   top:-45vh;
 }
-.text-column {
-  margin-top: 50px;
-}
 .each-service {
   width: 80%;
   flex-direction: column;
@@ -327,9 +223,8 @@ button.btn {
   width: 75% !important;
 }
 
-/* External CSS for Next and Previous Buttons */
-/* Default styles for the Next and Previous input buttons */
-.next-button, .prev-button {
+/* Next button */
+.next-button {
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -345,22 +240,11 @@ button.btn {
   color: #fff;
 }
 
-/* Previous button styles */
-.prev-button {
-  background-color: #ccc;
-  color: #555;
-  margin-left: 10px;
-}
-
 /* Hover effect for Next button */
 .next-button:hover {
   background-color: #1a6ca8; /* Darker blue on hover */
 }
 
-/* Hover effect for Previous button */
-.prev-button:hover {
-  background-color: #999; /* Darker gray on hover */
-}
 .custom-input::placeholder {
   font-size: 14px; /* or whatever size you want */
   color: "#aab7c4";
@@ -405,15 +289,6 @@ button.btn {
     gap: 10px;
     align-items: center;
   }
-  .home-heading {
-    font-size: 24px;
-  }
-  .home-text h5 {
-    font-size: 16px;
-  }
-  .text-column {
-    margin-top: 0px;
-  }
   .price-summary {
     margin-left: 0px;
     max-width: 90% !important;
@@ -451,25 +326,9 @@ button.btn {
     gap: 10px;
     align-items: center;
   }
-  .home-heading {
-    font-size: 24px;
-  }
-  .home-text h5 {
-    font-size: 16px;
-  }
-  .text-column {
-    margin-top: 0px;
-  }
   .price-summary {
     margin-left: 0px;
     max-width: 90% !important;
-  }
-  #menu-main-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    height: auto;
-    margin-top: 20px;
   }
 }
 
@@ -497,23 +356,11 @@ button.btn {
     padding: 20px 10px;
     top: -65vh;
   }
-  .home-heading {
-    font-size: 24px;
-  }
-  .home-text h5 {
-    font-size: 16px;
-  }
-  .text-column {
-    margin-top: 0px;
-  }
   .each-service {
     width: 100%
   }
   .service-card-details {
     margin-bottom: 0px;
-  }
-  .progressbar-item {
-    font-size: 12px !important;
   }
   .privacy-policy {
     width: 90% !important;
@@ -554,9 +401,6 @@ button.btn {
   box-sizing: border-box;
 }
 
-.bookingform-col-7 {
-  width: 100%;
-}
 .addon-desc {
   flex: 1;
 }
@@ -571,8 +415,7 @@ button.btn {
   .bookingform-row {
     flex-direction: column;
   }
-  .bookingform-col,
-  .bookingform-col-7 {
+  .bookingform-col {
     width: 100%;
     padding: 0;
   }

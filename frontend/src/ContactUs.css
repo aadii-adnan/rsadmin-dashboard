@@ -3,120 +3,6 @@ img:is([sizes=auto i],[sizes^="auto," i]) {
     contain-intrinsic-size: 3000px 1500px
 }
 
-.ht_ctc_chat_greetings_box :not(ul):not(ol):not(.ht_ctc_default):not(.ht_ctc_defaults *) {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0
-}
-
-.ht_ctc_chat_greetings_box ul {
-    margin-bottom: 0;
-    margin-top: 0
-}
-
-.g_header_badge_online {
-    border-radius: 50%;
-    bottom: 0;
-    height: 12px;
-    position: absolute;
-    right: 0;
-    width: 12px;
-    z-index: 1
-}
-
-@media only screen and (max-width: 420px) {
-    .ht_ctc_animation:has(.ht_ctc_greetings) {
-        animation-fill-mode:none!important
-    }
-}
-
-ul.gum-menu {
-    padding: 0;
-    margin: 0
-}
-
-.gum-menu .menu-item,.gum-menu .page_item {
-    position: relative;
-    -webkit-transition: .2s;
-    -o-transition: .2s;
-    transition: all .2s ease
-}
-
-.gum-menu>.menu-item>a,.gum-menu>.page_item>a {
-    color: inherit;
-    font-weight: 600
-}
-
-.gum-menu>li {
-    display: inline-block
-}
-
-.gum-menu>li:last-child {
-    margin-right: 0
-}
-
-.gum-menu li .arrow {
-    display: inline-block;
-    padding: 0 5px 0 10px;
-    z-index: 9999;
-    cursor: pointer;
-    line-height: 1;
-    vertical-align: middle
-}
-
-.gum-menu li .arrow span {
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-left: 5px solid;
-    display: inline-block;
-    line-height: 1;
-    -webkit-transition: .2s;
-    -o-transition: .2s;
-    transition: all .2s ease
-}
-
-.gum-menu>li>a {
-    padding: 1em;
-    display: block
-}
-
-.toggle-gum-menu {
-    position: absolute;
-    padding: 0;
-    margin: 0;
-    top: 0;
-    right: 0;
-    z-index: 9999;
-    display: none!important
-}
-
-.gum-menu li.menu-open>a>.arrow span {
-    -webkit-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    transform: rotate(90deg)
-}
-
-.price-period-switch {
-    list-style: none;
-    padding: 0
-}
-
-.price-period-switch .period {
-    cursor: pointer;
-    display: inline-block;
-    background: #f4f4f4;
-    padding: 10px 0
-}
-
-.price-period-switch .period span {
-    padding: 0 20px
-}
-
-.price-period-switch .period.active {
-    background: #007cba;
-    color: #fff
-}
-
 .elementor-button-content-wrapper {
     align-items: center
 }
@@ -124,12 +10,6 @@ ul.gum-menu {
 .elementor-button-content-wrapper * {
     -webkit-transition: all var(--e-button-transition-duration, 100ms);
     transition: all var(--e-button-transition-duration, 100ms)
-}
-
-.not-empty {
-    height: .1px;
-    width: 0;
-    z-index: -999
 }
 
 .elementor-widget-heading .elementor-heading-title[class*=elementor-size-]>a {
@@ -276,230 +156,6 @@ a:where(:not(.wp-element-button)) {
     line-height: 1.6
 }
 
-.alert-wrapper {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    padding: 0 auto;
-    left: 0;
-    top: 0;
-    overflow: hidden;
-    position: fixed;
-    background: rgba(0,0,0,.3);
-    z-index: 999999
-}
-
-@keyframes open-frame {
-    0% {
-        transform: scale(1)
-    }
-
-    25% {
-        transform: scale(.95)
-    }
-
-    50% {
-        transform: scale(.97)
-    }
-
-    75% {
-        transform: scale(.93)
-    }
-
-    100% {
-        transform: scale(1)
-    }
-}
-
-.alert-frame {
-    background: #fff;
-    min-height: 350px;
-    width: 300px;
-    box-shadow: 5px 5px 10px rgba(0,0,0,.2);
-    border-radius: 10px;
-    animation: .3s linear open-frame
-}
-
-.alert-header-base {
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px
-}
-
-.custom-img-wrapper {
-    min-height: 145px;
-    max-height: 20rem;
-    overflow: scroll;
-    display: flex;
-    align-items: center;
-    justify-content: center
-}
-
-.alert-close {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: Dosis,sans-serif;
-    font-weight: 700;
-    cursor: pointer;
-    line-height: 30px
-}
-
-.alert-close-default {
-    color: rgba(0,0,0,.2);
-    font-size: 16px;
-    transition: color .5s;
-    margin-left: auto;
-    margin-right: 5px;
-    margin-top: 5px
-}
-
-.alert-close-circle {
-    background: #e4eae7;
-    color: #222;
-    border-radius: 17.5px;
-    margin-top: -15px;
-    margin-right: -15px;
-    font-size: 12px;
-    transition: background .5s;
-    margin-left: auto
-}
-
-.alert-close-circle:hover {
-    background: #fff
-}
-
-.alert-close:hover {
-    color: rgba(0,0,0,.5)
-}
-
-.alert-body {
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    text-align: center
-}
-
-.alert-title {
-    font-size: 18px!important;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 35px;
-    color: #222;
-    align-self: center
-}
-
-.alert-message {
-    font-size: 15px!important;
-    color: #666;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: 400;
-    font-size: 15px;
-    text-align: center;
-    line-height: 1.6;
-    align-self: center
-}
-
-.alert-button {
-    min-width: 140px;
-    height: 35px;
-    border-radius: 20px;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: 400;
-    font-size: 15px;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    transition: background .5s;
-    padding: 0 15px;
-    align-self: center;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center
-}
-
-.alert-button:focus {
-    outline: 0
-}
-
-.question-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center
-}
-
-.confirm-button {
-    min-width: 100px;
-    height: 35px;
-    border-radius: 20px;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: 400;
-    font-size: 15px;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    transition: background .5s;
-    padding: 0 15px;
-    margin-right: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center
-}
-
-.confirm-button:focus {
-    outline: 0
-}
-
-.cancel-button {
-    min-width: 100px;
-    height: 35px;
-    border-radius: 20px;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: 400;
-    font-size: 15px;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1.6;
-    transition: background .5s;
-    padding: 0 15px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center
-}
-
-.cancel-button:focus {
-    outline: 0
-}
-
-@keyframes open-toast {
-    0% {
-        transform: scaleX(1) scaleY(1)
-    }
-
-    20%,45% {
-        transform: scaleX(1.35) scaleY(.1)
-    }
-
-    65% {
-        transform: scaleX(.8) scaleY(1.7)
-    }
-
-    80% {
-        transform: scaleX(.6) scaleY(.85)
-    }
-
-    100% {
-        transform: scaleX(1) scaleY(1)
-    }
-}
-
 .toast-container {
     display: flex;
     flex-direction: column;
@@ -507,32 +163,6 @@ a:where(:not(.wp-element-button)) {
     right: 15px;
     position: fixed;
     z-index: 999999
-}
-
-.toast-content {
-    overflow: hidden;
-    border-radius: 5px;
-    box-shadow: 0 0 20px rgba(0,0,0,.2);
-    animation: .3s linear open-toast
-}
-
-.toast-content+.toast-content {
-    margin-top: 10px
-}
-
-.toast-frame {
-    padding: 5px 15px;
-    display: flex;
-    min-width: 100px;
-    height: 70px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    align-items: center;
-    flex-wrap: wrap
-}
-
-.toast-body-img {
-    height: 40px
 }
 
 .toast-body {
@@ -545,43 +175,6 @@ a:where(:not(.wp-element-button)) {
     display: flex;
     flex-direction: column;
     width: 100%
-}
-
-.toast-title {
-    font-size: 16px!important;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    color: #fff;
-    margin-left: 15px
-}
-
-.toast-message {
-    font-size: 13px!important;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: 600;
-    font-size: 15px;
-    color: #fff;
-    margin-left: 15px
-}
-
-.toast-close {
-    color: rgba(0,0,0,.2);
-    font-family: Dosis,sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    cursor: pointer;
-    transition: color .5s;
-    margin-left: 25px
-}
-
-.toast-timer {
-    width: 1%;
-    height: 5px
-}
-
-.toast-close:hover {
-    color: rgba(0,0,0,.5)
 }
 
 .ql-container {
@@ -1601,144 +1194,6 @@ li,ul {
     z-index: 100000
 }
 
-#comments .comment {
-    position: relative
-}
-
-#comments .reply {
-    font-size: 11px;
-    line-height: 1
-}
-
-#comments .children {
-    position: relative;
-    list-style: none;
-    margin: 0;
-    padding-inline-start:30px}
-
-#comments .children li:last-child {
-    padding-block-end:0}
-
-.site-header:not(.dynamic-header) {
-    margin-inline-start:auto;margin-inline-end:auto;width: 100%
-}
-
-@media (min-width: 576px) {
-    .site-header:not(.dynamic-header) {
-        max-width:500px
-    }
-}
-
-@media (min-width: 768px) {
-    .site-header:not(.dynamic-header) {
-        max-width:600px
-    }
-}
-
-@media (min-width: 992px) {
-    .site-header:not(.dynamic-header) {
-        max-width:800px
-    }
-}
-
-@media (min-width: 1200px) {
-    .site-header:not(.dynamic-header) {
-        max-width:1140px
-    }
-}
-
-.site-header+.elementor {
-    min-height: calc(100vh - 320px)
-}
-
-.site-header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding-block-start:1rem;padding-block-end:1rem;position: relative
-}
-
-.site-navigation-toggle-holder {
-    display: flex;
-    align-items: center;
-    padding: 8px 15px
-}
-
-.site-navigation-toggle-holder .site-navigation-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: .5rem;
-    cursor: pointer;
-    border: 0 solid;
-    border-radius: 3px;
-    background-color: rgba(0,0,0,.05);
-    color: #494c4f
-}
-
-.site-navigation-dropdown {
-    margin-block-start:10px;transition: max-height .3s,transform .3s;
-    transform-origin: top;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    z-index: 10000;
-    width: 100%
-}
-
-.site-navigation-toggle-holder:not(.elementor-active)+.site-navigation-dropdown {
-    transform: scaleY(0);
-    max-height: 0
-}
-
-.site-navigation-toggle-holder.elementor-active+.site-navigation-dropdown {
-    transform: scaleY(1);
-    max-height: 100vh
-}
-
-.site-navigation-dropdown ul {
-    padding: 0
-}
-
-.site-navigation-dropdown ul.menu {
-    position: absolute;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-    background: #fff
-}
-
-.site-navigation-dropdown ul.menu li {
-    display: block;
-    width: 100%;
-    position: relative
-}
-
-.site-navigation-dropdown ul.menu li a {
-    display: block;
-    padding: 20px;
-    background: #fff;
-    color: #55595c;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,.1019607843)
-}
-
-.site-navigation-dropdown ul.menu li.current-menu-item a {
-    color: #fff;
-    background: #55595c
-}
-
-.site-navigation-dropdown ul.menu>li li {
-    transition: max-height .3s,transform .3s;
-    transform-origin: top;
-    transform: scaleY(0);
-    max-height: 0
-}
-
-.site-navigation-dropdown ul.menu li.elementor-active>ul>li {
-    transform: scaleY(1);
-    max-height: 100vh
-}
-
 .elementor-screen-only,.screen-reader-text,.screen-reader-text span {
     height: 1px;
     margin: -1px;
@@ -1903,9 +1358,6 @@ li,ul {
         font-weight: 400
     }
 
-    #comments .children {
-        padding-inline-start:20px}
-
     .elementor-mobile-align-right {
         text-align: right
     }
@@ -1913,10 +1365,6 @@ li,ul {
     .elementor-mobile-align-right .elementor-button {
         width: auto
     }
-}
-
-:root {
-    --page-title-display: block
 }
 
 @keyframes eicon-spin {
@@ -2386,206 +1834,6 @@ body.rtl .e-con {
     }
 }
 
-.elementor-kit-8 {
-    --e-global-color-primary: #010659;
-    --e-global-color-secondary: #273E8F;
-    --e-global-color-text: #676767;
-    --e-global-color-accent: #2890CD;
-    --e-global-color-08673a6: #fff;
-    --e-global-color-85fa94e: #DCE2E5;
-    --e-global-color-6451a9d: #ECECEA;
-    --e-global-color-3656500: #FFFFFF;
-    --e-global-typography-primary-font-family: "Urbanist";
-    --e-global-typography-primary-font-size: 80px;
-    --e-global-typography-primary-font-weight: 400;
-    --e-global-typography-primary-text-transform: none;
-    --e-global-typography-primary-font-style: normal;
-    --e-global-typography-primary-text-decoration: none;
-    --e-global-typography-primary-line-height: 1.3em;
-    --e-global-typography-primary-letter-spacing: 0.3px;
-    --e-global-typography-secondary-font-family: "Urbanist";
-    --e-global-typography-secondary-font-size: 36px;
-    --e-global-typography-secondary-font-weight: 400;
-    --e-global-typography-secondary-text-transform: none;
-    --e-global-typography-secondary-font-style: normal;
-    --e-global-typography-secondary-text-decoration: none;
-    --e-global-typography-secondary-line-height: 1.3em;
-    --e-global-typography-secondary-letter-spacing: 0.3px;
-    --e-global-typography-text-font-family: "Urbanist";
-    --e-global-typography-text-font-size: 16px;
-    --e-global-typography-text-font-weight: 400;
-    --e-global-typography-text-text-transform: none;
-    --e-global-typography-text-font-style: normal;
-    --e-global-typography-text-text-decoration: none;
-    --e-global-typography-text-line-height: 1.8em;
-    --e-global-typography-text-letter-spacing: 0.3px;
-    --e-global-typography-accent-font-family: "Urbanist";
-    --e-global-typography-accent-font-size: 12px;
-    --e-global-typography-accent-font-weight: 600;
-    --e-global-typography-accent-text-transform: uppercase;
-    --e-global-typography-accent-font-style: normal;
-    --e-global-typography-accent-text-decoration: none;
-    --e-global-typography-accent-letter-spacing: 0.5px;
-    --e-global-typography-e96326f-font-family: "Urbanist";
-    --e-global-typography-e96326f-font-size: 30px;
-    --e-global-typography-e96326f-font-weight: 400;
-    --e-global-typography-e96326f-text-transform: none;
-    --e-global-typography-e96326f-font-style: normal;
-    --e-global-typography-e96326f-text-decoration: none;
-    --e-global-typography-e96326f-line-height: 1.4em;
-    --e-global-typography-e96326f-letter-spacing: 0px;
-    --e-global-typography-57f8fac-font-family: "Urbanist";
-    --e-global-typography-57f8fac-font-size: 24px;
-    --e-global-typography-57f8fac-font-weight: 400;
-    --e-global-typography-57f8fac-text-transform: none;
-    --e-global-typography-57f8fac-font-style: normal;
-    --e-global-typography-57f8fac-text-decoration: none;
-    --e-global-typography-57f8fac-line-height: 1.4em;
-    --e-global-typography-57f8fac-letter-spacing: 0px;
-    --e-global-typography-8ec3326-font-family: "Urbanist";
-    --e-global-typography-8ec3326-font-size: 21px;
-    --e-global-typography-8ec3326-font-weight: 400;
-    --e-global-typography-8ec3326-text-transform: none;
-    --e-global-typography-8ec3326-font-style: normal;
-    --e-global-typography-8ec3326-text-decoration: none;
-    --e-global-typography-8ec3326-line-height: 1.6em;
-    --e-global-typography-8ec3326-letter-spacing: 0.3px;
-    --e-global-typography-a236984-font-family: "Urbanist";
-    --e-global-typography-a236984-font-size: 19px;
-    --e-global-typography-a236984-font-weight: 400;
-    --e-global-typography-a236984-text-transform: none;
-    --e-global-typography-a236984-font-style: normal;
-    --e-global-typography-a236984-text-decoration: none;
-    --e-global-typography-a236984-line-height: 1.6em;
-    --e-global-typography-a236984-letter-spacing: 0.3px;
-    --e-global-typography-51b1dae-font-family: "Urbanist";
-    --e-global-typography-51b1dae-font-size: 14px;
-    --e-global-typography-51b1dae-font-weight: 600;
-    --e-global-typography-51b1dae-text-transform: uppercase;
-    --e-global-typography-51b1dae-font-style: normal;
-    --e-global-typography-51b1dae-text-decoration: none;
-    --e-global-typography-51b1dae-line-height: 1.6em;
-    --e-global-typography-51b1dae-letter-spacing: 5px;
-    --e-global-typography-f8ce950-font-family: "Urbanist";
-    --e-global-typography-f8ce950-font-size: 12px;
-    --e-global-typography-f8ce950-font-weight: 500;
-    --e-global-typography-f8ce950-text-transform: uppercase;
-    --e-global-typography-f8ce950-font-style: normal;
-    --e-global-typography-f8ce950-text-decoration: none;
-    --e-global-typography-f8ce950-line-height: 1.6em;
-    --e-global-typography-f8ce950-letter-spacing: 0.5px;
-    --e-global-typography-a06246a-font-family: "Urbanist";
-    --e-global-typography-a06246a-font-size: 14px;
-    --e-global-typography-a06246a-font-weight: 400;
-    --e-global-typography-a06246a-text-transform: none;
-    --e-global-typography-a06246a-font-style: normal;
-    --e-global-typography-a06246a-text-decoration: none;
-    --e-global-typography-a06246a-line-height: 1.8em;
-    --e-global-typography-a06246a-letter-spacing: 0px;
-    background-color: #fff;
-    color: var(--e-global-color-text);
-    font-family: var( --e-global-typography-text-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-text-font-size );
-    font-weight: var(--e-global-typography-text-font-weight);
-    text-transform: var(--e-global-typography-text-text-transform);
-    font-style: var(--e-global-typography-text-font-style);
-    text-decoration: var(--e-global-typography-text-text-decoration);
-    line-height: var( --e-global-typography-text-line-height );
-    letter-spacing: var( --e-global-typography-text-letter-spacing )
-}
-
-.elementor-kit-8 .elementor-button,.elementor-kit-8 button,.elementor-kit-8 input[type=button],.elementor-kit-8 input[type=submit] {
-    background-color: var(--e-global-color-secondary);
-    font-family: var( --e-global-typography-accent-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-accent-font-size );
-    font-weight: var(--e-global-typography-accent-font-weight);
-    text-transform: var(--e-global-typography-accent-text-transform);
-    font-style: var(--e-global-typography-accent-font-style);
-    text-decoration: var(--e-global-typography-accent-text-decoration);
-    letter-spacing: var( --e-global-typography-accent-letter-spacing );
-    color: #fff;
-    border-radius: 30px 30px 30px 30px;
-    padding: 14px 30px
-}
-
-.elementor-kit-8 .elementor-button:focus,.elementor-kit-8 .elementor-button:hover,.elementor-kit-8 button:focus,.elementor-kit-8 button:hover,.elementor-kit-8 input[type=button]:focus,.elementor-kit-8 input[type=button]:hover,.elementor-kit-8 input[type=submit]:focus,.elementor-kit-8 input[type=submit]:hover {
-    background-color: var(--e-global-color-primary);
-    color: #fff
-}
-
-.elementor-kit-8 a {
-    color: var(--e-global-color-secondary)
-}
-
-.elementor-kit-8 a:hover {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-kit-8 h1 {
-    color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-primary-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-primary-font-size );
-    font-weight: var(--e-global-typography-primary-font-weight);
-    text-transform: var(--e-global-typography-primary-text-transform);
-    font-style: var(--e-global-typography-primary-font-style);
-    text-decoration: var(--e-global-typography-primary-text-decoration);
-    line-height: var( --e-global-typography-primary-line-height );
-    letter-spacing: var( --e-global-typography-primary-letter-spacing )
-}
-
-.elementor-kit-8 h2 {
-    color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-secondary-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-secondary-font-size );
-    font-weight: var(--e-global-typography-secondary-font-weight);
-    text-transform: var(--e-global-typography-secondary-text-transform);
-    font-style: var(--e-global-typography-secondary-font-style);
-    text-decoration: var(--e-global-typography-secondary-text-decoration);
-    line-height: var( --e-global-typography-secondary-line-height );
-    letter-spacing: var( --e-global-typography-secondary-letter-spacing )
-}
-
-.elementor-kit-8 h3 {
-    color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-e96326f-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-e96326f-font-size );
-    font-weight: var(--e-global-typography-e96326f-font-weight);
-    text-transform: var(--e-global-typography-e96326f-text-transform);
-    font-style: var(--e-global-typography-e96326f-font-style);
-    text-decoration: var(--e-global-typography-e96326f-text-decoration);
-    line-height: var( --e-global-typography-e96326f-line-height );
-    letter-spacing: var( --e-global-typography-e96326f-letter-spacing )
-}
-
-.elementor-kit-8 label {
-    color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-accent-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-accent-font-size );
-    font-weight: var(--e-global-typography-accent-font-weight);
-    text-transform: var(--e-global-typography-accent-text-transform);
-    font-style: var(--e-global-typography-accent-font-style);
-    text-decoration: var(--e-global-typography-accent-text-decoration);
-    letter-spacing: var( --e-global-typography-accent-letter-spacing )
-}
-
-.elementor-kit-8 input:not([type=button]):not([type=submit]),.elementor-kit-8 textarea {
-    font-family: var( --e-global-typography-text-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-text-font-size );
-    font-weight: var(--e-global-typography-text-font-weight);
-    text-transform: var(--e-global-typography-text-text-transform);
-    font-style: var(--e-global-typography-text-font-style);
-    text-decoration: var(--e-global-typography-text-text-decoration);
-    line-height: var( --e-global-typography-text-line-height );
-    letter-spacing: var( --e-global-typography-text-letter-spacing );
-    color: var(--e-global-color-primary);
-    accent-color: #02010100;
-    background-color: #02010100;
-    border-style: solid;
-    border-width: 1px;
-    border-color: #19191730;
-    border-radius: 30px 30px 30px 30px
-}
-
 .e-con {
     --container-max-width: 1140px
 }
@@ -2599,59 +1847,7 @@ body.rtl .e-con {
     --widgets-spacing-column: 20px
 }
 
-.site-header {
-    padding-inline-end:0px;padding-inline-start:0px}
-
 @media(max-width: 1024px) {
-    .elementor-kit-8 {
-        --e-global-typography-primary-font-size:68px;
-        --e-global-typography-secondary-font-size: 46px;
-        --e-global-typography-text-font-size: 15px;
-        --e-global-typography-accent-font-size: 11px;
-        --e-global-typography-e96326f-font-size: 29px;
-        --e-global-typography-57f8fac-font-size: 26px;
-        --e-global-typography-8ec3326-font-size: 20px;
-        --e-global-typography-a236984-font-size: 18px;
-        --e-global-typography-51b1dae-font-size: 13px;
-        --e-global-typography-a06246a-font-size: 13px;
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
-    .elementor-kit-8 h1 {
-        font-size: var( --e-global-typography-primary-font-size );
-        line-height: var( --e-global-typography-primary-line-height );
-        letter-spacing: var( --e-global-typography-primary-letter-spacing )
-    }
-
-    .elementor-kit-8 h2 {
-        font-size: var( --e-global-typography-secondary-font-size );
-        line-height: var( --e-global-typography-secondary-line-height );
-        letter-spacing: var( --e-global-typography-secondary-letter-spacing )
-    }
-
-    .elementor-kit-8 h3 {
-        font-size: var( --e-global-typography-e96326f-font-size );
-        line-height: var( --e-global-typography-e96326f-line-height );
-        letter-spacing: var( --e-global-typography-e96326f-letter-spacing )
-    }
-
-    .elementor-kit-8 .elementor-button,.elementor-kit-8 button,.elementor-kit-8 input[type=button],.elementor-kit-8 input[type=submit] {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing )
-    }
-
-    .elementor-kit-8 label {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing )
-    }
-
-    .elementor-kit-8 input:not([type=button]):not([type=submit]),.elementor-kit-8 textarea {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
 
     .e-con {
         --container-max-width: 1024px
@@ -2659,55 +1855,6 @@ body.rtl .e-con {
 }
 
 @media(max-width: 767px) {
-    .elementor-kit-8 {
-        --e-global-typography-primary-font-size:48px;
-        --e-global-typography-secondary-font-size: 40px;
-        --e-global-typography-text-font-size: 15px;
-        --e-global-typography-accent-font-size: 11px;
-        --e-global-typography-e96326f-font-size: 27px;
-        --e-global-typography-57f8fac-font-size: 25px;
-        --e-global-typography-8ec3326-font-size: 19px;
-        --e-global-typography-a236984-font-size: 17px;
-        --e-global-typography-51b1dae-font-size: 12px;
-        --e-global-typography-a06246a-font-size: 13px;
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
-    .elementor-kit-8 h1 {
-        font-size: var( --e-global-typography-primary-font-size );
-        line-height: var( --e-global-typography-primary-line-height );
-        letter-spacing: var( --e-global-typography-primary-letter-spacing )
-    }
-
-    .elementor-kit-8 h2 {
-        font-size: var( --e-global-typography-secondary-font-size );
-        line-height: var( --e-global-typography-secondary-line-height );
-        letter-spacing: var( --e-global-typography-secondary-letter-spacing )
-    }
-
-    .elementor-kit-8 h3 {
-        font-size: var( --e-global-typography-e96326f-font-size );
-        line-height: var( --e-global-typography-e96326f-line-height );
-        letter-spacing: var( --e-global-typography-e96326f-letter-spacing )
-    }
-
-    .elementor-kit-8 .elementor-button,.elementor-kit-8 button,.elementor-kit-8 input[type=button],.elementor-kit-8 input[type=submit] {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing )
-    }
-
-    .elementor-kit-8 label {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing )
-    }
-
-    .elementor-kit-8 input:not([type=button]):not([type=submit]),.elementor-kit-8 textarea {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
 
     .e-con {
         --container-max-width: 767px
@@ -3847,13 +2994,13 @@ button.metform-btn:focus,button.metform-btn:hover {
     --padding-right: 0px
 }
 
-.elementor-637 .elementor-element.elementor-element-f872fc6:not(.elementor-motion-effects-element-type-background),.elementor-637 .elementor-element.elementor-element-f872fc6>.elementor-motion-effects-container>.elementor-motion-effects-layer {
+.elementor-637 .elementor-element.elementor-element-f872fc6:not(.elementor-motion-effects-element-type-background) {
     background-image: var(--wpr-bg-83b6f427-1807-4298-8330-b22bf3dbfb44);
     background-position: center center;
     background-size: cover
 }
 
-.elementor-637 .elementor-element.elementor-element-f872fc6::before,.elementor-637 .elementor-element.elementor-element-f872fc6>.e-con-inner>.elementor-background-slideshow::before,.elementor-637 .elementor-element.elementor-element-f872fc6>.e-con-inner>.elementor-background-video-container::before,.elementor-637 .elementor-element.elementor-element-f872fc6>.elementor-background-slideshow::before,.elementor-637 .elementor-element.elementor-element-f872fc6>.elementor-background-video-container::before,.elementor-637 .elementor-element.elementor-element-f872fc6>.elementor-motion-effects-container>.elementor-motion-effects-layer::before {
+.elementor-637 .elementor-element.elementor-element-f872fc6::before {
     background-color: var(--e-global-color-primary);
     --background-overlay: ''
 }
@@ -3913,7 +3060,7 @@ button.metform-btn:focus,button.metform-btn:hover {
     --padding-right: 30px
 }
 
-.elementor-637 .elementor-element.elementor-element-5266326c:not(.elementor-motion-effects-element-type-background),.elementor-637 .elementor-element.elementor-element-5266326c>.elementor-motion-effects-container>.elementor-motion-effects-layer {
+.elementor-637 .elementor-element.elementor-element-5266326c:not(.elementor-motion-effects-element-type-background) {
     background-image: var(--wpr-bg-f159c7e0-f388-4499-a87c-c8250ddbc1da);
     background-position: center center;
     background-size: cover
@@ -4166,30 +3313,6 @@ button.metform-btn:focus,button.metform-btn:hover {
     letter-spacing: .3px
 }
 
-.elementor-637 .elementor-element.elementor-element-1c6d88ab {
-    --display: flex;
-    --flex-direction: column;
-    --container-widget-width: 100%;
-    --container-widget-height: initial;
-    --container-widget-flex-grow: 0;
-    --container-widget-align-self: initial;
-    --flex-wrap-mobile: wrap;
-    --padding-top: 0px;
-    --padding-bottom: 0px;
-    --padding-left: 0px;
-    --padding-right: 0px
-}
-
-.elementor-637 .elementor-element.elementor-element-377ea64f iframe {
-    height: 500px;
-    filter: brightness( 100% ) contrast( 100% ) saturate( 0% ) blur( 0px ) hue-rotate( 0deg );
-    transition-duration: .4s
-}
-
-.elementor-637 .elementor-element.elementor-element-377ea64f:hover iframe {
-    filter: brightness( 100% ) contrast( 100% ) saturate( 100% ) blur( 0px ) hue-rotate( 0deg )
-}
-
 @media(max-width: 1024px) {
     .elementor-637 .elementor-element.elementor-element-f872fc6 {
         --min-height:400px;
@@ -4275,17 +3398,6 @@ button.metform-btn:focus,button.metform-btn:hover {
     .elementor-637 .elementor-element.elementor-element-7358461e .elementor-heading-title {
         font-size: 20px
     }
-
-    .elementor-637 .elementor-element.elementor-element-1c6d88ab {
-        --padding-top: 0px;
-        --padding-bottom: 0px;
-        --padding-left: 30px;
-        --padding-right: 30px
-    }
-
-    .elementor-637 .elementor-element.elementor-element-377ea64f iframe {
-        height: 400px
-    }
 }
 
 @media(max-width: 767px) {
@@ -4362,13 +3474,6 @@ button.metform-btn:focus,button.metform-btn:hover {
     .elementor-637 .elementor-element.elementor-element-7358461e .elementor-heading-title {
         font-size: 19px
     }
-
-    .elementor-637 .elementor-element.elementor-element-1c6d88ab {
-        --padding-top: 0px;
-        --padding-bottom: 0px;
-        --padding-left: 20px;
-        --padding-right: 20px
-    }
 }
 
 @media(min-width: 768px) {
@@ -4400,589 +3505,6 @@ button.metform-btn:focus,button.metform-btn:hover {
 
     .elementor-637 .elementor-element.elementor-element-23ebb524 {
         --width: 60%
-    }
-}
-
-.elementor-319 .elementor-element.elementor-element-71809993 {
-    --display: flex;
-    --flex-direction: row;
-    --container-widget-width: initial;
-    --container-widget-height: 100%;
-    --container-widget-flex-grow: 1;
-    --container-widget-align-self: stretch;
-    --flex-wrap-mobile: wrap;
-    --gap: 0px 0px;
-    --row-gap: 0px;
-    --column-gap: 0px;
-    border-style: solid;
-    --border-style: solid;
-    border-width: 0 0 1px;
-    --border-top-width: 0px;
-    --border-right-width: 0px;
-    --border-bottom-width: 1px;
-    --border-left-width: 0px;
-    border-color: #edeBE630;
-    --border-color: #EDEBE630;
-    --margin-top: 0px;
-    --margin-bottom: 0px;
-    --margin-left: 0px;
-    --margin-right: 0px;
-    --padding-top: 20px;
-    --padding-bottom: 15px;
-    --padding-left: 30px;
-    --padding-right: 30px;
-    --z-index: 55
-}
-
-.elementor-319 .elementor-element.elementor-element-71809993:not(.elementor-motion-effects-element-type-background),.elementor-319 .elementor-element.elementor-element-71809993>.elementor-motion-effects-container>.elementor-motion-effects-layer {
-    background-color: var(--e-global-color-08673a6)
-}
-
-.elementor-319 .elementor-element.elementor-element-79e6e754 {
-    --display: flex;
-    --padding-top: 0px;
-    --padding-bottom: 0px;
-    --padding-left: 0px;
-    --padding-right: 0px
-}
-
-.elementor-319 .elementor-element.elementor-element-79e6e754.e-con {
-    --align-self: center
-}
-
-.elementor-319 .elementor-element.elementor-element-32b2338c>.elementor-widget-container {
-    margin: 0
-}
-
-.elementor-319 .elementor-element.elementor-element-32b2338c {
-    text-align: left
-}
-
-.elementor-319 .elementor-element.elementor-element-32b2338c img {
-    width: 205px
-}
-
-.elementor-319 .elementor-element.elementor-element-37937865 {
-    --display: flex;
-    --flex-direction: row;
-    --container-widget-width: calc( ( 1 - var( --container-widget-flex-grow ) ) * 100% );
-    --container-widget-height: 100%;
-    --container-widget-flex-grow: 1;
-    --container-widget-align-self: stretch;
-    --flex-wrap-mobile: wrap;
-    --justify-content: flex-end;
-    --align-items: center;
-    --gap: 0px 0px;
-    --row-gap: 0px;
-    --column-gap: 0px;
-    --padding-top: 0px;
-    --padding-bottom: 0px;
-    --padding-left: 0px;
-    --padding-right: 0px
-}
-
-.elementor-319 .elementor-element.elementor-element-37937865.e-con {
-    --align-self: center
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li:hover>a,.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a:active,.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a:focus,.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a:hover {
-    background-color: #fde3A700
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel {
-    background-color: var(--e-global-color-primary);
-    border-style: solid;
-    border-width: 0;
-    border-color: #fffFFF30;
-    border-radius: 0 0 0 0;
-    min-width: 200px;
-    box-shadow: 1px 1px 15px 0 transparent
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger {
-    background-color: var(--e-global-color-accent);
-    float: right;
-    border-radius: 100px;
-    border-style: solid;
-    border-color: #02010100
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-close {
-    background-color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-accent-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-accent-font-size );
-    font-weight: var(--e-global-typography-accent-font-weight);
-    text-transform: var(--e-global-typography-accent-text-transform);
-    font-style: var(--e-global-typography-accent-font-style);
-    text-decoration: var(--e-global-typography-accent-text-decoration);
-    letter-spacing: var( --e-global-typography-accent-letter-spacing );
-    border-style: solid;
-    border-color: #02010100;
-    color: #fffFFFA3
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-close:hover {
-    background-color: #02010100;
-    color: #fff
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 {
-    width: auto;
-    max-width: auto
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5>.elementor-widget-container {
-    margin: -14px 25px -15px 0
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-container {
-    height: 70px;
-    border-radius: 0 0 0 0
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a {
-    font-family: Urbanist,Sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-style: normal;
-    text-decoration: none;
-    line-height: 1.6em;
-    letter-spacing: .5px;
-    color: var(--e-global-color-primary);
-    padding: 0 25px
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a:hover {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a:focus {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a:active {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li:hover>a {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li:hover>a .elementskit-submenu-indicator {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a:hover .elementskit-submenu-indicator {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a:focus .elementskit-submenu-indicator {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a:active .elementskit-submenu-indicator {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li.current-menu-item>a {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li.current-menu-ancestor>a {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li.current-menu-ancestor>a .elementskit-submenu-indicator {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a .elementskit-submenu-indicator {
-    font-size: 10px;
-    color: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a .ekit-submenu-indicator-icon {
-    font-size: 10px;
-    color: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav-default .elementskit-dropdown-has>a .elementskit-submenu-indicator {
-    margin: 0 0 0 7px
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav-default .elementskit-dropdown-has>a .ekit-submenu-indicator-icon {
-    margin: 0 0 0 7px
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a {
-    font-family: var( --e-global-typography-f8ce950-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-f8ce950-font-size );
-    font-weight: var(--e-global-typography-f8ce950-font-weight);
-    text-transform: var(--e-global-typography-f8ce950-text-transform);
-    font-style: var(--e-global-typography-f8ce950-font-style);
-    text-decoration: var(--e-global-typography-f8ce950-text-decoration);
-    line-height: var( --e-global-typography-f8ce950-line-height );
-    letter-spacing: var( --e-global-typography-f8ce950-letter-spacing );
-    padding: 7px 15px 7px 35px;
-    color: var(--e-global-color-08673a6)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a:hover {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a:focus {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a:active {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li:hover>a {
-    color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li.current-menu-item>a {
-    color: #fff!important
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li:last-child>a {
-    border-style: solid;
-    border-width: 0;
-    border-color: #02010100
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li:first-child>a {
-    border-style: solid;
-    border-width: 0;
-    border-color: #02010100
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-submenu-panel {
-    padding: 10px 10px 10px 0
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger .elementskit-menu-hamburger-icon {
-    background-color: #fff
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger>.ekit-menu-icon {
-    color: #fff
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger:hover .elementskit-menu-hamburger-icon {
-    background-color: #fffFFFA8
-}
-
-.elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger:hover>.ekit-menu-icon {
-    color: #fffFFFA8
-}
-
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button {
-    background-color: var(--e-global-color-primary);
-    font-family: Urbanist,Sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-style: normal;
-    text-decoration: none;
-    letter-spacing: .5px;
-    fill: var(--e-global-color-3656500);
-    color: var(--e-global-color-3656500);
-    border-radius: 30px 30px 30px 30px;
-    padding: 15px 20px
-}
-
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button:focus,.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button:hover {
-    background-color: var(--e-global-color-accent);
-    color: var(--e-global-color-3656500);
-    border-color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button-content-wrapper {
-    flex-direction: row
-}
-
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button .elementor-button-content-wrapper {
-    gap: 10px
-}
-
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button:focus svg,.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button:hover svg {
-    fill: var(--e-global-color-3656500)
-}
-
-.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button .elementor-button-icon i,.elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button .elementor-button-icon svg {
-    transform: rotate(0)
-}
-
-.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button {
-    background-color: var(--e-global-color-primary);
-    font-family: Urbanist,Sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-style: normal;
-    text-decoration: none;
-    letter-spacing: .5px;
-    fill: var(--e-global-color-3656500);
-    color: var(--e-global-color-3656500);
-    border-radius: 30px 30px 30px 30px;
-    padding: 15px 20px
-}
-
-.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button:focus,.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button:hover {
-    background-color: var(--e-global-color-accent);
-    color: var(--e-global-color-3656500);
-    border-color: var(--e-global-color-accent)
-}
-
-.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button:focus svg,.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button:hover svg {
-    fill: var(--e-global-color-3656500)
-}
-
-.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button .elementor-button-icon i,.elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button .elementor-button-icon svg {
-    transform: rotate(0)
-}
-
-.elementor-319:not(.elementor-motion-effects-element-type-background),.elementor-319>.elementor-motion-effects-container>.elementor-motion-effects-layer {
-    background-color: var(--e-global-color-primary)
-}
-
-@media(max-width: 1024px) {
-    .elementor-319 .elementor-element.elementor-element-71809993 {
-        --margin-top:0px;
-        --margin-bottom: -78px;
-        --margin-left: 0px;
-        --margin-right: 0px;
-        --padding-top: 20px;
-        --padding-bottom: 20px;
-        --padding-left: 30px;
-        --padding-right: 30px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-32b2338c img {
-        width: 200px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5>.elementor-widget-container {
-        margin: 3px -13px 0 10px;
-        padding: 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5.elementor-element {
-        --order: 99999
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-container {
-        background-color: var(--e-global-color-primary);
-        max-width: 350px;
-        border-radius: 0 0 0 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-nav-identity-panel {
-        padding: 10px 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a {
-        padding: 7px 15px 7px 30px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav-default .elementskit-dropdown-has>a .elementskit-submenu-indicator {
-        margin: 0 0 0 200px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav-default .elementskit-dropdown-has>a .ekit-submenu-indicator-icon {
-        margin: 0 0 0 200px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a {
-        font-size: var( --e-global-typography-f8ce950-font-size );
-        line-height: var( --e-global-typography-f8ce950-line-height );
-        letter-spacing: var( --e-global-typography-f8ce950-letter-spacing );
-        padding: 5px 15px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li:last-child>a {
-        border-width: 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li:first-child>a {
-        border-width: 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-submenu-panel {
-        padding: 10px 0 10px 30px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel {
-        border-width: 0;
-        border-radius: 0 0 0 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger {
-        float: right;
-        padding: 5px 0;
-        width: 45px;
-        border-radius: 0;
-        border-width: 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger>.ekit-menu-icon {
-        font-size: 26px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-close {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing );
-        padding: 0;
-        margin: 12px;
-        width: 45px;
-        border-radius: 0;
-        border-width: 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-nav-logo>img {
-        max-width: 105px;
-        max-height: 70px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-nav-logo {
-        margin: 15px 0 30px 25px;
-        padding: 5px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button {
-        font-size: 11px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button {
-        font-size: 11px
-    }
-}
-
-@media(max-width: 767px) {
-    .elementor-319 .elementor-element.elementor-element-71809993 {
-        --gap:0px 0px;
-        --row-gap: 0px;
-        --column-gap: 0px;
-        --margin-top: 0px;
-        --margin-bottom: 0px;
-        --margin-left: 0px;
-        --margin-right: 0px;
-        --padding-top: 15px;
-        --padding-bottom: 15px;
-        --padding-left: 20px;
-        --padding-right: 20px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-79e6e754 {
-        --width: 30%;
-        --flex-direction: row;
-        --container-widget-width: calc( ( 1 - var( --container-widget-flex-grow ) ) * 100% );
-        --container-widget-height: 100%;
-        --container-widget-flex-grow: 1;
-        --container-widget-align-self: stretch;
-        --flex-wrap-mobile: wrap;
-        --justify-content: flex-start;
-        --align-items: center
-    }
-
-    .elementor-319 .elementor-element.elementor-element-32b2338c>.elementor-widget-container {
-        margin: 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-32b2338c img {
-        width: 333px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-37937865 {
-        --width: 60%
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5>.elementor-widget-container {
-        margin: 0 0 0 8px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 {
-        align-self: center
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a {
-        font-size: 20px;
-        color: var(--e-global-color-3656500)
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a .elementskit-submenu-indicator {
-        font-size: 15px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a .ekit-submenu-indicator-icon {
-        font-size: 15px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav-default .elementskit-dropdown-has>a .elementskit-submenu-indicator {
-        margin: 0 0 0 20px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav-default .elementskit-dropdown-has>a .ekit-submenu-indicator-icon {
-        margin: 0 0 0 20px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav .elementskit-submenu-panel>li>a {
-        font-size: var( --e-global-typography-f8ce950-font-size );
-        line-height: var( --e-global-typography-f8ce950-line-height );
-        letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger>.ekit-menu-icon {
-        font-size: 27px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-hamburger {
-        border-width: 5px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-menu-close {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing );
-        border-width: 0
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-nav-logo>img {
-        max-width: 155px;
-        max-height: 50px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-nav-logo {
-        margin: 15px 0 20px 25px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-6096eb18 .elementor-button {
-        font-size: 14px;
-        line-height: 1.3em;
-        padding: 14px 15px 10px
-    }
-
-    .elementor-319 .elementor-element.elementor-element-71d1120 .elementor-button {
-        font-size: 14px;
-        line-height: 1.3em;
-        padding: 14px 15px
-    }
-}
-
-@media(min-width: 768px) {
-    .elementor-319 .elementor-element.elementor-element-79e6e754 {
-        --width:20%
-    }
-}
-
-@media(max-width: 1024px) and (min-width:768px) {
-    .elementor-319 .elementor-element.elementor-element-79e6e754 {
-        --width:25%
     }
 }
 
@@ -5049,7 +3571,7 @@ button.metform-btn:focus,button.metform-btn:hover {
     --padding-right: 0px
 }
 
-.elementor-330 .elementor-element.elementor-element-365e4719:not(.elementor-motion-effects-element-type-background),.elementor-330 .elementor-element.elementor-element-365e4719>.elementor-motion-effects-container>.elementor-motion-effects-layer {
+.elementor-330 .elementor-element.elementor-element-365e4719:not(.elementor-motion-effects-element-type-background) {
     background-color: var(--e-global-color-primary)
 }
 
@@ -5157,32 +3679,6 @@ button.metform-btn:focus,button.metform-btn:hover {
     margin-top: calc(8px/2)
 }
 
-.elementor-330 .elementor-element.elementor-element-7d693748 .elementor-icon-list-items.elementor-inline-items .elementor-icon-list-item {
-    margin-right: calc(8px/2);
-    margin-left: calc(8px/2)
-}
-
-.elementor-330 .elementor-element.elementor-element-7d693748 .elementor-icon-list-items.elementor-inline-items {
-    margin-right: calc(-8px/2);
-    margin-left: calc(-8px/2)
-}
-
-body.rtl .elementor-330 .elementor-element.elementor-element-7d693748 .elementor-icon-list-items.elementor-inline-items .elementor-icon-list-item:after {
-    left: calc(-8px/2)
-}
-
-body:not(.rtl) .elementor-330 .elementor-element.elementor-element-7d693748 .elementor-icon-list-items.elementor-inline-items .elementor-icon-list-item:after {
-    right: calc(-8px/2)
-}
-
-.elementor-330 .elementor-element.elementor-element-7d693748 .elementor-icon-list-icon i {
-    transition: color .3s
-}
-
-.elementor-330 .elementor-element.elementor-element-7d693748 .elementor-icon-list-icon svg {
-    transition: fill .3s
-}
-
 .elementor-330 .elementor-element.elementor-element-7d693748 {
     --e-icon-list-icon-size: 14px;
     --icon-vertical-offset: 0px
@@ -5229,32 +3725,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-7d693748 .ele
 
 .elementor-330 .elementor-element.elementor-element-288766b .elementor-icon-list-items:not(.elementor-inline-items) .elementor-icon-list-item:not(:first-child) {
     margin-top: calc(8px/2)
-}
-
-.elementor-330 .elementor-element.elementor-element-288766b .elementor-icon-list-items.elementor-inline-items .elementor-icon-list-item {
-    margin-right: calc(8px/2);
-    margin-left: calc(8px/2)
-}
-
-.elementor-330 .elementor-element.elementor-element-288766b .elementor-icon-list-items.elementor-inline-items {
-    margin-right: calc(-8px/2);
-    margin-left: calc(-8px/2)
-}
-
-body.rtl .elementor-330 .elementor-element.elementor-element-288766b .elementor-icon-list-items.elementor-inline-items .elementor-icon-list-item:after {
-    left: calc(-8px/2)
-}
-
-body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elementor-icon-list-items.elementor-inline-items .elementor-icon-list-item:after {
-    right: calc(-8px/2)
-}
-
-.elementor-330 .elementor-element.elementor-element-288766b .elementor-icon-list-icon i {
-    transition: color .3s
-}
-
-.elementor-330 .elementor-element.elementor-element-288766b .elementor-icon-list-icon svg {
-    transition: fill .3s
 }
 
 .elementor-330 .elementor-element.elementor-element-288766b {
@@ -5311,16 +3781,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     color: #fff
 }
 
-.elementor-330 .elementor-element.elementor-element-77d88058 .elementor-image-box-title {
-    margin-bottom: 2px;
-    margin-top: 0
-}
-
-.elementor-330 .elementor-element.elementor-element-77d88058.elementor-view-stacked .elementor-icon {
-    background-color: var(--e-global-color-accent)
-}
-
-.elementor-330 .elementor-element.elementor-element-77d88058.elementor-view-default .elementor-icon,.elementor-330 .elementor-element.elementor-element-77d88058.elementor-view-framed .elementor-icon {
+.elementor-330 .elementor-element.elementor-element-77d88058.elementor-view-default .elementor-icon {
     fill: var(--e-global-color-accent);
     color: var(--e-global-color-accent);
     border-color: var(--e-global-color-accent)
@@ -5345,26 +3806,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     letter-spacing: var( --e-global-typography-a236984-letter-spacing )
 }
 
-.elementor-330 .elementor-element.elementor-element-77d88058 .elementor-icon-box-description {
-    color: #fffFFFC9;
-    font-family: var( --e-global-typography-text-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-text-font-size );
-    font-weight: var(--e-global-typography-text-font-weight);
-    text-transform: var(--e-global-typography-text-text-transform);
-    font-style: var(--e-global-typography-text-font-style);
-    text-decoration: var(--e-global-typography-text-text-decoration);
-    line-height: var( --e-global-typography-text-line-height );
-    letter-spacing: var( --e-global-typography-text-letter-spacing )
-}
-
-.elementor-330 .elementor-element.elementor-element-77d88058:hover .elementor-icon-box-description {
-    color: #fff
-}
-
-.elementor-330 .elementor-element.elementor-element-77d88058:hover .elementor-image-box-description {
-    color: #fff
-}
-
 .elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-wrapper {
     text-align: left
 }
@@ -5379,16 +3820,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     color: #fff
 }
 
-.elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-image-box-title {
-    margin-bottom: 2px;
-    margin-top: 0
-}
-
-.elementor-330 .elementor-element.elementor-element-6e66e81e.elementor-view-stacked .elementor-icon {
-    background-color: var(--e-global-color-accent)
-}
-
-.elementor-330 .elementor-element.elementor-element-6e66e81e.elementor-view-default .elementor-icon,.elementor-330 .elementor-element.elementor-element-6e66e81e.elementor-view-framed .elementor-icon {
+.elementor-330 .elementor-element.elementor-element-6e66e81e.elementor-view-default .elementor-icon {
     fill: var(--e-global-color-accent);
     color: var(--e-global-color-accent);
     border-color: var(--e-global-color-accent)
@@ -5413,26 +3845,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     letter-spacing: var( --e-global-typography-text-letter-spacing )
 }
 
-.elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-description {
-    color: #fffFFFC9;
-    font-family: var( --e-global-typography-text-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-text-font-size );
-    font-weight: var(--e-global-typography-text-font-weight);
-    text-transform: var(--e-global-typography-text-text-transform);
-    font-style: var(--e-global-typography-text-font-style);
-    text-decoration: var(--e-global-typography-text-text-decoration);
-    line-height: var( --e-global-typography-text-line-height );
-    letter-spacing: var( --e-global-typography-text-letter-spacing )
-}
-
-.elementor-330 .elementor-element.elementor-element-6e66e81e:hover .elementor-icon-box-description {
-    color: #fff
-}
-
-.elementor-330 .elementor-element.elementor-element-6e66e81e:hover .elementor-image-box-description {
-    color: #fff
-}
-
 .elementor-330 .elementor-element.elementor-element-6aa1e7b .elementor-icon-box-wrapper {
     text-align: left
 }
@@ -5445,15 +3857,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     margin-bottom: 2px;
     margin-top: 0;
     color: #fff
-}
-
-.elementor-330 .elementor-element.elementor-element-6aa1e7b .elementor-image-box-title {
-    margin-bottom: 2px;
-    margin-top: 0
-}
-
-.elementor-330 .elementor-element.elementor-element-6aa1e7b.elementor-view-stacked .elementor-icon {
-    background-color: var(--e-global-color-accent)
 }
 
 .elementor-330 .elementor-element.elementor-element-6aa1e7b .elementor-icon {
@@ -5475,26 +3878,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     letter-spacing: var( --e-global-typography-text-letter-spacing )
 }
 
-.elementor-330 .elementor-element.elementor-element-6aa1e7b .elementor-icon-box-description {
-    color: #fffFFFC9;
-    font-family: var( --e-global-typography-text-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-text-font-size );
-    font-weight: var(--e-global-typography-text-font-weight);
-    text-transform: var(--e-global-typography-text-text-transform);
-    font-style: var(--e-global-typography-text-font-style);
-    text-decoration: var(--e-global-typography-text-text-decoration);
-    line-height: var( --e-global-typography-text-line-height );
-    letter-spacing: var( --e-global-typography-text-letter-spacing )
-}
-
-.elementor-330 .elementor-element.elementor-element-6aa1e7b:hover .elementor-icon-box-description {
-    color: #fff
-}
-
-.elementor-330 .elementor-element.elementor-element-6aa1e7b:hover .elementor-image-box-description {
-    color: #fff
-}
-
 .elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-wrapper {
     text-align: left
 }
@@ -5507,15 +3890,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     margin-bottom: 2px;
     margin-top: 0;
     color: #fff
-}
-
-.elementor-330 .elementor-element.elementor-element-29f28201 .elementor-image-box-title {
-    margin-bottom: 2px;
-    margin-top: 0
-}
-
-.elementor-330 .elementor-element.elementor-element-29f28201.elementor-view-stacked .elementor-icon {
-    background-color: var(--e-global-color-accent)
 }
 
 .elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon {
@@ -5535,26 +3909,6 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     text-decoration: var(--e-global-typography-text-text-decoration);
     line-height: var( --e-global-typography-text-line-height );
     letter-spacing: var( --e-global-typography-text-letter-spacing )
-}
-
-.elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-description {
-    color: #fffFFFC9;
-    font-family: var( --e-global-typography-text-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-text-font-size );
-    font-weight: var(--e-global-typography-text-font-weight);
-    text-transform: var(--e-global-typography-text-text-transform);
-    font-style: var(--e-global-typography-text-font-style);
-    text-decoration: var(--e-global-typography-text-text-decoration);
-    line-height: var( --e-global-typography-text-line-height );
-    letter-spacing: var( --e-global-typography-text-letter-spacing )
-}
-
-.elementor-330 .elementor-element.elementor-element-29f28201:hover .elementor-icon-box-description {
-    color: #fff
-}
-
-.elementor-330 .elementor-element.elementor-element-29f28201:hover .elementor-image-box-description {
-    color: #fff
 }
 
 .elementor-330 .elementor-element.elementor-element-418a45d7 {
@@ -5580,7 +3934,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
     --padding-right: 0px
 }
 
-.elementor-330 .elementor-element.elementor-element-418a45d7:not(.elementor-motion-effects-element-type-background),.elementor-330 .elementor-element.elementor-element-418a45d7>.elementor-motion-effects-container>.elementor-motion-effects-layer {
+.elementor-330 .elementor-element.elementor-element-418a45d7:not(.elementor-motion-effects-element-type-background) {
     background-color: var(--e-global-color-primary)
 }
 
@@ -5695,19 +4049,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
         letter-spacing: var( --e-global-typography-a236984-letter-spacing )
     }
 
-    .elementor-330 .elementor-element.elementor-element-77d88058 .elementor-icon-box-description {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
     .elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-title,.elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-title a {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
-    .elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-description {
         font-size: var( --e-global-typography-text-font-size );
         line-height: var( --e-global-typography-text-line-height );
         letter-spacing: var( --e-global-typography-text-letter-spacing )
@@ -5719,19 +4061,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
         letter-spacing: var( --e-global-typography-text-letter-spacing )
     }
 
-    .elementor-330 .elementor-element.elementor-element-6aa1e7b .elementor-icon-box-description {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
     .elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-title,.elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-title a {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
-    .elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-description {
         font-size: var( --e-global-typography-text-font-size );
         line-height: var( --e-global-typography-text-line-height );
         letter-spacing: var( --e-global-typography-text-letter-spacing )
@@ -5797,19 +4127,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
         letter-spacing: var( --e-global-typography-a236984-letter-spacing )
     }
 
-    .elementor-330 .elementor-element.elementor-element-77d88058 .elementor-icon-box-description {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
     .elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-title,.elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-title a {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
-    .elementor-330 .elementor-element.elementor-element-6e66e81e .elementor-icon-box-description {
         font-size: var( --e-global-typography-text-font-size );
         line-height: var( --e-global-typography-text-line-height );
         letter-spacing: var( --e-global-typography-text-letter-spacing )
@@ -5821,19 +4139,7 @@ body:not(.rtl) .elementor-330 .elementor-element.elementor-element-288766b .elem
         letter-spacing: var( --e-global-typography-text-letter-spacing )
     }
 
-    .elementor-330 .elementor-element.elementor-element-6aa1e7b .elementor-icon-box-description {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
     .elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-title,.elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-title a {
-        font-size: var( --e-global-typography-text-font-size );
-        line-height: var( --e-global-typography-text-line-height );
-        letter-spacing: var( --e-global-typography-text-letter-spacing )
-    }
-
-    .elementor-330 .elementor-element.elementor-element-29f28201 .elementor-icon-box-description {
         font-size: var( --e-global-typography-text-font-size );
         line-height: var( --e-global-typography-text-line-height );
         letter-spacing: var( --e-global-typography-text-letter-spacing )
@@ -8456,15 +6762,15 @@ button.mfp-close.ekit-popup-close:hover {
     --padding-right: 0px
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
     background-color: #fffFFF00
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:hover {
     background-color: #02010100
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input>.mf_select__control--menu-is-open,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:focus {
     background-color: #02010100
 }
 
@@ -8496,20 +6802,8 @@ button.mfp-close.ekit-popup-close:hover {
     color: var(--e-global-color-secondary)
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .mf-input.mf-invalid,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .mf-input[aria-invalid=true] {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .mf-input[aria-invalid=true] {
     border-color: var(--e-global-color-secondary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-error-message {
-    color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-a06246a-font-size );
-    font-weight: var(--e-global-typography-a06246a-font-weight);
-    text-transform: var(--e-global-typography-a06246a-text-transform);
-    font-style: var(--e-global-typography-a06246a-font-style);
-    text-decoration: var(--e-global-typography-a06246a-text-decoration);
-    line-height: var( --e-global-typography-a06246a-line-height );
-    letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
 .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
@@ -8518,42 +6812,7 @@ button.mfp-close.ekit-popup-close:hover {
     border-radius: 30px
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-file-upload-label {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_select__control {
-    padding: 9px 22px
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .range-slider {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-dial-code {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-bar,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-from,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-to {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-handle {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-from:before,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-single:before,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-to:before {
-    border-top-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_select__single-value {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
     color: var(--e-global-color-primary)
 }
 
@@ -8561,95 +6820,31 @@ button.mfp-close.ekit-popup-close:hover {
     border-color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .input-range__track--active {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .asRange .asRange-pointer .asRange-tip {
-    background-color: var(--e-global-color-primary);
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-file-upload-label {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
     border-style: solid;
     border-width: 1px;
     border-color: #00000030
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:hover {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:hover {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-handle:hover {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-file-upload-label:hover {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:hover .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:hover .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-select>.mf_select__control:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:hover {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:focus {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:focus {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-handle:focus {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:focus .mf-image-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input>.mf_select__control--is-focused .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:focus .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper>.mf-input-select>.mf_select__control--is-focused,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:focus {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -8660,19 +6855,7 @@ button.mfp-close.ekit-popup-close:hover {
     letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
-.elementor-896 .elementor-element.elementor-element-41dddb3b .input-range .input-range__track {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-41dddb3b :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-41dddb3b :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -8696,10 +6879,6 @@ button.mfp-close.ekit-popup-close:hover {
 }
 
 .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input:not([type=submit]):not([type=checkbox]):not([type=radio]):-moz-placeholder {
-    color: var(--e-global-color-text)
-}
-
-.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-time-input::before {
     color: var(--e-global-color-text)
 }
 
@@ -8735,15 +6914,15 @@ button.mfp-close.ekit-popup-close:hover {
     --padding-right: 0px
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
     background-color: #fffFFF00
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:hover {
     background-color: #02010100
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input>.mf_select__control--menu-is-open,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:focus {
     background-color: #02010100
 }
 
@@ -8775,20 +6954,8 @@ button.mfp-close.ekit-popup-close:hover {
     color: var(--e-global-color-secondary)
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .mf-input.mf-invalid,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .mf-input[aria-invalid=true] {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .mf-input[aria-invalid=true] {
     border-color: var(--e-global-color-secondary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-error-message {
-    color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-a06246a-font-size );
-    font-weight: var(--e-global-typography-a06246a-font-weight);
-    text-transform: var(--e-global-typography-a06246a-text-transform);
-    font-style: var(--e-global-typography-a06246a-font-style);
-    text-decoration: var(--e-global-typography-a06246a-text-decoration);
-    line-height: var( --e-global-typography-a06246a-line-height );
-    letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
 .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
@@ -8797,42 +6964,7 @@ button.mfp-close.ekit-popup-close:hover {
     border-radius: 30px
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-file-upload-label {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_select__control {
-    padding: 9px 22px
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .range-slider {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-dial-code {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-bar,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-from,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-to {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-handle {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-from:before,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-single:before,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-to:before {
-    border-top-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_select__single-value {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
     color: var(--e-global-color-primary)
 }
 
@@ -8840,95 +6972,31 @@ button.mfp-close.ekit-popup-close:hover {
     border-color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .input-range__track--active {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .asRange .asRange-pointer .asRange-tip {
-    background-color: var(--e-global-color-primary);
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-file-upload-label {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
     border-style: solid;
     border-width: 1px;
     border-color: #00000030
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:hover {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:hover {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-handle:hover {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-file-upload-label:hover {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:hover .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:hover .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-select>.mf_select__control:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:hover {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:focus {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:focus {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-handle:focus {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:focus .mf-image-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input>.mf_select__control--is-focused .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:focus .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper>.mf-input-select>.mf_select__control--is-focused,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:focus {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -8939,19 +7007,7 @@ button.mfp-close.ekit-popup-close:hover {
     letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
-.elementor-896 .elementor-element.elementor-element-67b22a87 .input-range .input-range__track {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-67b22a87 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-67b22a87 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -8975,10 +7031,6 @@ button.mfp-close.ekit-popup-close:hover {
 }
 
 .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input:not([type=submit]):not([type=checkbox]):not([type=radio]):-moz-placeholder {
-    color: var(--e-global-color-text)
-}
-
-.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-time-input::before {
     color: var(--e-global-color-text)
 }
 
@@ -9035,15 +7087,15 @@ button.mfp-close.ekit-popup-close:hover {
     --padding-right: 0px
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
     background-color: #fffFFF00
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:hover {
     background-color: #02010100
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input>.mf_select__control--menu-is-open,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:focus {
     background-color: #02010100
 }
 
@@ -9075,20 +7127,8 @@ button.mfp-close.ekit-popup-close:hover {
     color: var(--e-global-color-secondary)
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .mf-input.mf-invalid,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .mf-input[aria-invalid=true] {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .mf-input[aria-invalid=true] {
     border-color: var(--e-global-color-secondary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-error-message {
-    color: var(--e-global-color-primary);
-    font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-a06246a-font-size );
-    font-weight: var(--e-global-typography-a06246a-font-weight);
-    text-transform: var(--e-global-typography-a06246a-text-transform);
-    font-style: var(--e-global-typography-a06246a-font-style);
-    text-decoration: var(--e-global-typography-a06246a-text-decoration);
-    line-height: var( --e-global-typography-a06246a-line-height );
-    letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
 .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
@@ -9097,42 +7137,7 @@ button.mfp-close.ekit-popup-close:hover {
     border-radius: 30px
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-file-upload-label {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_select__control {
-    padding: 9px 22px
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .range-slider {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-dial-code {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-bar,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-from,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-to {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-handle {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-from:before,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-single:before,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-to:before {
-    border-top-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_select__single-value {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
     color: var(--e-global-color-primary)
 }
 
@@ -9140,95 +7145,31 @@ button.mfp-close.ekit-popup-close:hover {
     border-color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .input-range__track--active {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .asRange .asRange-pointer .asRange-tip {
-    background-color: var(--e-global-color-primary);
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-file-upload-label {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
     border-style: solid;
     border-width: 1px;
     border-color: #00000030
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:hover {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:hover {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-handle:hover {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-file-upload-label:hover {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:hover .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:hover .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-select>.mf_select__control:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:hover {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:focus {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:focus {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-handle:focus {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:focus .mf-image-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input>.mf_select__control--is-focused .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:focus .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper>.mf-input-select>.mf_select__control--is-focused,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:focus {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -9239,19 +7180,7 @@ button.mfp-close.ekit-popup-close:hover {
     letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
-.elementor-896 .elementor-element.elementor-element-7603acf5 .input-range .input-range__track {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-7603acf5 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-7603acf5 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -9275,10 +7204,6 @@ button.mfp-close.ekit-popup-close:hover {
 }
 
 .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input:not([type=submit]):not([type=checkbox]):not([type=radio]):-moz-placeholder {
-    color: var(--e-global-color-text)
-}
-
-.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-time-input::before {
     color: var(--e-global-color-text)
 }
 
@@ -9314,15 +7239,15 @@ button.mfp-close.ekit-popup-close:hover {
     --padding-right: 0px
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
     background-color: #fffFFF00
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:hover {
     background-color: #02010100
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input>.mf_select__control--menu-is-open,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:focus {
     background-color: #02010100
 }
 
@@ -9354,20 +7279,8 @@ button.mfp-close.ekit-popup-close:hover {
     color: var(--e-global-color-secondary)
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .mf-input.mf-invalid,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .mf-input[aria-invalid=true] {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .mf-input[aria-invalid=true] {
     border-color: var(--e-global-color-secondary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-error-message {
-    color: red;
-    font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-a06246a-font-size );
-    font-weight: var(--e-global-typography-a06246a-font-weight);
-    text-transform: var(--e-global-typography-a06246a-text-transform);
-    font-style: var(--e-global-typography-a06246a-font-style);
-    text-decoration: var(--e-global-typography-a06246a-text-decoration);
-    line-height: var( --e-global-typography-a06246a-line-height );
-    letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
 .elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
@@ -9376,42 +7289,7 @@ button.mfp-close.ekit-popup-close:hover {
     border-radius: 30px
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-file-upload-label {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-10456889 .mf_select__control {
-    padding: 9px 22px
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .range-slider {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-dial-code {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-bar,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-from,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-to {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-handle {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-from:before,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-single:before,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-to:before {
-    border-top-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf_select__single-value {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
     color: var(--e-global-color-primary)
 }
 
@@ -9419,95 +7297,31 @@ button.mfp-close.ekit-popup-close:hover {
     border-color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .input-range__track--active {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .asRange .asRange-pointer .asRange-tip {
-    background-color: var(--e-global-color-primary);
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-file-upload-label {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
     border-style: solid;
     border-width: 1px;
     border-color: #00000030
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:hover {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:hover {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-handle:hover {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-file-upload-label:hover {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:hover .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:hover .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-select>.mf_select__control:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:hover {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:focus {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:focus {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-handle:focus {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:focus .mf-image-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input>.mf_select__control--is-focused .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:focus .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper>.mf-input-select>.mf_select__control--is-focused,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input:focus {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -9518,19 +7332,7 @@ button.mfp-close.ekit-popup-close:hover {
     letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
-.elementor-896 .elementor-element.elementor-element-10456889 .input-range .input-range__track {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option {
-    border-radius: 30px
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-10456889 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-10456889 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+.elementor-896 .elementor-element.elementor-element-10456889 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-10456889 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -9554,10 +7356,6 @@ button.mfp-close.ekit-popup-close:hover {
 }
 
 .elementor-896 .elementor-element.elementor-element-10456889 .mf-input:not([type=submit]):not([type=checkbox]):not([type=radio]):-moz-placeholder {
-    color: var(--e-global-color-text)
-}
-
-.elementor-896 .elementor-element.elementor-element-10456889 .mf-time-input::before {
     color: var(--e-global-color-text)
 }
 
@@ -9602,15 +7400,15 @@ button.mfp-close.ekit-popup-close:hover {
     --padding-right: 0px
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input {
     background-color: #fffFFF00
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:hover {
     background-color: #02010100
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input>.mf_select__control--menu-is-open,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:focus {
     background-color: #02010100
 }
 
@@ -9648,42 +7446,7 @@ button.mfp-close.ekit-popup-close:hover {
     border-radius: 25px
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-file-upload-label {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_select__control {
-    padding: 9px 22px
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .range-slider {
-    padding: 9px 22px;
-    margin: 0
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-dial-code {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-bar,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-from,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-to {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-handle {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-from:before,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-single:before,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-to:before {
-    border-top-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_select__single-value {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input {
     color: var(--e-global-color-primary)
 }
 
@@ -9691,95 +7454,31 @@ button.mfp-close.ekit-popup-close:hover {
     border-color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .input-range__track--active {
-    background-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .asRange .asRange-pointer .asRange-tip {
-    background-color: var(--e-global-color-primary);
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-file-upload-label {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input {
     border-style: solid;
     border-width: 1px;
     border-color: #00000030
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:hover {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:hover {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-handle:hover {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-file-upload-label:hover {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:hover .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:hover .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:hover .mf_multiselect__multi-value__remove {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:hover .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-select>.mf_select__control:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:hover .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options:hover,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option:hover {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:hover {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-dial-code,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:focus {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:focus {
     color: var(--e-global-color-primary)
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-handle:focus {
-    border-color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:focus .mf-image-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input>.mf_select__control--is-focused .mf_select__single-value {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:focus .mf-input-file-upload-label svg path {
-    stroke: var(--e-global-color-primary);
-    fill: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value:focus .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option:focus {
-    color: var(--e-global-color-primary)
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container:focus .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper:focus .iti--separate-dial-code .iti__selected-flag,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper>.mf-input-select>.mf_select__control--is-focused,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options:focus,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option:focus {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input:focus {
     border-style: solid;
     border-color: #00000050
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -9790,19 +7489,7 @@ button.mfp-close.ekit-popup-close:hover {
     letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .input-range .input-range__track {
-    border-radius: 25px
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-    border-radius: 25px
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-multiselect .mf_multiselect__control,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-select>.mf_select__control,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value__label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__multi-value__remove,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option {
-    border-radius: 25px
-}
-
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-19c518a7 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-19c518a7 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
     font-family: var( --e-global-typography-a06246a-font-family ),Sans-serif;
     font-size: var( --e-global-typography-a06246a-font-size );
     font-weight: var(--e-global-typography-a06246a-font-weight);
@@ -9829,10 +7516,6 @@ button.mfp-close.ekit-popup-close:hover {
     color: var(--e-global-color-text)
 }
 
-.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-time-input::before {
-    color: var(--e-global-color-text)
-}
-
 .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input::-webkit-input-placeholder {
     color: var(--e-global-color-text)
 }
@@ -9853,41 +7536,6 @@ button.mfp-close.ekit-popup-close:hover {
     color: var(--e-global-color-text)
 }
 
-.elementor-896 .elementor-element.elementor-element-6e36f998 .mf-btn-wraper {
-    text-align: justify
-}
-
-.elementor-896 .elementor-element.elementor-element-6e36f998 .metform-btn {
-    background-color: var(--e-global-color-secondary);
-    padding: 14px 30px;
-    font-family: var( --e-global-typography-accent-font-family ),Sans-serif;
-    font-size: var( --e-global-typography-accent-font-size );
-    font-weight: var(--e-global-typography-accent-font-weight);
-    text-transform: var(--e-global-typography-accent-text-transform);
-    font-style: var(--e-global-typography-accent-font-style);
-    text-decoration: var(--e-global-typography-accent-text-decoration);
-    letter-spacing: var( --e-global-typography-accent-letter-spacing );
-    color: #fff;
-    border-style: solid;
-    border-width: 0;
-    border-color: #fffFFF30;
-    border-radius: 30px 30px 30px 30px;
-    box-shadow: 0 0 10px 0 transparent
-}
-
-.elementor-896 .elementor-element.elementor-element-6e36f998 .metform-btn:hover {
-    background-color: var(--e-global-color-primary);
-    color: #fff
-}
-
-.elementor-896 .elementor-element.elementor-element-6e36f998 .metform-btn:focus {
-    color: #fff
-}
-
-:root {
-    --page-title-display: none
-}
-
 @media(max-width: 1024px) {
     .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-label {
         font-size:var( --e-global-typography-f8ce950-font-size );
@@ -9895,39 +7543,17 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-error-message {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
     .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
         padding: 8px 22px
     }
 
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-file-upload-label {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf_select__control {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .range-slider {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-41dddb3b :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-41dddb3b :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -9939,39 +7565,17 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-error-message {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
     .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
         padding: 8px 22px
     }
 
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-file-upload-label {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf_select__control {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .range-slider {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-67b22a87 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-67b22a87 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -9983,39 +7587,17 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-error-message {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
     .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
         padding: 8px 22px
     }
 
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-file-upload-label {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf_select__control {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .range-slider {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-7603acf5 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-7603acf5 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -10027,39 +7609,17 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf-error-message {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
     .elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
         padding: 8px 22px
     }
 
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input-file-upload-label {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-10456889 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-10456889 .mf_select__control {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .range-slider {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-10456889 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-10456889 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-10456889 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-10456889 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -10075,41 +7635,16 @@ button.mfp-close.ekit-popup-close:hover {
         padding: 8px 22px
     }
 
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-file-upload-label {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__control .mf_multiselect__value-container,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__menu-notice--no-options,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_multiselect__option,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf_select__control {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .range-slider {
-        padding: 8px 22px
-    }
-
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-19c518a7 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-19c518a7 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
-    .elementor-896 .elementor-element.elementor-element-6e36f998 .mf-btn-wraper {
-        text-align: justify
-    }
-
-    .elementor-896 .elementor-element.elementor-element-6e36f998 .metform-btn {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing )
     }
 }
 
@@ -10134,19 +7669,13 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-error-message {
+    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-41dddb3b .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
-    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-41dddb3b .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-41dddb3b :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-41dddb3b .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-41dddb3b :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -10162,19 +7691,13 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-error-message {
+    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-67b22a87 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
-    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-67b22a87 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-67b22a87 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-67b22a87 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-67b22a87 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -10200,19 +7723,13 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-error-message {
+    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-7603acf5 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
-    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-7603acf5 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-7603acf5 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-7603acf5 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-7603acf5 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -10228,19 +7745,13 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf-error-message {
+    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-10456889 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-10456889 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-10456889 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-10456889 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
-        font-size: var( --e-global-typography-a06246a-font-size );
-        line-height: var( --e-global-typography-a06246a-line-height );
-        letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
-    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-10456889 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-10456889 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-10456889 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-10456889 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
@@ -10252,25 +7763,16 @@ button.mfp-close.ekit-popup-close:hover {
         letter-spacing: var( --e-global-typography-f8ce950-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .asRange .asRange-pointer .asRange-tip,.elementor-896 .elementor-element.elementor-element-19c518a7 .irs--round .irs-single,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-file-upload-container .mf-input-file-upload-label,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-calculation-total,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .input-range__label-container,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input-wrapper .iti--separate-dial-code .iti__selected-flag {
+    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
     }
 
-    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-19c518a7 .mf-time-input::before,.elementor-896 .elementor-element.elementor-element-19c518a7 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
+    .elementor-896 .elementor-element.elementor-element-19c518a7 .mf-input::placeholder,.elementor-896 .elementor-element.elementor-element-19c518a7 :is(.mf_select__placeholder,.mf_multiselect__placeholder,.text) {
         font-size: var( --e-global-typography-a06246a-font-size );
         line-height: var( --e-global-typography-a06246a-line-height );
         letter-spacing: var( --e-global-typography-a06246a-letter-spacing )
-    }
-
-    .elementor-896 .elementor-element.elementor-element-6e36f998 .mf-btn-wraper {
-        text-align: justify
-    }
-
-    .elementor-896 .elementor-element.elementor-element-6e36f998 .metform-btn {
-        font-size: var( --e-global-typography-accent-font-size );
-        letter-spacing: var( --e-global-typography-accent-letter-spacing )
     }
 }
 
@@ -10324,9 +7826,6 @@ button.mfp-close.ekit-popup-close:hover {
 }
 
 @media (max-width: 575px) {
-    .site-header:not(.dynamic-header) {
-        padding-inline-start:10px;
-        padding-inline-end:10px}
 
     .footer-main {
         flex-direction: column;
@@ -10339,12 +7838,5 @@ button.mfp-close.ekit-popup-close:hover {
     }
     .e-con.e-flex.footer-address {
         width: 100% !important;
-    }
-}
-
-
-@media (max-width: 1100px) {
-    .elementor-319 .elementor-element.elementor-element-4e6caee5 .elementskit-navbar-nav>li>a {
-        padding:  0 15px;
     }
 }
