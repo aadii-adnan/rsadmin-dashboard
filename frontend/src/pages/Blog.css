@@ -64,6 +64,7 @@
 
 .blog-card-img {
   width: 100%;
+  height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 0 !important;
@@ -500,6 +501,7 @@
 }
 .related-blog-img {
   width: 100%;
+  height: auto;
   aspect-ratio: 16/9;
   object-fit: cover;
   border-radius: 0 !important; /* Sharp corners */
