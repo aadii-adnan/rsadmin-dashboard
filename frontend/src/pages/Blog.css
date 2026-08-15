@@ -198,6 +198,8 @@
 }
 
 .blog-content img {
+  display: block;
+  width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: contain;
 }
@@ -521,18 +523,6 @@
   line-height: 1.6;
   margin-bottom: 1rem;
 }
-.related-blog-link {
-  color: var(--primary-dark, #010659);
-  font-weight: 700;
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-family: 'Urbanist', sans-serif;
-}
-.related-blog-link:hover {
-  color: var(--primary-light, rgb(40, 144, 205));
-  text-decoration: underline;
-}
-
 .related-blogs-title {
   color: var(--primary-dark, #010659);
   font-weight: 700;

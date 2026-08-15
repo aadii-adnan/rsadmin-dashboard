@@ -635,7 +635,6 @@ function BlogDetail() {
                       <p className="related-blog-excerpt">
                         {rPost.excerpt_text || rPost.excerpt || "Read more about this topic..."}
                       </p>
-                      <span className="related-blog-link">Learn more</span>
                     </div>
                   </Link>
                 </Col>
