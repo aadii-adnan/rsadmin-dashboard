@@ -200,8 +200,6 @@
 .blog-content img {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
 }
 
 /* Wrapper that gives wide tables a horizontal scrollbar on small screens.
