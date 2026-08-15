@@ -9,38 +9,45 @@ import { captureAttribution } from "./utils/attribution";
 import Home from "./pages/Home";
 import VoucherToast from "./components/Utility/VoucherToast";
 
-const Services = lazy(() => import("./pages/Services"));
-const BookingForm = lazy(() => import("./pages/BookingForm"));
-const BlogList = lazy(() => import("./pages/BlogList"));
-const BlogDetail = lazy(() => import("./pages/BlogDetail"));
-const ContactUs = lazy(() => import("./pages/ContactUs"));
-const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const UnauthorizedPage = lazy(() => import("./pages/UnauthorizedPage"));
-const ThankYouPage = lazy(() => import("./pages/ThankYouPage"));
-const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
-const ManageBookingLookup = lazy(() => import("./pages/ManageBookingLookup"));
-const ManageBooking = lazy(() => import("./pages/ManageBooking"));
-const Login = lazy(() => import("./pages/Login"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const FinanceDashboard = lazy(() => import("./pages/FinanceDashboard"));
-const BlogDashboard = lazy(() => import("./components/FinanceDashboard/BlogAdmin/BlogDashboard"));
-const BlogPostForm = lazy(() => import("./components/FinanceDashboard/BlogAdmin/BlogPostForm"));
-const AdminLayout = lazy(() => import("./components/AdminLayout/AdminLayout"));
-const SitemapPage = lazy(() => import("./pages/SitemapPage"));
-const NotFound404 = lazy(() => import("./pages/NotFound404"));
+function lazyWithLegacyStyles(loader) {
+  return lazy(async () => {
+    const [, module] = await Promise.all([
+      import("./styles/legacyBootstrap"),
+      loader(),
+    ]);
+    return module;
+  });
+}
+
+const Services = lazyWithLegacyStyles(() => import("./pages/Services"));
+const BookingForm = lazyWithLegacyStyles(() => import("./pages/BookingForm"));
+const BlogList = lazyWithLegacyStyles(() => import("./pages/BlogList"));
+const BlogDetail = lazyWithLegacyStyles(() => import("./pages/BlogDetail"));
+const ContactUs = lazyWithLegacyStyles(() => import("./pages/ContactUs"));
+const TermsAndConditions = lazyWithLegacyStyles(() => import("./pages/TermsAndConditions"));
+const PrivacyPolicy = lazyWithLegacyStyles(() => import("./pages/PrivacyPolicy"));
+const UnauthorizedPage = lazyWithLegacyStyles(() => import("./pages/UnauthorizedPage"));
+const ThankYouPage = lazyWithLegacyStyles(() => import("./pages/ThankYouPage"));
+const CustomerDashboard = lazyWithLegacyStyles(() => import("./pages/CustomerDashboard"));
+const ManageBookingLookup = lazyWithLegacyStyles(() => import("./pages/ManageBookingLookup"));
+const ManageBooking = lazyWithLegacyStyles(() => import("./pages/ManageBooking"));
+const Login = lazyWithLegacyStyles(() => import("./pages/Login"));
+const ForgotPassword = lazyWithLegacyStyles(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazyWithLegacyStyles(() => import("./pages/ResetPassword"));
+const FinanceDashboard = lazyWithLegacyStyles(() => import("./pages/FinanceDashboard"));
+const BlogDashboard = lazyWithLegacyStyles(() => import("./components/FinanceDashboard/BlogAdmin/BlogDashboard"));
+const BlogPostForm = lazyWithLegacyStyles(() => import("./components/FinanceDashboard/BlogAdmin/BlogPostForm"));
+const AdminLayout = lazyWithLegacyStyles(() => import("./components/AdminLayout/AdminLayout"));
+const SitemapPage = lazyWithLegacyStyles(() => import("./pages/SitemapPage"));
+const NotFound404 = lazyWithLegacyStyles(() => import("./pages/NotFound404"));
 const FloatingWhatsApp = lazy(() =>
   import("react-floating-whatsapp").then((module) => ({ default: module.FloatingWhatsApp })),
 );
 
 function RouteFallback({ label = "Loading page..." }) {
   return (
-    <div
-      className="d-flex align-items-center justify-content-center py-5"
-      style={{ minHeight: "calc(100svh - 180px)" }}
-    >
-      <div className="text-muted">{label}</div>
+    <div className="route-fallback">
+      <div>{label}</div>
     </div>
   );
 }

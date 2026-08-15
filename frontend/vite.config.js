@@ -11,13 +11,11 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
-    // DiscountPopup is loaded lazily, so make its React wrapper part of the
-    // initial dependency optimization pass instead of discovering it later.
+    // Keep React dependencies deduplicated across lazy route chunks.
     include: [
       'react',
       'react-dom',
       'react/jsx-runtime',
-      '@lottiefiles/dotlottie-react',
     ],
   },
   build: {

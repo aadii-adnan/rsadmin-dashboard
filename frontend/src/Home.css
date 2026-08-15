@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Urbanist';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./assets/fonts/urbanist-latin.woff2') format('woff2');
+}
+
 :root {
   --primary-dark: #010659;
   --primary-light: rgb(40, 144, 205);
@@ -14,6 +22,16 @@
 }
 
 /* --- General Resets & Typography --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Urbanist', sans-serif;
   color: var(--text-dark);
@@ -22,8 +40,77 @@ body {
   background-color: var(--white);
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
+}
+
 img {
+  max-width: 100%;
   border-radius: 8px;
+}
+
+/* Small critical layout subset used by the homepage and shared shell. Full
+   Bootstrap is loaded only by legacy lazy routes. */
+.container {
+  width: 100%;
+  max-width: 1140px;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -12px;
+  margin-left: -12px;
+}
+
+.row > * {
+  width: 100%;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.justify-content-center { justify-content: center; }
+.align-items-center { align-items: center; }
+.text-center { text-align: center; }
+.text-muted { color: #6c757d; }
+.bg-white { background-color: #fff; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-5 { margin-bottom: 3rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 3rem; }
+.mx-auto { margin-right: auto; margin-left: auto; }
+
+@media (min-width: 992px) {
+  .col-lg-6 { width: 50%; }
+  .col-lg-8 { width: 66.666667%; }
+  .ps-lg-5 { padding-left: 3rem; }
+  .mb-lg-0 { margin-bottom: 0; }
+}
+
+.route-fallback {
+  display: flex;
+  min-height: calc(100svh - 180px);
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
 }
 
 .section-padding {
@@ -99,7 +186,6 @@ body .home-banner {
   width: 100%;
   height: 90vh;
   background-color: #010659;
-  background-image: url('../assets/hero-cover.webp');
   background-size: cover;
   background-position: center;
   overflow: hidden;
@@ -684,6 +770,84 @@ body .home-banner {
   background: #fff;
 }
 
+.booking-form-placeholder {
+  min-height: 390px;
+  overflow: hidden;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.booking-form-placeholder::before {
+  display: block;
+  width: min(360px, 70%);
+  height: 28px;
+  margin: 34px auto 26px;
+  border-radius: 8px;
+  background: #e7edf2;
+  content: '';
+}
+
+.booking-form-placeholder::after {
+  display: block;
+  width: calc(100% - 80px);
+  height: 210px;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #edf1f4 0,
+    #edf1f4 42px,
+    transparent 42px,
+    transparent 66px
+  );
+  content: '';
+}
+
+.deferred-render-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 760px;
+}
+
+.viewport-gate {
+  min-height: 1px;
+}
+
+.discount-popup-art {
+  position: relative;
+  display: grid;
+  width: 138px;
+  height: 138px;
+  place-items: center;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #eef7fc, #d9effb);
+  color: var(--primary-dark);
+  font-size: 54px;
+  font-weight: 700;
+  box-shadow: 0 14px 30px rgba(1, 6, 89, 0.12);
+  animation: discount-float 2.4s ease-in-out infinite;
+}
+
+.discount-popup-art::after {
+  position: absolute;
+  inset: 12px;
+  border: 2px dashed rgba(40, 144, 205, 0.55);
+  border-radius: inherit;
+  content: '';
+  animation: discount-spin 12s linear infinite;
+}
+
+@keyframes discount-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes discount-spin {
+  to { transform: rotate(360deg); }
+}
+
 
 /* --- RESPONSIVE ADJUSTMENTS --- */
 @media (max-width: 1024px) {
@@ -737,6 +901,10 @@ body .home-banner {
   .banner-heading { font-size: 30px; }
   .banner-subheading { font-size: 14px; }
   body .home-banner { height: 250px; }
+
+  .booking-form-placeholder {
+    min-height: 470px;
+  }
   
   .faq-header { padding: 16px; }
   .question-text { font-size: 1rem; }

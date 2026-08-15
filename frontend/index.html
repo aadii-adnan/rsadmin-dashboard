@@ -8,9 +8,21 @@
     <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/images/icon.webp" type="image/webp" />
     
-    <!-- Preconnect only for first-render critical origins -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- First-render resources are local so they can be discovered before React runs. -->
+    <link
+      rel="preload"
+      href="/src/assets/fonts/urbanist-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/src/assets/hero-cover.webp"
+      as="image"
+      type="image/webp"
+      fetchpriority="high"
+    />
 
     <style>
       html.tidio-hidden #tidio-chat,
@@ -21,9 +33,6 @@
       }
     </style>
     
-    <!-- Font loading optimized -->
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
-
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
@@ -48,7 +57,7 @@
       });
     </script>
 
-    <!-- Load GTM immediately, regardless of consent -->
+    <!-- Load GTM immediately, regardless of consent. Consent defaults are queued above. -->
     <script>
       (function (w, d, s, l, i) {
         w[l] = w[l] || [];

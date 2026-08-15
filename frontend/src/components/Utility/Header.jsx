@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useBooking } from "../../context/BookingContext";
-import logo from "../../assets/logo-white.webp";
-import simpleLogo from "../../assets/logo.webp";
+import logo from "../../assets/logo-white-240.webp?no-inline";
+import logo2x from "../../assets/logo-white-480.webp?no-inline";
+import simpleLogo from "../../assets/logo-238.webp";
+import simpleLogo2x from "../../assets/logo-476.webp";
 import {
   FaBars,
   FaChevronDown,
@@ -119,7 +121,14 @@ function Header() {
 
       <div className="rs-header-main">
         <Link className="rs-header-logo" to="/" aria-label="RS Express Parking home">
-          <img src={simpleLogo} alt="RS Express Parking" width="2170" height="548" />
+          <img
+            src={simpleLogo}
+            srcSet={`${simpleLogo} 1x, ${simpleLogo2x} 2x`}
+            alt="RS Express Parking"
+            width="238"
+            height="60"
+            decoding="async"
+          />
         </Link>
 
         {!isMobileHeader && (
@@ -223,7 +232,14 @@ function Header() {
           >
             <div className="rs-mobile-menu-header">
               <Link to="/" onClick={closeMobileMenu} aria-label="RS Express Parking home">
-                <img src={logo} alt="RS Express Parking" width="2170" height="548" />
+                <img
+                  src={logo}
+                  srcSet={`${logo} 1x, ${logo2x} 2x`}
+                  alt="RS Express Parking"
+                  width="240"
+                  height="61"
+                  decoding="async"
+                />
               </Link>
               <button
                 type="button"

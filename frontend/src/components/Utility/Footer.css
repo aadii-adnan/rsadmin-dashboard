@@ -1,0 +1,135 @@
+.rse-footer {
+  background: var(--primary-dark);
+  color: #fff;
+  font-family: 'Urbanist', sans-serif;
+}
+
+.rse-footer *,
+.rse-footer *::before,
+.rse-footer *::after {
+  box-sizing: border-box;
+}
+
+.rse-footer__grid {
+  display: grid;
+  width: min(1180px, calc(100% - 40px));
+  grid-template-columns: minmax(240px, 1.35fr) repeat(3, minmax(155px, 1fr));
+  gap: clamp(28px, 4vw, 60px);
+  margin: 0 auto;
+  padding: 64px 0 52px;
+}
+
+.rse-footer__brand img {
+  display: block;
+  width: min(240px, 100%);
+  height: auto;
+  border-radius: 0;
+}
+
+.rse-footer__brand p {
+  max-width: 360px;
+  margin: 24px 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.65;
+}
+
+.rse-footer__social {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+}
+
+.rse-footer__section h2 {
+  margin: 6px 0 22px;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.rse-footer__section ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rse-footer a {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+}
+
+.rse-footer a:hover,
+.rse-footer a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.rse-footer__contact {
+  display: grid;
+  align-content: start;
+  gap: 15px;
+  margin: 0;
+  font-style: normal;
+}
+
+.rse-footer__contact h2 {
+  margin-bottom: 7px;
+}
+
+.rse-footer__contact > a {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.rse-footer__contact svg {
+  flex: 0 0 18px;
+  color: var(--primary-light);
+}
+
+.rse-footer__contact small {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.72rem;
+}
+
+.rse-footer__bottom {
+  padding: 22px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.13);
+  text-align: center;
+}
+
+.rse-footer__bottom p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 900px) {
+  .rse-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .rse-footer__grid {
+    width: min(100% - 32px, 420px);
+    grid-template-columns: 1fr;
+    gap: 34px;
+    padding: 48px 0 40px;
+  }
+
+  .rse-footer__brand img {
+    width: 210px;
+  }
+}

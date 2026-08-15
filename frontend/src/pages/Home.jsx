@@ -1,18 +1,15 @@
-import React, {useEffect, useState} from 'react'
-import BookingDatesForm from '../components/HomePage/BookingDatesForm'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import { useBooking } from "../context/BookingContext";
 import "../Home.css";
 import secureParking from "../assets/secure-parking.webp"
 import { Helmet } from 'react-helmet-async';
-import "swiper/css";
-import "swiper/css/effect-fade";
-import "swiper/css/autoplay";
+const BookingDatesForm = React.lazy(() => import('../components/HomePage/BookingDatesForm'));
 const FAQSection = React.lazy(() => import('../components/HomePage/FAQSection'));
 const VideoTestimonialSection = React.lazy(() => import('../components/HomePage/VideoTestimonialSection'));
 import { 
     FaCarSide, FaCheckCircle, FaShieldAlt, FaPlaneDeparture, 
     FaUserTie, FaSuitcase, FaChild, FaVideo, FaKey, 
-    FaClock, FaPhoneAlt, FaEnvelope, FaStar 
+    FaClock, FaStar 
 } from "react-icons/fa";
 import { SiTrustpilot } from "react-icons/si"; 
 import { FcGoogle } from "react-icons/fc";
@@ -21,11 +18,73 @@ import videoPoster from "../assets/hero-cover.webp";
 import parking from "../assets/parking2.webp";
 const DiscountPopup = React.lazy(() => import('../components/Utility/DiscountPopup'));
 
+function ViewportGate({ children, placeholderClass, onReveal, rootMargin = '700px 0px' }) {
+    const [revealed, setRevealed] = useState(false);
+    const gateRef = useRef(null);
+
+    useEffect(() => {
+        if (revealed) {
+            onReveal?.();
+            return undefined;
+        }
+
+        if (!('IntersectionObserver' in window)) {
+            setRevealed(true);
+            return undefined;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                setRevealed(true);
+                observer.disconnect();
+            }
+        }, { rootMargin });
+
+        if (gateRef.current) {
+            observer.observe(gateRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [onReveal, revealed, rootMargin]);
+
+    return (
+        <div className="viewport-gate" ref={gateRef}>
+            {revealed ? children : <div className={placeholderClass} aria-hidden="true" />}
+        </div>
+    );
+}
+
+function DeferredDiscountOffer() {
+    const [shouldMount, setShouldMount] = useState(false);
+
+    useEffect(() => {
+        try {
+            if (localStorage.getItem('discount_popup_done')) {
+                return undefined;
+            }
+        } catch {
+            // Storage can be unavailable in privacy modes; keep the in-session offer.
+        }
+
+        const timer = window.setTimeout(() => setShouldMount(true), 12000);
+        return () => window.clearTimeout(timer);
+    }, []);
+
+    if (!shouldMount) return null;
+
+    return (
+        <React.Suspense fallback={null}>
+            <DiscountPopup />
+        </React.Suspense>
+    );
+}
+
 const Home = () => {
 
     const { setBookingData } = useBooking();
     const [faqs, setFaqs] = useState([]);
     const [faqsLoading, setFaqsLoading] = useState(true);
+    const [shouldFetchFaqs, setShouldFetchFaqs] = useState(false);
     const [reviewFilter, setReviewFilter] = useState('all');
     const [showAll, setShowAll] = useState(false);
     
@@ -85,7 +144,7 @@ const Home = () => {
                 return;
             }
             clearTimers();
-            fallbackTimer = window.setTimeout(activateVideo, 3500);
+            fallbackTimer = window.setTimeout(activateVideo, 5000);
         };
 
         window.addEventListener('pointerdown', activateVideo, { once: true, passive: true });
@@ -96,7 +155,10 @@ const Home = () => {
         if ('PerformanceObserver' in window) {
             try {
                 lcpObserver = new PerformanceObserver((entryList) => {
-                    if (entryList.getEntries().length > 0) {
+                    const heroPainted = entryList.getEntries().some((entry) => (
+                        entry.element?.classList?.contains('banner-poster-img')
+                    ));
+                    if (heroPainted) {
                         scheduleActivationAfterLCP();
                     }
                 });
@@ -151,22 +213,34 @@ const Home = () => {
         localStorage.removeItem("payment_status");
     }, [setBookingData]);
 
-    // Fetch FAQs in background - does NOT block UI render
+    const revealFaqs = useCallback(() => setShouldFetchFaqs(true), []);
+
+    // Fetch FAQ content only when its below-fold section approaches the viewport.
     useEffect(() => {
+        if (!shouldFetchFaqs) return undefined;
+
+        const controller = new AbortController();
         const fetchFAQs = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/?website=rsexpressparking`);
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/?website=rsexpressparking`, {
+                    signal: controller.signal,
+                });
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 setFaqs(data);
             } catch (error) {
-                console.error('Error fetching FAQs:', error);
+                if (error.name !== 'AbortError') {
+                    console.error('Error fetching FAQs:', error);
+                }
             } finally {
-                setFaqsLoading(false);
+                if (!controller.signal.aborted) {
+                    setFaqsLoading(false);
+                }
             }
         };
         fetchFAQs();
-    }, []);
+        return () => controller.abort();
+    }, [shouldFetchFaqs]);
 
     // --- Content Data ---
     const processSteps = [
@@ -338,11 +412,9 @@ const Home = () => {
 
     </Helmet>
 
-    <React.Suspense fallback={null}>
-        <DiscountPopup />
-    </React.Suspense>
+    <DeferredDiscountOffer />
 
-    <div style={{backgroundColor: "#fff"}} data-elementor-type="wp-page" data-elementor-id="88" className="elementor elementor-88" data-elementor-post-type="page">
+    <main className="home-page" style={{backgroundColor: "#fff"}}>
         <div className="home-wrapper">
         <div className="home-banner video-banner">
             
@@ -355,7 +427,7 @@ const Home = () => {
                     width="1920"
                     height="1080"
                     fetchPriority="high"
-                    decoding="sync"
+                    decoding="async"
                 />
             )}
 
@@ -396,12 +468,14 @@ const Home = () => {
             </div>
         </div>
         </div>
-    <BookingDatesForm />
+    <React.Suspense fallback={<div className="form-column booking-form-placeholder" aria-hidden="true" />}>
+        <BookingDatesForm />
+    </React.Suspense>
 
         
         
         {/* 2. PROCESS SECTION (Modern Timeline) */}
-            <section className="section-padding bg-white info-sect">
+            <section className="section-padding bg-white info-sect deferred-render-section">
                 <div className="container">
                     <div className="section-header text-center mb-5">
                         <h2 className="section-title">How Our Meet & Greet Works</h2>
@@ -425,7 +499,7 @@ const Home = () => {
             </section>
 
             {/* 3. WHY CHOOSE US (Grid Layout - Dark Blue/Gold Theme) */}
-            <section className="section-padding bg-primary-dark">
+            <section className="section-padding bg-primary-dark deferred-render-section">
                 <div className="container">
                     <div className="row justify-content-center text-center mb-5">
                         <div className="col-lg-8">
@@ -451,7 +525,7 @@ const Home = () => {
             </section>
 
             {/* 4. WHO IS THIS FOR (Modern Cards) */}
-            <section className="section-padding bg-light-blue">
+            <section className="section-padding bg-light-blue deferred-render-section">
                 <div className="container">
                     <div className="section-header text-center mb-5">
                         <h2 className="section-title">Perfect for All Travellers</h2>
@@ -469,7 +543,7 @@ const Home = () => {
             </section>
 
             {/* 5. SECURE FACILITY (Split Layout) */}
-            <section className="section-padding bg-white">
+            <section className="section-padding bg-white deferred-render-section">
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-lg-6 mb-4 mb-lg-0">
@@ -529,7 +603,7 @@ const Home = () => {
             </section>
 
             {/* 6. TESTIMONIALS (Modern Redesign) */}
-            <section className="section-padding bg-light-grey">
+            <section className="section-padding bg-light-grey deferred-render-section">
                 <div className="container">
                 <div className="section-header text-center mb-4">
                     <h2 className="section-title">What Our Customers Say</h2>
@@ -597,34 +671,38 @@ const Home = () => {
             </section>     
 
             {/* VIDEO TESTIMONIALS SECTION */}
-            <React.Suspense fallback={<div className="video-section-placeholder" aria-hidden="true" />}>
-                <VideoTestimonialSection 
-                    testimonials={[
-                        {
-                            id: 1,
-                            videoUrl: '/videos/review_1.webm',
-                            thumbnailUrl: '/videos/thumb1.webp',
-                            title: 'Customer Video Review 1',
-                        },
-                        {
-                            id: 2,
-                            videoUrl: '/videos/review_2.webm',
-                            thumbnailUrl: '/videos/thumb2.webp',
-                            title: 'Customer Video Review 2',
-                        },
-                    ]}
-                    sectionTitle="Video Testimonials"
-                    sectionSubtitle="Hear directly from our happy customers"
-                />
-            </React.Suspense>
+            <ViewportGate placeholderClass="video-section-placeholder">
+                <React.Suspense fallback={<div className="video-section-placeholder" aria-hidden="true" />}>
+                    <VideoTestimonialSection 
+                        testimonials={[
+                            {
+                                id: 1,
+                                videoUrl: '/videos/review_1.webm',
+                                thumbnailUrl: '/videos/thumb1.webp',
+                                title: 'Customer Video Review 1',
+                            },
+                            {
+                                id: 2,
+                                videoUrl: '/videos/review_2.webm',
+                                thumbnailUrl: '/videos/thumb2.webp',
+                                title: 'Customer Video Review 2',
+                            },
+                        ]}
+                        sectionTitle="Video Testimonials"
+                        sectionSubtitle="Hear directly from our happy customers"
+                    />
+                </React.Suspense>
+            </ViewportGate>
 
-            <React.Suspense fallback={<div className="faq-section-placeholder" aria-hidden="true" />}>
-                <FAQSection faqs={faqs} loading={faqsLoading}/>
-            </React.Suspense>
+            <ViewportGate placeholderClass="faq-section-placeholder" onReveal={revealFaqs}>
+                <React.Suspense fallback={<div className="faq-section-placeholder" aria-hidden="true" />}>
+                    <FAQSection faqs={faqs} loading={faqsLoading}/>
+                </React.Suspense>
+            </ViewportGate>
 
 
 
-    </div>
+    </main>
 
 </>
   )

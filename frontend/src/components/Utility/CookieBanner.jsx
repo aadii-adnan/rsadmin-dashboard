@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import './CookieBanner.css';
 
 const CONSENT_STORAGE_KEY = 'cookieConsent';
 
@@ -9,7 +10,7 @@ const CookieConsentBanner = () => {
     let consent;
     try {
       consent = localStorage.getItem(CONSENT_STORAGE_KEY);
-    } catch (error) {
+    } catch {
       consent = null;
     }
 
@@ -21,7 +22,7 @@ const CookieConsentBanner = () => {
   const handleConsent = (choice) => {
     try {
       localStorage.setItem(CONSENT_STORAGE_KEY, choice);
-    } catch (error) {
+    } catch {
       // Ignore storage failures and still apply in-session behavior.
     }
 
@@ -40,9 +41,9 @@ const CookieConsentBanner = () => {
 
   return (
     <div
-      className="position-fixed bottom-0 start-0 end-0 bg-dark text-white py-4 shadow-lg border-top"
+      className="rse-cookie-banner position-fixed bottom-0 start-0 end-0 bg-dark text-white py-4 shadow-lg border-top"
       style={{
-        zIndex: 999999999999999, // Ensure it's above all other elements
+        zIndex: 999999999999999,
         position: 'fixed',
         width: '100%',
       }}

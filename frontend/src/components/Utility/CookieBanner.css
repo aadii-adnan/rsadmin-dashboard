@@ -1,0 +1,171 @@
+.rse-cookie-banner {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999999999999999;
+  width: 100%;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-top: 1px solid #dee2e6;
+  background: #212529;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  color: #fff;
+  line-height: 1.5;
+}
+
+.rse-cookie-banner .container {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 auto;
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+.rse-cookie-banner .fs-5 {
+  font-size: 1.25rem;
+}
+
+.rse-cookie-banner .text-decoration-underline {
+  text-decoration: underline;
+}
+
+.rse-cookie-banner .text-light {
+  color: #f8f9fa;
+}
+
+.rse-cookie-banner .ms-2 {
+  margin-left: 0.5rem;
+}
+
+.rse-cookie-banner .d-flex {
+  display: flex;
+}
+
+.rse-cookie-banner .flex-column {
+  flex-direction: column;
+}
+
+.rse-cookie-banner .align-items-center {
+  align-items: center;
+}
+
+.rse-cookie-banner .justify-content-between {
+  justify-content: space-between;
+}
+
+.rse-cookie-banner .gap-2 {
+  gap: 0.5rem;
+}
+
+.rse-cookie-banner .gap-3 {
+  gap: 1rem;
+}
+
+.rse-cookie-banner .text-center {
+  text-align: center;
+}
+
+.rse-cookie-banner .btn {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.rse-cookie-banner .btn-outline-light {
+  border-color: #f8f9fa;
+  color: #fff;
+}
+
+.rse-cookie-banner .btn-outline-light:hover,
+.rse-cookie-banner .btn-outline-light:active {
+  border-color: #f8f9fa;
+  background: #f8f9fa;
+  color: #000;
+}
+
+.rse-cookie-banner .btn-success {
+  border-color: #198754;
+  background: #198754;
+  color: #fff;
+}
+
+.rse-cookie-banner .btn-success:hover {
+  border-color: #146c43;
+  background: #157347;
+}
+
+.rse-cookie-banner .btn-success:active {
+  border-color: #13653f;
+  background: #146c43;
+}
+
+.rse-cookie-banner .btn-lg {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.rse-cookie-banner .rounded-pill {
+  border-radius: 50rem;
+}
+
+.rse-cookie-banner .px-4 {
+  padding-right: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+@media (min-width: 576px) {
+  .rse-cookie-banner .container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .rse-cookie-banner .container {
+    max-width: 720px;
+  }
+
+  .rse-cookie-banner .flex-md-row {
+    flex-direction: row;
+  }
+
+  .rse-cookie-banner .text-md-start {
+    text-align: left;
+  }
+}
+
+@media (min-width: 992px) {
+  .rse-cookie-banner .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .rse-cookie-banner .container {
+    max-width: 1140px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .rse-cookie-banner .container {
+    max-width: 1320px;
+  }
+}

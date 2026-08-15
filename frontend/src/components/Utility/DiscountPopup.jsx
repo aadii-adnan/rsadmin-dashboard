@@ -1,24 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import React, { useState } from 'react';
 
 const DiscountPopup = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [code, setCode] = useState('');
 
-  useEffect(() => {
-    const already = localStorage.getItem('discount_popup_done');
-    if (!already) {
-      // Show after user interaction or 3s
-      const timer = setTimeout(() => setOpen(true), 12000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
   const close = () => {
     setOpen(false);
-    localStorage.setItem('discount_popup_done', '1');
+    try {
+      localStorage.setItem('discount_popup_done', '1');
+    } catch {
+      // Closing the in-session modal should still work without storage.
+    }
   };
 
   const submit = async (e) => {
@@ -47,15 +41,7 @@ const DiscountPopup = () => {
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button onClick={close} style={styles.closeBtn} aria-label="Close">×</button>
         
-        {/* Replace dotlottie with simple emoji or CSS animation */}
-        <div style={styles.emojiWrapper}>
-          <DotLottieReact
-            src="/animations/popup.lottie"
-            loop
-            autoplay
-            style={{ width: 300, height: 180, margin: '0 auto' }}
-          />
-        </div>
+        <div className="discount-popup-art" aria-hidden="true">%</div>
 
         <h2 style={styles.title}>Unlock a Special Discount!</h2>
         {!submitted && (
@@ -105,12 +91,6 @@ const styles = {
   closeBtn: {
     position: 'absolute', top: 12, right: 16, background: 'none', border: 'none',
     fontSize: 28, cursor: 'pointer', lineHeight: 1, color: '#666'
-  },
-  emojiWrapper: {
-    marginBottom: 15
-  },
-  emoji: {
-    fontSize: 64, animation: 'bounce 2s infinite'
   },
   title: {
     fontSize: 26, margin: '0 0 14px', fontWeight: 700, color: '#0d102f'

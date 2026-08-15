@@ -5,9 +5,6 @@ import { AuthProvider } from './auth/AuthContext';
 import App from './App';
 import { HelmetProvider } from 'react-helmet-async';
 import { BookingProvider } from "./context/BookingContext"; 
-import "./ContactUs.css";
-import "./pages/Blog.css";
-import 'bootstrap/dist/css/bootstrap.min.css';
 import "./Home.css"; // Base theme (CSS variables, .btn-modern, Urbanist) — must load on every page, not just Home
 
 
