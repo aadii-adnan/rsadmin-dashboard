@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6;">
+    <h2 style="color: #2890cd; margin-bottom: 16px;">Credits added to your account</h2>
+    <p>Hi {{ first_name }},</p>
+    <p>
+      <strong>€{{ amount }}</strong> in account credits has been added to your
+      <strong>{{ site_name }}</strong> account.
+    </p>
+    <table style="border-collapse: collapse; margin: 16px 0;">
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>Amount added:</strong></td>
+        <td style="padding: 6px 0;">€{{ amount }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>New credit balance:</strong></td>
+        <td style="padding: 6px 0;">€{{ balance }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>Date:</strong></td>
+        <td style="padding: 6px 0;">{{ created_at|date:"d/m/Y H:i" }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 16px 6px 0;"><strong>Transaction reference:</strong></td>
+        <td style="padding: 6px 0;">#{{ transaction_id }}</td>
+      </tr>
+    </table>
+
+    <h3 style="color: #010659; margin: 24px 0 8px;">How to use your credits</h3>
+    <ol style="padding-left: 22px;">
+      <li style="margin-bottom: 8px;">
+        <a href="{{ login_url }}" style="color: #2890cd;">Log in</a> with your username
+        <strong>{{ username }}</strong> and password before starting your booking.
+      </li>
+      <li style="margin-bottom: 8px;">Choose your parking dates and service, then start your booking.</li>
+      <li style="margin-bottom: 8px;">Complete your customer, flight and vehicle details.</li>
+      <li style="margin-bottom: 8px;">Your available account credits will be shown and applied automatically in the price summary.</li>
+      <li style="margin-bottom: 8px;">If your credits cover the full booking, select <strong>Pay with Credits</strong>. If they cover only part of it, pay the remaining amount by card.</li>
+    </ol>
+
+    <p style="margin: 24px 0;">
+      <a href="{{ site_url }}" style="background: #2890cd; border-radius: 4px; color: #fff; display: inline-block; padding: 10px 18px; text-decoration: none;">
+        Start a booking
+      </a>
+    </p>
+    <p>
+      Please make sure you are logged in to the same account before booking;
+      credits cannot be used during guest checkout.
+    </p>
+    <p>
+      Regards,<br />
+      The {{ site_name }} Team<br />
+      <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+    </p>
+  </body>
+</html>

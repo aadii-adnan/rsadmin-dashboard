@@ -1,0 +1,36 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+{{ block.super }}
+{% if not original %}
+<div class="submit-row send-credit-email-row">
+    <input type="submit" value="Save and send credit email to customer"
+           name="_save_and_send_email"
+           class="send-credit-email-btn"
+           title="Adds the credits, then emails the customer their new balance and instructions for using credits during booking.">
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<style>
+    .send-credit-email-row {
+        margin-top: -10px;
+    }
+    input[type="submit"].send-credit-email-btn {
+        float: right;
+        background: #2e7d32;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 15px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    input[type="submit"].send-credit-email-btn:hover,
+    input[type="submit"].send-credit-email-btn:focus {
+        background: #256628;
+        color: #fff;
+    }
+</style>
+{% endblock %}

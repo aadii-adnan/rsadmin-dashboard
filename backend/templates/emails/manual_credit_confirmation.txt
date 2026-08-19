@@ -1,0 +1,24 @@
+Hi {{ first_name }},
+
+EUR {{ amount }} in account credits has been added to your {{ site_name }} account.
+
+Amount added: EUR {{ amount }}
+New credit balance: EUR {{ balance }}
+Date: {{ created_at|date:"d/m/Y H:i" }}
+Transaction reference: #{{ transaction_id }}
+
+How to use your credits when making a booking:
+
+1. Go to {{ login_url }} and log in with your username ({{ username }}) and password before starting your booking.
+2. Choose your parking dates and service, then start your booking.
+3. Complete your customer, flight and vehicle details.
+4. Your available account credits will be shown and applied automatically in the price summary.
+5. If your credits cover the full booking, select Pay with Credits. If they cover only part of it, pay the remaining amount by card.
+
+Start a booking: {{ site_url }}
+
+Please make sure you are logged in to the same account before booking; credits cannot be used during guest checkout.
+
+Regards,
+The {{ site_name }} Team
+{{ support_email }}

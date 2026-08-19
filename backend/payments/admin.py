@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django import forms
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from .models import Payment, CreditTransaction
@@ -112,6 +113,8 @@ class CreditTransactionAdmin(admin.ModelAdmin):
     """Credit ledger. Rows are immutable; admins add manual adjustments via
     the add form, which atomically updates the user's balance."""
 
+    change_form_template = 'admin/payments/credittransaction/change_form.html'
+
     def colored_status(self, obj):
         status_colors = {
             'succeeded': '#28a745',
@@ -165,6 +168,52 @@ class CreditTransactionAdmin(admin.ModelAdmin):
             obj.status = CreditTransaction.STATUS_SUCCEEDED
             obj.balance_after = new_balance
             super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        if "_save_and_send_email" in request.POST:
+            if obj.amount <= 0:
+                self.message_user(
+                    request,
+                    "Credit adjustment saved, but no email was sent because the amount was not positive.",
+                    level=messages.WARNING,
+                )
+            elif not obj.user.email:
+                self.message_user(
+                    request,
+                    "Credits were added, but no email was sent because this customer has no email address.",
+                    level=messages.WARNING,
+                )
+            else:
+                transaction_id = obj.pk
+                recipient = obj.user.email
+
+                def queue_email():
+                    from .tasks import send_manual_credit_confirmation_email_task
+
+                    try:
+                        send_manual_credit_confirmation_email_task.delay(transaction_id)
+                    except Exception:
+                        # Keep the admin action useful when the Celery broker is
+                        # temporarily unavailable (for example in local admin).
+                        try:
+                            send_manual_credit_confirmation_email_task(transaction_id)
+                        except Exception as exc:
+                            self.message_user(
+                                request,
+                                f"Credits were added, but the customer email could not be sent: {exc}",
+                                level=messages.ERROR,
+                            )
+
+                # The email task must not read the ledger row until both the
+                # adjustment and the user's new balance have been committed.
+                transaction.on_commit(queue_email)
+                self.message_user(
+                    request,
+                    f"Credits added. A confirmation email will be sent to {recipient}.",
+                    level=messages.SUCCESS,
+                )
+
+        return super().response_add(request, obj, post_url_continue)
 
     def has_change_permission(self, request, obj=None):
         return False
