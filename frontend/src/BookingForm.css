@@ -249,6 +249,72 @@ button.btn {
   font-size: 14px; /* or whatever size you want */
   color: "#aab7c4";
 }
+
+.booking-error-summary {
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  border: 1px solid #f1aeb5;
+  border-left: 5px solid #b42318;
+  border-radius: 8px;
+  background: #fff4f4;
+  color: #7a271a;
+  text-align: left;
+}
+
+.booking-error-summary:focus {
+  outline: 3px solid rgba(180, 35, 24, 0.2);
+  outline-offset: 2px;
+}
+
+.booking-error-summary h3 {
+  margin: 0 0 6px;
+  color: #7a271a;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.booking-error-summary p {
+  margin: 0 0 8px;
+  color: #7a271a;
+}
+
+.booking-error-summary ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.booking-error-summary li + li {
+  margin-top: 4px;
+}
+
+#msform .booking-field-input[aria-invalid="true"] {
+  border-color: #b42318 !important;
+  background-color: #fff8f7;
+  box-shadow: 0 0 0 2px rgba(180, 35, 24, 0.12) !important;
+}
+
+#msform .booking-field-input[aria-invalid="true"]:focus {
+  outline: 2px solid rgba(180, 35, 24, 0.24);
+  outline-offset: 1px;
+}
+
+.booking-field-error {
+  margin: -10px 0 15px;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+@media (max-width: 576px) {
+  .booking-error-summary {
+    padding: 14px;
+  }
+
+  .booking-error-summary h3 {
+    font-size: 17px;
+  }
+}
 .booking-form-banner {
   background-position: 0 -70px;
   height: 350px;

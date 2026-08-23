@@ -1,15 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
-import PopupDialog from "../Utility/PopupDialog";
 import { useBooking } from "../../context/BookingContext";
+import customFetch from "../../auth/fetch";
 import { clearAttribution, getAttribution } from "../../utils/attribution";
+import {
+  BOOKING_FIELD_LABELS,
+  normalizeBookingSubmissionError,
+  parseBookingErrorResponse,
+} from "../../utils/bookingSubmissionErrors";
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 
 const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, nextButtonStyle, goNext, goBack, prevButtonStyle, contactNo, setContactNo, serviceDetails, couponId, discountedPrice, totalPrice, statuses, setFormData, selectedAddOns, addOnsDetails }) => {
-  const [error, setError] = useState(""); // State to store validation error messages
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup
+  const [submissionError, setSubmissionError] = useState({
+    fieldErrors: {},
+    summaryMessages: [],
+  });
   const [loading, setLoading] = useState(false); // Loading state while creating the booking
   const submissionLockRef = useRef(false);
+  const formCardRef = useRef(null);
+  const errorSummaryRef = useRef(null);
   const {
     bookingData,
     setBookingData,
@@ -20,33 +29,139 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
     window.scrollTo(0, 300)
   }, []);
 
-  // Validation function
+  const showSubmissionError = (nextError) => {
+    setSubmissionError(nextError);
+
+    window.requestAnimationFrame(() => {
+      const firstInvalidField = Object.keys(nextError.fieldErrors)
+        .map((fieldName) => formCardRef.current?.querySelector(`[name="${fieldName}"]`))
+        .find(Boolean);
+
+      if (firstInvalidField) {
+        firstInvalidField.focus();
+        firstInvalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      errorSummaryRef.current?.focus();
+      errorSummaryRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
+
+  const clearFieldError = (fieldName) => {
+    setSubmissionError((currentError) => {
+      if (!currentError.fieldErrors[fieldName]) return currentError;
+
+      const nextFieldErrors = { ...currentError.fieldErrors };
+      delete nextFieldErrors[fieldName];
+      return { ...currentError, fieldErrors: nextFieldErrors };
+    });
+  };
+
+  const handleFieldChange = (event) => {
+    clearFieldError(event.target.name);
+    handleChange(event);
+  };
+
+  const fieldErrorProps = (fieldName) => {
+    const hasError = Boolean(submissionError.fieldErrors[fieldName]?.length);
+    return {
+      "aria-invalid": hasError,
+      "aria-describedby": hasError ? `${fieldName}-error` : undefined,
+    };
+  };
+
+  const renderFieldError = (fieldName) => {
+    const messages = submissionError.fieldErrors[fieldName];
+    if (!messages?.length) return null;
+
+    return (
+      <p className="booking-field-error" id={`${fieldName}-error`}>
+        {messages.join(" ")}
+      </p>
+    );
+  };
+
   const validateInputs = () => {
-    if (!formData.car_registration_no || !formData.car_model || !formData.car_colour || !formData.car_manufacturer || !formData.departure_terminal || !formData.return_terminal) {
-      setError("Please fill in all required fields.");
-      setIsPopupOpen(true);
-      return false;
+    const fieldErrors = {};
+    const summaryMessages = [];
+    const requiredFields = {
+      car_registration_no: "Enter your car registration.",
+      car_model: "Enter your car model.",
+      car_colour: "Enter your car color.",
+      car_manufacturer: "Enter your car manufacturer.",
+      departure_terminal: "Select a departure terminal.",
+      return_terminal: "Select a return terminal.",
+    };
+
+    if (bookingData?.userDetails?.id) {
+      Object.assign(requiredFields, {
+        first_name: "Enter your first name.",
+        last_name: "Enter your last name.",
+        email: "Enter your email address.",
+        contact_no: "Enter your contact number.",
+      });
+    }
+
+    Object.entries(requiredFields).forEach(([fieldName, message]) => {
+      const value = fieldName === "contact_no" ? contactNo : formData[fieldName];
+      if (!String(value ?? "").trim()) {
+        fieldErrors[fieldName] = [message];
+      }
+    });
+
+    if (
+      !fieldErrors.email &&
+      formData.email &&
+      !/^\S+@\S+\.\S+$/.test(formData.email.trim())
+    ) {
+      fieldErrors.email = ["Enter a valid email address, such as name@example.com."];
+    }
+
+    if (
+      !fieldErrors.contact_no &&
+      bookingData?.userDetails?.id &&
+      contactNo.replace(/\D/g, "").length < 7
+    ) {
+      fieldErrors.contact_no = ["Enter a valid contact number including the country code."];
+    }
+
+    if (!parkingFromDate || !parkingFromTime || !carCollectionDate || !carCollectionTime) {
+      summaryMessages.push(
+        "Your booking dates or times are missing. Return to the home page, select them again, and retry your booking.",
+      );
     }
 
     if (totalPrice <= 0) {
-      setError("Invalid price calculation");
-      setIsPopupOpen(true);
+      summaryMessages.push(
+        "The booking price could not be calculated. Return to the home page, select your dates and service again, then retry.",
+      );
+    }
+
+    if (!serviceDetails?.id || !statuses.length) {
+      summaryMessages.push(
+        "The booking options are still loading. Wait a moment and try again.",
+      );
+    }
+
+    const validationError = { fieldErrors, summaryMessages };
+    if (Object.keys(fieldErrors).length || summaryMessages.length) {
+      showSubmissionError(validationError);
       return false;
     }
 
-    setError(""); // Clear error if validation passes
+    setSubmissionError({ fieldErrors: {}, summaryMessages: [] });
     return true;
   };
 
   const updateBookingUserStatus = async (bookingUserId) => {
     if (!bookingUserId) return;
     try {
-      await fetch(
+      await customFetch(
         `${import.meta.env.VITE_API_BASE_URL}/bookings/booking-user/${bookingUserId}/status/`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ booking_completion_status: true }),
+          body: { booking_completion_status: true },
         }
       );
     } catch (err) {
@@ -61,12 +176,23 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
       const statusId = statuses.find((status) => status.name === formData.status_name && status.type === "booking")?.id;
 
       if (!statusId) {
-        alert("Invalid status selected.");
+        showSubmissionError({
+          fieldErrors: {},
+          summaryMessages: [
+            "The booking options have not finished loading. Wait a moment and try again.",
+          ],
+        });
         return;
       }
 
       if (!parkingFromDate || !carCollectionDate) {
-        throw new Error("Invalid booking dates");
+        showSubmissionError({
+          fieldErrors: {},
+          summaryMessages: [
+            "Your booking dates are missing. Return to the home page, select them again, and retry your booking.",
+          ],
+        });
+        return;
       }
 
       const bookingPayload = {
@@ -89,30 +215,30 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
       const isNewBooking = !formData.booking_id;
       if (formData.booking_id) {
         // Update existing booking
-        response = await fetch(
+        response = await customFetch(
           `${import.meta.env.VITE_API_BASE_URL}/bookings/${formData.booking_id}/`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(bookingPayload),
+            body: bookingPayload,
           }
         );
       } else {
         // Create new booking — attach first-touch marketing attribution (create only)
-        response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
+        response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             ...(bookingData.bookingJourneyId
               ? { "Idempotency-Key": bookingData.bookingJourneyId }
               : {}),
           },
-          body: JSON.stringify({ ...bookingPayload, ...getAttribution() }),
+          body: { ...bookingPayload, ...getAttribution() },
         });
       }
-      data = await response.json();
+
+      if (!response) return;
 
       if (response.ok) {
+        data = await response.json();
         if (isNewBooking) {
           clearAttribution();
         }
@@ -138,16 +264,15 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
         }
         goNext();
       } else {
-        if (data.error === "Coupon has been fully used") {
-          setError(data.error);
-          setIsPopupOpen(true);
-          return;
-        }
-        setError(data.message || "An error occurred.");
-        setIsPopupOpen(true);
+        showSubmissionError(await parseBookingErrorResponse(response));
       }
     } catch (error) {
       console.error("Error creating/updating booking:", error);
+      showSubmissionError(
+        normalizeBookingSubmissionError(null, {
+          networkError: error instanceof TypeError,
+        }),
+      );
     }
   };
 
@@ -168,73 +293,117 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
     }
   };
 
+  const errorSummaryItems = [
+    ...Object.entries(submissionError.fieldErrors).flatMap(([fieldName, messages]) =>
+      messages.map((message) => `${BOOKING_FIELD_LABELS[fieldName] || fieldName}: ${message}`),
+    ),
+    ...submissionError.summaryMessages,
+  ];
+
   return (
     <div>
     <fieldset className="fieldset active">
-      <div className="form-card">
+      <div className="form-card" ref={formCardRef}>
         <h2 style={{ fontSize: "20px", fontWeight: "bold", color: "#010659", marginBottom: "20px" }}>Car Details:</h2>
-        {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>} {/* Display validation error */}
+        {errorSummaryItems.length > 0 && (
+          <div
+            className="booking-error-summary"
+            ref={errorSummaryRef}
+            role="alert"
+            aria-live="assertive"
+            tabIndex={-1}
+          >
+            <h3>We couldn&apos;t save your booking</h3>
+            <p>
+              {Object.keys(submissionError.fieldErrors).length
+                ? "Please correct the highlighted fields and try again."
+                : "Please follow the guidance below and try again."}
+            </p>
+            <ul>
+              {errorSummaryItems.map((message, index) => (
+                <li key={`${index}-${message}`}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="bookingform-row">
             <div  className="bookingform-col">
-                <label style={labelStyle}>Car Registration: *</label>
+                <label htmlFor="car_registration_no" style={labelStyle}>Car Registration: *</label>
                 <input
+                className="booking-field-input"
+                id="car_registration_no"
                 type="text"
                 name="car_registration_no"
                 placeholder="Registration No"
                 style={inputStyle}
                 value={formData?.car_registration_no}
-                onChange={handleChange}
+                onChange={handleFieldChange}
+                {...fieldErrorProps("car_registration_no")}
                 required
                 />
+                {renderFieldError("car_registration_no")}
             </div>
             <div  className="bookingform-col">
-                <label style={labelStyle}>Car Model: *</label>
+                <label htmlFor="car_model" style={labelStyle}>Car Model: *</label>
                 <input
+                className="booking-field-input"
+                id="car_model"
                 type="text"
                 name="car_model"
                 placeholder="Model"
                 style={inputStyle}
                 value={formData?.car_model}
-                onChange={handleChange}
+                onChange={handleFieldChange}
+                {...fieldErrorProps("car_model")}
                 required
                 />
+                {renderFieldError("car_model")}
             </div>
         </div>
         <div className="bookingform-row">
             <div  className="bookingform-col">
-                <label style={labelStyle}>Car Color: *</label>
+                <label htmlFor="car_colour" style={labelStyle}>Car Color: *</label>
                 <input
+                className="booking-field-input"
+                id="car_colour"
                 type="text"
                 name="car_colour"
                 placeholder="Color"
                 style={inputStyle}
                 value={formData?.car_colour}
-                onChange={handleChange}
+                onChange={handleFieldChange}
+                {...fieldErrorProps("car_colour")}
                 required
                 />
+                {renderFieldError("car_colour")}
             </div>
             <div  className="bookingform-col">
-                <label style={labelStyle}>Car Manufacturer: *</label>
+                <label htmlFor="car_manufacturer" style={labelStyle}>Car Manufacturer: *</label>
                 <input
+                className="booking-field-input"
+                id="car_manufacturer"
                 type="text"
                 name="car_manufacturer"
                 placeholder="Manufacturer"
                 style={inputStyle}
                 value={formData?.car_manufacturer}
-                onChange={handleChange}
+                onChange={handleFieldChange}
+                {...fieldErrorProps("car_manufacturer")}
                 required
                 />
+                {renderFieldError("car_manufacturer")}
             </div>
         </div>
 
         <div className="bookingform-row">
           <div className="bookingform-col">
-            <label style={labelStyle}>Total Passengers:</label>
-            <input className='custom-input' type="number" name="total_passengers" placeholder="Passengers" style={inputStyle} min={0} value={formData?.total_passengers} onChange={e=>{
+            <label htmlFor="total_passengers" style={labelStyle}>Total Passengers:</label>
+            <input className='custom-input booking-field-input' id="total_passengers" type="number" name="total_passengers" placeholder="Passengers" style={inputStyle} min={0} value={formData?.total_passengers} onChange={e=>{
               const val = Number(e.target.value);
               if(val < 0) return;
-              handleChange(e);
-            }}/>
+              handleFieldChange(e);
+            }} {...fieldErrorProps("total_passengers")}/>
+            {renderFieldError("total_passengers")}
           </div>
         </div>
 
@@ -247,59 +416,71 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
         </div>
         <div className="bookingform-row">
             <div className="bookingform-col">
-                <label style={labelStyle}>Departure Terminal: *</label>
+                <label htmlFor="departure_terminal" style={labelStyle}>Departure Terminal: *</label>
                 <select
-                  className='custom-input'
+                  className='custom-input booking-field-input'
+                  id="departure_terminal"
                   name="departure_terminal"
                   style={inputStyle}
                   value={formData?.departure_terminal ?? ''}
-                  onChange={handleChange}
+                  onChange={handleFieldChange}
+                  {...fieldErrorProps("departure_terminal")}
                   required
                 >
                   <option value="">Select Terminal</option>
                   <option value="1">Terminal 1</option>
                   <option value="2">Terminal 2</option>
                 </select>
+                {renderFieldError("departure_terminal")}
             </div>
             <div className="bookingform-col">
-                <label style={labelStyle}>Return Terminal: *</label>
+                <label htmlFor="return_terminal" style={labelStyle}>Return Terminal: *</label>
                 <select
-                  className='custom-input'
+                  className='custom-input booking-field-input'
+                  id="return_terminal"
                   name="return_terminal"
                   style={inputStyle}
                   value={formData?.return_terminal ?? ''}
-                  onChange={handleChange}
+                  onChange={handleFieldChange}
+                  {...fieldErrorProps("return_terminal")}
                   required
                 >
                   <option value="">Select Terminal</option>
                   <option value="1">Terminal 1</option>
                   <option value="2">Terminal 2</option>
                 </select>
+                {renderFieldError("return_terminal")}
             </div>
         </div>
 
         <div className="bookingform-row">
           <div className="bookingform-col">
-              <label style={labelStyle}>Departure Flight Number:</label>
-              <input className='custom-input'
+              <label htmlFor="departure_flight_number" style={labelStyle}>Departure Flight Number:</label>
+              <input className='custom-input booking-field-input'
+              id="departure_flight_number"
               type="text"
               name="departure_flight_number"
               placeholder="Dep Flight Number"
               style={inputStyle}
               value={formData?.departure_flight_number}
-              onChange={handleChange}
+              onChange={handleFieldChange}
+              {...fieldErrorProps("departure_flight_number")}
               />
+              {renderFieldError("departure_flight_number")}
           </div>
           <div className="bookingform-col">
-              <label style={labelStyle}>Return Flight Number:</label>
-              <input className='custom-input'
+              <label htmlFor="return_flight_number" style={labelStyle}>Return Flight Number:</label>
+              <input className='custom-input booking-field-input'
+              id="return_flight_number"
               type="text"
               name="return_flight_number"
               placeholder="Ret Flight Number"
               style={inputStyle}
               value={formData?.return_flight_number}
-              onChange={handleChange}
+              onChange={handleFieldChange}
+              {...fieldErrorProps("return_flight_number")}
               />
+              {renderFieldError("return_flight_number")}
           </div>
         </div>  
 
@@ -315,51 +496,70 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
 
               <div className="bookingform-row">
                   <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
-                      <label style={labelStyle}>First Name: *</label>
-                      <input className='custom-input'
+                      <label htmlFor="first_name" style={labelStyle}>First Name: *</label>
+                      <input className='custom-input booking-field-input'
+                      id="first_name"
                       type="text"
                       name="first_name"
                       placeholder="First Name"
                       style={inputStyle}
                       value={formData?.first_name}
-                      onChange={handleChange}
+                      onChange={handleFieldChange}
+                      {...fieldErrorProps("first_name")}
                       required
                       />
+                      {renderFieldError("first_name")}
                   </div>
                   <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px" }}>
-                      <label style={labelStyle}>Last Name: *</label>
-                      <input className='custom-input'
+                      <label htmlFor="last_name" style={labelStyle}>Last Name: *</label>
+                      <input className='custom-input booking-field-input'
+                      id="last_name"
                       type="text"
                       name="last_name"
                       placeholder="Last Name"
                       style={inputStyle}
                       value={formData?.last_name}
-                      onChange={handleChange}
+                      onChange={handleFieldChange}
+                      {...fieldErrorProps("last_name")}
                       required
                       />
+                      {renderFieldError("last_name")}
                   </div>
               </div>
 
               <div className="bookingform-row">
                   <div className="bookingform-col" style={{ width: "50%", paddingRight: "10px" }}>
-                      <label style={labelStyle}>Email: *</label>
-                      <input className='custom-input'
+                      <label htmlFor="email" style={labelStyle}>Email: *</label>
+                      <input className='custom-input booking-field-input'
+                      id="email"
                       type="email"
                       name="email"
                       placeholder="Email Id"
                       style={inputStyle}
                       value={formData?.email}
-                      onChange={handleChange}
+                      onChange={handleFieldChange}
+                      {...fieldErrorProps("email")}
                       required
                       />
+                      {renderFieldError("email")}
                   </div>
                   <div className="bookingform-col" style={{ width: "50%", paddingLeft: "10px", marginBottom: "10px" }}>
-                      <label style={labelStyle}>Contact No: *</label>
+                      <label htmlFor="contact_no" style={labelStyle}>Contact No: *</label>
                       <PhoneInput
                       defaultCountry="ie"
                       value={contactNo}
-                      onChange={(phone) => setContactNo(phone)}
+                      onChange={(phone) => {
+                        clearFieldError("contact_no");
+                        setContactNo(phone);
+                      }}
+                      inputClassName="booking-field-input"
+                      inputProps={{
+                        id: "contact_no",
+                        name: "contact_no",
+                        ...fieldErrorProps("contact_no"),
+                      }}
                       />
+                      {renderFieldError("contact_no")}
                   </div>
               </div>
             </>}
@@ -368,14 +568,6 @@ const Step1BookingForm = ({ labelStyle, inputStyle, formData, handleChange, next
       <input type="button" className="next action-button" value={loading ? "loading..." : "Next"} onClick={handleNext} disabled={loading} style={nextButtonStyle} />
       {!bookingData?.userDetails?.id && <input type="button" className="previous action-button-previous" value="Back" onClick={goBack} style={prevButtonStyle} />}
     </fieldset>
-
-    {/* Popup Dialog */}
-    <PopupDialog
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        title=""
-        message={error}
-      />
     </div>
   );
 };

@@ -1,3 +1,9 @@
+export const isUsableToken = (token) => {
+  if (typeof token !== 'string') return false;
+  const normalizedToken = token.trim().toLowerCase();
+  return Boolean(normalizedToken && normalizedToken !== 'null' && normalizedToken !== 'undefined');
+};
+
 const customFetch = async (url, { method = 'GET', body = null, headers = {}, useFinanceJwt = false, ...options } = {}) => {
     let refresh = false;
     let response;
@@ -6,12 +12,18 @@ const customFetch = async (url, { method = 'GET', body = null, headers = {}, use
     const accessKey = useFinanceJwt ? 'finance_jwt' : 'access_token';
     const refreshKey = useFinanceJwt ? 'finance_jwt_refresh' : 'refresh_token';
 
-    let token = localStorage.getItem(accessKey);
+    const token = localStorage.getItem(accessKey);
 
     const mergedHeaders = {
-      'Authorization': `Bearer ${token}`,
       ...headers,
     };
+
+    // Public endpoints must not receive a fake `Bearer null` credential. DRF
+    // authenticates a supplied credential before applying AllowAny, so an
+    // invalid header turns a valid guest request into a 401 response.
+    if (isUsableToken(token)) {
+      mergedHeaders.Authorization = `Bearer ${token}`;
+    }
 
     if (!(body instanceof FormData)) {
       mergedHeaders['Content-Type'] = 'application/json';
@@ -26,7 +38,7 @@ const customFetch = async (url, { method = 'GET', body = null, headers = {}, use
 
     response = await fetch(url, fetchOptions);
 
-    if (response.status === 401 && !refresh) {
+    if (response.status === 401 && !refresh && isUsableToken(token)) {
       refresh = true;
 
       const refreshToken = localStorage.getItem(refreshKey);
