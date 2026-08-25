@@ -85,6 +85,33 @@ test("Google privacy-safe and Microsoft click parameters are captured", () => {
   });
 });
 
+test("an unsupported app referrer is not stored or sent", () => {
+  const storage = installBrowser({
+    url: "https://rsexpressparking.com/",
+    referrer: "android-app://com.google.android.googlequicksearchbox/https/www.google.com",
+  });
+
+  captureAttribution();
+
+  assert.equal(storage.getItem(STORAGE_KEY), null);
+  assert.deepEqual(getAttribution(), {});
+});
+
+test("invalid legacy attribution is discarded without losing valid fields", () => {
+  installBrowser({
+    url: "https://rsexpressparking.com/",
+    storage: new MemoryStorage({
+      [STORAGE_KEY]: JSON.stringify({
+        gclid: "valid-click",
+        utm_campaign: "x".repeat(256),
+        referrer_url: "not-a-url",
+      }),
+    }),
+  });
+
+  assert.deepEqual(getAttribution(), { gclid: "valid-click" });
+});
+
 test("the first meaningful touch is preserved during a booking journey", () => {
   const original = JSON.stringify({
     utm_source: "facebook",

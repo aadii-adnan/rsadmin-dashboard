@@ -4,6 +4,9 @@
 
 const STORAGE_KEY = "firstTouchAttribution";
 
+const ATTRIBUTION_VALUE_MAX_LENGTH = 255;
+const REFERRER_URL_MAX_LENGTH = 500;
+
 const ATTRIBUTION_KEYS = [
   "utm_source",
   "utm_medium",
@@ -19,13 +22,30 @@ const ATTRIBUTION_KEYS = [
   "referrer_url",
 ];
 
+function normalizeReferrerUrl(value) {
+  if (value.length > REFERRER_URL_MAX_LENGTH) return "";
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? value : "";
+  } catch {
+    return "";
+  }
+}
+
 function normalizeAttribution(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
 
   return ATTRIBUTION_KEYS.reduce((data, key) => {
     const rawValue = value[key];
     if (typeof rawValue === "string" && rawValue.trim()) {
-      data[key] = rawValue.trim();
+      const normalizedValue = rawValue.trim();
+      if (key === "referrer_url") {
+        const referrerUrl = normalizeReferrerUrl(normalizedValue);
+        if (referrerUrl) data[key] = referrerUrl;
+      } else if (normalizedValue.length <= ATTRIBUTION_VALUE_MAX_LENGTH) {
+        data[key] = normalizedValue;
+      }
     }
     return data;
   }, {});

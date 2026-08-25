@@ -1,4 +1,7 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import URLValidator
 from rest_framework import serializers
+
 from .models import Booking, BookingUser
 from services.models import AddOn, Coupon, Service
 from core.models import Status
@@ -6,6 +9,56 @@ from core.serializers import StatusSerializer
 from services.serializers import AddOnSerializer
 from datetime import timezone as dt_timezone
 from decimal import Decimal
+
+
+ATTRIBUTION_FIELD_MAX_LENGTHS = {
+    'utm_source': 255,
+    'utm_medium': 255,
+    'utm_campaign': 255,
+    'utm_term': 255,
+    'utm_content': 255,
+    'gclid': 255,
+    'gbraid': 255,
+    'wbraid': 255,
+    'gad_source': 255,
+    'msclkid': 255,
+    'fbclid': 255,
+    'referrer_url': 500,
+}
+HTTP_URL_VALIDATOR = URLValidator(schemes=('http', 'https'))
+
+
+def sanitize_attribution(data):
+    """Drop malformed optional attribution so it can never block a booking."""
+    if not hasattr(data, 'copy'):
+        return data
+
+    cleaned_data = data.copy()
+    for field_name, max_length in ATTRIBUTION_FIELD_MAX_LENGTHS.items():
+        if field_name not in cleaned_data:
+            continue
+
+        value = cleaned_data.get(field_name)
+        if not isinstance(value, str):
+            cleaned_data.pop(field_name, None)
+            continue
+
+        value = value.strip()
+        if not value or len(value) > max_length:
+            cleaned_data.pop(field_name, None)
+            continue
+
+        if field_name == 'referrer_url':
+            try:
+                HTTP_URL_VALIDATOR(value)
+            except DjangoValidationError:
+                cleaned_data.pop(field_name, None)
+                continue
+
+        cleaned_data[field_name] = value
+
+    return cleaned_data
+
 
 class BookingSerializer(serializers.ModelSerializer):
     # This will be used for writes (POST/PUT)
@@ -39,6 +92,9 @@ class BookingSerializer(serializers.ModelSerializer):
             'submission_key': {'read_only': True},
             'submission_fingerprint': {'read_only': True},
         }
+
+    def to_internal_value(self, data):
+        return super().to_internal_value(sanitize_attribution(data))
 
     def to_representation(self, instance):
         """Show add_ons as detailed objects on read."""

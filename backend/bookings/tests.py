@@ -171,6 +171,44 @@ class BookingIdempotencyTests(TestCase):
         self.assertEqual(second.status_code, 201)
         self.assertEqual(Booking.objects.count(), 2)
 
+    def test_invalid_attribution_is_discarded_without_blocking_booking(self):
+        response = self.client.post(
+            '/api/bookings/',
+            self.booking_payload(
+                referrer_url=(
+                    'android-app://com.google.android.googlequicksearchbox/'
+                    'https/www.google.com'
+                ),
+                utm_campaign='x' * 256,
+            ),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201, response.data)
+        booking = Booking.objects.get(pk=response.data['id'])
+        self.assertIsNone(booking.referrer_url)
+        self.assertIsNone(booking.utm_campaign)
+        self.assertEqual(booking.source_channel, 'Direct')
+
+    def test_valid_http_attribution_is_preserved(self):
+        response = self.client.post(
+            '/api/bookings/',
+            self.booking_payload(
+                referrer_url='https://www.google.com/search?q=dublin+parking',
+                utm_campaign=' summer-parking ',
+            ),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201, response.data)
+        booking = Booking.objects.get(pk=response.data['id'])
+        self.assertEqual(
+            booking.referrer_url,
+            'https://www.google.com/search?q=dublin+parking',
+        )
+        self.assertEqual(booking.utm_campaign, 'summer-parking')
+        self.assertEqual(booking.source_channel, 'Organic Search')
+
 
 class ConcurrentBookingIdempotencyTests(TransactionTestCase):
     reset_sequences = True
