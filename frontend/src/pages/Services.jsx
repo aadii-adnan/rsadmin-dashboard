@@ -3,7 +3,9 @@ import ServiceModal from "../components/Services/ServiceModal";
 import ServicesItem from "../components/Services/ServicesItem";
 import { Helmet } from "react-helmet-async";
 import ServiceShimmer from "../components/Services/ServiceShimmer"
+import ServicesDateEditor from "../components/Services/ServicesDateEditor";
 import PopupDialog from "../components/Utility/PopupDialog";
+import customFetch from "../auth/fetch";
 import "../Services.css";
 
 const Services = () => {
@@ -16,16 +18,17 @@ const Services = () => {
 
 	const fetchServices = async () => {
 		try {
-		  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/`);
+		  const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/services/`);
 		  if (!response.ok) {
 			throw new Error("Failed to fetch services");
 		  }
-		  
+
 		  const data = await response.json();
 		  setServices(data);
-		  setLoading(false);
 		} catch (error) {
 		  console.error("Error fetching services:", error);
+		} finally {
+		  setLoading(false);
 		}
 	};
 
@@ -69,7 +72,8 @@ const Services = () => {
 
 		</Helmet>
 		<div style={{ padding: "40px 20px", backgroundColor: "#f8f9fa", minHeight: "100vh", }}>
-			<h1 className="services-heading" style={{ textAlign: "center", color: "#010659", marginBottom: "40px", fontSize: "36px", fontWeight: "700",}}>Select Parking Option</h1>
+			<h1 className="services-heading" style={{ textAlign: "center", color: "#010659", marginBottom: "24px", fontSize: "36px", fontWeight: "700",}}>Select Parking Option</h1>
+			<ServicesDateEditor />
 			<div className="each-service" style={{ display: 'flex', gap: '20px', maxWidth: '1200px', margin: '0 auto'}}>
 			{loading ? ([...Array(3)].map((_, index) => (<ServiceShimmer key={index} />))
 			) : ( services

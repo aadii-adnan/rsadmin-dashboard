@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useBooking } from '../../context/BookingContext';
 import flexible from '../../assets/service.jpg';
 import standard from "../../assets/parking2.webp"
 import "../../BookingForm.css";
 import { useNavigate } from 'react-router-dom';
+import customFetch from '../../auth/fetch';
+import { calculateServicePrice } from '../../utils/servicePricing';
 
 const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOpen }) => {
   const { bookingData, setBookingData } = useBooking();
-  const [amountSaved, setAmountSaved] = useState(0);
-  const [discountPercentage, setDiscountPercentage] = useState(0);
-  const [price, setPrice] = useState(0);
   const navigate = useNavigate();
+  const {
+    hasPrice,
+    price,
+    amountSaved,
+    discountPercentage,
+  } = calculateServicePrice(service, bookingData?.paymentDetails);
 
   const handleBookNow = async () => {
     // Get selected drop-off date from bookingData
@@ -25,18 +28,27 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
     // Fetch order limit for this service and date
     const bookingDate = bookingDates.parkingFromDate;
     const serviceSlug = service.slug;
-    const limitRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/core/order-limit/?date=${bookingDate}&service=${serviceSlug}`);
-    const limitData = await limitRes.json();
+    try {
+      const limitRes = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/core/order-limit/?date=${bookingDate}&service=${serviceSlug}`);
+      if (!limitRes?.ok) throw new Error("Failed to fetch the order limit");
+      const limitData = await limitRes.json();
 
-    if (limitData.max_orders !== null && limitData.max_orders !== -1) {
-      // Fetch current order count
-      const countRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/core/orders-count/?date=${bookingDate}&service=${serviceSlug}`);
-      const countData = await countRes.json();
-      if (countData.count >= limitData.max_orders) {
-        setPopupMessage("Sorry, we are fully booked for this service on the selected date.");
-        setIsPopupOpen(true);
-        return;
+      if (limitData.max_orders !== null && limitData.max_orders !== -1) {
+        // Fetch current order count
+        const countRes = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/core/orders-count/?date=${bookingDate}&service=${serviceSlug}`);
+        if (!countRes?.ok) throw new Error("Failed to fetch the current order count");
+        const countData = await countRes.json();
+        if (countData.count >= limitData.max_orders) {
+          setPopupMessage("Sorry, we are fully booked for this service on the selected date.");
+          setIsPopupOpen(true);
+          return;
+        }
       }
+    } catch (error) {
+      console.error("Error checking service availability:", error);
+      setPopupMessage("We could not check availability right now. Please try again.");
+      setIsPopupOpen(true);
+      return;
     }
 
     setBookingData({
@@ -48,26 +60,6 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
     });
     navigate(`/book/${service.slug}`);
   };
-
-  function calculateTotalPrice() {
-    const noOfDays = bookingData?.paymentDetails?.noOfDays || 0;
-    const discount = bookingData?.paymentDetails?.discount || 0;
-    const basePrice = Number(service?.base_price) || 0;
-    const perDayPrice = Number(service?.per_day_price) || 0;
-
-    if (discount > 0) {
-      const discountAmount = (basePrice + perDayPrice * noOfDays) * (discount / 100);
-      setAmountSaved(discountAmount);
-      setDiscountPercentage(discount)
-      setPrice(basePrice + perDayPrice * noOfDays - discountAmount);
-    } else {
-      setPrice(basePrice + perDayPrice * noOfDays);
-    }
-  }
-
-  useEffect(() => {
-    calculateTotalPrice();
-  }, []);
 
   const imageSrc = service.image
   ? `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${service.image}`
@@ -135,8 +127,12 @@ const ServicesItem = ({ service, openModal, index, setPopupMessage, setIsPopupOp
       {/* Right Section: Price Details and Buttons */}
       <div className='service-card-actions'>
         <div className='service-card-price'>
-          <p style={{   fontSize: '20px',   fontWeight: 'bold',   color: '#010659',   marginBottom: '5px', }}>  €{price.toFixed(2)}</p>
-          {amountSaved > 0 && (
+          {hasPrice ? (
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#010659', marginBottom: '5px' }}>€{price.toFixed(2)}</p>
+          ) : (
+            <p className="service-card-price-prompt">Select dates to see price</p>
+          )}
+          {hasPrice && amountSaved > 0 && (
             <div style={{   display: 'flex',   flexDirection: 'row',   gap: '4px',   marginBottom: '15px',   justifyContent: "end" }}>
               <div style={{ fontSize: '14px', color: '#28a745', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px'}}>
                 <svg  width="16"  height="16"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  strokeWidth="2">

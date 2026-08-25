@@ -2,116 +2,40 @@ import React, { useState, useEffect } from "react";
 import { useBooking } from "../../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import PopupDialog from "../Utility/PopupDialog";
-import { DateTime } from "luxon";
 import "./BookingDatesForm.css";
-import IrishDatePicker from "./IrishDatePicker";
-import { getDublinTodayIso } from "../../utils/irishDate";
+import BookingDateFields from "./BookingDateFields";
+import customFetch from "../../auth/fetch";
+import {
+  EMPTY_BOOKING_DATES,
+  updateBookingDateField,
+  validateBookingDates,
+} from "../../utils/bookingDates";
 
 const BookingDatesForm = () => {
   const { setBookingData } = useBooking();
   const [coupon, setCoupon] = useState("");
   const [agreeChecked, setAgreeChecked] = useState(true);
-  const [timeFormat, setTimeFormat] = useState("24");
   const navigate = useNavigate();
- 
-  const [formData, setFormData] = useState({
-    parkingFromDate: "",
-    parkingFromTime: "",
-    carCollectionDate: "",
-    carCollectionTime: "",
-  });
+
+  const [formData, setFormData] = useState({ ...EMPTY_BOOKING_DATES });
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [minHours, setMinHours] = useState(4);
 
-  const generate24HourTimeOptions = () => {
-    const times = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 10) {
-        const formattedHour = hour.toString().padStart(2, "0");
-        const formattedMinute = minute.toString().padStart(2, "0");
-        times.push(`${formattedHour}:${formattedMinute}`);
-      }
-    }
-    return times;
-  };
-
-  const formatTimeLabel = (time24) => {
-    if (timeFormat === "24") return time24;
-
-    const [hourStr, minute] = time24.split(":");
-    let hour = parseInt(hourStr, 10);
-    const period = hour >= 12 ? "PM" : "AM";
-
-    if (hour === 0) {
-      hour = 12;
-    } else if (hour > 12) {
-      hour -= 12;
-    }
-
-    return `${hour}:${minute} ${period}`;
-  };
-  
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => {
-      const next = {
-        ...prev,
-        [name]: value,
-      };
-      if (
-        name === "parkingFromDate" &&
-        prev.carCollectionDate &&
-        (!value || prev.carCollectionDate < value)
-      ) {
-        next.carCollectionDate = "";
-      }
-      return next;
-    });
+    setFormData((previous) => updateBookingDateField(previous, name, value));
   };
-
-  function calculateParkingDays({ parkingFromDate, parkingFromTime, carCollectionDate, carCollectionTime }) {
-    if (!parkingFromDate || !parkingFromTime || !carCollectionDate || !carCollectionTime) {
-      setPopupMessage("Invalid dates");
-      setIsPopupOpen(true);
-      return 0;
-    }
-
-    const fromDate = new Date(parkingFromDate);
-    const toDate = new Date(carCollectionDate);
-
-    if (isNaN(fromDate) || isNaN(toDate)) {
-      setPopupMessage("Invalid dates");
-      setIsPopupOpen(true);
-      return 0;
-    }
-
-    // Calculate the difference in days, inclusive of both start and end date
-    const diffInMs = toDate - fromDate;
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-
-    if (diffInDays < 0) {
-      setPopupMessage("Invalid dates");
-      setIsPopupOpen(true);
-      return 0;
-    }
-
-    // Add 1 to include both the start and end date as chargeable days
-    return diffInDays + 1;
-  }
 
   const handleApplyCoupon = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/services/coupons/validate/`, {
+      const response = await customFetch(`${import.meta.env.VITE_API_BASE_URL}/services/coupons/validate/`, {
         method: "POST",
-        body: JSON.stringify({ code: coupon.trim() }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        body: { code: coupon.trim() },
       });
-  
+      if (!response) return null;
+
       const data = await response.json();
   
       if (!response.ok) {
@@ -152,28 +76,9 @@ const BookingDatesForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const now = DateTime.now().setZone("Europe/Dublin");
-
-    const parkingFromDateTime = DateTime.fromISO(
-      `${formData.parkingFromDate}T${formData.parkingFromTime}`,
-      { zone: "Europe/Dublin" }
-    );
-    const carCollectionDateTime = DateTime.fromISO(
-      `${formData.carCollectionDate}T${formData.carCollectionTime}`,
-      { zone: "Europe/Dublin" }
-    );
-
-    if (
-      parkingFromDateTime.diff(now, "hours").hours < minHours ||
-      carCollectionDateTime.diff(now, "hours").hours < minHours
-    ) {
-      setPopupMessage(`Drop-off date and time must be at least ${minHours} hours from the current Dublin time.`);
-      setIsPopupOpen(true);
-      return;
-    }
-
-    if (parkingFromDateTime >= carCollectionDateTime) {
-      setPopupMessage("Pickup date and time must be after Drop-off date and time.");
+    const validation = validateBookingDates(formData, minHours);
+    if (validation.error) {
+      setPopupMessage(validation.error);
       setIsPopupOpen(true);
       return;
     }
@@ -186,13 +91,11 @@ const BookingDatesForm = () => {
       }
     }
 
-    const noOfDays = calculateParkingDays(formData);
-  
     const paymentDetails = {
       couponId: couponData?.couponId || null,
       discount: couponData?.discount || 0,
       minimumOrderValue: couponData?.minimumOrderValue || 0,
-      noOfDays: noOfDays,
+      noOfDays: validation.noOfDays,
       coupon: coupon,
     };
   
@@ -206,17 +109,29 @@ const BookingDatesForm = () => {
     navigate("/services");
   };
 
-    useEffect(() => {
-      // Fetch booking settings from backend
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/core/booking-settings/`)
-        .then(res => res.json())
-        .then(data => {
-          setMinHours(data.min_hours_before_booking || 4);
-        });
-    }, []);
-  
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const today = getDublinTodayIso();
+    const loadBookingSettings = async () => {
+      try {
+        const response = await customFetch(
+          `${import.meta.env.VITE_API_BASE_URL}/core/booking-settings/`,
+          { signal: controller.signal },
+        );
+        if (!response?.ok) return;
+        const data = await response.json();
+        setMinHours(data.min_hours_before_booking || 4);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching booking settings:", error);
+        }
+      }
+    };
+
+    loadBookingSettings();
+    return () => controller.abort();
+  }, []);
+  
 
   return (
     <div id="book" className="form-column" style={{ 
@@ -232,134 +147,14 @@ const BookingDatesForm = () => {
     }}>
       
       
-      {/* Mobile-only time format dropdown */}
-      <div className="time-format-mobile">
-        <span>Time</span>
-        <select
-          value={timeFormat}
-          onChange={(e) => setTimeFormat(e.target.value)}
-        >
-          <option value="24">24h</option>
-          <option value="12">12h</option>
-        </select>
-      </div>
-
-      <form onSubmit={handleSubmit}> 
+      <form onSubmit={handleSubmit} noValidate>
         <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
-        
-        {/* Desktop-only radio buttons */}
-        <div className="time-format-desktop">
-          <span>Time format:</span>
-          <label>
-            <input
-              type="radio"
-              name="timeFormat"
-              value="24"
-              checked={timeFormat === "24"}
-              onChange={() => setTimeFormat("24")}
-              style={{ marginRight: "4px" }}
-            />
-            24-hour
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="timeFormat"
-              value="12"
-              checked={timeFormat === "12"}
-              onChange={() => setTimeFormat("12")}
-              style={{ marginRight: "4px", marginLeft: "8px" }}
-            />
-            12-hour (AM/PM)
-          </label>
-        </div>
-        <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
-          {/* Parking From Date */}
-          <div className="form-date">
-            <IrishDatePicker
-              id="parkingFromDate"
-              name="parkingFromDate"
-              label="Drop-off Date"
-              value={formData.parkingFromDate}
-              minimum={today}
-              onChange={handleChange}
-              analyticsId="booking-dropoff-date"
-              required
-            />
-          </div>
 
-          {/* Parking From Time */}
-          <div className="form-time">
-            <label htmlFor="parkingFromTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Drop-off Time</label>
-            <select
-              id="parkingFromTime"
-              name="parkingFromTime"
-              value={formData.parkingFromTime}
-              onChange={handleChange}
-              required
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "5px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              <option value="">Select time</option>
-              {generate24HourTimeOptions().map((time) => (
-                <option key={time} value={time}>
-                  {formatTimeLabel(time)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div style={{   display: "flex",   justifyContent: "space-between",   gap: "15px",   marginBottom: "15px", }}>
-          {/* Car Collection Date */}
-          <div className="form-date">
-            <IrishDatePicker
-              id="carCollectionDate"
-              name="carCollectionDate"
-              label="Pickup Date"
-              value={formData.carCollectionDate}
-              minimum={formData.parkingFromDate || today}
-              onChange={handleChange}
-              analyticsId="booking-pickup-date"
-              required
-            />
-          </div>
-
-          {/* Car Collection Time */}
-          <div className="form-time">
-            <label htmlFor="carCollectionTime" style={{ display: "block", marginBottom: "5px", fontWeight: "500", color: "#333" }}>Pickup Time</label>
-            <select
-              id="carCollectionTime"
-              name="carCollectionTime"
-              value={formData.carCollectionTime}
-              onChange={handleChange}
-              required
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "5px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              <option value="">Select time</option>
-              {generate24HourTimeOptions().map((time) => (
-                <option key={time} value={time}>
-                  {formatTimeLabel(time)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <BookingDateFields
+          value={formData}
+          onChange={handleChange}
+          idPrefix="home-booking"
+        />
 
         <div style={{ marginBottom: "15px" }}>
           <label htmlFor="couponCode" style={{   display: "block",   marginBottom: "5px",   fontWeight: "500",   color: "#333", }}>  Coupon Code:</label>
