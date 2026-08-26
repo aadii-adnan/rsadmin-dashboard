@@ -8,6 +8,7 @@ import {
 } from "../../utils/bookingDates";
 import BookingDateFields from "../HomePage/BookingDateFields";
 import PopupDialog from "../Utility/PopupDialog";
+import { formatIrishDate } from "../../utils/irishDate";
 import "../HomePage/BookingDatesForm.css";
 
 const ServicesDateEditor = () => {
@@ -17,6 +18,13 @@ const ServicesDateEditor = () => {
   const [popupMessage, setPopupMessage] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [updatedDays, setUpdatedDays] = useState(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+
+  const appliedDates = normalizeBookingDates(bookingData?.bookingDates);
+  const hasAppliedDates = Object.values(appliedDates).every(Boolean);
+  const appliedDatesLabel = hasAppliedDates
+    ? `${formatIrishDate(appliedDates.parkingFromDate).slice(0, 5)} ${appliedDates.parkingFromTime} – ${formatIrishDate(appliedDates.carCollectionDate).slice(0, 5)} ${appliedDates.carCollectionTime}`
+    : "No dates selected";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -66,6 +74,7 @@ const ServicesDateEditor = () => {
       },
     }));
     setUpdatedDays(validation.noOfDays);
+    setIsEditorOpen(false);
   };
 
   return (
@@ -77,7 +86,28 @@ const ServicesDateEditor = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <button
+        type="button"
+        className="services-date-mobile-toggle"
+        aria-expanded={isEditorOpen}
+        aria-controls="services-date-editor-form"
+        onClick={() => setIsEditorOpen((current) => !current)}
+      >
+        <span className="services-date-mobile-summary">
+          <span>Parking dates</span>
+          <strong>{appliedDatesLabel}</strong>
+        </span>
+        <span className="services-date-mobile-action">
+          {isEditorOpen ? "Close" : hasAppliedDates ? "Change date/time" : "Select date/time"}
+        </span>
+      </button>
+
+      <form
+        id="services-date-editor-form"
+        className={`services-date-editor-form${isEditorOpen ? " is-open" : ""}`}
+        onSubmit={handleSubmit}
+        noValidate
+      >
         <BookingDateFields
           value={formData}
           onChange={handleChange}
