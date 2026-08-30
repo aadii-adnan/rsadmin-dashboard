@@ -148,7 +148,9 @@ const BookingDatesForm = () => {
       
       
       <form onSubmit={handleSubmit} noValidate>
-        <h3   style={{     textAlign: "center",     marginBottom: "20px",     color: "#2890cd",     fontWeight: "600",   }} >   Book Your Parking </h3>
+        <h3 style={{ textAlign: "center", marginBottom: "20px", color: "#2890cd", fontWeight: "600" }}>
+          Check Availability &amp; Get Your Parking Price
+        </h3>
 
         <BookingDateFields
           value={formData}
@@ -169,7 +171,7 @@ const BookingDatesForm = () => {
             onChange={(e) => setAgreeChecked(e.target.checked)}
           />
           <label htmlFor="agreeTerms" style={{ color: "#333" }}>
-            By clicking <strong>Book Now</strong>, you agree to our terms & conditions.
+            By clicking <strong>Check Price &amp; Availability</strong>, you agree to our terms &amp; conditions.
           </label>
         </div>
         
@@ -193,7 +195,7 @@ const BookingDatesForm = () => {
           onMouseOut={(e) => (e.target.style.backgroundColor = "#2890cd")}
           onFocus={(e) => (e.target.style.boxShadow = "0 0 5px rgba(0, 123, 255, 0.5)")}
         >
-          Book Now
+          Check Price &amp; Availability
         </button>
       </form>
 

@@ -1,8 +1,9 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import { useBooking } from "../context/BookingContext";
 import "../Home.css";
 import secureParking from "../assets/secure-parking.webp"
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 const BookingDatesForm = React.lazy(() => import('../components/HomePage/BookingDatesForm'));
 const FAQSection = React.lazy(() => import('../components/HomePage/FAQSection'));
 const VideoTestimonialSection = React.lazy(() => import('../components/HomePage/VideoTestimonialSection'));
@@ -17,6 +18,41 @@ import parkingVideo from "../assets/vid2.mp4";
 import videoPoster from "../assets/hero-cover.webp"; 
 import parking from "../assets/parking2.webp";
 const DiscountPopup = React.lazy(() => import('../components/Utility/DiscountPopup'));
+
+const landingFaqs = [
+    {
+        question: "What is Meet and Greet parking and how does it work?",
+        answer: "Book online, meet your driver at the agreed Dublin Airport terminal point, hand over your vehicle and continue to Departures. Your car is parked securely and returned when you arrive back.",
+    },
+    {
+        question: "How much does Meet & Greet parking at Dublin Airport cost?",
+        answer: "Prices depend on your parking dates, length of stay and service selected. Enter your dates above to check current availability and pricing.",
+    },
+    {
+        question: "Where do I meet the driver at Dublin Airport?",
+        answer: "Your booking confirmation will provide the agreed meeting instructions and terminal handover details.",
+    },
+    {
+        question: "How early should I arrive before my flight?",
+        answer: "Allow enough time for the vehicle handover and your airline's recommended airport check-in time. Follow the instructions included with your booking confirmation.",
+    },
+    {
+        question: "Is my car safe while parked?",
+        answer: "Your vehicle is stored in a monitored parking facility with CCTV and controlled access. Vehicles are handled by trained and insured drivers.",
+    },
+    {
+        question: "What happens if my return flight is delayed?",
+        answer: "Follow the contact instructions provided with your booking so the team can coordinate your vehicle return based on your updated arrival time.",
+    },
+    {
+        question: "How can I pay for my booking?",
+        answer: "Available payment options are shown during the booking process before your reservation is completed.",
+    },
+    {
+        question: "Can I change or cancel my booking?",
+        answer: "Changes and cancellations are subject to the terms of your booking. Check the Terms & Conditions or contact the RS Express Parking team for assistance.",
+    },
+];
 
 function ViewportGate({ children, placeholderClass, onReveal, rootMargin = '700px 0px' }) {
     const [revealed, setRevealed] = useState(false);
@@ -82,9 +118,6 @@ function DeferredDiscountOffer() {
 const Home = () => {
 
     const { setBookingData } = useBooking();
-    const [faqs, setFaqs] = useState([]);
-    const [faqsLoading, setFaqsLoading] = useState(true);
-    const [shouldFetchFaqs, setShouldFetchFaqs] = useState(false);
     const [reviewFilter, setReviewFilter] = useState('all');
     const [showAll, setShowAll] = useState(false);
     
@@ -213,56 +246,27 @@ const Home = () => {
         localStorage.removeItem("payment_status");
     }, [setBookingData]);
 
-    const revealFaqs = useCallback(() => setShouldFetchFaqs(true), []);
-
-    // Fetch FAQ content only when its below-fold section approaches the viewport.
-    useEffect(() => {
-        if (!shouldFetchFaqs) return undefined;
-
-        const controller = new AbortController();
-        const fetchFAQs = async () => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/faqs/?website=rsexpressparking`, {
-                    signal: controller.signal,
-                });
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                setFaqs(data);
-            } catch (error) {
-                if (error.name !== 'AbortError') {
-                    console.error('Error fetching FAQs:', error);
-                }
-            } finally {
-                if (!controller.signal.aborted) {
-                    setFaqsLoading(false);
-                }
-            }
-        };
-        fetchFAQs();
-        return () => controller.abort();
-    }, [shouldFetchFaqs]);
-
     // --- Content Data ---
     const processSteps = [
-        { icon: <FaClock />, title: "Book Online", desc: "Choose your dates using the form above and secure your Dublin Airport parking in seconds." },
-        { icon: <FaUserTie />, title: "Meet the Driver", desc: "Arrive at the terminal, where our insured driver meets you for a smooth meet and greet handover." },
-        { icon: <FaShieldAlt />, title: "Secure Parking", desc: "Your car is taken to our monitored facility offering affordable Dublin Airport parking with full CCTV." },
-        { icon: <FaCarSide />, title: "Pick Up", desc: "When you return, your car is brought back to the terminal so you can head home without delays." },
+        { icon: <FaClock />, title: "Book Online", desc: "Select your dates and times, check availability and secure your Dublin Airport parking online." },
+        { icon: <FaUserTie />, title: "Meet the Driver", desc: "Meet your insured driver at the agreed Dublin Airport Departures meeting point for a quick vehicle handover." },
+        { icon: <FaShieldAlt />, title: "Secure Parking", desc: "Your car is taken to our secure, monitored parking facility with controlled access and 24/7 CCTV." },
+        { icon: <FaCarSide />, title: "Pick Up", desc: "When you return, your car is brought back to the agreed terminal meeting point so you can continue your journey without unnecessary delays." },
     ];
 
     const reasons = [
-        { title: "No walking needed", desc: "Go straight to the terminal for a simple start to your trip.", icon: <FaPlaneDeparture/> },
-        { title: "Fast terminal handover", desc: "Meet the driver at Departures for quick valet parking.", icon: <FaKey/> },
-        { title: "Perfect for families", desc: "No stress with kids, strollers or luggage.", icon: <FaChild/> },
-        { title: "Ideal for business trips", desc: "Save time with direct meet and greet drop-off.", icon: <FaUserTie/> },
-        { title: "Secure monitored facility", desc: "Your car stays protected with CCTV and controlled access.", icon: <FaVideo/> },
-        { title: "Optional car wash service", desc: "Get your car cleaned while you travel.", icon: <FaCarSide/> },
+        { title: "No Shuttle Bus", desc: "Meet your driver directly at the terminal and avoid transferring between remote car parks and the airport.", icon: <FaPlaneDeparture/> },
+        { title: "Fully Insured Drivers", desc: "Your vehicle is handled by trained and insured drivers throughout the handover process.", icon: <FaKey/> },
+        { title: "24/7 CCTV Monitoring", desc: "Your car is parked in a monitored facility with round-the-clock CCTV coverage.", icon: <FaVideo/> },
+        { title: "Fast Terminal Handover", desc: "Drop off your car close to the terminal and continue straight to Departures.", icon: <FaUserTie/> },
+        { title: "Ideal for Families", desc: "Avoid carrying children, luggage and pushchairs across large airport car parks.", icon: <FaChild/> },
+        { title: "Optional Car Wash", desc: "Choose an optional car wash service and return to a clean vehicle after your trip.", icon: <FaCarSide/> },
     ];
 
     const audience = [
-        { title: "Families", desc: "A smooth option for parents who want quick terminal access without long walks or shuttle delays.", icon: <FaChild/> },
-        { title: "Business Travellers", desc: "Reliable valet parking at Dublin Airport that helps you save time and stay on schedule.", icon: <FaUserTie/> },
-        { title: "Travellers with Heavy Luggage", desc: "Ideal for anyone who wants direct terminal handover without carrying bags across large parking areas.", icon: <FaSuitcase/> }
+        { title: "Families", desc: "A convenient option for parents who want quick terminal access without shuttle buses or long walks with children and luggage.", icon: <FaChild/> },
+        { title: "Business Travellers", desc: "Reliable Dublin Airport parking designed for travellers who want a fast handover and a smoother journey to Departures.", icon: <FaUserTie/> },
+        { title: "Travellers with Heavy Luggage", desc: "Hand over your car near the terminal instead of carrying bags across large airport parking areas.", icon: <FaSuitcase/> }
     ];
 
     const allReviews = [
@@ -299,26 +303,25 @@ const Home = () => {
       visibleReviews = showAll ? filtered.slice(0, 6) : filtered.slice(0, 3);
     }
 
-    // REMOVED: Blocking loading screen that destroyed FCP
-    // The page now renders immediately, FAQs load in background
+    // The page renders immediately; heavier media sections stay deferred.
     
   return (
     <>
     <Helmet>
-        <title>Meet & Greet Dublin Airport Parking - RS Express Parking</title>
-        <meta name="description" content="Secure Meet & Greet Dublin Airport Parking with 24/7 surveillance. Easy booking, hassle-free drop-off & pick-up. Reserve your parking spot today!"/>
+        <title>Meet and Greet Dublin Airport Parking - RS Express Parking</title>
+        <meta name="description" content="Secure Meet and Greet parking at Dublin Airport with quick terminal drop-off, insured drivers and 24/7 monitored parking."/>
         <meta name="robots" content="index, follow, max-snippet:-1, max-video-preview:-1, max-image-preview:large"/>
         <link rel="canonical" href="https://rsexpressparking.com/"/>
-        <meta property="og:title" content="Meet & Greet Dublin Airport Parking - RS Express Parking"/>
-        <meta property="og:description" content="Secure, reliable Dublin Airport parking with hassle-free booking."/>
+        <meta property="og:title" content="Meet and Greet Dublin Airport Parking - RS Express Parking"/>
+        <meta property="og:description" content="Secure Meet and Greet parking at Dublin Airport with quick terminal drop-off, insured drivers and 24/7 monitored parking."/>
         <meta property="og:type" content="website"/>
         <meta property="og:url" content="https://rsexpressparking.com/"/>
         <meta property="og:image" content="https://rsexpressparking.com/images/og-parking.jpg"/>
         <meta property="og:site_name" content="RS Express Parking"/>
         <meta property="og:locale" content="en_US"/>
         <meta name="twitter:card" content="summary_large_image"/>
-        <meta name="twitter:title" content="Meet & Greet Dublin Airport Parking - RS Express Parking"/>
-        <meta name="twitter:description" content="Easy, secure Dublin Airport parking with Meet & Greet service."/>
+        <meta name="twitter:title" content="Meet and Greet Dublin Airport Parking - RS Express Parking"/>
+        <meta name="twitter:description" content="Secure Meet and Greet parking at Dublin Airport with quick terminal drop-off, insured drivers and 24/7 monitored parking."/>
         <meta name="twitter:image" content="https://rsexpressparking.com/images/og-parking.jpg"/>
 
         <script type="application/ld+json">
@@ -394,7 +397,7 @@ const Home = () => {
         "@type": "FAQPage",
         "@id": "https://rsexpressparking.com/#faq",
         "mainEntity": ${JSON.stringify(
-            faqs.map(faq => ({
+            landingFaqs.map(faq => ({
                 "@type": "Question",
                 "name": faq.question,
                 "acceptedAnswer": {
@@ -455,9 +458,9 @@ const Home = () => {
 
             <div className="banner-content">
                  {/* Your text content here */}                 
-                <h1 className="banner-heading">Meet & Greet Parking at Dublin Airport</h1>
+                <h1 className="banner-heading">Meet and Greet Dublin Airport Parking</h1>
                 <h2 className="banner-subheading">
-                Fast and affordable Dublin Airport parking with simple meet and greet drop-off at the terminal.
+                Secure Meet and Greet parking at Dublin Airport with quick terminal drop-off, insured drivers and 24/7 monitored parking.
                 </h2>
                 <div className="trust-badges">
                     <div className="badge-item"><FaShieldAlt /> Secure Parking</div>
@@ -478,7 +481,7 @@ const Home = () => {
             <section className="section-padding bg-white info-sect deferred-render-section">
                 <div className="container">
                     <div className="section-header text-center mb-5">
-                        <h2 className="section-title">How Our Meet & Greet Works</h2>
+                        <h2 className="section-title">How Meet and Greet Dublin Airport Parking Works</h2>
                     </div>
                     
                     <div className="process-timeline">
@@ -505,7 +508,7 @@ const Home = () => {
                         <div className="col-lg-8">
                             <h2 className="section-title text-white">Why Choose RS Express?</h2>
                             <p className="section-subtitle text-light-grey">
-                                We provide a quicker, easier way to manage Dublin Airport parking without long walks or shuttle delays.
+                                A quicker and easier way to park at Dublin Airport without shuttle buses, long walks or unnecessary waiting.
                             </p>
                         </div>
                     </div>
@@ -577,26 +580,29 @@ const Home = () => {
                         <div className="col-lg-6 ps-lg-5">
                             <h2 className="section-title mb-4">Your Car Stays in Safe Hands</h2>
                             <p className="text-muted mb-4">
-                                Your vehicle is parked in a gated, well-lit facility monitored around the clock. 
-                                RS Express Parking uses insured and trained drivers who handle every car carefully.
+                                Your vehicle is parked in a secure, well-lit facility monitored around the clock.
+                                RS Express Parking uses trained and insured drivers who handle every vehicle with care.
                             </p>
                             
                             <div className="facility-features">
                                 <div className="f-item">
-                                    <FaCheckCircle className="text-green" /> <span>Gated & Well-lit facility</span>
+                                    <FaCheckCircle className="text-green" /> <span>Gated and well-lit parking facility</span>
                                 </div>
                                 <div className="f-item">
-                                    <FaCheckCircle className="text-green" /> <span>24/7 CCTV Monitoring</span>
+                                    <FaCheckCircle className="text-green" /> <span>24/7 CCTV monitoring</span>
                                 </div>
                                 <div className="f-item">
-                                    <FaCheckCircle className="text-green" /> <span>Fully Insured Drivers</span>
+                                    <FaCheckCircle className="text-green" /> <span>Fully insured drivers</span>
                                 </div>
                                 <div className="f-item">
-                                    <FaCheckCircle className="text-green" /> <span>Optional Car Wash</span>
+                                    <FaCheckCircle className="text-green" /> <span>Controlled access parking</span>
+                                </div>
+                                <div className="f-item">
+                                    <FaCheckCircle className="text-green" /> <span>Optional car wash service</span>
                                 </div>
                             </div>
 
-                            <a href="#book" className="btn-modern mt-4">Book Now</a>
+                            <a href="#book" className="btn-modern mt-4">Check Availability</a>
                         </div>
                     </div>
                 </div>
@@ -607,7 +613,7 @@ const Home = () => {
                 <div className="container">
                 <div className="section-header text-center mb-4">
                     <h2 className="section-title">What Our Customers Say</h2>
-                    <p className="section-subtitle">Trusted by thousands of travellers</p>
+                    <p className="section-subtitle">Trusted by Dublin Airport Travellers</p>
 
                     {/* Filter buttons */}
                     <div className="review-filter-row mt-3" style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
@@ -694,11 +700,21 @@ const Home = () => {
                 </React.Suspense>
             </ViewportGate>
 
-            <ViewportGate placeholderClass="faq-section-placeholder" onReveal={revealFaqs}>
+            <ViewportGate placeholderClass="faq-section-placeholder">
                 <React.Suspense fallback={<div className="faq-section-placeholder" aria-hidden="true" />}>
-                    <FAQSection faqs={faqs} loading={faqsLoading}/>
+                    <FAQSection faqs={landingFaqs} loading={false}/>
                 </React.Suspense>
             </ViewportGate>
+
+            <section className="section-padding bg-primary-dark final-cta-section deferred-render-section">
+                <div className="container text-center">
+                    <h2 className="section-title text-white">Ready to Book Your Dublin Airport Parking?</h2>
+                    <p className="section-subtitle text-light-grey mb-4">
+                        Check your dates, view current availability and get your parking price online.
+                    </p>
+                    <Link to="/contact-us" className="btn-modern">Contact Support</Link>
+                </div>
+            </section>
 
 
 
