@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.http import QueryDict
 from django.test import SimpleTestCase
+from django.template.loader import render_to_string
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
@@ -74,6 +75,21 @@ class FinanceFilterContractTests(SimpleTestCase):
 
         self.assertIsNone(comparison["balance"]["percent"])
         self.assertEqual(comparison["balance"]["delta"], 120.0)
+
+
+class SupplierInvoiceTemplateTests(SimpleTestCase):
+    def test_extended_amount_is_not_shown_on_supplier_invoice(self):
+        html = render_to_string("finance/supplier_invoice.html", {
+            "supplier": SimpleNamespace(
+                name="Test Supplier",
+                contact_person="",
+                email="",
+            ),
+            "total_extended_amount": "25.00",
+        })
+
+        self.assertNotIn("Extended Amount", html)
+        self.assertNotIn("25.00", html)
 
 
 class ExpenseSerializerValidationTests(SimpleTestCase):

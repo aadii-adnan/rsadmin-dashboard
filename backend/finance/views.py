@@ -1127,7 +1127,6 @@ class SupplierInvoicePDFView(APIView):
 
         total_revenue = Decimal('0.00')
         supplier_share = Decimal('0.00')
-        total_extended_amount = Decimal('0.00')
         completed_count = 0
         started_count = 0
         cancelled_count = 0
@@ -1137,7 +1136,6 @@ class SupplierInvoicePDFView(APIView):
             if should_count_supplier_commission_status(status_name):
                 total_revenue += get_booking_supplier_split_base_amount(b)
                 supplier_share += get_booking_supplier_share_amount(b)
-                total_extended_amount += get_supplier_extension_amount(b)
 
             if status_name == 'completed':
                 completed_count += 1
@@ -1156,9 +1154,7 @@ class SupplierInvoicePDFView(APIView):
         rs_pct = (Decimal('100') - effective_commission_percentage).quantize(Decimal('0.01'))
 
         supplier_share = supplier_share.quantize(Decimal('0.01'))
-        total_extended_amount = total_extended_amount.quantize(Decimal('0.01'))
         rs_commission_share = (total_revenue - supplier_share).quantize(Decimal('0.01'))
-        rs_share = (rs_commission_share + total_extended_amount).quantize(Decimal('0.01'))
         total_revenue = total_revenue.quantize(Decimal('0.01'))
 
         logo_path = settings.PDF_LOGO_PATH
@@ -1189,10 +1185,9 @@ class SupplierInvoicePDFView(APIView):
             'period_str': period_str,
             'total_bookings': bookings.count(),
             'total_revenue': fmt(total_revenue),
-            'rs_share': fmt(rs_share),
+            'rs_share': fmt(rs_commission_share),
             'rs_commission_share': fmt(rs_commission_share),
             'supplier_share': fmt(supplier_share),
-            'total_extended_amount': fmt(total_extended_amount),
             'commission_pct': fmt_pct(effective_commission_percentage),
             'rs_commission_pct': fmt_pct(rs_pct),
             'completed_count': completed_count,
