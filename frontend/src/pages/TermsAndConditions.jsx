@@ -82,7 +82,7 @@ export default function TermsAndConditions() {
                 <li>Bookings with <strong>Cancellation Cover</strong> can be canceled <strong>up to 72 hours</strong> before drop-off for a refund (minus fees).</li>
                 <li>Bookings made <strong>within 72 hours</strong> of drop-off are <strong>non-refundable</strong>.</li>
                 <li>Cancellation Cover <strong>does not apply</strong> to last-minute bookings.</li>
-                <li>Cancellations <strong>up to 72 hours before</strong> incur a <strong>€15 fee</strong>.</li>
+                <li>Cancellations <strong>up to 72 hours before</strong> incur a <strong>€15 fee</strong> when refunded to a card or bank account. No cancellation fee applies when the full booking value is returned as bonus points.</li>
                 <li><strong>Changes to pick-up dates</strong> must be arranged directly with RS EXPRESS PARKING LTD.</li>
                 <li>No refund for <strong>shortened parking periods</strong> after service starts.</li>
                 <li><strong>Non-refundable bookings</strong> cannot be changed or canceled.</li>

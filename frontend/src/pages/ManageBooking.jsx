@@ -158,14 +158,14 @@ const ManageBooking = () => {
     });
   };
 
-  const handleCancelConfirm = async () => {
+  const handleCancelConfirm = async (type) => {
     setCancelOpen(false);
     setActionLoading(true);
     try {
       const res = await fetch(`${API_BASE}/bookings/manage/cancel/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, refund: type !== "points" }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -174,6 +174,12 @@ const ManageBooking = () => {
       applyResponse(payload);
       if (payload.outcome === "no_refund") {
         alert("Your booking was cancelled. As it was cancelled within 72 hours of departure, no refund applies.");
+      } else if (payload.outcome === "points") {
+        alert(
+          payload.account_created
+            ? "Your booking was cancelled with no fee. The full amount has been added as bonus points, and we’ve emailed instructions for accessing your new account."
+            : "Your booking was cancelled with no fee. The full amount has been added to your account as bonus points."
+        );
       } else {
         alert("Your booking was cancelled. €15 cancellation fee will be deducted and the remaining amount will be refunded to your original payment method.");
       }
@@ -429,7 +435,8 @@ const ManageBooking = () => {
             booking={booking}
             onClose={() => setCancelOpen(false)}
             onConfirm={handleCancelConfirm}
-            allowPoints={false}
+            allowPoints={true}
+            pointsRequireAccount={!data.bonus_points_account_exists}
             refundEligible={!!data.cancel_refund_eligible}
             loading={actionLoading}
           />

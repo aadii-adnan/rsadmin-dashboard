@@ -7,9 +7,16 @@ by booking_id + email (registered users included) — email ownership is the
 proof of access.
 """
 from datetime import timedelta
+import uuid
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.core import signing
+from django.db import transaction
 from django.utils import timezone
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from django.utils.text import slugify
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -25,6 +32,7 @@ from .booking_rules import (
     parse_and_localize,
     validate_reschedule,
 )
+from .cancellation import credit_cancellation_points
 from .models import Booking
 from .serializers import GuestBookingSerializer
 from .tasks import (
@@ -33,6 +41,7 @@ from .tasks import (
     send_reschedule_email_task,
 )
 from .tokens import resolve_manage_booking_token
+from users.tasks import send_password_reset_email_task
 
 GENERIC_LINK_MESSAGE = "If a matching booking exists, we've emailed you a secure link to manage it."
 
@@ -84,8 +93,39 @@ def _manage_flags(booking, now=None):
         'can_cancel': policy['allowed'],
         'cancel_block_reason': policy['reason'],
         'cancel_refund_eligible': policy['refund_eligible'],
+        'bonus_points_account_exists': bool(
+            booking.user_id
+            or get_user_model().objects.filter(email__iexact=booking.email).exists()
+        ),
         'extension_day_rate': float(RESCHEDULE_DAY_RATE),
     }
+
+
+def _get_or_create_bonus_points_user(booking):
+    """Resolve the booking owner or create an account for a verified guest."""
+    User = get_user_model()
+    user = booking.user
+    if not user:
+        user = User.objects.filter(email__iexact=booking.email).order_by('id').first()
+    if user:
+        return user, False
+
+    email_prefix = slugify(booking.email.split('@', 1)[0])[:100] or 'customer'
+    while True:
+        username = f"{email_prefix}-{uuid.uuid4().hex[:8]}"[:150]
+        if not User.objects.filter(username=username).exists():
+            break
+
+    user = User(
+        username=username,
+        email=booking.email.strip().lower(),
+        first_name=booking.first_name,
+        last_name=booking.last_name,
+        phone=booking.contact_no,
+    )
+    user.set_unusable_password()
+    user.save()
+    return user, True
 
 
 class ManageBookingLinkRequestView(APIView):
@@ -193,18 +233,46 @@ class ManageBookingCancelView(APIView):
         if not policy['allowed']:
             return Response({'error': policy['reason']}, status=400)
 
-        booking.status = Status.objects.get(name='Cancelled', type='booking')
-        booking.save()
+        refund = request.data.get('refund', True)
+        account_created = False
+        bonus_points = None
 
-        # Guests have no account, so no bonus-points option: refund when
-        # eligible, nothing inside the no-refund window.
-        outcome = 'refund' if policy['refund_eligible'] else 'no_refund'
+        with transaction.atomic():
+            if not policy['refund_eligible']:
+                outcome = 'no_refund'
+            elif refund:
+                outcome = 'refund'
+            else:
+                outcome = 'points'
+                user, account_created = _get_or_create_bonus_points_user(booking)
+                balance, _ = credit_cancellation_points(booking, user)
+                bonus_points = float(balance)
+                if booking.user_id != user.id:
+                    booking.user = user
+
+            booking.status = Status.objects.get(name='Cancelled', type='booking')
+            booking.save()
+
+        if account_created:
+            uid = urlsafe_base64_encode(force_bytes(booking.user_id))
+            reset_token = default_token_generator.make_token(booking.user)
+            send_password_reset_email_task.delay(
+                booking.user_id,
+                uid,
+                reset_token,
+                booking.website,
+            )
+
         send_cancellation_email_task.delay(booking.id, outcome)
 
-        return Response({
+        response_data = {
             'message': 'Booking cancelled successfully.',
             'outcome': outcome,
             'refund_eligible': policy['refund_eligible'],
+            'account_created': account_created,
             'booking': GuestBookingSerializer(booking).data,
             **_manage_flags(booking),
-        })
+        }
+        if bonus_points is not None:
+            response_data['bonus_points'] = bonus_points
+        return Response(response_data)

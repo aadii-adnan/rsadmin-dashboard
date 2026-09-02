@@ -915,6 +915,7 @@ def send_cancellation_email_task(booking_id, outcome='refund'):
     return_time = timezone.localtime(booking.return_time).strftime('%d %b %Y %H:%M')
     booking_amount = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
     refund_amount = max(0, booking_amount - 15)
+    points_amount = max(0, booking_amount)
 
     booking_details_html = f"""
         <ul>
@@ -999,8 +1000,8 @@ Please find the cancelled booking details below for your records.
             <p>
             Dear {booking.first_name},<br><br>
             Your booking <strong>#{booking.booking_id}</strong> has been <strong>cancelled</strong>.<br>
-            <b>€15</b> has been deducted as a cancellation fee.<br>
-            The remaining amount of <b>€{refund_amount:.2f}</b> has been instantly added to your account as bonus points.<br>
+            No cancellation fee applies when you choose bonus points.<br>
+            The full amount of <b>€{points_amount:.2f}</b> has been instantly added to your account as bonus points.<br>
             <span style="color: #888;">You can use these points for discounts on your next booking.</span>
             </p>
             {booking_details_html}
@@ -1009,8 +1010,8 @@ Please find the cancelled booking details below for your records.
 Dear {booking.first_name},
 
 Your booking #{booking.booking_id} has been cancelled.
-€15 has been deducted as a cancellation fee.
-The remaining amount of €{refund_amount:.2f} has been instantly added to your account as bonus points.
+No cancellation fee applies when you choose bonus points.
+The full amount of €{points_amount:.2f} has been instantly added to your account as bonus points.
 You can use these points for discounts on your next booking.
 {booking_details_text}"""
     else:  # no_refund
@@ -1074,10 +1075,10 @@ Service: {booking.service.name}
     elif outcome == 'points':
         subject_manager = "Booking Cancelled – Bonus Points Issued"
         heading = "Booking Cancelled – Bonus Points Issued"
-        intro_html = "The following booking has been <strong>cancelled</strong> and the refund has been issued as bonus points.<br><b>€15</b> has been deducted as a cancellation fee."
-        intro_text = "The following booking has been cancelled and the refund has been issued as bonus points.\n€15 has been deducted as a cancellation fee."
-        amount_line_html = f"<li><strong>Bonus Points Added:</strong> €{refund_amount:.2f}</li>"
-        amount_line_text = f"Bonus Points Added: €{refund_amount:.2f}"
+        intro_html = "The following booking has been <strong>cancelled</strong> and the full booking value has been issued as bonus points.<br>No cancellation fee applies to bonus-points cancellations."
+        intro_text = "The following booking has been cancelled and the full booking value has been issued as bonus points.\nNo cancellation fee applies to bonus-points cancellations."
+        amount_line_html = f"<li><strong>Bonus Points Added:</strong> €{points_amount:.2f}</li>"
+        amount_line_text = f"Bonus Points Added: €{points_amount:.2f}"
         outro_html = "No Stripe refund is required for this booking."
         outro_text = "No Stripe refund is required for this booking."
     else:  # no_refund

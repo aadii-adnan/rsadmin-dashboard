@@ -7,7 +7,7 @@ from .serializers import BookingSerializer, BookingUserSerializer, SupplierBooki
 from core.permissions import IsManagerOrAdmin, IsSupplier
 from core.models import Status, BookingSettings
 from services.models import Coupon
-from payments.models import Payment, CreditTransaction
+from payments.models import Payment
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -23,12 +23,10 @@ from decouple import config
 from payments.views import calculate_parking_days  # Make sure this import is at the top
 from django.db.models import Q
 from django.db import IntegrityError, transaction
-from decimal import Decimal
 import hashlib
 import json
 import uuid
 from .booking_rules import (
-    CANCELLATION_FEE,
     compute_reschedule_pricing,
     find_succeeded_extra_payment,
     get_cancellation_policy,
@@ -36,6 +34,7 @@ from .booking_rules import (
     validate_reschedule,
 )
 from .tasks import send_reschedule_email_task, send_cancellation_email_task
+from .cancellation import credit_cancellation_points
 import logging
 
 logger = logging.getLogger(__name__)
@@ -251,24 +250,8 @@ class CancelBookingView(APIView):
             outcome = 'refund'
         else:
             outcome = 'points'
-            booking_amount = booking.discounted_price if booking.discounted_price and booking.discounted_price > 0 else booking.total_price
-            bonus_to_add = max(Decimal('0.00'), Decimal(str(booking_amount)) - CANCELLATION_FEE)
-            User = get_user_model()
-            with transaction.atomic():
-                user = User.objects.select_for_update().get(pk=request.user.pk)
-                user.bonus_points = (user.bonus_points or Decimal('0.00')) + bonus_to_add
-                user.save(update_fields=['bonus_points'])
-                if bonus_to_add > 0:
-                    CreditTransaction.objects.create(
-                        user=user,
-                        transaction_type=CreditTransaction.TYPE_CANCELLATION_REFUND,
-                        amount=bonus_to_add,
-                        balance_after=user.bonus_points,
-                        booking=booking,
-                        status=CreditTransaction.STATUS_SUCCEEDED,
-                        website=getattr(booking, 'website', None) or 'rsexpressparking',
-                    )
-            bonus_points = float(user.bonus_points)
+            balance, _ = credit_cancellation_points(booking, request.user)
+            bonus_points = float(balance)
 
         send_cancellation_email_task.delay(booking.id, outcome)
 

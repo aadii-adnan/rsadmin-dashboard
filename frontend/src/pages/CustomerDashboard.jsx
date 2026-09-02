@@ -164,7 +164,7 @@ const CustomerDashboard = () => {
             ...prev,
             userDetails: updatedUser,
           }));
-        alert("Your booking was cancelled. €15 cancellation fee has been deducted and the remaining amount has been added to your account as credit points.");
+        alert("Your booking was cancelled. The full booking amount has been added to your account as bonus points with no cancellation fee.");
       } else {
         alert("Your booking was cancelled. €15 cancellation fee will be deducted and the remaining amount will be refunded to your original payment method.");
       }

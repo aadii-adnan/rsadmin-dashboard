@@ -1,24 +1,36 @@
 import React from "react";
 import { CANCELLATION_FEE } from "../../utils/bookingRules";
+import "./CancelBookingModal.css";
 
 // Shared cancel dialog for the customer dashboard and the guest manage page.
 // - refundEligible=false → no refund of any kind (within 72h of departure):
 //   a single confirm button behind a clear warning.
-// - allowPoints=false → guest flow: only the card refund option is offered.
 const CancelBookingModal = ({
   open,
   booking,
   onClose,
   onConfirm, // (type) => void, type: "refund" | "points" | "no_refund"
   allowPoints = true,
+  pointsRequireAccount = false,
   refundEligible = true,
   loading = false,
 }) => {
   if (!open || !booking) return null;
 
+  const rawBookingAmount = Number(
+    Number(booking.discounted_price) > 0
+      ? booking.discounted_price
+      : booking.total_price
+  );
+  const bookingAmount = Number.isFinite(rawBookingAmount)
+    ? Math.max(0, rawBookingAmount)
+    : 0;
+  const bankRefundAmount = Math.max(0, bookingAmount - CANCELLATION_FEE);
+  const formatEuro = (amount) => `€${amount.toFixed(2)}`;
+
   return (
     <div
-      className="modal fade show"
+      className="modal fade show cancel-booking-modal"
       tabIndex="-1"
       style={{
         display: "block",
@@ -64,64 +76,75 @@ const CancelBookingModal = ({
               </>
             ) : (
               <>
-                <p className="mb-3">
-                  {allowPoints
-                    ? "How would you like to receive your refund for this booking?"
-                    : "Your refund will be returned to your original payment method."}
+                <p className="cancel-booking-modal__intro">
+                  Choose how you would like to receive your booking value.
                 </p>
-                <div className="mb-3 p-3 rounded bg-light border">
-                  <strong>Refund to Original Payment Method</strong>
-                  <br />
-                  <span className="text-muted" style={{ fontSize: "0.97rem" }}>
-                    The amount will be returned to your original payment method. Processing may take 5-10 business days depending on your bank.
-                  </span>
-                </div>
                 {allowPoints && (
-                  <div className="mb-3 p-3 rounded bg-light border">
-                    <strong>Credit Points</strong>
-                    <br />
-                    <span className="text-muted" style={{ fontSize: "0.97rem" }}>
-                      Instantly receive the booking amount as credit points in your account. You can use these points for discounts on your next booking.
+                  <div className="cancel-booking-modal__points-card">
+                    <span className="cancel-booking-modal__badge">BEST VALUE</span>
+                    <strong className="cancel-booking-modal__option-title">
+                      Keep 100% in Bonus Points
+                    </strong>
+                    <span className="cancel-booking-modal__amount">
+                      {formatEuro(bookingAmount)}
                     </span>
+                    <span className="cancel-booking-modal__benefit">
+                      No €{CANCELLATION_FEE} fee · Added instantly · Use on your next booking
+                    </span>
+                    {pointsRequireAccount && (
+                      <span className="cancel-booking-modal__account-note">
+                        We’ll create a free account using the email on this booking and
+                        send you instructions to access your points.
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-success cancel-booking-modal__points-button"
+                      disabled={loading}
+                      onClick={() => onConfirm("points")}
+                    >
+                      {loading
+                        ? "Cancelling..."
+                        : `Get ${formatEuro(bookingAmount)} in Bonus Points`}
+                    </button>
                   </div>
                 )}
-                <div className="alert alert-warning mt-3 mb-0 text-center" style={{ fontSize: "0.98rem" }}>
-                  <b>Note:</b> A €{CANCELLATION_FEE} cancellation fee applies to all cancellations.
+
+                <div className="cancel-booking-modal__bank-option">
+                  <strong>Prefer a card or bank refund?</strong>
+                  <span>
+                    A €{CANCELLATION_FEE} cancellation fee applies, so you’ll receive{" "}
+                    <b>{formatEuro(bankRefundAmount)}</b>. Bank processing may take 5–10
+                    business days.
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary cancel-booking-modal__refund-button"
+                    disabled={loading}
+                    onClick={() => onConfirm("refund")}
+                  >
+                    {loading
+                      ? "Cancelling..."
+                      : `Refund ${formatEuro(bankRefundAmount)} to Card/Bank`}
+                  </button>
                 </div>
               </>
             )}
           </div>
-          <div className="modal-footer d-flex flex-column flex-sm-row justify-content-between gap-2">
+          <div className="modal-footer cancel-booking-modal__footer">
             {!refundEligible ? (
               <button
+                type="button"
                 className="btn btn-danger w-100"
                 disabled={loading}
                 onClick={() => onConfirm("no_refund")}
               >
                 {loading ? "Cancelling..." : "Cancel Booking (No Refund)"}
               </button>
-            ) : (
-              <>
-                <button
-                  className="btn btn-danger w-100"
-                  disabled={loading}
-                  onClick={() => onConfirm("refund")}
-                >
-                  Refund to Card/Bank
-                </button>
-                {allowPoints && (
-                  <button
-                    className="btn btn-success w-100"
-                    disabled={loading}
-                    onClick={() => onConfirm("points")}
-                  >
-                    Get Credit Points
-                  </button>
-                )}
-              </>
-            )}
+            ) : null}
             <button
-              className="btn btn-outline-secondary w-100"
+              type="button"
+              className="btn btn-link cancel-booking-modal__close-button"
               disabled={loading}
               onClick={onClose}
             >
