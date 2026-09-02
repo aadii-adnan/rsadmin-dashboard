@@ -3,7 +3,6 @@ import { useBooking } from "../context/BookingContext";
 import "../Home.css";
 import secureParking from "../assets/secure-parking.webp"
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
 const BookingDatesForm = React.lazy(() => import('../components/HomePage/BookingDatesForm'));
 const FAQSection = React.lazy(() => import('../components/HomePage/FAQSection'));
 const VideoTestimonialSection = React.lazy(() => import('../components/HomePage/VideoTestimonialSection'));
@@ -705,18 +704,6 @@ const Home = () => {
                     <FAQSection faqs={landingFaqs} loading={false}/>
                 </React.Suspense>
             </ViewportGate>
-
-            <section className="section-padding bg-primary-dark final-cta-section deferred-render-section">
-                <div className="container text-center">
-                    <h2 className="section-title text-white">Ready to Book Your Dublin Airport Parking?</h2>
-                    <p className="section-subtitle text-light-grey mb-4">
-                        Check your dates, view current availability and get your parking price online.
-                    </p>
-                    <Link to="/contact-us" className="btn-modern">Contact Support</Link>
-                </div>
-            </section>
-
-
 
     </main>
 

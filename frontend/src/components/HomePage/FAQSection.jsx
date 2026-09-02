@@ -52,8 +52,8 @@ const FAQSection = ({ faqs, loading, isBlog = false }) => {
             <div className="icon-box mb-3">
                <BiSupport size={30} color="#fff"/>
             </div>
-            <h4>Still have questions?</h4>
-            <p>Can’t find the answer you’re looking for? Please contact our friendly support team.</p>
+            <h4>Ready to Book Your Dublin Airport Parking?</h4>
+            <p>Check your dates, view current availability and get your parking price online.</p>
             <Link to="/contact-us" className="contact-link">Contact Support</Link>
           </div>
         )}
