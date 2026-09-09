@@ -12,6 +12,7 @@ const ThankYouPage = () => {
   const booking_unique_id = bookingData?.bookingDetails?.booking_unique_id;
   const bookingDates = bookingData?.bookingDates || {};
   const selectedService = bookingData?.bookingDetails?.service || "N/A";
+  const isParkAndFly = selectedService.includes("Park & Fly");
   const selectedAddOns = bookingData?.carFlightDetails?.addOnsDetails || [];
   const { setUser } = useAuth();
   const { userDetails } = bookingData || {};
@@ -172,16 +173,24 @@ const ThankYouPage = () => {
                     </div>
                   )}
                 </div>
-                <div className="alert alert-info text-center mb-4" style={{ fontSize: "1.05rem" }}>
-                  <strong>Important:</strong> Please call our drivers <strong>30 minutes</strong> before your <u>departure</u> and <u>arrival</u>.<br />
-                  <span className="d-block mt-2">
-                    <strong>Driver:</strong> <a href="tel:+353834896505" className="text-decoration-none text-dark">+353 83 489 6505</a>
-                    <br />
-                    <strong>Driver:</strong> <a href="tel:+353838208082" className="text-decoration-none text-dark">+353 83 820 8082</a>
-                  </span>
-                  <span className="d-block mt-2">Customers should go to Car Park A, Level 2.</span>
-                  <span className="d-block">Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.</span>
-                </div>
+                {!isParkAndFly && (
+                  <div className="alert alert-info text-center mb-4" style={{ fontSize: "1.05rem" }}>
+                    <strong>Important terminal instructions</strong>
+                    <span className="d-block mt-2">
+                      <strong>Driver:</strong> <a href="tel:+353834896505" className="text-decoration-none text-dark">+353 83 489 6505</a>
+                      <br />
+                      <strong>Driver:</strong> <a href="tel:+353838208082" className="text-decoration-none text-dark">+353 83 820 8082</a>
+                    </span>
+                    <span className="d-block mt-3"><strong>Terminal 1:</strong></span>
+                    <span className="d-block">Call 25-30 minutes before arrival.</span>
+                    <span className="d-block">Upon arriving at Terminal 1, follow signs for the parking and enter car park A.</span>
+                    <span className="d-block">Head to level 2, where you will be warmly greeted by our driver.</span>
+                    <span className="d-block mt-3"><strong>Terminal 2:</strong></span>
+                    <span className="d-block">Call 25-30 minutes before arrival.</span>
+                    <span className="d-block">Follow signs for T2 departures.</span>
+                    <span className="d-block">Park in the designated set-down area where our driver will meet you.</span>
+                  </div>
+                )}
                 <div className="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
                     <button
                         className="btn btn-success px-4 py-2 fw-semibold"

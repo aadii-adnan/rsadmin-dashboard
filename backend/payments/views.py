@@ -288,28 +288,29 @@ def send_booking_confirmation_email(booking):
         <p>
             Call us just before arriving so our driver can assist and park your car.<br>
             <strong>Contact:</strong> +353 (01) 221 0589<br>
-            Customers should go to Car Park A, Level 2.<br>
-            Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.<br>
             On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
         </p>
         '''
         if "Park & Fly" in booking.service.name else
         '''
         <h3 style="color: #444;">📞 Important Instructions</h3>
-        <ul>
-            <li>
-                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a> or <a href="tel:+353838208082" style="color:#0066cc;">+353 83 820 8082</a> at least 30 minutes before your arrival and departure</strong> to ensure a smooth handover.
-            </li>
-            <li>
-                Customers should go to Car Park A, Level 2.
-            </li>
-            <li>
-                Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
-            </li>
-            <li>
-                For any other queries, feel free to reply to this email or contact us directly.
-            </li>
-        </ul>
+        <p>
+            <strong>Driver:</strong> <a href="tel:+353834896505" style="color:#0066cc;">+353 83 489 6505</a><br>
+            <strong>Driver:</strong> <a href="tel:+353838208082" style="color:#0066cc;">+353 83 820 8082</a>
+        </p>
+        <h4 style="color: #444;">Terminal 1</h4>
+        <p>
+            Call 25-30 minutes before arrival.<br>
+            Upon arriving at Terminal 1, follow signs for the parking and enter car park A.<br>
+            Head to level 2, where you will be warmly greeted by our driver.
+        </p>
+        <h4 style="color: #444;">Terminal 2</h4>
+        <p>
+            Call 25-30 minutes before arrival.<br>
+            Follow signs for T2 departures.<br>
+            Park in the designated set-down area where our driver will meet you.
+        </p>
+        <p>For any other queries, feel free to reply to this email or contact us directly.</p>
         '''
         )}
         <h3 style="color: #444;">🔧 Manage Your Booking</h3>
@@ -376,8 +377,6 @@ IMPORTANT: Extra passengers may delay shuttle dispatch to/from the airport.
 -----------------------------
 Call us just before arriving so our driver can assist and park your car.
 Contact: +353 (01) 221 0589
-Customers should go to Car Park A, Level 2.
-Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
 On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
 '''
 if "Park & Fly" in booking.service.name else
@@ -385,10 +384,20 @@ if "Park & Fly" in booking.service.name else
 -----------------------------
 📞 Important Instructions
 -----------------------------
-- Please make sure to call the driver at +353 83 489 6505 or +353 83 820 8082 at least 30 minutes before your arrival and departure to ensure a smooth handover.
-- Customers should go to Car Park A, Level 2.
-- Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
-- For any other queries, feel free to reply to this email or contact us directly.
+Driver: +353 83 489 6505
+Driver: +353 83 820 8082
+
+Terminal 1:
+Call 25-30 minutes before arrival.
+Upon arriving at Terminal 1, follow signs for the parking and enter car park A.
+Head to level 2, where you will be warmly greeted by our driver.
+
+Terminal 2:
+Call 25-30 minutes before arrival.
+Follow signs for T2 departures.
+Park in the designated set-down area where our driver will meet you.
+
+For any other queries, feel free to reply to this email or contact us directly.
 '''
 )}
 

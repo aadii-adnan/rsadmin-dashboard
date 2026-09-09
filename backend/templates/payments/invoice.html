@@ -218,25 +218,22 @@
         <p>
             Call us just before arriving so our driver can assist and park your car.<br/><br/>
             <strong>Contact:</strong> +353 (01) 221 0589<br/><br/>
-            Customers should go to Car Park A, Level 2.<br/><br/>
-            Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.<br/><br/>
             On arrival, go to reception. Show your email confirmation (print or digital) or booking reference.
         </p>
     {% else %}
         <p class="section-title">Important Instructions</p>
-        {% if booking.website and booking.website|lower == "dublinairportparking" %}
-            <p>
-                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#010659;">+353 83 489 6505</a> or <a href="tel:+353838208082" style="color:#010659;">+353 83 820 8082</a> at least 30 minutes before your departure and arrival</strong> to ensure a smooth handover.<br/><br/>
-                Customers should go to Car Park A, Level 2.<br/><br/>
-                Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
-            </p>
-        {% else %}
-            <p>
-                Please make sure to <strong>call the driver at <a href="tel:+353834896505" style="color:#010659;">+353 83 489 6505</a> or <a href="tel:+353838208082" style="color:#010659;">+353 83 820 8082</a> at least 30 minutes before your departure and arrival</strong> to ensure a smooth handover.<br/><br/>
-                Customers should go to Car Park A, Level 2.<br/><br/>
-                Go to Terminal 1, Car Park A, Level 2 for pick-up and drop-off.
-            </p>
-        {% endif %}
+        <p>
+            <strong>Driver:</strong> <a href="tel:+353834896505" style="color:#010659;">+353 83 489 6505</a><br/>
+            <strong>Driver:</strong> <a href="tel:+353838208082" style="color:#010659;">+353 83 820 8082</a><br/><br/>
+            <strong>Terminal 1:</strong><br/>
+            Call 25-30 minutes before arrival.<br/>
+            Upon arriving at Terminal 1, follow signs for the parking and enter car park A.<br/>
+            Head to level 2, where you will be warmly greeted by our driver.<br/><br/>
+            <strong>Terminal 2:</strong><br/>
+            Call 25-30 minutes before arrival.<br/>
+            Follow signs for T2 departures.<br/>
+            Park in the designated set-down area where our driver will meet you.
+        </p>
     {% endif %}
 
 
