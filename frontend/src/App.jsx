@@ -38,6 +38,14 @@ const FinanceDashboard = lazyWithLegacyStyles(() => import("./pages/FinanceDashb
 const BlogDashboard = lazyWithLegacyStyles(() => import("./components/FinanceDashboard/BlogAdmin/BlogDashboard"));
 const BlogPostForm = lazyWithLegacyStyles(() => import("./components/FinanceDashboard/BlogAdmin/BlogPostForm"));
 const AdminLayout = lazyWithLegacyStyles(() => import("./components/AdminLayout/AdminLayout"));
+const RequireStaffRole = lazyWithLegacyStyles(() => import("./auth/RequireStaffRole"));
+const RequireFullSuperAdmin = lazyWithLegacyStyles(() => import("./auth/RequireFullSuperAdmin"));
+const BookingsAdmin = lazyWithLegacyStyles(() => import("./pages/BookingsAdmin"));
+const BookingsAdminDetail = lazyWithLegacyStyles(() => import("./pages/BookingsAdminDetail"));
+const OperationsUsers = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsUsers"));
+const OperationsCatalog = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsCatalog"));
+const OperationsCommunications = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsCommunications"));
+const OperationsPayments = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsPayments"));
 const SitemapPage = lazyWithLegacyStyles(() => import("./pages/SitemapPage"));
 const NotFound404 = lazyWithLegacyStyles(() => import("./pages/NotFound404"));
 const FloatingWhatsApp = lazy(() =>
@@ -114,7 +122,8 @@ function App() {
   const location = useLocation();
   const isAdminDashboard =
     location.pathname.startsWith("/finance-dashboard") ||
-    location.pathname.startsWith("/blog-admin");
+    location.pathname.startsWith("/blog-admin") ||
+    location.pathname.startsWith("/bookings-admin") || location.pathname.startsWith("/users-admin") || location.pathname.startsWith("/catalog-admin") || location.pathname.startsWith("/communications-admin") || location.pathname.startsWith("/payments-admin");
 
   // Capture first-touch marketing attribution on initial load.
   useEffect(() => {
@@ -167,6 +176,16 @@ function App() {
             <Route path="/blog-admin" element={<BlogDashboard />} />
             <Route path="/blog-admin/create" element={<BlogPostForm />} />
             <Route path="/blog-admin/edit/:id" element={<BlogPostForm />} />
+            <Route element={<RequireStaffRole />}>
+              <Route path="/bookings-admin" element={<BookingsAdmin />} />
+              <Route path="/bookings-admin/:bookingId" element={<BookingsAdminDetail />} />
+            </Route>
+            <Route element={<RequireFullSuperAdmin />}>
+              <Route path="/users-admin" element={<OperationsUsers />} />
+              <Route path="/catalog-admin" element={<OperationsCatalog />} />
+              <Route path="/communications-admin" element={<OperationsCommunications />} />
+              <Route path="/payments-admin" element={<OperationsPayments />} />
+            </Route>
           </Route>
 
           {/* Legacy redirects */}

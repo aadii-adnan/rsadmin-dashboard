@@ -14,6 +14,8 @@ from .views import (
     TopUpInvoiceDownloadView,
     PayBookingWithCreditsView,
 )
+from .staff_views import StaffCreditLedgerView
+from .staff_payment_views import StaffPaymentDetailView, StaffPaymentsView
 
 urlpatterns = [
     path('', PaymentList.as_view(), name='payment-list'),
@@ -29,4 +31,7 @@ urlpatterns = [
     path('credits/history/', CreditHistoryView.as_view(), name='credit-history'),
     path('credits/invoice/<int:transaction_id>/', TopUpInvoiceDownloadView.as_view(), name='credit-topup-invoice'),
     path('pay-with-credits/<int:booking_id>/', PayBookingWithCreditsView.as_view(), name='pay-with-credits'),
+    path('staff/credits/', StaffCreditLedgerView.as_view(), name='staff-credit-ledger'),
+    path('staff/records/', StaffPaymentsView.as_view(), name='staff-payment-records'),
+    path('staff/records/<int:payment_id>/', StaffPaymentDetailView.as_view(), name='staff-payment-record-detail'),
 ]

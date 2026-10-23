@@ -17,3 +17,13 @@ perf/after2-*.json
 !perf/before-metrics.json
 !perf/before-media-audit.json
 .DS_Store
+
+# Local credentials and environment-specific configuration
+.env
+.env.*
+!.env.example
+
+# Local Python environments and JavaScript dependencies
+backend/.venv*/
+backend/venv/
+frontend/node_modules/

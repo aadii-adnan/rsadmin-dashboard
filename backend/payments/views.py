@@ -565,10 +565,6 @@ class PaymentList(APIView):
 class CreateStripePaymentIntent(APIView):
     permission_classes = [AllowAny]
     def post(self, request, booking_id):
-        config_error = stripe_configuration_error_response()
-        if config_error:
-            return config_error
-
         booking = get_object_or_404(Booking, id=booking_id)
         user = booking.user  # adjust if your Booking model uses a different field
 
@@ -609,6 +605,14 @@ class CreateStripePaymentIntent(APIView):
                     {'error': 'This booking has already been paid.', 'code': 'already_paid'},
                     status=status.HTTP_409_CONFLICT,
                 )
+
+            # Stripe is required only for a genuinely new payment attempt.
+            # Replayed requests and already-paid bookings must retain their
+            # deterministic idempotency/conflict response even if the local
+            # server is temporarily missing Stripe configuration.
+            config_error = stripe_configuration_error_response()
+            if config_error:
+                return config_error
 
             is_reschedule_extra = request.data.get("is_reschedule_extra", False)
             try:

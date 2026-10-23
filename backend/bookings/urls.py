@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import BookingListCreate, BookingRescheduleView, CancelBookingView, ManagerBookingList, ManagerBookingStatusUpdate, BookingDetailView, UserBookingsView, BookingUserCreateView, BookingUserStatusUpdateView
+from .views import BookingListCreate, BookingRescheduleView, CancelBookingView, ManagerBookingList, ManagerBookingStatusUpdate, BookingDetailView, UserBookingsView, BookingUserCreateView, BookingUserStatusUpdateView, StaffBookingList, StaffBookingCreate, StaffBookingDetail, StaffBookingDocument, StaffBookingStatusAction, StaffBookingSaveAndNotify, StaffBookingBulkAction
 from .guest_views import (
     ManageBookingLinkRequestView,
     ManageBookingDetailView,
@@ -9,6 +9,13 @@ from .guest_views import (
 
 urlpatterns = [
     path('', BookingListCreate.as_view(), name='booking-list-create'),
+    path('staff/', StaffBookingList.as_view(), name='staff-booking-list'),
+    path('staff/create/', StaffBookingCreate.as_view(), name='staff-booking-create'),
+    path('staff/bulk/<str:action>/', StaffBookingBulkAction.as_view(), name='staff-booking-bulk-action'),
+    path('staff/<int:pk>/', StaffBookingDetail.as_view(), name='staff-booking-detail'),
+    path('staff/<int:pk>/documents/<str:document_type>/', StaffBookingDocument.as_view(), name='staff-booking-document'),
+    path('staff/<int:pk>/actions/status/', StaffBookingStatusAction.as_view(), name='staff-booking-status-action'),
+    path('staff/<int:pk>/actions/save-and-notify/', StaffBookingSaveAndNotify.as_view(), name='staff-booking-save-and-notify'),
     path('manage/request-link/', ManageBookingLinkRequestView.as_view(), name='manage-booking-request-link'),
     path('manage/booking/', ManageBookingDetailView.as_view(), name='manage-booking-detail'),
     path('manage/reschedule/', ManageBookingRescheduleView.as_view(), name='manage-booking-reschedule'),

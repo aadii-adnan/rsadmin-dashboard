@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import (
+    CurrentUserSerializer,
     GENERIC_FORGOT_PASSWORD_MESSAGE,
     ForgotPasswordSerializer,
     RegisterSerializer,
@@ -167,18 +168,7 @@ class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        return Response({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "phone": user.phone,
-            "is_manager": user.is_manager,
-            "bonus_points": str(user.bonus_points),  # Convert Decimal to string for JSON serialization
-            "is_superuser": user.is_superuser
-        })
+        return Response(CurrentUserSerializer(request.user).data)
     
 
 # NOTE: AddBonusPointsView was removed deliberately — it let any authenticated

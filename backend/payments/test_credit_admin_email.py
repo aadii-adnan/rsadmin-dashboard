@@ -8,6 +8,33 @@ from django.urls import reverse
 
 from .models import CreditTransaction
 from .tasks import send_manual_credit_confirmation_email_task
+from rest_framework.test import APIClient
+
+
+class StaffCreditLedgerTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.client = APIClient()
+        self.admin = User.objects.create_user(username="ledger-admin", password="pass", is_superuser=True)
+        self.manager = User.objects.create_user(username="ledger-manager", password="pass", is_manager=True)
+        self.customer = User.objects.create_user(username="ledger-customer", password="pass", bonus_points=Decimal("10.00"))
+
+    def test_only_full_admin_can_adjust_and_adjustment_is_audited(self):
+        self.client.force_authenticate(self.manager)
+        self.assertEqual(self.client.post("/api/payments/staff/credits/", {}, format="json").status_code, 403)
+        self.client.force_authenticate(self.admin)
+        response = self.client.post("/api/payments/staff/credits/", {"user_id": self.customer.pk, "amount": "5.00", "note": "Service recovery", "website": "rsexpressparking"}, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.customer.refresh_from_db()
+        transaction = CreditTransaction.objects.get(pk=response.data["id"])
+        self.assertEqual(self.customer.bonus_points, Decimal("15.00"))
+        self.assertEqual(transaction.transaction_type, CreditTransaction.TYPE_ADJUSTMENT)
+        self.assertEqual(transaction.balance_after, Decimal("15.00"))
+
+    def test_adjustment_cannot_make_balance_negative(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.post("/api/payments/staff/credits/", {"user_id": self.customer.pk, "amount": "-11.00", "note": "Bad deduction", "website": "rsexpressparking"}, format="json")
+        self.assertEqual(response.status_code, 400)
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")

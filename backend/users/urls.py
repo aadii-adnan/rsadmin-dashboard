@@ -6,6 +6,7 @@ from .views import (
     RegisterView,
     ValidateResetPasswordTokenView,
 )
+from .staff_views import StaffSupplierDetailView, StaffSuppliersView, StaffUserDetailView, StaffUsersView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -19,4 +20,8 @@ urlpatterns = [
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
     path('reset-password/validate/', ValidateResetPasswordTokenView.as_view(), name='reset-password-validate'),
     path('reset-password/confirm/', ConfirmResetPasswordView.as_view(), name='reset-password-confirm'),
+    path('staff/users/', StaffUsersView.as_view(), name='staff-users'),
+    path('staff/users/<int:user_id>/', StaffUserDetailView.as_view(), name='staff-user-detail'),
+    path('staff/suppliers/', StaffSuppliersView.as_view(), name='staff-suppliers'),
+    path('staff/suppliers/<int:supplier_id>/', StaffSupplierDetailView.as_view(), name='staff-supplier-detail'),
 ]

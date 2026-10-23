@@ -20,6 +20,9 @@ export default function AdminNavbar() {
             <Nav.Link as={NavLink} to="/blog-admin" className="admin-nav-link">
               Blogs Dashboard
             </Nav.Link>
+            <Nav.Link as={NavLink} to="/bookings-admin" className="admin-nav-link">
+              Bookings
+            </Nav.Link>
             {/* Standard anchor tag to break out of React SPA to Django Admin */}
             <a style={{background: "default"}} href="/admin-dashboard/" className="nav-link" id='django-admin-btn'>
               Django Admin Panel

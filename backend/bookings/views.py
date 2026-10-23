@@ -1,10 +1,22 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from .models import Booking, BookingUser
-from .serializers import BookingSerializer, BookingUserSerializer, SupplierBookingSerializer
-from core.permissions import IsManagerOrAdmin, IsSupplier
+from .models import Booking, BookingUser, normalize_phone_number
+from .serializers import (
+    BookingSerializer,
+    BookingUserSerializer,
+    StaffBookingListSerializer,
+    StaffBookingDetailSerializer,
+    StaffBookingUpdateSerializer,
+    StaffBookingCreateSerializer,
+    StaffBookingStatusActionSerializer,
+    StaffBookingBulkActionSerializer,
+    SupplierBookingSerializer,
+)
+from core.permissions import IsManagerOrAdmin, IsStaffDashboardUser, IsSupplier, is_full_super_admin
 from core.models import Status, BookingSettings
 from services.models import Coupon
 from payments.models import Payment
@@ -14,14 +26,24 @@ from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.utils import timezone
 from django.template.loader import render_to_string
-from payments.views import generate_invoice  # You need to implement this utility
+from payments.views import (
+    generate_invoice,
+    generate_booking_form_pdf,
+    send_booking_confirmation_email,
+    send_manager_new_booking_email,
+)
 from django.http import HttpResponse
+from django.http import QueryDict
+from django.contrib import admin
+from types import SimpleNamespace
+from .admin import BookingAdmin
 import pytz
 from celery import current_app
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decouple import config
 from payments.views import calculate_parking_days  # Make sure this import is at the top
-from django.db.models import Q
+from django.db.models import Q, Value
+from django.db.models.functions import Lower, Replace
 from django.db import IntegrityError, transaction
 import hashlib
 import json
@@ -33,8 +55,14 @@ from .booking_rules import (
     parse_and_localize,
     validate_reschedule,
 )
-from .tasks import send_reschedule_email_task, send_cancellation_email_task
+from .tasks import (
+    send_reschedule_email_task,
+    send_cancellation_email_task,
+    send_booking_updated_email,
+    send_supplier_booking_manager_notification,
+)
 from .cancellation import credit_cancellation_points
+from .update_email import build_update_email_changes
 import logging
 
 logger = logging.getLogger(__name__)
@@ -284,6 +312,554 @@ class ManagerBookingList(APIView):
 
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data)
+
+
+class StaffBookingPagination(PageNumberPagination):
+    """Bounded pagination for the operations bookings table."""
+
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+def get_staff_booking_queryset(user):
+    """Return the bookings visible to a staff-dashboard user.
+
+    Every staff booking endpoint must start with this scope before selecting
+    an object or applying request-controlled filtering.
+    """
+    queryset = Booking.objects.all()
+    if is_full_super_admin(user):
+        return queryset
+    if getattr(user, 'is_manager', False):
+        return queryset.exclude(status__name__iexact='pending').exclude(
+            status__name__iexact='payment failed'
+        )
+    # IsStaffDashboardUser guarantees an active supplier profile here.
+    return queryset.filter(supplier=user.supplier_profile)
+
+
+def staff_booking_bulk_actions(user):
+    """Return the bulk operations available to this staff role.
+
+    This mirrors ``BookingAdmin.get_actions``: managers do not receive invoice
+    downloads, while full administrators and suppliers retain the actions
+    available to them in Django Admin.  The endpoint repeats this check; this
+    capability data is only for presenting the React toolbar.
+    """
+    return {
+        'xlsx': True,
+        'pdf': True,
+        'invoice_zip': not getattr(user, 'is_manager', False),
+        'booking_form_zip': True,
+    }
+
+
+class StaffBookingBulkAction(APIView):
+    """Run an existing Django Admin selected-booking export on safe IDs only."""
+
+    permission_classes = [IsStaffDashboardUser]
+
+    ACTION_METHODS = {
+        'xlsx': 'export_as_csv',
+        'pdf': 'export_as_pdf',
+        'invoice-zip': 'download_invoices_zip',
+        'booking-form-zip': 'download_booking_forms_zip',
+    }
+    DATE_FILTER_MAP = {
+        'departure_date_from': 'departure_time__gte',
+        'departure_date_to': 'departure_time__lt',
+        'return_date_from': 'return_time__gte',
+        'return_date_to': 'return_time__lt',
+        'created_date_from': 'created_at__gte',
+        'created_date_to': 'created_at__lt',
+    }
+
+    def post(self, request, action):
+        method_name = self.ACTION_METHODS.get(action)
+        if method_name is None:
+            return Response({'detail': 'Unknown bulk booking action.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = StaffBookingBulkActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not self._is_action_allowed(request.user, action):
+            return Response(
+                {'detail': 'You are not allowed to run this bulk booking action.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        selected_ids = list(dict.fromkeys(serializer.validated_data['ids']))
+        queryset = (
+            get_staff_booking_queryset(request.user)
+            .filter(pk__in=selected_ids)
+            .select_related('service', 'status', 'supplier')
+            .prefetch_related('add_ons')
+        )
+        # Avoid disclosing which hand-crafted ID was outside the caller's
+        # scope.  A supplier must only ever export its own selected bookings.
+        if queryset.count() != len(selected_ids):
+            return Response(
+                {'detail': 'One or more selected bookings are unavailable.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        admin_request = SimpleNamespace(GET=self._admin_export_query(serializer.validated_data))
+        booking_admin = BookingAdmin(Booking, admin.site)
+        try:
+            return getattr(booking_admin, method_name)(admin_request, queryset)
+        except Exception:
+            # Keep operational logs useful without recording booking contents,
+            # customer data, request bodies, or authentication material.
+            logger.error(
+                'Staff bulk booking action failed: action=%s actor_id=%s selected_count=%s',
+                action,
+                request.user.pk,
+                len(selected_ids),
+            )
+            return Response(
+                {'detail': 'Unable to prepare this bulk download.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @staticmethod
+    def _is_action_allowed(user, action):
+        capabilities = staff_booking_bulk_actions(user)
+        capability_name = action.replace('-', '_')
+        return capabilities.get(capability_name, False)
+
+    def _admin_export_query(self, validated_data):
+        """Translate dashboard filter names to the existing Admin contract."""
+        query = QueryDict('', mutable=True)
+        for dashboard_name, admin_name in self.DATE_FILTER_MAP.items():
+            value = validated_data.get(dashboard_name)
+            if value:
+                query[admin_name] = value.isoformat()
+        return query
+
+
+class StaffBookingList(APIView):
+    """Read-only bookings list for the future staff dashboard.
+
+    Role scoping is deliberately applied before any request-controlled search
+    or filters. This makes supplier isolation a backend guarantee.
+    """
+
+    permission_classes = [IsStaffDashboardUser]
+    pagination_class = StaffBookingPagination
+
+    ORDERING_FIELDS = {
+        'created_at': 'created_at',
+        'departure_time': 'departure_time',
+        'return_time': 'return_time',
+        'booking_id': 'booking_id',
+        'status': 'status__name',
+        'service': 'service__name',
+    }
+
+    DATE_FILTERS = {
+        'departure': 'departure_time',
+        'return': 'return_time',
+        'created': 'created_at',
+    }
+
+    def get(self, request):
+        queryset = self._role_scoped_queryset(request)
+        queryset = self._apply_search(queryset, request.query_params.get('search', ''))
+        queryset = self._apply_filters(queryset, request)
+        queryset = self._apply_ordering(queryset, request.query_params.get('ordering', '-created_at'))
+
+        queryset = queryset.select_related('service', 'status', 'supplier').prefetch_related('add_ons')
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        serializer = StaffBookingListSerializer(page, many=True, context={'request': request})
+        response = paginator.get_paginated_response(serializer.data)
+        response.data['bulk_actions'] = staff_booking_bulk_actions(request.user)
+        return response
+
+    def _role_scoped_queryset(self, request):
+        return get_staff_booking_queryset(request.user)
+
+    def _apply_search(self, queryset, raw_search):
+        search = (raw_search or '').strip()
+        if not search:
+            return queryset
+
+        search_without_spaces = search.replace(' ', '')
+        search_without_dashes = search.replace('-', '')
+        search_digits = ''.join(character for character in search if character.isdigit())
+        normalized_phone = normalize_phone_number(search)
+        search_query = (
+            Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(email__icontains=search)
+            | Q(contact_no__icontains=search)
+            | Q(car_registration_no__icontains=search)
+            | Q(booking_id__icontains=search)
+            | Q(source_channel__icontains=search)
+            | Q(utm_campaign__icontains=search)
+        )
+
+        if search_digits:
+            search_query |= Q(contact_no_normalized__icontains=search_digits)
+        if normalized_phone:
+            search_query |= Q(contact_no_normalized__icontains=normalized_phone)
+
+        if search.isdigit():
+            search_query |= Q(pk=int(search))
+
+        # These annotations match the BookingAdmin normalization behavior.
+        queryset = queryset.annotate(
+            normalized_registration=Replace('car_registration_no', Value(' '), Value('')),
+            normalized_booking_id=Lower(Replace('booking_id', Value('-'), Value(''))),
+        )
+        if search_without_spaces:
+            search_query |= Q(normalized_registration__icontains=search_without_spaces)
+        if search_without_dashes:
+            search_query |= Q(normalized_booking_id__icontains=search_without_dashes.lower())
+
+        return queryset.filter(search_query).distinct()
+
+    def _apply_filters(self, queryset, request):
+        params = request.query_params
+        user = request.user
+        queryset = self._apply_date_filters(queryset, params)
+
+        status_id = self._optional_positive_int(params, 'status')
+        if status_id is not None:
+            queryset = queryset.filter(status_id=status_id)
+
+        service_id = self._optional_positive_int(params, 'service')
+        if service_id is not None:
+            queryset = queryset.filter(service_id=service_id)
+
+        is_full_admin = is_full_super_admin(user)
+        for restricted_filter in ('website', 'supplier', 'source'):
+            if params.get(restricted_filter, '').strip() and not is_full_admin:
+                raise ValidationError({
+                    restricted_filter: 'This filter is available only to full super-admins.'
+                })
+
+        if not is_full_admin:
+            return queryset
+
+        website = params.get('website', '').strip()
+        if website:
+            # Match BookingAdmin's website filter: website filters exclude
+            # supplier-created bookings.
+            queryset = queryset.filter(website=website, supplier__isnull=True)
+
+        supplier = params.get('supplier', '').strip()
+        if supplier == 'all_suppliers':
+            queryset = queryset.filter(supplier__isnull=False)
+        elif supplier:
+            supplier_id = self._positive_int(supplier, 'supplier')
+            queryset = queryset.filter(supplier_id=supplier_id)
+
+        source = params.get('source', '').strip()
+        if source:
+            queryset = queryset.filter(source_channel=source)
+
+        return queryset
+
+    def _apply_date_filters(self, queryset, params):
+        """Mirror BookingAdmin's OR-across-active-date-fields behavior."""
+        date_conditions = []
+        for prefix, field_name in self.DATE_FILTERS.items():
+            start = self._parse_date(params.get(f'{prefix}_date_from'), f'{prefix}_date_from')
+            end = self._parse_date(params.get(f'{prefix}_date_to'), f'{prefix}_date_to')
+            if not start and not end:
+                continue
+            if start and end and start > end:
+                raise ValidationError({
+                    f'{prefix}_date_to': 'Must be on or after the start date.'
+                })
+
+            condition = Q()
+            if start:
+                condition &= Q(**{f'{field_name}__gte': timezone.make_aware(datetime.combine(start, datetime.min.time()))})
+            if end:
+                end_exclusive = timezone.make_aware(
+                    datetime.combine(end + timedelta(days=1), datetime.min.time())
+                )
+                condition &= Q(**{f'{field_name}__lt': end_exclusive})
+            date_conditions.append(condition)
+
+        if not date_conditions:
+            return queryset
+
+        combined_condition = date_conditions[0]
+        for condition in date_conditions[1:]:
+            combined_condition |= condition
+        return queryset.filter(combined_condition).distinct()
+
+    def _apply_ordering(self, queryset, raw_ordering):
+        ordering = (raw_ordering or '-created_at').strip()
+        descending = ordering.startswith('-')
+        requested_field = ordering[1:] if descending else ordering
+        model_field = self.ORDERING_FIELDS.get(requested_field)
+        if model_field is None:
+            allowed = ', '.join(sorted(self.ORDERING_FIELDS))
+            raise ValidationError({'ordering': f'Use one of: {allowed}.'})
+
+        prefix = '-' if descending else ''
+        return queryset.order_by(f'{prefix}{model_field}', f'{prefix}id')
+
+    @staticmethod
+    def _optional_positive_int(params, name):
+        raw_value = params.get(name, '').strip()
+        if not raw_value:
+            return None
+        return StaffBookingList._positive_int(raw_value, name)
+
+    @staticmethod
+    def _positive_int(raw_value, name):
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError) as exc:
+            raise ValidationError({name: 'Must be a positive numeric ID.'}) from exc
+        if value <= 0:
+            raise ValidationError({name: 'Must be a positive numeric ID.'})
+        return value
+
+    @staticmethod
+    def _parse_date(raw_value, name):
+        if not raw_value:
+            return None
+        try:
+            return datetime.strptime(raw_value, '%Y-%m-%d').date()
+        except (TypeError, ValueError) as exc:
+            raise ValidationError({name: 'Use YYYY-MM-DD.'}) from exc
+
+
+class StaffBookingCreate(APIView):
+    """Create one booking through the operations dashboard only."""
+
+    permission_classes = [IsStaffDashboardUser]
+
+    def post(self, request):
+        serializer = StaffBookingCreateSerializer(
+            data=request.data,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        booking = serializer.save()
+
+        if booking.supplier_id:
+            self._notify_supplier_booking_created(booking)
+        elif booking.status and booking.status.name.lower() == 'confirmed' and not booking.email_sent:
+            self._notify_confirmed_staff_booking(booking)
+
+        booking = StaffBookingDetail._detail_queryset(request).get(pk=booking.pk)
+        return Response(
+            StaffBookingDetailSerializer(booking, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @staticmethod
+    def _notify_confirmed_staff_booking(booking):
+        """Match Django Admin's non-supplier confirmed-booking behaviour."""
+        try:
+            pdf_content = send_booking_confirmation_email(booking)
+            send_manager_new_booking_email(booking, pdf_content)
+        except Exception:
+            # Keep the successful booking record, just as Django Admin does
+            # when an email/PDF provider has a temporary failure.
+            logger.error('Staff-created booking email failed for booking %s', booking.pk)
+
+    @staticmethod
+    def _notify_supplier_booking_created(booking):
+        """Preserve the existing supplier-create manager notification."""
+        try:
+            send_supplier_booking_manager_notification.delay(booking.id)
+        except Exception:
+            logger.error(
+                'Supplier booking manager notification failed for booking %s',
+                booking.pk,
+            )
+
+
+class StaffBookingDetail(APIView):
+    """Read-only, role-scoped booking detail for the staff dashboard."""
+
+    permission_classes = [IsStaffDashboardUser]
+
+    def get(self, request, pk):
+        queryset = self._detail_queryset(request)
+        booking = get_object_or_404(queryset, pk=pk)
+
+        # Preserve the existing Django Admin change-view behaviour: opening a
+        # staff detail marks a previously unseen booking as viewed.
+        if not booking.is_viewed:
+            booking.is_viewed = True
+            booking.save(update_fields=['is_viewed'])
+
+        serializer = StaffBookingDetailSerializer(booking, context={'request': request})
+        return Response(serializer.data)
+
+    def patch(self, request, pk):
+        booking = get_object_or_404(self._detail_queryset(request), pk=pk)
+        serializer = StaffBookingUpdateSerializer(
+            booking,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        updated_booking = serializer.save()
+        return Response(
+            StaffBookingDetailSerializer(updated_booking, context={'request': request}).data
+        )
+
+    @staticmethod
+    def _detail_queryset(request):
+        return (
+            get_staff_booking_queryset(request.user)
+            .select_related('service', 'status', 'supplier', 'coupon')
+            .prefetch_related('add_ons')
+        )
+
+
+class StaffBookingDocument(APIView):
+    """Authenticated PDF download for a booking visible to the staff user."""
+
+    permission_classes = [IsStaffDashboardUser]
+
+    def get(self, request, pk, document_type):
+        booking = get_object_or_404(StaffBookingDetail._detail_queryset(request), pk=pk)
+
+        if document_type == 'invoice':
+            # This mirrors Django Admin: managers may download booking forms,
+            # but invoice access is reserved for full admins and suppliers.
+            if getattr(request.user, 'is_manager', False):
+                return Response({'detail': 'You are not allowed to download this invoice.'}, status=status.HTTP_403_FORBIDDEN)
+            response, error = generate_invoice(booking)
+            filename_prefix = 'Invoice'
+        elif document_type == 'booking-form':
+            response, error = generate_booking_form_pdf(booking)
+            filename_prefix = 'BookingForm'
+        else:
+            return Response({'detail': 'Unknown booking document.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if error:
+            # Deliberately do not interpolate the generator exception: it can
+            # originate in a template or provider and may contain PII.
+            logger.error(
+                'Staff document generation failed: document_type=%s booking_id=%s',
+                document_type,
+                booking.pk,
+            )
+            return Response({'detail': 'Unable to generate this document.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        response['Content-Disposition'] = (
+            f'attachment; filename="{filename_prefix}-{booking.booking_id or booking.pk}.pdf"'
+        )
+        return response
+
+
+class StaffBookingStatusAction(APIView):
+    """Explicit allow-listed status actions for one role-scoped booking."""
+
+    permission_classes = [IsStaffDashboardUser]
+
+    def post(self, request, pk):
+        booking = get_object_or_404(StaffBookingDetail._detail_queryset(request), pk=pk)
+        serializer = StaffBookingStatusActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        booking.status = serializer.validated_data['status']
+        booking.full_clean()
+        booking.save(update_fields=['status', 'contact_no_normalized', 'modified_at'])
+
+        # Existing manager status updates only persist the status. Notification
+        # behaviour deliberately remains in Chunk 7's explicit email action.
+        return Response(
+            StaffBookingDetailSerializer(booking, context={'request': request}).data
+        )
+
+
+class StaffBookingSaveAndNotify(APIView):
+    """Save role-permitted changes and explicitly notify the customer."""
+
+    permission_classes = [IsStaffDashboardUser]
+
+    def post(self, request, pk):
+        if not request.data:
+            raise ValidationError({'non_field_errors': 'Provide at least one booking change.'})
+
+        booking = get_object_or_404(StaffBookingDetail._detail_queryset(request), pk=pk)
+        original = (
+            get_staff_booking_queryset(request.user)
+            .select_related('service', 'status', 'supplier', 'coupon')
+            .prefetch_related('add_ons')
+            .get(pk=booking.pk)
+        )
+        serializer = StaffBookingUpdateSerializer(
+            booking,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        updated_booking = serializer.save()
+        changed_fields = list(serializer.validated_data.keys())
+        update_changes = build_update_email_changes(
+            original,
+            updated_booking,
+            changed_fields,
+        )
+
+        is_cancellation = (
+            'status' in serializer.validated_data
+            and updated_booking.status
+            and updated_booking.status.name.lower() == 'cancelled'
+        )
+        notification = self._dispatch_notification(
+            updated_booking,
+            update_changes,
+            is_cancellation,
+        )
+        return Response({
+            'booking': StaffBookingDetailSerializer(
+                updated_booking,
+                context={'request': request},
+            ).data,
+            'notification': notification,
+        })
+
+    @staticmethod
+    def _dispatch_notification(booking, update_changes, is_cancellation):
+        task = send_cancellation_email_task if is_cancellation else send_booking_updated_email
+        args = (booking.id, 'admin_cancelled') if is_cancellation else (booking.id, update_changes)
+        notification_type = 'cancellation' if is_cancellation else 'update'
+
+        try:
+            task.delay(*args)
+            return {
+                'status': 'queued',
+                'type': notification_type,
+                'message': 'Notification has been queued for delivery.',
+            }
+        except Exception:
+            # Match the Django Admin's broker-failure fallback. Report a
+            # failure explicitly if the inline send also fails.
+            try:
+                task(*args)
+                return {
+                    'status': 'sent',
+                    'type': notification_type,
+                    'message': 'Notification was sent directly.',
+                }
+            except Exception:
+                logger.error(
+                    'Staff notification failed: booking_id=%s notification_type=%s',
+                    booking.pk,
+                    notification_type,
+                )
+                return {
+                    'status': 'failed',
+                    'type': notification_type,
+                    'message': 'Booking saved, but the customer notification could not be sent.',
+                }
 
 class ManagerBookingStatusUpdate(APIView):
     permission_classes = [IsManagerOrAdmin]

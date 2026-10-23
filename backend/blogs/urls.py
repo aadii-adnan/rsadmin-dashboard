@@ -17,6 +17,7 @@ from .views import (
     TagViewSet,
     HTMLSitemapDataView,
 )
+from .staff_redirect_views import StaffRedirectDetailView, StaffRedirectsView
 
 router = DefaultRouter()
 router.register(r"categories", CategoryViewSet, basename="blog-admin-category")
@@ -34,6 +35,8 @@ urlpatterns = [
     path("public/html-sitemap-data/", HTMLSitemapDataView.as_view(), name="html-sitemap-data"),
     path("public/redirects/", cache_page(60 * 30)(ActiveRedirectsView.as_view()), name="public-active-redirects"),
     path("admin/import-wordpress/", ImportWordPressView.as_view(), name="import-wordpress"),
+    path('staff/redirect-rules/', StaffRedirectsView.as_view(), name='staff-redirect-rules'),
+    path('staff/redirect-rules/<int:rule_id>/', StaffRedirectDetailView.as_view(), name='staff-redirect-rule-detail'),
     path("admin/", include(router.urls)),
 ]
 
