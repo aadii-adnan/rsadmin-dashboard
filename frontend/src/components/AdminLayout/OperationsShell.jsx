@@ -10,6 +10,7 @@ import '../BookingsAdmin/bookingsAdmin.css';
 export default function OperationsShell({ children }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
+  const canAccessDjangoAdmin = Boolean(user?.can_access_staff_dashboard);
   const role = user?.is_full_super_admin ? 'Super administrator' : user?.is_manager ? 'Manager' : user?.is_supplier ? 'Supplier' : 'Staff';
   const name = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || user?.email || 'Staff account';
   return <div className="operations-shell">
@@ -17,8 +18,8 @@ export default function OperationsShell({ children }) {
     <aside className="operations-sidebar" aria-label="Operations navigation">
       <Link to="/bookings-admin" className="operations-brand" aria-label="RS Express Parking operations workspace"><img src={simpleLogo} srcSet={`${simpleLogo} 1x, ${simpleLogo2x} 2x`} alt="RS Express Parking" width="238" height="60" decoding="async" style={{ width: "156px", height: "auto", maxWidth: "100%" }} /></Link>
       <span className="operations-nav-label">Workspace</span>
-      <nav aria-label="Dashboard"><NavLink to="/bookings-admin"><FiCalendar aria-hidden="true" />Bookings</NavLink>{user?.is_full_super_admin && <><NavLink to="/users-admin"><FiUsers aria-hidden="true" />People & credits</NavLink><NavLink to="/catalog-admin"><FiSettings aria-hidden="true" />Configuration</NavLink><NavLink to="/communications-admin"><FiMessageSquare aria-hidden="true" />Contact & marketing</NavLink><NavLink to="/payments-admin"><FiCreditCard aria-hidden="true" />Payment review</NavLink></>}<NavLink to="/finance-dashboard"><FiGrid aria-hidden="true" />Finance</NavLink><NavLink to="/blog-admin"><FiBookOpen aria-hidden="true" />Blogs</NavLink></nav>
-      <a className="operations-admin-link" href="/admin-dashboard/"><FiShield aria-hidden="true" />Django Admin<FiArrowUpRight aria-hidden="true" /></a>
+      <nav aria-label="Dashboard"><NavLink to="/bookings-admin"><FiCalendar aria-hidden="true" />Bookings</NavLink>{user?.is_full_super_admin && <><NavLink to="/users-admin"><FiUsers aria-hidden="true" />People & credits</NavLink><NavLink to="/catalog-admin"><FiSettings aria-hidden="true" />Configuration</NavLink><NavLink to="/communications-admin"><FiMessageSquare aria-hidden="true" />Contact & marketing</NavLink><NavLink to="/payments-admin"><FiCreditCard aria-hidden="true" />Payment review</NavLink><NavLink to="/finance-dashboard"><FiGrid aria-hidden="true" />Finance</NavLink><NavLink to="/blog-admin"><FiBookOpen aria-hidden="true" />Blogs</NavLink></>}</nav>
+      {canAccessDjangoAdmin && <a className="operations-admin-link" href="/admin-dashboard/"><FiShield aria-hidden="true" />Django Admin<FiArrowUpRight aria-hidden="true" /></a>}
       <div className="operations-sidebar-note">Booking operations<span>Manage the details. Keep journeys moving.</span></div>
     </aside>
     <div className="operations-workspace">

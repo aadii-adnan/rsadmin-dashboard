@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Spinner, Table } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import BookingStatusBadge from "./BookingStatusBadge";
 import { FiArrowUpRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
@@ -17,7 +17,14 @@ function formatPrice(price) {
   return Number.isFinite(value) ? new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(value) : "—";
 }
 
+function isInteractiveRowTarget(target) {
+  return target instanceof Element && Boolean(
+    target.closest("a, button, input, select, textarea, label, [role='button'], [contenteditable='true']"),
+  );
+}
+
 export default function BookingList({ bookings, count, loading, error, onRetry, page, hasNext, hasPrevious, onPageChange, selectedIds = [], onSelectionChange }) {
+  const navigate = useNavigate();
   if (loading) {
     return <div className="booking-list-state" role="status" aria-live="polite"><Spinner animation="border" size="sm" /> Loading bookings…</div>;
   }
@@ -50,6 +57,19 @@ export default function BookingList({ bookings, count, loading, error, onRetry, 
     onSelectionChange([...next]);
   };
 
+  const openBooking = (booking) => navigate(`/bookings-admin/${booking.id}`);
+
+  const handleRowClick = (event, booking) => {
+    if (!isInteractiveRowTarget(event.target)) openBooking(booking);
+  };
+
+  const handleRowKeyDown = (event, booking) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (isInteractiveRowTarget(event.target)) return;
+    event.preventDefault();
+    openBooking(booking);
+  };
+
   return (
     <>
       <div className="booking-table-wrap">
@@ -64,7 +84,7 @@ export default function BookingList({ bookings, count, loading, error, onRetry, 
           </thead>
           <tbody>
             {bookings.map((booking) => (
-              <tr key={booking.id}>
+              <tr key={booking.id} className="booking-clickable-row" tabIndex={0} aria-label={`Open booking ${booking.booking_id || booking.id}`} onClick={(event) => handleRowClick(event, booking)} onKeyDown={(event) => handleRowKeyDown(event, booking)}>
                 <td className="booking-select-column"><input type="checkbox" aria-label={`Select booking ${booking.booking_id || booking.id}`} checked={selected.has(booking.id)} onChange={() => toggleBooking(booking.id)} /></td>
                 <td><Link className="booking-detail-link" to={`/bookings-admin/${booking.id}`}>{booking.booking_id || booking.id}<FiArrowUpRight aria-hidden="true" /></Link>{!booking.is_viewed && <span className="booking-new-badge">New</span>}</td>
                 <td><strong>{booking.first_name} {booking.last_name}</strong><span className="booking-muted">{booking.contact_no || "—"}</span></td>

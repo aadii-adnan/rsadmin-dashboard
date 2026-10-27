@@ -11,7 +11,6 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import customFetch from "../../../auth/fetch";
-import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
@@ -142,7 +141,6 @@ function createTinyMceInit(overrides = {}) {
 }
 
 function BlogPostForm() {
-  useBlogJwtFromUrl();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
@@ -326,7 +324,7 @@ function BlogPostForm() {
 
   useEffect(() => {
     // 1. Check Auth first
-    if (!localStorage.getItem("finance_jwt")) {
+    if (!localStorage.getItem("access_token")) {
       navigate("/unauthorized", { replace: true });
       return;
     }

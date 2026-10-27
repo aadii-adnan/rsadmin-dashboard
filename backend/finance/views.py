@@ -1,5 +1,4 @@
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from bookings.models import Booking
 from payments.models import Payment
@@ -31,15 +30,12 @@ from bookings.tasks import (
     PROMOTIONAL_CAMPAIGNS,
     send_promotional_deliverability_test,
 )
+from core.permissions import is_full_super_admin
 
 @login_required
 def finance_jwt_login(request):
     user = request.user
-    if not (
-        user.is_superuser
-        and not getattr(user, 'is_manager', False)
-        and not getattr(user, 'is_supplier', False)
-    ):
+    if not is_full_super_admin(user):
         return HttpResponseRedirect('/admin/login/?next=/admin-dashboard/finance/')
     refresh = RefreshToken.for_user(user)
     access = str(refresh.access_token)
@@ -64,12 +60,7 @@ def count_overlapping_months(start1, end1, start2, end2):
 class IsSuperAdminNotManager(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        return (
-            user.is_authenticated
-            and user.is_superuser
-            and not getattr(user, 'is_manager', False)
-            and not getattr(user, 'is_supplier', False)
-        )
+        return is_full_super_admin(user)
 
 
 class EmailDeliverabilityTestView(APIView):

@@ -43,8 +43,12 @@ const RequireFullSuperAdmin = lazyWithLegacyStyles(() => import("./auth/RequireF
 const BookingsAdmin = lazyWithLegacyStyles(() => import("./pages/BookingsAdmin"));
 const BookingsAdminDetail = lazyWithLegacyStyles(() => import("./pages/BookingsAdminDetail"));
 const OperationsUsers = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsUsers"));
+const OperationsSupplierDetail = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsSupplierDetail"));
+const OperationsCreditTransactionDetail = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsCreditTransactionDetail"));
 const OperationsCatalog = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsCatalog"));
+const OperationsCatalogDetail = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsCatalogDetail"));
 const OperationsCommunications = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsCommunications"));
+const OperationsContactMessageDetail = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsContactMessageDetail"));
 const OperationsPayments = lazyWithLegacyStyles(() => import("./components/OperationsAdmin/OperationsPayments"));
 const SitemapPage = lazyWithLegacyStyles(() => import("./pages/SitemapPage"));
 const NotFound404 = lazyWithLegacyStyles(() => import("./pages/NotFound404"));
@@ -172,18 +176,22 @@ function App() {
 
           {/* Admin Routes — wrapped in AdminLayout for persistent AdminNavbar */}
           <Route element={<AdminLayout />}>
-            <Route path="/finance-dashboard" element={<FinanceDashboard />} />
-            <Route path="/blog-admin" element={<BlogDashboard />} />
-            <Route path="/blog-admin/create" element={<BlogPostForm />} />
-            <Route path="/blog-admin/edit/:id" element={<BlogPostForm />} />
             <Route element={<RequireStaffRole />}>
               <Route path="/bookings-admin" element={<BookingsAdmin />} />
               <Route path="/bookings-admin/:bookingId" element={<BookingsAdminDetail />} />
             </Route>
             <Route element={<RequireFullSuperAdmin />}>
+              <Route path="/finance-dashboard" element={<FinanceDashboard />} />
+              <Route path="/blog-admin" element={<BlogDashboard />} />
+              <Route path="/blog-admin/create" element={<BlogPostForm />} />
+              <Route path="/blog-admin/edit/:id" element={<BlogPostForm />} />
               <Route path="/users-admin" element={<OperationsUsers />} />
+              <Route path="/users-admin/suppliers/:supplierId" element={<OperationsSupplierDetail />} />
+              <Route path="/users-admin/credit-ledger/:transactionId" element={<OperationsCreditTransactionDetail />} />
               <Route path="/catalog-admin" element={<OperationsCatalog />} />
+              <Route path="/catalog-admin/:resource/:recordId" element={<OperationsCatalogDetail />} />
               <Route path="/communications-admin" element={<OperationsCommunications />} />
+              <Route path="/communications-admin/messages/:messageId" element={<OperationsContactMessageDetail />} />
               <Route path="/payments-admin" element={<OperationsPayments />} />
             </Route>
           </Route>

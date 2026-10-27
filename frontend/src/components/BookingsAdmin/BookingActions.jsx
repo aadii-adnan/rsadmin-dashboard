@@ -3,6 +3,7 @@ import { Alert, Button, Form, Spinner, Modal } from "react-bootstrap";
 import { FiDownload, FiRefreshCw } from "react-icons/fi";
 import {
   downloadStaffBookingDocument,
+  getStaffBookingDocument,
   updateStaffBookingStatus,
 } from "./bookingAdminApi";
 
@@ -23,6 +24,36 @@ export default function BookingActions({ booking, onStatusChanged }) {
       await downloadStaffBookingDocument(booking.id, documentType);
       setMessage("Your document download has started.");
     } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const view = async (documentType) => {
+    // Open synchronously so popup blockers do not reject the authenticated
+    // request that follows. The Blob URL is local to the browser; no JWT is
+    // placed in the address bar.
+    const preview = window.open("", "_blank");
+    if (!preview) {
+      setError("Your browser blocked the PDF preview. Allow popups and try again.");
+      return;
+    }
+    preview.opener = null;
+    preview.document.title = "Preparing PDF preview";
+    preview.document.body.textContent = "Preparing PDF preview…";
+    setBusy(`view-${documentType}`);
+    setError("");
+    setMessage("");
+    try {
+      const { blob } = await getStaffBookingDocument(booking.id, documentType);
+      const objectUrl = window.URL.createObjectURL(blob);
+      preview.location.replace(objectUrl);
+      // A preview may remain open for a while. Release its temporary Blob URL
+      // after a bounded period instead of retaining it for the page lifetime.
+      window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 5 * 60 * 1000);
+    } catch (requestError) {
+      preview.close();
       setError(requestError.message);
     } finally {
       setBusy("");
@@ -55,8 +86,8 @@ export default function BookingActions({ booking, onStatusChanged }) {
     {message && <Alert variant="success" className="py-2">{message}</Alert>}
     {error && <Alert variant="danger" className="py-2">{error}</Alert>}
     <div className="booking-document-actions">
-      {documents.invoice && <Button variant="outline-primary" onClick={() => download("invoice")} disabled={Boolean(busy)}>{busy === "invoice" ? <><Spinner animation="border" size="sm" /> Preparing invoice...</> : <><FiDownload aria-hidden="true" /> Invoice PDF</>}</Button>}
-      {documents.booking_form && <Button variant="outline-primary" onClick={() => download("booking-form")} disabled={Boolean(busy)}>{busy === "booking-form" ? <><Spinner animation="border" size="sm" /> Preparing form...</> : <><FiDownload aria-hidden="true" /> Booking form PDF</>}</Button>}
+      {documents.invoice && <><Button variant="outline-primary" onClick={() => view("invoice")} disabled={Boolean(busy)}>{busy === "view-invoice" ? <><Spinner animation="border" size="sm" /> Preparing invoice...</> : "View Invoice"}</Button><Button variant="outline-primary" onClick={() => download("invoice")} disabled={Boolean(busy)}>{busy === "invoice" ? <><Spinner animation="border" size="sm" /> Preparing invoice...</> : <><FiDownload aria-hidden="true" /> Download invoice</>}</Button></>}
+      {documents.booking_form && <><Button variant="outline-primary" onClick={() => view("booking-form")} disabled={Boolean(busy)}>{busy === "view-booking-form" ? <><Spinner animation="border" size="sm" /> Preparing form...</> : "View Booking Form"}</Button><Button variant="outline-primary" onClick={() => download("booking-form")} disabled={Boolean(busy)}>{busy === "booking-form" ? <><Spinner animation="border" size="sm" /> Preparing form...</> : <><FiDownload aria-hidden="true" /> Download booking form</>}</Button></>}
     </div>
     {statusActions.length > 0 && <Form className="booking-status-action" onSubmit={(event) => { event.preventDefault(); if (statusId) setConfirming(true); }}>
       <Form.Label htmlFor="staff-status-action">Change status</Form.Label>

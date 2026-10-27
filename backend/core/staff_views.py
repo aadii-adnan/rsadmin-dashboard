@@ -24,6 +24,10 @@ class StaffStatusesView(APIView):
 class StaffStatusDetailView(APIView):
     permission_classes = [IsFullSuperAdmin]
 
+    def get(self, request, status_id):
+        item = get_object_or_404(Status, pk=status_id)
+        return Response(StaffStatusSerializer(item).data)
+
     def patch(self, request, status_id):
         item = get_object_or_404(Status, pk=status_id)
         serializer = StaffStatusSerializer(item, data=request.data, partial=True)

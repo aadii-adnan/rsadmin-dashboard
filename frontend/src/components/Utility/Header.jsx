@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useBooking } from "../../context/BookingContext";
+import { useAuth } from "../../auth/AuthContext";
 import logo from "../../assets/logo-white-240.webp?no-inline";
 import logo2x from "../../assets/logo-white-480.webp?no-inline";
 import simpleLogo from "../../assets/logo-238.webp";
@@ -34,7 +35,11 @@ function Header() {
   const [isMeDropdownOpen, setIsMeDropdownOpen] = useState(false);
   const accountCloseTimerRef = useRef(null);
   const { bookingData } = useBooking();
-  const { userDetails } = bookingData || {};
+  const { user } = useAuth();
+  // AuthContext is the authoritative source for account capabilities. Keep
+  // the booking-context value only as a short-lived compatibility fallback.
+  const userDetails = user || bookingData?.userDetails;
+  const canAccessDashboard = Boolean(user?.can_access_staff_dashboard);
   const location = useLocation();
 
   useEffect(() => {
@@ -174,6 +179,11 @@ function Header() {
                   <Link to="/customer-dashboard" onClick={() => setIsMeDropdownOpen(false)}>
                     My Bookings
                   </Link>
+                  {canAccessDashboard && (
+                    <Link to="/bookings-admin" onClick={() => setIsMeDropdownOpen(false)}>
+                      Admin Dashboard
+                    </Link>
+                  )}
                   <Link to={accountAction.to} onClick={() => setIsMeDropdownOpen(false)}>
                     {accountAction.label}
                   </Link>
@@ -273,6 +283,11 @@ function Header() {
                 <FaUserCircle aria-hidden="true" />
                 My Bookings
               </Link>
+              {canAccessDashboard && (
+                <Link to="/bookings-admin" onClick={closeMobileMenu}>
+                  Admin Dashboard
+                </Link>
+              )}
               <Link to={accountAction.to} onClick={closeMobileMenu}>
                 {accountAction.label}
               </Link>

@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,3 +44,16 @@ class StaffCreditLedgerView(APIView):
                 status=CreditTransaction.STATUS_SUCCEEDED,
             )
         return Response(StaffCreditTransactionSerializer(entry).data, status=status.HTTP_201_CREATED)
+
+
+class StaffCreditTransactionDetailView(APIView):
+    """Read one immutable credit-ledger entry for the operations dashboard."""
+
+    permission_classes = [IsFullSuperAdmin]
+
+    def get(self, request, transaction_id):
+        entry = get_object_or_404(
+            CreditTransaction.objects.select_related("user", "booking"),
+            pk=transaction_id,
+        )
+        return Response(StaffCreditTransactionSerializer(entry).data)

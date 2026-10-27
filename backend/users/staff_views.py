@@ -52,6 +52,10 @@ class StaffSuppliersView(APIView):
 class StaffSupplierDetailView(APIView):
     permission_classes = [IsFullSuperAdmin]
 
+    def get(self, request, supplier_id):
+        supplier = get_object_or_404(Supplier.objects.select_related("user"), pk=supplier_id)
+        return Response(StaffSupplierSerializer(supplier).data)
+
     def patch(self, request, supplier_id):
         supplier = get_object_or_404(Supplier.objects.select_related("user"), pk=supplier_id)
         serializer = StaffSupplierSerializer(supplier, data=request.data, partial=True)

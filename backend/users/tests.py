@@ -253,3 +253,25 @@ class StaffPeopleManagementTests(TestCase):
         }, format="json")
         self.assertEqual(response.status_code, 201)
         self.assertTrue(Supplier.objects.get(name="Test supplier").user.is_supplier)
+
+    def test_supplier_detail_is_full_admin_only_and_never_returns_credentials(self):
+        supplier_user = User.objects.create_user(
+            username="supplier-detail-user",
+            password="Strong-pass-123!",
+            is_supplier=True,
+        )
+        supplier = Supplier.objects.create(
+            name="Detail Supplier",
+            booking_id_prefix="DTL",
+            user=supplier_user,
+        )
+        url = f"/api/auth/staff/suppliers/{supplier.id}/"
+
+        self.client.force_authenticate(self.manager)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], supplier.name)
+        self.assertNotIn("password", response.data)

@@ -5,6 +5,7 @@ from unittest.mock import patch
 import uuid
 
 from django.core import mail
+from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
 from rest_framework.test import APIClient
 
@@ -12,7 +13,7 @@ from bookings.models import Booking
 from core.models import Status
 from services.models import Service
 
-from .models import Payment
+from .models import CreditTransaction, Payment
 from .views import send_manager_new_booking_email
 
 
@@ -173,3 +174,43 @@ class PaymentIntentIdempotencyTests(TestCase):
 
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.data['code'], 'already_paid')
+
+
+class StaffCreditTransactionDetailTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        user_model = get_user_model()
+        self.admin = user_model.objects.create_user(
+            username="credit-admin", password="pass", is_superuser=True,
+        )
+        self.manager = user_model.objects.create_user(
+            username="credit-manager", password="pass", is_manager=True,
+        )
+        self.customer = user_model.objects.create_user(
+            username="credit-customer", password="pass",
+        )
+        self.entry = CreditTransaction.objects.create(
+            user=self.customer,
+            transaction_type=CreditTransaction.TYPE_ADJUSTMENT,
+            amount=Decimal("15.00"),
+            balance_after=Decimal("15.00"),
+            note="Manual goodwill credit",
+            website="rsexpressparking",
+        )
+        self.url = f"/api/payments/staff/credits/{self.entry.id}/"
+
+    def test_full_superadmin_can_read_credit_transaction_detail(self):
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["id"], self.entry.id)
+        self.assertEqual(response.data["note"], "Manual goodwill credit")
+
+    def test_manager_and_anonymous_users_cannot_read_credit_transaction_detail(self):
+        self.client.force_authenticate(self.manager)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+        self.client.force_authenticate(user=None)
+        self.assertIn(self.client.get(self.url).status_code, (401, 403))

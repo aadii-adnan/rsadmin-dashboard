@@ -166,7 +166,7 @@ export async function updateStaffBookingStatus(bookingId, status) {
   return payload;
 }
 
-export async function downloadStaffBookingDocument(bookingId, documentType) {
+export async function getStaffBookingDocument(bookingId, documentType) {
   const response = await customFetch(
     buildStaffBookingActionUrl(bookingId, `documents/${documentType}/`),
   );
@@ -177,13 +177,18 @@ export async function downloadStaffBookingDocument(bookingId, documentType) {
     throw error;
   }
 
-  const blob = await response.blob();
+  return {
+    blob: await response.blob(),
+    fileName: filenameFromResponse(response, `${documentType}-${bookingId}.pdf`),
+  };
+}
+
+export async function downloadStaffBookingDocument(bookingId, documentType) {
+  const { blob, fileName } = await getStaffBookingDocument(bookingId, documentType);
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const contentDisposition = response.headers.get("Content-Disposition") || "";
-  const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
   link.href = url;
-  link.download = fileNameMatch?.[1] || `${documentType}-${bookingId}.pdf`;
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
   link.remove();

@@ -21,12 +21,12 @@ from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from core.permissions import IsManagerOrAdmin
+from core.permissions import IsFullSuperAdmin, is_full_super_admin
 
 from .image_utils import (
     build_responsive_payload_for_storage_path,
@@ -61,8 +61,7 @@ class PublicCacheHeaderMixin:
 @login_required
 def blogs_jwt_login(request):
     user = request.user
-    # Use the exact same permission check as the finance dashboard
-    if not (user.is_superuser and not getattr(user, "is_manager", False)):
+    if not is_full_super_admin(user):
         return HttpResponseRedirect("/admin/login/?next=/admin/")
 
     refresh = RefreshToken.for_user(user)
@@ -242,20 +241,20 @@ class ActiveRedirectsView(PublicCacheHeaderMixin, ListAPIView):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
-    permission_classes = [IsManagerOrAdmin]
+    permission_classes = [IsFullSuperAdmin]
 
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all().order_by("name")
     serializer_class = TagSerializer
-    permission_classes = [IsManagerOrAdmin]
+    permission_classes = [IsFullSuperAdmin]
 
 
 class BlogPostViewSet(viewsets.ModelViewSet):
     queryset = BlogPost.objects.all()
     serializer_class = AdminBlogPostSerializer
     pagination_class = AdminBlogPagination
-    permission_classes = [IsManagerOrAdmin]
+    permission_classes = [IsFullSuperAdmin]
     lookup_field = "id"
 
     def get_serializer_class(self):
@@ -336,7 +335,7 @@ class BlogPostViewSet(viewsets.ModelViewSet):
 class BlogFAQViewSet(viewsets.ModelViewSet):
     queryset = BlogFAQ.objects.all().select_related("post").order_by("post_id", "order", "id")
     serializer_class = AdminBlogFAQSerializer
-    permission_classes = [IsManagerOrAdmin]
+    permission_classes = [IsFullSuperAdmin]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -351,7 +350,7 @@ class BlogFAQViewSet(viewsets.ModelViewSet):
 class RedirectRuleViewSet(viewsets.ModelViewSet):
     queryset = RedirectRule.objects.all().order_by("old_path")
     serializer_class = RedirectRuleSerializer
-    permission_classes = [IsManagerOrAdmin]
+    permission_classes = [IsFullSuperAdmin]
 
 
 # ---------------------------------------------------------------------------
@@ -386,7 +385,7 @@ class ImportWordPressView(APIView):
     Expects: multipart/form-data with a 'file' field containing the .xml file.
     """
 
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsFullSuperAdmin]
     parser_classes = [MultiPartParser]
 
     # WordPress WXR namespaces

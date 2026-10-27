@@ -1,0 +1,19 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import SupplierForm from "./SupplierForm";
+import { emptySupplier } from "./supplierDefaults";
+import { getStaffSupplier, updateStaffSupplier } from "./operationsAdminApi";
+import "./operationsAdmin.css";
+
+const fields = [["Supplier ID", "id"], ["Business name", "name"], ["Contact person", "contact_person"], ["Email", "email"], ["Phone", "phone"], ["Website", "website"], ["Booking ID prefix", "booking_id_prefix"], ["Commission percentage", "commission_percentage"], ["Custom booking IDs", "use_custom_booking_ids"], ["Account status", "is_active"], ["Linked user ID", "user_id"], ["Linked login", "username"], ["Created", "created_at"]];
+
+export default function OperationsSupplierDetail() {
+  const { supplierId } = useParams(); const [supplier, setSupplier] = useState(null); const [editing, setEditing] = useState(false); const [form, setForm] = useState(emptySupplier); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState(""); const [message, setMessage] = useState("");
+  const load = useCallback(async () => { setLoading(true); setError(""); try { const data = await getStaffSupplier(supplierId); setSupplier(data); setForm({ ...emptySupplier, ...data }); } catch (requestError) { setError(requestError.status === 404 ? "This supplier was not found." : requestError.message); } finally { setLoading(false); } }, [supplierId]);
+  useEffect(() => { load(); }, [load]);
+  const save = async (event) => { event.preventDefault(); setSaving(true); setError(""); try { const values = { ...form }; delete values.username; delete values.password; const updated = await updateStaffSupplier(supplierId, values); setSupplier(updated); setForm({ ...emptySupplier, ...updated }); setEditing(false); setMessage("Supplier profile updated."); } catch (requestError) { setError(requestError.message); } finally { setSaving(false); } };
+  return <section className="bookings-admin-page operations-management-page operations-message-detail"><Link className="btn btn-admin-outline" to="/users-admin">← Back to Suppliers</Link><span className="booking-eyebrow">People & credit ledger</span><h1 className="admin-page-title">Supplier details</h1>{message && <div className="alert alert-success">{message}</div>}{loading && <div className="booking-list-state" role="status">Loading supplier...</div>}{error && <div className="alert alert-danger" role="alert">{error}<button type="button" className="btn btn-admin-outline ms-3" onClick={load}>Try again</button></div>}{supplier && !editing && <div className="booking-table-card operations-message-card"><div className="booking-table-heading"><h2>{supplier.name}</h2><button type="button" className="btn btn-admin-outline" onClick={() => { setForm({ ...emptySupplier, ...supplier }); setEditing(true); setMessage(""); }}>Edit supplier</button></div><SupplierSummary supplier={supplier} /></div>}{supplier && editing && <SupplierForm value={form} onChange={setForm} isEdit saving={saving} onCancel={() => { setForm({ ...emptySupplier, ...supplier }); setEditing(false); }} onSubmit={save} />}</section>;
+}
+
+function SupplierSummary({ supplier }) { return <dl className="operations-summary-grid">{fields.map(([label, key]) => <React.Fragment key={key}><dt>{label}</dt><dd>{displayValue(key, supplier[key])}</dd></React.Fragment>)}</dl>; }
+function displayValue(key, value) { if (key === "is_active") return value ? "Active" : "Inactive"; if (key === "use_custom_booking_ids") return value ? "Enabled" : "Disabled"; if (key === "commission_percentage" && value !== null && value !== undefined) return `${value}%`; if (key === "created_at" && value) return new Date(value).toLocaleString(); return value || "Not provided"; }

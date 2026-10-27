@@ -70,6 +70,10 @@ export function AuthProvider({ children }) {
       const data = await res.json();
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
+      // Finance and Blog Admin now use this same session. Remove stale
+      // dashboard-only tokens left by older Django Admin entry points.
+      localStorage.removeItem('finance_jwt');
+      localStorage.removeItem('finance_jwt_refresh');
 
       const profile = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/me/`, {
         headers: { Authorization: `Bearer ${data.access}` },
@@ -90,6 +94,8 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('finance_jwt');
+    localStorage.removeItem('finance_jwt_refresh');
     setBookingData((prev) => ({
       ...prev,
       userDetails: null,

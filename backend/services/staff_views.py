@@ -29,6 +29,10 @@ class StaffModelDetailView(APIView):
     model = None
     serializer_class = None
 
+    def get(self, request, object_id):
+        instance = get_object_or_404(self.model, pk=object_id)
+        return Response(self.serializer_class(instance).data)
+
     def patch(self, request, object_id):
         instance = get_object_or_404(self.model, pk=object_id)
         serializer = self.serializer_class(instance, data=request.data, partial=True)

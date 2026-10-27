@@ -22,7 +22,6 @@ async function requestJson(path, { signal, ...options } = {}) {
   const response = await customFetch(`${getApiBase()}${path}`, {
     ...options,
     signal,
-    useFinanceJwt: true,
   });
   if (!response) {
     throw new Error("Your session has expired.");
@@ -66,7 +65,7 @@ export const getSupplierFinanceDetail = (supplierId, filters, signal) =>
 export async function downloadSupplierInvoice(supplierId, month, year, supplierName) {
   const response = await customFetch(
     `${getApiBase()}/supplier/${supplierId}/invoice/?month=${month}&year=${year}`,
-    { useFinanceJwt: true },
+    {},
   );
   if (!response?.ok) {
     throw new Error("Failed to generate invoice.");

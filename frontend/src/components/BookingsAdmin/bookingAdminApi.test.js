@@ -34,6 +34,7 @@ test("buildStaffBookingBulkActionUrl keeps bulk actions inside the staff route",
 
 test("buildStaffBookingActionUrl creates scoped document and status action paths", () => {
   assert.equal(buildStaffBookingActionUrl(42, "documents/invoice/"), "/bookings/staff/42/documents/invoice/");
+  assert.equal(buildStaffBookingActionUrl(42, "documents/booking-form/"), "/bookings/staff/42/documents/booking-form/");
   assert.equal(buildStaffBookingActionUrl(42, "actions/status/"), "/bookings/staff/42/actions/status/");
   assert.equal(buildStaffBookingActionUrl(42, "actions/save-and-notify/"), "/bookings/staff/42/actions/save-and-notify/");
 });

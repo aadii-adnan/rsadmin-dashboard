@@ -31,7 +31,7 @@ import {
   FaShieldAlt,
   FaTrash,
 } from "react-icons/fa";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import {
   deleteExpense,
@@ -112,26 +112,6 @@ function readFilters(params) {
   return { periodType, website, startMonth, endMonth, year };
 }
 
-function useFinanceJwtFromUrl() {
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const access = params.get("access");
-    const refresh = params.get("refresh");
-    if (!access || !refresh) return;
-
-    localStorage.setItem("finance_jwt", access);
-    localStorage.setItem("finance_jwt_refresh", refresh);
-    params.delete("access");
-    params.delete("refresh");
-    const query = params.toString();
-    window.history.replaceState(
-      {},
-      document.title,
-      `${window.location.pathname}${query ? `?${query}` : ""}`,
-    );
-  }, []);
-}
-
 function compactCurrency(value) {
   return new Intl.NumberFormat("en-IE", {
     style: "currency",
@@ -154,8 +134,6 @@ function emptyExpense(filters) {
 }
 
 function FinanceDashboard() {
-  useFinanceJwtFromUrl();
-  const navigate = useNavigate();
   const { loading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => readFilters(searchParams), [searchParams]);
@@ -205,12 +183,6 @@ function FinanceDashboard() {
   const [deliverabilityAlert, setDeliverabilityAlert] = useState(null);
 
   useEffect(() => setDraftFilters(filters), [filters]);
-
-  useEffect(() => {
-    if (!authLoading && !localStorage.getItem("finance_jwt")) {
-      navigate("/unauthorized", { replace: true });
-    }
-  }, [authLoading, navigate]);
 
   const loadOverview = useCallback((signal) => {
     setOverviewLoading(true);

@@ -19,7 +19,9 @@ export const updateStaffUser = (id, values) => request(`/auth/staff/users/${id}/
 export const getStaffSuppliers = () => request("/auth/staff/suppliers/");
 export const createStaffSupplier = (values) => request("/auth/staff/suppliers/", { method: "POST", body: values });
 export const updateStaffSupplier = (id, values) => request(`/auth/staff/suppliers/${id}/`, { method: "PATCH", body: values });
+export const getStaffSupplier = (id) => request(`/auth/staff/suppliers/${id}/`);
 export const getCreditLedger = () => request("/payments/staff/credits/");
+export const getCreditTransaction = (id) => request(`/payments/staff/credits/${id}/`);
 export const createCreditAdjustment = (values) => request("/payments/staff/credits/", { method: "POST", body: values });
 
 export const resources = {
@@ -29,11 +31,13 @@ export const resources = {
   statuses: { label: "Statuses", path: "/core/staff/statuses/" },
 };
 export const getResource = (resource) => request(resources[resource].path);
+export const getResourceDetail = (resource, id) => request(`${resources[resource].path}${id}/`);
 export const createResource = (resource, values) => request(resources[resource].path, { method: "POST", body: values });
 export const updateResource = (resource, id, values) => request(`${resources[resource].path}${id}/`, { method: "PATCH", body: values });
 export const getBookingSettings = () => request("/core/staff/booking-settings/");
 export const saveBookingSettings = (values) => request("/core/staff/booking-settings/", { method: "PUT", body: values });
 export const getCommunications = (kind) => request(({ contacts: "/contact/staff/", faqs: "/faqs/staff/", leads: "/core/staff/marketing-leads/", unsubscribes: "/core/staff/unsubscribes/", redirects: "/blogs/staff/redirect-rules/" })[kind]);
+export const getContactMessage = (id) => request(`/contact/staff/${id}/`);
 export const createCommunication = (kind, values) => request(({ faqs: "/faqs/staff/", redirects: "/blogs/staff/redirect-rules/" })[kind], { method: "POST", body: values });
 export const updateCommunication = (kind, id, values) => request(({ faqs: `/faqs/staff/${id}/`, redirects: `/blogs/staff/redirect-rules/${id}/` })[kind], { method: "PATCH", body: values });
 export const getStaffPayments = (filters = {}) => request(`/payments/staff/records/?${new URLSearchParams(filters).toString()}`);

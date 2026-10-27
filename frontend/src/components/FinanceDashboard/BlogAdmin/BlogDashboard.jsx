@@ -11,7 +11,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { FaUpload } from "react-icons/fa";
 import customFetch from "../../../auth/fetch";
-import { useBlogJwtFromUrl } from "../../../auth/useBlogJwtFromUrl";
 import "./BlogAdmin.css";
 
 const BLOG_API_BASE = `${import.meta.env.VITE_API_BASE_URL}/blogs/admin`;
@@ -69,7 +68,6 @@ function formatDateTime(value) {
 }
 
 function BlogDashboard() {
-  useBlogJwtFromUrl();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("posts");
@@ -193,7 +191,7 @@ function BlogDashboard() {
 
   useEffect(() => {
     // 1. Check Auth first
-    if (!localStorage.getItem("finance_jwt")) {
+    if (!localStorage.getItem("access_token")) {
       navigate("/unauthorized", { replace: true });
       return; // Stop execution immediately
     }
@@ -202,7 +200,7 @@ function BlogDashboard() {
   }, [navigate, fetchCategories]);
 
   useEffect(() => {
-    if (localStorage.getItem("finance_jwt")) fetchPosts();
+    if (localStorage.getItem("access_token")) fetchPosts();
   }, [fetchPosts]);
 
   useEffect(() => {

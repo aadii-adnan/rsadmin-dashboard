@@ -8,9 +8,15 @@ const customFetch = async (url, { method = 'GET', body = null, headers = {}, use
     let refresh = false;
     let response;
 
-    // Use finance dashboard tokens if requested
-    const accessKey = useFinanceJwt ? 'finance_jwt' : 'access_token';
-    const refreshKey = useFinanceJwt ? 'finance_jwt_refresh' : 'refresh_token';
+    // Finance and Blog Admin now share the normal application session. Keep
+    // the legacy option as a compatibility fallback only for stale Admin links
+    // that have not yet been promoted by RequireFullSuperAdmin.
+    const hasPrimarySession = isUsableToken(localStorage.getItem('access_token'));
+    const useLegacyFinanceSession = useFinanceJwt
+      && !hasPrimarySession
+      && isUsableToken(localStorage.getItem('finance_jwt'));
+    const accessKey = useLegacyFinanceSession ? 'finance_jwt' : 'access_token';
+    const refreshKey = useLegacyFinanceSession ? 'finance_jwt_refresh' : 'refresh_token';
 
     const token = localStorage.getItem(accessKey);
 

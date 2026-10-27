@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+from .models import Status
 
 
 class StaffConfigurationTests(TestCase):
@@ -19,3 +20,15 @@ class StaffConfigurationTests(TestCase):
         self.client.force_authenticate(self.admin)
         response = self.client.post("/api/core/staff/statuses/", {"name": "Bad", "type": "unknown"}, format="json")
         self.assertEqual(response.status_code, 400)
+
+    def test_status_detail_is_full_superadmin_only(self):
+        status = Status.objects.create(name="Testing", type="booking")
+        url = f"/api/core/staff/statuses/{status.id}/"
+
+        self.client.force_authenticate(self.supplier)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], status.name)

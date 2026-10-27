@@ -176,6 +176,7 @@
 
 .rs-account-dropdown {
   position: absolute;
+  z-index: 1100;
   top: calc(100% + 8px);
   right: 0;
   display: grid;

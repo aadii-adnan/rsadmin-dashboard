@@ -87,13 +87,14 @@ class PublicBlogApiPerformanceShapeTests(TestCase):
 class AdminBlogFaqFilteringTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.manager = get_user_model().objects.create_user(
-            username="blog_manager",
-            email="manager@example.com",
+        self.admin = get_user_model().objects.create_user(
+            username="blog_admin",
+            email="admin@example.com",
             password="pass1234",
-            is_manager=True,
+            is_superuser=True,
+            is_staff=True,
         )
-        self.client.force_authenticate(user=self.manager)
+        self.client.force_authenticate(user=self.admin)
 
         self.category = Category.objects.create(name="Airport", slug="airport")
         self.post_one = BlogPost.objects.create(
@@ -101,7 +102,7 @@ class AdminBlogFaqFilteringTests(TestCase):
             slug="post-one",
             content="<p>One</p>",
             status="draft",
-            author=self.manager,
+            author=self.admin,
             category=self.category,
         )
         self.post_two = BlogPost.objects.create(
@@ -109,7 +110,7 @@ class AdminBlogFaqFilteringTests(TestCase):
             slug="post-two",
             content="<p>Two</p>",
             status="draft",
-            author=self.manager,
+            author=self.admin,
             category=self.category,
         )
 
@@ -156,15 +157,16 @@ class AdminBlogFaqFilteringTests(TestCase):
 class AdminBlogPostListTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.manager = get_user_model().objects.create_user(
-            username="post_manager",
-            email="post-manager@example.com",
+        self.admin = get_user_model().objects.create_user(
+            username="post_admin",
+            email="post-admin@example.com",
             password="pass1234",
             first_name="Post",
-            last_name="Manager",
-            is_manager=True,
+            last_name="Admin",
+            is_superuser=True,
+            is_staff=True,
         )
-        self.client.force_authenticate(user=self.manager)
+        self.client.force_authenticate(user=self.admin)
         self.airport_category = Category.objects.create(name="Airport", slug="admin-airport")
         self.travel_category = Category.objects.create(name="Travel", slug="admin-travel")
         self.tag = Tag.objects.create(name="Featured", slug="admin-featured")
@@ -180,7 +182,7 @@ class AdminBlogPostListTests(TestCase):
                 featured_image="blog/images/large-image.jpg",
                 status="publish" if index % 2 == 0 else "draft",
                 published_date=self.now + timedelta(minutes=index),
-                author=self.manager,
+                author=self.admin,
                 category=self.airport_category if index % 3 else self.travel_category,
                 meta_title=f"Meta title {index}",
                 meta_description=f"Meta description {index}",
@@ -246,7 +248,28 @@ class AdminBlogPostListTests(TestCase):
         self.assertIn("featured_image", response.data)
         self.assertIn("meta_title", response.data)
 
-    def test_admin_list_requires_manager_or_admin_authentication(self):
+    def test_admin_list_rejects_unauthenticated_requests(self):
         self.client.force_authenticate(user=None)
         response = self.client.get("/api/blogs/admin/posts/")
         self.assertIn(response.status_code, {401, 403})
+
+    def test_admin_list_rejects_manager_and_supplier_superuser_roles(self):
+        user_model = get_user_model()
+        manager = user_model.objects.create_user(
+            username="blog-manager",
+            password="pass1234",
+            is_manager=True,
+        )
+        supplier_superuser = user_model.objects.create_user(
+            username="blog-supplier-superuser",
+            password="pass1234",
+            is_supplier=True,
+            is_superuser=True,
+            is_staff=True,
+        )
+
+        for user in (manager, supplier_superuser):
+            with self.subTest(username=user.username):
+                self.client.force_authenticate(user=user)
+                response = self.client.get("/api/blogs/admin/posts/")
+                self.assertEqual(response.status_code, 403)
